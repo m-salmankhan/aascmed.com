@@ -1,0 +1,100 @@
+backend:
+  name: git-gateway
+  repo: m-salmankhan/aascmed
+
+# media_folder: static/assets
+media_folder: static/assets/uploads
+public_folder: /assets/uploads
+
+collections:
+  - name: conditions
+    label: Conditions
+    folder: content/conditions
+    format: frontmatter
+    extension: mdx
+    create: true
+    fields:
+      - { name: title, label: Title }
+      - { name: description, label: Description, widget: text }
+      - { name: thumbnail, label: Thumbnail, widget: image }
+
+  - name: service-updates
+    label: Service Updates
+    folder: content/service-updates
+    format: frontmatter
+    extension: mdx
+    create: true
+    fields:
+      - { name: title, label: Title, }
+      - { name: date, label: Date, widget: datetime }
+      - { name: description, label: Description, widget: text }
+      - { name: body, label: Body, widget: markdown }
+
+  - name: providers
+    label: Providers
+    folder: content/providers
+    format: frontmatter
+    extension: mdx
+    create: true
+    fields:
+      - { name: title, label: Title }
+      - name: "name"
+        label: "Name"
+        widget: "object"
+        fields:
+          - { name: fullname, label: Full Name }
+          - { name: degree, label: Degree, widget: string, required: false }
+          - { name: degree-abbr, label: Degree (Abbreviation), widget: string, required: false }
+          - { name: title, label: Title, widget: string, required: false }
+      - { name: image, label: Image, widget: image }
+      - { name: review, label: Featured Review, widget: markdown }
+      - { name: body, label: Body, widget: markdown }
+      - { name: description, label: Description (Displayed under google search results), widget: text }
+      - { name: order, label: Order (higher number = higher up), widget: number, required: false, default: 0 }
+
+  - name: reviews
+    label: Reviews
+    folder: content/reviews
+    format: frontmatter
+    extension: mdx
+    create: true
+    fields:
+      - { name: title, label: Title }
+      - name: "source"
+        label: "Review Source"
+        widget: "object"
+        fields:
+          - { name: url, label: URL, widget: string }
+          - { name: name, label: Name, widget: string, required: false }
+      - { name: stars, label: Stars, widget: number, min: 0, max: 5, step: 0.5 }
+      - { name: body, label: Body, widget: markdown }
+
+  - name: clinics
+    label: Clinics
+    folder: content/clinics
+    format: frontmatter
+    extension: mdx
+    create: true
+    fields:
+      - { name: title, label: Title }
+      - name: "opening"
+        label: "Opening Times"
+        widget: "list"
+        fields:
+          - { name: day, label: Day, widget: string }
+          - { name: hours, label: Hours, widget: string }
+          - { name: notes, label: Notes, widget: string, required: false }
+      - name: "shot"
+        label: "Shot Times"
+        widget: "list"
+        fields:
+          - { name: day, label: Day, widget: string }
+          - { name: hours, label: Hours, widget: string }
+          - { name: notes, label: Notes, widget: string, required: false }
+      - { name: address, label: Address, widget: text }
+      - { name: phone, label: Phone, widget: string }
+      - { name: fax, label: Fax, widget: string }
+      - { name: lon, label: Longitude, widget: number, valueType: float, step: 0.0001 }
+      - { name: lat, label: Latitude, widget: number, valueType: float, step: 0.0001 }
+      - { name: placeId, label: Google Maps Place ID, widget: string, isRequired: false }
+      # - { name: body, label: Body, widget: markdown }
