@@ -1,5 +1,6 @@
 import React from "react"
 import PropTypes from "prop-types"
+import {css} from "@emotion/core"
 
 export default function HTML(props) {
   return (
@@ -13,7 +14,7 @@ export default function HTML(props) {
         />
         {props.headComponents}
       </head>
-      <body {...props.bodyAttributes}>
+      <body css={css({"*": {boxSizing: "border-box"}})} {...props.bodyAttributes}>
         {props.preBodyComponents}
         <div
           key={`body`}
