@@ -6,6 +6,10 @@ backend:
 media_folder: static/assets/uploads
 public_folder: /assets/uploads
 
+media_library:
+  max_file_size: 5000000000
+  folder_support: true
+
 collections:
   - name: pages
     label: Pages
