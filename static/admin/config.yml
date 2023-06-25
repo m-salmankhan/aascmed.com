@@ -10,7 +10,7 @@ collections:
   - name: pages
     label: Pages
     files:
-      - Label: "Home Page"
+      - label: "Home Page"
         name: home
         file: content/pages/home.mdx
         fields:
