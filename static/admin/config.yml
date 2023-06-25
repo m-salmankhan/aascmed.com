@@ -7,6 +7,26 @@ media_folder: static/assets/uploads
 public_folder: /assets/uploads
 
 collections:
+  - name: pages
+    label: Pages
+    files:
+      - Label: "Home Page"
+        file: content/pages/home.mdx
+        fields:
+          - name: hero
+            label: Hero
+            widget: object
+            fields:
+              - { name: heading, label: Heading, widget: text }
+              - { name: text, label: Text, widget: markdown }
+
+          - name: conditions
+            label: Conditions Section
+            widget: object
+            fields:
+              - { name: heading, label: Heading, widget: text }
+              - { name: text, label: Text, widget: markdown }
+
   - name: conditions
     label: Conditions
     folder: content/conditions
@@ -17,6 +37,7 @@ collections:
       - { name: title, label: Title }
       - { name: description, label: Description, widget: text }
       - { name: thumbnail, label: Thumbnail, widget: image }
+      - { name: body, label: Body, widget: markdown }
 
   - name: service-updates
     label: Service Updates
