@@ -10,7 +10,7 @@ const config: GatsbyConfig = {
     // Learn more at: https://gatsby.dev/graphql-typegen
     graphqlTypegen: true,
     plugins: [
-        "gatsby-plugin-netlify-cms",
+        "gatsby-plugin-static-cms",
         "gatsby-plugin-emotion",
         "gatsby-plugin-image",
         "gatsby-plugin-sitemap",
@@ -20,10 +20,10 @@ const config: GatsbyConfig = {
         {
             resolve: 'gatsby-source-filesystem',
             options: {
-                "name": "images",
-                "path": "./src/images/"
+                "name": "assets",
+                "path": "./static/assets/"
             },
-            __key: "images"
+            __key: "assets"
         }, {
             resolve: 'gatsby-source-filesystem',
             options: {
@@ -41,6 +41,19 @@ const config: GatsbyConfig = {
         },
         {
             resolve: `gatsby-plugin-emotion`,
+        },
+        {
+            resolve: `gatsby-omni-font-loader`,
+            options: {
+                enableListener: true,
+                preconnect: [`https://fonts.googleapis.com`, `https://fonts.gstatic.com`],
+                web: [
+                    {
+                        name: `Poppins`,
+                        file: `https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700&display=swap`,
+                    },
+                ],
+            },
         },
     ]
 };

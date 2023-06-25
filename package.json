@@ -19,18 +19,20 @@
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@mdx-js/react": "^2.3.0",
+    "@staticcms/app": "^2.5.1",
     "gatsby": "^5.11.0",
+    "gatsby-omni-font-loader": "^2.0.2",
     "gatsby-plugin-emotion": "^8.11.0",
     "gatsby-plugin-image": "^3.11.0",
     "gatsby-plugin-mdx": "^5.11.0",
-    "gatsby-plugin-netlify-cms": "^7.11.0",
     "gatsby-plugin-sharp": "^5.11.0",
     "gatsby-plugin-sitemap": "^6.11.0",
+    "gatsby-plugin-static-cms": "^2.0.2",
     "gatsby-source-filesystem": "^5.11.0",
     "gatsby-transformer-sharp": "^5.11.0",
-    "netlify-cms-app": "^2.15.72",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-helmet": "^6.1.0"
   },
   "devDependencies": {
     "@types/node": "^20.2.6",
