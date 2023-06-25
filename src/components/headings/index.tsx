@@ -35,7 +35,7 @@ export const stylesH6 = css(stylesHeadings, {
 });
 
 interface HeadingProps {
-    className: string,
+    className?: string,
     children: any
 }
 

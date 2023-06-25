@@ -6,7 +6,7 @@ import {PaddedContainer} from "../containers";
 import {colours, fontBaseSize, gridSpacing} from "../../styles/theme";
 import {breakpointStrings} from "../../styles/breakpoints";
 import {CSSInterpolation} from "@emotion/serialize";
-import {match} from "assert";
+import ReactMarkdown from "react-markdown";
 
 interface HeroProps extends HTMLDivElement {
     siteTitle: string,
@@ -138,9 +138,9 @@ export const Hero: React.FC<HeroProps> = ({heading, text, image, siteTitle, chil
                     <div>
                         {children}
                         <h2>{heading}</h2>
-                        <div className="subtext">
+                        <ReactMarkdown>
                             {text}
-                        </div>
+                        </ReactMarkdown>
                     </div>
                 </div>
                 <div/>

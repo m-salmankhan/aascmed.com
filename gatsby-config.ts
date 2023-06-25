@@ -3,7 +3,7 @@ import type { GatsbyConfig } from "gatsby";
 const config: GatsbyConfig = {
     siteMetadata: {
         title: `Allergy, Asthma and Sinus Centers`,
-        siteUrl: `https://www.yourdomain.tld`
+        siteUrl: `https://www.aascmed.com`
     },
     // More easily incorporate content into your pages through automatic TypeScript type generation and better GraphQL IntelliSense.
     // If you use VSCode you can also use the GraphQL plugin
@@ -16,27 +16,7 @@ const config: GatsbyConfig = {
         "gatsby-plugin-sitemap",
         "gatsby-plugin-sharp",
         "gatsby-transformer-sharp",
-        {
-            resolve: `gatsby-plugin-mdx`,
-            options: {
-                gatsbyRemarkPlugins: [
-                    {
-                        resolve: `gatsby-remark-images`,
-                        options: {
-                            maxWidth: 1500,
-                        },
-                    },
-                    {
-                        resolve: `gatsby-remark-autolink-headers`,
-                        options: {
-                            elements: [`h1`, `h2`],
-                            isIconAfterHeader: false,
-                            className: `link-icon`
-                        },
-                    }
-                ],
-            },
-        },
+        `gatsby-transformer-yaml`,
         {
             resolve: 'gatsby-source-filesystem',
             options: {
@@ -72,6 +52,27 @@ const config: GatsbyConfig = {
                         name: `Poppins`,
                         file: `https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700&display=swap`,
                     },
+                ],
+            },
+        },
+        {
+            resolve: `gatsby-plugin-mdx`,
+            options: {
+                gatsbyRemarkPlugins: [
+                    {
+                        resolve: `gatsby-remark-images`,
+                        options: {
+                            maxWidth: 1500,
+                        },
+                    },
+                    {
+                        resolve: `gatsby-remark-autolink-headers`,
+                        options: {
+                            elements: [`h1`, `h2`],
+                            isIconAfterHeader: false,
+                            className: `link-icon`
+                        },
+                    }
                 ],
             },
         },

@@ -12,7 +12,7 @@ collections:
     files:
       - label: "Home Page"
         name: home
-        file: content/pages/home.yml
+        file: content/pages/home.mdx
         fields:
           - name: hero
             label: Hero
@@ -31,6 +31,8 @@ collections:
   - name: conditions
     label: Conditions
     folder: content/conditions
+    media_folder: ''
+    public_folder: ''
     format: frontmatter
     extension: mdx
     create: true
