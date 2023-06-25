@@ -157,9 +157,6 @@ stylesStackedLogo[breakpointStrings.lg] = {
 
 
 const stylesNavigationUl = (state: NavigationMenuStates) => {
-    const isMediumScreen = matchMedia(`screen and (min-width: ${mediaBreakpoints.md}em)`).matches;
-    const isLargeScreen = matchMedia(`screen and (min-width: ${mediaBreakpoints.lg}em)`).matches;
-
     const stylesExpanded = css(
         cols(12),
         cols(9, mediaBreakpoints.lg),
@@ -212,15 +209,18 @@ const stylesNavigationUl = (state: NavigationMenuStates) => {
         }
     });
 
+    if(typeof window !== "undefined") {
+        const isMediumScreen = matchMedia(`screen and (min-width: ${mediaBreakpoints.md}em)`).matches ;
+        const isLargeScreen = matchMedia(`screen and (min-width: ${mediaBreakpoints.lg}em)`).matches ;
 
-    if(isMediumScreen) {
-        return inlineItems;
+        if (isMediumScreen) {
+            return inlineItems;
+        }
+
+        if (isLargeScreen) {
+            return css(inlineItems, {textAlign: "right"});
+        }
     }
-
-    if(isLargeScreen) {
-        return css(inlineItems, {textAlign: "right"});
-    }
-
 
     const stylesExpanding = css(stylesExpanded, {
         maxHeight: "60em",
