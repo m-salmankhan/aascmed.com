@@ -18,8 +18,10 @@ export const defaultTotalColumnCount = 12;
 */
 
 export const fontFamily = "Poppins, sans-serif";
-export const fontBaseWeight = 300;
+export const fontWeightBase = 300;
+export const fontWeightHeadings = 800;
 export const fontBaseSize = "1rem";
+
 /*
 ===== Colours ====
 */

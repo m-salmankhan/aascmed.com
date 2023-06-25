@@ -2,6 +2,8 @@ import React from "react";
 import {graphql, PageProps} from "gatsby";
 import {Hero} from "../components/header";
 import {css} from "@emotion/react";
+import {H2, stylesH1} from "../components/headings";
+import {Container} from "../components/containers";
 
 const IndexPage: React.FC = ({ data }: PageProps<Queries.IndexPageQuery>) => {
     const image = data.heroImage.edges[0].node.childImageSharp.gatsbyImageData;
@@ -11,6 +13,11 @@ const IndexPage: React.FC = ({ data }: PageProps<Queries.IndexPageQuery>) => {
     return (
         <main>
             <Hero image={image} heading={heroTitle} siteTitle={siteTitle} text={heroText}/>
+            <section>
+                <Container>
+                    <H2 css={stylesH1}>Learn more about the conditions we treat</H2>
+                </Container>
+            </section>
             <div css={css({height: "1000px"})}/>
         </main>
     );

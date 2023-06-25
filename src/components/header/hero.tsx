@@ -23,6 +23,7 @@ interface ParallaxParameters {
 
 const stylesHero = css({
     minHeight: "60vh",
+    marginBottom: `${2*gridSpacing}em`,
     backgroundColor: "green",
     backgroundRepeat: "no-repeat",
     backgroundSize: "cover",

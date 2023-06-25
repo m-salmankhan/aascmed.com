@@ -1,7 +1,7 @@
 import React from "react"
 import PropTypes from "prop-types"
 import {css} from "@emotion/react"
-import {fontBaseWeight, fontFamily} from "./styles/theme";
+import {fontWeightBase, fontFamily} from "./styles/theme";
 
 export default function HTML(props) {
   return (
@@ -15,7 +15,7 @@ export default function HTML(props) {
         />
         {props.headComponents}
       </head>
-      <body css={css({padding: 0, margin: 0, fontWeight: fontBaseWeight, "*": {boxSizing: "border-box", fontFamily: fontFamily}})} {...props.bodyAttributes}>
+      <body css={css({padding: 0, margin: 0, fontWeight: fontWeightBase, "*": {boxSizing: "border-box", fontFamily: fontFamily}})} {...props.bodyAttributes}>
         {props.preBodyComponents}
         <div
           key={`body`}
