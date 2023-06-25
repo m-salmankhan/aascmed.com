@@ -157,76 +157,66 @@ stylesStackedLogo[breakpointStrings.lg] = {
 
 
 const stylesNavigationUl = (state: NavigationMenuStates) => {
-    const stylesExpanded = css(
-        cols(12),
-        cols(9, mediaBreakpoints.lg),
-        // offsetCols(1, mediaBreakpoints.lg),
-        {
-            padding: 0,
-            margin: "0 auto",
-            textAlign: "center",
-            listStyle: "none",
-            overflow: "hidden",
-            transition: "max-height 1s ease-in-out 0s",
+    const stylesBase: CSSInterpolation = {
+        padding: 0,
+        margin: "0 auto",
+        textAlign: "center",
+        listStyle: "none",
+        overflow: "hidden",
+        transition: "max-height 1s ease-in-out 0s",
 
-            li: {
-                fontWeight: "bold",
-                display: "block",
-                letterSpacing: "0.025rem",
-                padding: `${gridSpacing/4}em 0`,
+        li: {
+            fontWeight: "bold",
+            display: "block",
+            letterSpacing: "0.025rem",
+            padding: `${gridSpacing/4}em 0`,
+        },
+
+        "a, button": {
+            color: "#fff",
+            textDecoration:" none",
+            background:" transparent",
+            border:" none",
+            verticalAlign:" middle",
+            padding: "5px 0",
+
+            "&.active, &.active:hover": {
+                borderBottom: "5px solid white",
+                color: "#fff",
+                background: "none",
             },
 
-            "a, button": {
-                color: "#fff",
-                textDecoration:" none",
-                background:" transparent",
-                border:" none",
-                verticalAlign:" middle",
-                padding: "5px 0",
-
-                "&.active, &.active:hover": {
-                    borderBottom: "5px solid white",
-                    color: "#fff",
-                    background: "none",
-                },
-
-                "&:focus, &:hover, &:active":  {
-                    color: colours.infoBlue,
-                    background: colours.infoYellow,
-                    outline: "none",
-                    border: "none",
-                    textDecoration: "none",
-                    borderBottom: `5px solid ${colours.infoBlue}`,
-                },
-            }
+            "&:focus, &:hover, &:active":  {
+                color: colours.infoBlue,
+                background: colours.infoYellow,
+                outline: "none",
+                border: "none",
+                textDecoration: "none",
+                borderBottom: `5px solid ${colours.infoBlue}`,
+            },
         }
-    );
-
-    const inlineItems = css(stylesExpanded, {
-        "li": {
+    };
+    stylesBase[breakpointStrings.md] = {
+        li: {
             display: "inline-block",
             padding: `0 ${gridSpacing/2}em`,
         }
-    });
-
-    if(typeof window !== "undefined") {
-        const isMediumScreen = matchMedia(`screen and (min-width: ${mediaBreakpoints.md}em)`).matches ;
-        const isLargeScreen = matchMedia(`screen and (min-width: ${mediaBreakpoints.lg}em)`).matches ;
-
-        if (isMediumScreen) {
-            return inlineItems;
-        }
-
-        if (isLargeScreen) {
-            return css(inlineItems, {textAlign: "right"});
-        }
     }
 
-    const stylesExpanding = css(stylesExpanded, {
+    stylesBase[breakpointStrings.lg] = {
+        textAlign: "right",
+    }
+
+    const stylesExpanded = css(
+        cols(9, mediaBreakpoints.lg),
+        stylesBase,
+    );
+
+    const stylesExpanding = css(stylesBase, {
         maxHeight: "60em",
     });
 
-    const stylesCollapsing = css(stylesExpanded, {
+    const stylesCollapsing = css(stylesBase, {
         maxHeight: "0em",
     });
 

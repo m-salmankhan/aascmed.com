@@ -1,6 +1,6 @@
 backend:
   name: git-gateway
-  repo: m-salmankhan/aascmed
+  repo: m-salmankhan/aascmed-monorepo
 
 # media_folder: static/assets
 media_folder: static/assets/uploads
