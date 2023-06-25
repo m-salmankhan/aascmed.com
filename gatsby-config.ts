@@ -14,9 +14,29 @@ const config: GatsbyConfig = {
         "gatsby-plugin-emotion",
         "gatsby-plugin-image",
         "gatsby-plugin-sitemap",
-        "gatsby-plugin-mdx",
         "gatsby-plugin-sharp",
         "gatsby-transformer-sharp",
+        {
+            resolve: `gatsby-plugin-mdx`,
+            options: {
+                gatsbyRemarkPlugins: [
+                    {
+                        resolve: `gatsby-remark-images`,
+                        options: {
+                            maxWidth: 1500,
+                        },
+                    },
+                    {
+                        resolve: `gatsby-remark-autolink-headers`,
+                        options: {
+                            elements: [`h1`, `h2`],
+                            isIconAfterHeader: false,
+                            className: `link-icon`
+                        },
+                    }
+                ],
+            },
+        },
         {
             resolve: 'gatsby-source-filesystem',
             options: {
