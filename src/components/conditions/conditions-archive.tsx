@@ -126,7 +126,7 @@ const stylesLink : CSSInterpolation = {
 
 const stylesLi = css(
     cols(12),
-    cols(6, mediaBreakpoints.sm),
+    cols(6, mediaBreakpoints.md),
     cols(4, mediaBreakpoints.lg),
     {
         marginBottom: gridSpacing/2 + "em",
