@@ -42,6 +42,7 @@ const stylesHeroContent: CSSInterpolation = {
     position: "relative",
     width: "100%",
     margin: `${gridSpacing/2}em 0`,
+    willChange: "transform",
 
     "h1, h2": {
         marginTop: "1em",
@@ -78,7 +79,7 @@ const stylesHeroBackgroundImage = css({
     zIndex: 0,
 });
 
-const stylesHeroOverlay = (opacity) => css({
+const stylesHeroOverlay = css({
     position: "absolute",
     top: 0,
     left: 0,
@@ -86,15 +87,17 @@ const stylesHeroOverlay = (opacity) => css({
     height: "100%",
     background: colours.brandGradient,
     zIndex: 0,
-    opacity: opacity,
+    opacity: 0,
+    willChange: "opacity",
 })
 
 const getParallaxValues = (height: number): ParallaxParameters => {
     const percentage = window.scrollY / height;
-
+    const backgroundOpacity = Math.min(Math.pow(percentage, 1-percentage), 1);
+    const textTranslation = (backgroundOpacity === 1) ? 100 : percentage * 30;
     return {
-        backgroundOpacity: Math.min(Math.pow(percentage, 1-percentage), 1),
-        textTranslation: percentage*30,
+        backgroundOpacity,
+        textTranslation,
     }
 }
 
@@ -134,7 +137,7 @@ export const Hero: React.FC<HeroProps> = ({heading, text, image, siteTitle, chil
             <header ref={headerRef}>
                 <GatsbyImage css={stylesHeroBackgroundImage} draggable={false} image={image} alt={""}/>
                 <Navigation css={stylesNavigation} siteTitle={siteTitle} frontPage={true} />
-                <div className="translate" css={css(stylesHeroContent, {transform: `translate3d(0, -${parallax.textTranslation}%, 0)`})}>
+                <div className="translate" css={css(stylesHeroContent)} style={{transform: `translate3d(0, -${parallax.textTranslation}%, 0)`}}>
                     <div>
                         {children}
                         <h2>{heading}</h2>
@@ -144,7 +147,7 @@ export const Hero: React.FC<HeroProps> = ({heading, text, image, siteTitle, chil
                     </div>
                 </div>
                 <div/>
-                <div css={stylesHeroOverlay(parallax.backgroundOpacity)}/>
+                <div css={stylesHeroOverlay} style={{opacity: parallax.backgroundOpacity}}/>
             </header>
         </PaddedContainer>
     );

@@ -128,7 +128,7 @@ const stylesLogoLink = css(
         svg: {
             width: "100%",
             fill: "#fff",
-            transition: `all 1s ${bounceTransition} 0s`,
+            transition: `transform 1s ${bounceTransition} 0s`,
         },
 
         "&:focus, &:active": {
