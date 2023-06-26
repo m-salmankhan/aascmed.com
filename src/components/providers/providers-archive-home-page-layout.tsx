@@ -44,10 +44,13 @@ const stylesProviderItem = css(
             textDecoration: "none",
 
             ".thumbnail": {
-                borderRadius: "50em",
                 position: "relative",
                 width: "70%",
                 margin: "0 auto",
+
+                img: {
+                    borderRadius: "50em",
+                },
 
                 ".overlay": {
                     borderRadius: "50em",

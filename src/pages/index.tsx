@@ -55,7 +55,7 @@ const IndexPage: React.FC = ({ data }: PageProps<Queries.IndexPageQuery>) => {
                 <Hero image={heroImage} heading={heroTitle} siteTitle={siteTitle} text={heroText}/>
                 <ConditionsArchive heading={conditionsTitle} text={conditionsText} frontPage={true} conditionsList={[...conditions, ...conditions, conditions[0]]} css={css({marginTop: "5em",})} />
                 <ServiceUpdateArchive serviceUpdates={serviceUpdates} frontPage={true} heading={serviceUpdatesTitle} text={serviceUpdatesText} css={css({marginTop: "4em",})} />
-                <ProvidersArchiveHomePageLayout providers={[...providers,...providers]} heading={providersTitle} text={providersText} css={css({marginTop: "4em",})} />
+                <ProvidersArchiveHomePageLayout providers={providers} heading={providersTitle} text={providersText} css={css({marginTop: "4em",})} />
                 <div css={css({height: "1000px"})}/>
             </main>
         </App>

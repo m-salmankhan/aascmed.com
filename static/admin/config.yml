@@ -101,7 +101,7 @@ collections:
       - { name: review, label: Featured Review, widget: markdown }
       - { name: body, label: Body, widget: markdown }
       - { name: description, label: Description (Displayed under google search results), widget: text }
-      - { name: order, label: Order (higher number = higher up), widget: number, required: false, default: 0 }
+      - { name: order, label: Order (Lowest = First), widget: number, value_type: int, required: false, default: 0 }
 
   - name: reviews
     label: Reviews
