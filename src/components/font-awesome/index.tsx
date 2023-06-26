@@ -1,4 +1,4 @@
-import React from "react"
+import React, {CSSProperties} from "react"
 import brands from "./brands.svg"
 import regular from "./regular.svg"
 import solid from "./solid.svg"
@@ -13,9 +13,10 @@ type FaIconProps = {
     iconStyle: IconStyles,
     icon: string,
     className?: string,
+    style?: CSSProperties,
 };
 
-export const FaIcons: React.FC<FaIconProps> = ({iconStyle, icon, className, props}) =>
+export const FaIcons: React.FC<FaIconProps> = ({iconStyle, icon, className, ...props}) =>
   <svg {...props} className={className}>
     <use href={`${iconStyle}#${icon}`}/>
   </svg>

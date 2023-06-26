@@ -1,6 +1,6 @@
 import {css} from "@emotion/react";
 import {alternativeBounceTransition, colours, gridSpacing} from "../../styles/theme";
-import React, {useEffect, useRef, useState} from "react";
+import React, {CSSProperties, useEffect, useRef, useState} from "react";
 import {FaIcons, IconStyles} from "../font-awesome";
 import Color from "color";
 import {H3, stylesH1} from "../headings";
@@ -33,14 +33,19 @@ interface StarIconProps {
     enabled: boolean
 }
 
-const stylesStarIcon = (visible: boolean) => css({
+const stylesStarIcon = css({
     fill: "#fff",
     width: "3em",
     height: "3em",
     margin: `0 ${gridSpacing/2}em`,
-    transition: `transform ${visible ? ".5s" : "0s"} ${alternativeBounceTransition} 0s`,
-    transform: `scale(${visible ? 1 : 0})`,
+    transition: `transform 0s ${alternativeBounceTransition} 0s`,
+    transform: `scale(0)`,
 });
+
+const stylesVisibleStarIcon: CSSProperties = {
+    transitionDuration: "0.5s",
+    transform: "scale(1)",
+}
 
 const StarIcon: React.FC<StarIconProps> = ({style, order, enabled}) => {
     const [visible, setVisible] = useState(false);
@@ -64,11 +69,11 @@ const StarIcon: React.FC<StarIconProps> = ({style, order, enabled}) => {
 
     switch (style) {
         case StarStyles.WHOLE:
-            return <FaIcons iconStyle={IconStyles.SOLID} icon="star" css={stylesStarIcon(visible)}/>
+            return <FaIcons iconStyle={IconStyles.SOLID} icon="star" css={stylesStarIcon} style={visible ? stylesVisibleStarIcon : {}}/>
         case StarStyles.HALF:
-            return <FaIcons iconStyle={IconStyles.SOLID} icon="star-half-alt" css={stylesStarIcon(visible)}/>
+            return <FaIcons iconStyle={IconStyles.SOLID} icon="star-half-alt" css={stylesStarIcon}  style={visible ? stylesVisibleStarIcon : {}}/>
         case StarStyles.EMPTY:
-            return <FaIcons iconStyle={IconStyles.REGULAR} icon="star" css={stylesStarIcon(visible)}/>
+            return <FaIcons iconStyle={IconStyles.REGULAR} icon="star" css={stylesStarIcon} style={visible ? stylesVisibleStarIcon : {}} />
     }
 }
 

@@ -47,6 +47,8 @@ const stylesProviderItem = css(
                 position: "relative",
                 width: "70%",
                 margin: "0 auto",
+                borderRadius: "50em",
+                overflow: "hidden",
 
                 img: {
                     borderRadius: "50em",
