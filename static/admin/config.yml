@@ -2,7 +2,6 @@ backend:
   name: git-gateway
   repo: m-salmankhan/aascmed-monorepo
 
-# media_folder: static/assets
 media_folder: static/assets/uploads
 public_folder: /assets/uploads
 
@@ -70,8 +69,6 @@ collections:
     format: frontmatter
     extension: mdx
     create: true
-    media_folder: ''
-    public_folder: ''
     editor:
       preview: false
     fields:
@@ -112,8 +109,6 @@ collections:
     format: frontmatter
     extension: mdx
     create: true
-    media_folder: ''
-    public_folder: ''
     editor:
       preview: false
     fields:
@@ -137,7 +132,6 @@ collections:
     public_folder: ''
     editor:
       preview: false
-
     fields:
       - { name: title, label: Title }
       - name: "opening"

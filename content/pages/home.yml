@@ -13,5 +13,8 @@ conditions:
     asthma and sinus related conditions. To view more details about a specific
     condition, please click on the image.
 service-updates:
-  heading: Service Updates
+  heading: Service updates
+  text: >
+providers:
+  heading: Meet the team
   text: >
