@@ -133,7 +133,7 @@ export const query = graphql`
     }
     providers: allMdx(
       filter: {fields: {post_type: {eq: "providers"}}}
-      sort: {frontmatter: {order: DESC}}
+      sort: {frontmatter: {order: ASC}}
     ) {
       edges {
         node {
