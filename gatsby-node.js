@@ -131,5 +131,16 @@ exports.createPages = async ({graphql, actions, reporter}) => {
             }
         });
     });
+
+    serviceUpdates.forEach((node) => {
+        createPage({
+            path: node.fields.slug,
+            component: `${path.resolve(`./src/templates/service-update.tsx`)}?__contentFilePath=${node.internal.contentFilePath}`,
+            context: {
+                id: node.id,
+                template: 'service-update',
+            }
+        });
+    });
 }
 

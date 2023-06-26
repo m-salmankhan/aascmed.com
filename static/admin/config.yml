@@ -38,6 +38,8 @@ collections:
     media_folder: ''
     public_folder: ''
     format: frontmatter
+    editor:
+      preview: false
     extension: mdx
     create: true
     fields:
@@ -52,7 +54,11 @@ collections:
     format: frontmatter
     extension: mdx
     create: true
+    media_folder: ''
+    public_folder: ''
     fields:
+      - editor:
+          - preview: false
       - { name: title, label: Title, }
       - { name: date, label: Date, widget: datetime }
       - { name: description, label: Description, widget: text }
@@ -64,7 +70,11 @@ collections:
     format: frontmatter
     extension: mdx
     create: true
+    media_folder: ''
+    public_folder: ''
     fields:
+      - editor:
+          - preview: false
       - { name: title, label: Title }
       - name: "name"
         label: "Name"
@@ -86,7 +96,11 @@ collections:
     format: frontmatter
     extension: mdx
     create: true
+    media_folder: ''
+    public_folder: ''
     fields:
+      - editor:
+          - preview: false
       - { name: title, label: Title }
       - name: "source"
         label: "Review Source"
@@ -107,7 +121,11 @@ collections:
       - { name: title, label: Title }
       - name: "opening"
         label: "Opening Times"
+        media_folder: ''
+        public_folder: ''
         widget: "list"
+        editor:
+          preview: false
         fields:
           - { name: day, label: Day, widget: string }
           - { name: hours, label: Hours, widget: string }
@@ -125,4 +143,4 @@ collections:
       - { name: lon, label: Longitude, widget: number, valueType: float, step: 0.0001 }
       - { name: lat, label: Latitude, widget: number, valueType: float, step: 0.0001 }
       - { name: placeId, label: Google Maps Place ID, widget: string, isRequired: false }
-      # - { name: body, label: Body, widget: markdown }
+      - { name: body, label: Body, widget: markdown }

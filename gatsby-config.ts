@@ -12,10 +12,10 @@ const config: GatsbyConfig = {
     plugins: [
         "gatsby-plugin-static-cms",
         "gatsby-plugin-emotion",
-        "gatsby-plugin-image",
         "gatsby-plugin-sitemap",
         "gatsby-plugin-sharp",
         "gatsby-transformer-sharp",
+        "gatsby-plugin-image",
         `gatsby-transformer-yaml`,
         {
             resolve: 'gatsby-source-filesystem',

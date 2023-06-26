@@ -12,10 +12,10 @@ export enum IconStyles {
 type FaIconProps = {
     iconStyle: IconStyles,
     icon: string,
-    className: string,
+    className?: string,
 };
 
-export const FaIcons: React.FC<FaIconProps> = ({iconStyle, icon, props}) =>
-  <svg {...props}>
+export const FaIcons: React.FC<FaIconProps> = ({iconStyle, icon, className, props}) =>
+  <svg {...props} className={className}>
     <use href={`${iconStyle}#${icon}`}/>
   </svg>

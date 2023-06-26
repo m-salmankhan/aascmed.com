@@ -25,7 +25,7 @@ stylesContainer[breakpointStrings.xl] = {
 }
 
 // Centered div of container width
-export const Container: React.FC<HTMLDivElement> = ({children, className}) =>
+export const Container: React.FC<{children: any, className?: string}> = ({children, className}) =>
     <div css={stylesContainer} className={className}>
         {children}
     </div>

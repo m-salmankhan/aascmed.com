@@ -2,12 +2,10 @@ import React from "react";
 import {graphql, PageProps} from "gatsby";
 import {Hero} from "../components/header";
 import {css} from "@emotion/react";
-import {H2, stylesH1} from "../components/headings";
-import {Container} from "../components/containers";
-import {ConditionsIndex} from "../components/conditions/conditions-index";
+import {ConditionsIndex, ConditionSummary} from "../components/conditions/conditions-index";
 
 const IndexPage: React.FC = ({ data }: PageProps<Queries.IndexPageQuery>) => {
-    const image = data.heroImage.edges[0].node.childImageSharp.gatsbyImageData;
+    const heroImage = data.heroImage.edges[0].node.childImageSharp.gatsbyImageData;
     const siteTitle = data.siteTitle.siteMetadata.title;
 
     const hero = data.sectionCopy.childPagesYaml.hero;
@@ -15,12 +13,19 @@ const IndexPage: React.FC = ({ data }: PageProps<Queries.IndexPageQuery>) => {
 
     const heroTitle = hero.heading || siteTitle;
     const heroText = hero.text || "";
+
     const conditionsTitle = conditions.heading || "Learn more about the conditions we treat."
     const conditionsText = conditions.text || "";
+    const conditionsList: ConditionSummary[] = data.conditions.edges.map(edge => ({
+        slug: edge.node.fields.slug,
+        title: edge.node.frontmatter.title,
+        thumbnail: edge.node.frontmatter.thumbnail.childImageSharp.gatsbyImageData,
+    }));
+
     return (
         <main>
-            <Hero image={image} heading={heroTitle} siteTitle={siteTitle} text={heroText}/>
-            <ConditionsIndex heading={conditionsTitle} text={conditionsText} frontPage={true} css={css({marginTop: "4em",})} />
+            <Hero image={heroImage} heading={heroTitle} siteTitle={siteTitle} text={heroText}/>
+            <ConditionsIndex heading={conditionsTitle} text={conditionsText} frontPage={true} conditionsList={[...conditionsList, ...conditionsList, ...conditionsList, ...conditionsList]} css={css({marginTop: "4em",})} />
             <div css={css({height: "1000px"})}/>
         </main>
     );
@@ -43,18 +48,35 @@ export const query = graphql`
       }
     }
     heroImage: allFile(filter: {relativePath: {eq: "hero-bg.png"}}) {
-        edges {
-          node {
-            childImageSharp {
-              gatsbyImageData(layout: FULL_WIDTH)
-            }
+      edges {
+        node {
+          childImageSharp {
+            gatsbyImageData(layout: FULL_WIDTH)
           }
         }
       }
-        siteTitle: site(siteMetadata: {}) {
-            siteMetadata {
-              title
+    }
+    siteTitle: site(siteMetadata: {}) {
+      siteMetadata {
+        title
+      }
+    }
+    conditions: allMdx(filter: {fields: {post_type: {eq: "conditions"}}}) {
+      edges {
+        node {
+          fields {
+            slug
+          }
+          frontmatter {
+            thumbnail {
+              childImageSharp {
+                gatsbyImageData(width: 600)
+              }
             }
+            title
+          }
         }
       }
+    }
+  }
 `
