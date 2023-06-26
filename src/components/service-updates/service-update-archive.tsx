@@ -37,7 +37,7 @@ const stylesLi = css(
     cols(6, mediaBreakpoints.md),
     cols(4, mediaBreakpoints.lg),
     {
-        margin: 0,
+        margin: "0 0 1em",
 
         header: {
             a: {
