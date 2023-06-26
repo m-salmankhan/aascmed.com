@@ -1,15 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from "react";
 import {stylesScreenReaderText} from "../../styles/accessibility";
 import {AverageRating} from "./star-rating";
-
-export interface Review {
-    body: string,
-    stars: number,
-    source: {
-        url: string,
-        name: string,
-    }
-}
+import {ReviewsSection} from "./reviews";
 
 interface PatientFeedbackProps {
     className?: string

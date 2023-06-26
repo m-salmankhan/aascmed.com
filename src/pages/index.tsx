@@ -9,6 +9,7 @@ import {ServiceUpdateSummary} from "../components/service-updates/service-update
 import {App} from "../components/layouts/app";
 import {ProviderSummary, ProvidersArchiveHomePageLayout} from "../components/providers";
 import {PatientFeedback} from "../components/patient-feedback";
+import {Review} from "../components/patient-feedback/reviews";
 
 const IndexPage: React.FC = ({ data }: PageProps<Queries.IndexPageQuery>) => {
     const heroImage = data.heroImage.edges[0].node.childImageSharp.gatsbyImageData;
@@ -48,6 +49,12 @@ const IndexPage: React.FC = ({ data }: PageProps<Queries.IndexPageQuery>) => {
             degreeAbbr: edge.node.frontmatter.name.degree_abbr,
         },
         image: edge.node.frontmatter.image.childImageSharp.gatsbyImageData,
+    }));
+
+    const reviews: Review[] = data.reviews.edges.map(edge => ({
+        stars: edge.node.frontmatter.stars,
+        body: edge.node.body,
+        source: edge.node.frontmatter.source,
     }));
 
     return (
