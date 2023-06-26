@@ -47,6 +47,15 @@ collections:
               - { name: heading, label: Heading, widget: text }
               - { name: text, label: Text, widget: markdown, required: false}
 
+          - name: patient-feedback
+            label: Patient Feedback Section
+            widget: object
+            fields:
+              - { name: rating, label: Rating, widget: number, value_type: float }
+              - { name: source-url, label: Source URL, widget: text}
+              - { name: source-name, label: Source Name, widget: text}
+              - { name: access-date, label: Access Date (Month, Year), widget: text}
+
   - name: conditions
     label: Conditions
     folder: content/conditions
