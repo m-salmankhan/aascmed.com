@@ -13,6 +13,8 @@ media_library:
 collections:
   - name: pages
     label: Pages
+    editor:
+      preview: false
     files:
       - label: "Home Page"
         name: home
@@ -45,9 +47,8 @@ collections:
     media_folder: ''
     public_folder: ''
     editor:
-      preview: falseformat: frontmatter
-    editor:
       preview: false
+    format: frontmatter
     extension: mdx
     create: true
     fields:
