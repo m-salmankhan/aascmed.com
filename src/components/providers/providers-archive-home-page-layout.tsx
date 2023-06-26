@@ -36,8 +36,8 @@ const stylesProviders = css(
 );
 const stylesProviderItem = css(
     cols(12),
-    cols(6, mediaBreakpoints.sm),
-    cols(3, mediaBreakpoints.md),
+    cols(6, mediaBreakpoints.md),
+    cols(3, mediaBreakpoints.lg),
     {
         a: {
             color: colours.brandPrimary,
