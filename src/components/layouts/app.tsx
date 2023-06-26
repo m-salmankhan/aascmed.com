@@ -15,7 +15,7 @@ const stylesApplication = css({
 
 export const App = ({children}) => {
     useEffect(() => {
-        if(typeof window.netlifyIdentity !== "undefined") {
+        if(typeof window.netlifyIdentity !== 'undefined') {
             window.netlifyIdentity.on('init', user => {
                 if (!user) {
                     window.netlifyIdentity.on('login', () => {

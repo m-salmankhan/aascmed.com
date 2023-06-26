@@ -41,6 +41,13 @@ collections:
               - { name: heading, label: Heading, widget: text }
               - { name: text, label: Text, widget: markdown, required: false}
 
+          - name: providers
+            label: Providers Section
+            widget: object
+            fields:
+              - { name: heading, label: Heading, widget: text }
+              - { name: text, label: Text, widget: markdown, required: false}
+
   - name: conditions
     label: Conditions
     folder: content/conditions
@@ -126,16 +133,16 @@ collections:
     format: frontmatter
     extension: mdx
     create: true
+    media_folder: ''
+    public_folder: ''
+    editor:
+      preview: false
+
     fields:
       - { name: title, label: Title }
       - name: "opening"
         label: "Opening Times"
-        media_folder: ''
-        public_folder: ''
-    editor:
-      preview: falsewidget: "list"
-        editor:
-          preview: false
+        widget: "list"
         fields:
           - { name: day, label: Day, widget: string }
           - { name: hours, label: Hours, widget: string }
