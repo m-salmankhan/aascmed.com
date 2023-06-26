@@ -39,6 +39,7 @@ const stylesProviderItem = css(
     cols(6, mediaBreakpoints.md),
     cols(3, mediaBreakpoints.lg),
     {
+        marginBottom: `${gridSpacing}em`,
         a: {
             color: colours.brandPrimary,
             textDecoration: "none",
