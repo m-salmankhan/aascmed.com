@@ -130,12 +130,6 @@ const stylesLi = css(
     cols(4, mediaBreakpoints.lg),
     {
         marginBottom: gridSpacing/2 + "em",
-        "&:nth-of-type(3n+1)": {
-            paddingLeft: 0,
-        },
-        "&:nth-of-type(3n)": {
-            paddingRight: 0,
-        },
     }
 );
 
@@ -174,12 +168,6 @@ export const ConditionList: React.FC<ConditionListProps> = ({className, conditio
 const stylesConditionsTextWrapper = css(
     cols(12),
     cols(8, mediaBreakpoints.md),
-    {
-        "@media screen and (min-width: 0)": {
-            paddingLeft: 0,
-            paddingRight: 0,
-        }
-    }
 );
 
 const stylesConditionsHeading = css(
@@ -187,20 +175,21 @@ const stylesConditionsHeading = css(
     cols(9, mediaBreakpoints.lg),
     {
         padding: 0,
+        fontSize: "2.5rem",
         "@media screen": {
             padding: 0,
         }
     }
 );
 
-export const ConditionsIndex: React.FC<ConditionsIndexProps> = ({className, text, heading, frontPage, conditionsList = false}) => {
+export const ConditionsArchive: React.FC<ConditionsIndexProps> = ({className, text, heading, frontPage, conditionsList = false}) => {
     return (
         <section className={className}>
             <Container>
                 <div css={stylesConditionsTextWrapper}>
                     {
                         frontPage ?
-                            <H2 css={css(stylesH1, stylesConditionsHeading)}>{heading}</H2> :
+                            <H2 css={stylesConditionsHeading}>{heading}</H2> :
                             <H1 css={stylesConditionsHeading}>{heading}</H1>
                     }
                     <ReactMarkdown>

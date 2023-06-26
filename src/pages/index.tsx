@@ -2,7 +2,11 @@ import React from "react";
 import {graphql, PageProps} from "gatsby";
 import {Hero} from "../components/header";
 import {css} from "@emotion/react";
-import {ConditionsIndex, ConditionSummary} from "../components/conditions/conditions-index";
+import {ConditionsArchive} from "../components/conditions/";
+import {ConditionSummary} from "../components/conditions/conditions-archive";
+import {ServiceUpdateArchive} from "../components/service-updates";
+import {ServiceUpdateSummary} from "../components/service-updates/service-update-archive";
+import {App} from "../components/layouts/app";
 
 const IndexPage: React.FC = ({ data }: PageProps<Queries.IndexPageQuery>) => {
     const heroImage = data.heroImage.edges[0].node.childImageSharp.gatsbyImageData;
@@ -10,6 +14,7 @@ const IndexPage: React.FC = ({ data }: PageProps<Queries.IndexPageQuery>) => {
 
     const hero = data.sectionCopy.childPagesYaml.hero;
     const conditions = data.sectionCopy.childPagesYaml.conditions;
+    const serviceUpdates = data.sectionCopy.childPagesYaml.service_updates;
 
     const heroTitle = hero.heading || siteTitle;
     const heroText = hero.text || "";
@@ -22,12 +27,24 @@ const IndexPage: React.FC = ({ data }: PageProps<Queries.IndexPageQuery>) => {
         thumbnail: edge.node.frontmatter.thumbnail.childImageSharp.gatsbyImageData,
     }));
 
+    const serviceUpdatesTitle = serviceUpdates.heading || "Service Updates"
+    const serviceUpdatesText = serviceUpdates.text || "";
+    const serviceUpdatesList: ServiceUpdateSummary[] = data.serviceUpdates.edges.map(edge => ({
+        slug: edge.node.fields.slug,
+        title: edge.node.frontmatter.title,
+        date: edge.node.frontmatter.date,
+        description: edge.node.frontmatter.description,
+    }));
+
     return (
-        <main>
-            <Hero image={heroImage} heading={heroTitle} siteTitle={siteTitle} text={heroText}/>
-            <ConditionsIndex heading={conditionsTitle} text={conditionsText} frontPage={true} conditionsList={[...conditionsList, ...conditionsList, ...conditionsList, ...conditionsList]} css={css({marginTop: "4em",})} />
-            <div css={css({height: "1000px"})}/>
-        </main>
+        <App>
+            <main>
+                <Hero image={heroImage} heading={heroTitle} siteTitle={siteTitle} text={heroText}/>
+                <ConditionsArchive heading={conditionsTitle} text={conditionsText} frontPage={true} conditionsList={[...conditionsList, ...conditionsList, conditionsList[0]]} css={css({marginTop: "5em",})} />
+                <ServiceUpdateArchive serviceUpdates={serviceUpdatesList} frontPage={true} heading={serviceUpdatesTitle} text={serviceUpdatesText} css={css({marginTop: "5em",})} />
+                <div css={css({height: "1000px"})}/>
+            </main>
+        </App>
     );
 }
 
@@ -42,6 +59,10 @@ export const query = graphql`
           text
         }
         hero {
+          heading
+          text
+        }
+        service_updates {
           heading
           text
         }
@@ -70,10 +91,24 @@ export const query = graphql`
           frontmatter {
             thumbnail {
               childImageSharp {
-                gatsbyImageData(width: 600)
+                gatsbyImageData(width: 800)
               }
             }
             title
+          }
+        }
+      }
+    }
+    serviceUpdates: allMdx(filter: {fields: {post_type: {eq: "service-update"}}}) {
+      edges {
+        node {
+          fields {
+            slug
+          }
+          frontmatter {
+            date(formatString: "Do MMMM YYYY")
+            title
+            description
           }
         }
       }

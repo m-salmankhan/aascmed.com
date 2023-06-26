@@ -32,12 +32,20 @@ collections:
               - { name: heading, label: Heading, widget: text }
               - { name: text, label: Text, widget: markdown }
 
+          - name: service-updates
+            label: Service Updates
+            widget: object
+            fields:
+              - { name: heading, label: Heading, widget: text }
+              - { name: text, label: Text, widget: markdown, required: false}
+
   - name: conditions
     label: Conditions
     folder: content/conditions
     media_folder: ''
     public_folder: ''
-    format: frontmatter
+    editor:
+      preview: falseformat: frontmatter
     editor:
       preview: false
     extension: mdx
@@ -56,9 +64,9 @@ collections:
     create: true
     media_folder: ''
     public_folder: ''
+    editor:
+      preview: false
     fields:
-      - editor:
-          - preview: false
       - { name: title, label: Title, }
       - { name: date, label: Date, widget: datetime }
       - { name: description, label: Description, widget: text }
@@ -72,9 +80,9 @@ collections:
     create: true
     media_folder: ''
     public_folder: ''
+    editor:
+      preview: false
     fields:
-      - editor:
-          - preview: false
       - { name: title, label: Title }
       - name: "name"
         label: "Name"
@@ -98,9 +106,9 @@ collections:
     create: true
     media_folder: ''
     public_folder: ''
+    editor:
+      preview: false
     fields:
-      - editor:
-          - preview: false
       - { name: title, label: Title }
       - name: "source"
         label: "Review Source"
@@ -123,7 +131,8 @@ collections:
         label: "Opening Times"
         media_folder: ''
         public_folder: ''
-        widget: "list"
+    editor:
+      preview: falsewidget: "list"
         editor:
           preview: false
         fields:

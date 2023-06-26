@@ -7,7 +7,7 @@ import {FaIcons, IconStyles} from "../font-awesome";
 import {bounceTransition, colours, gridSpacing} from "../../styles/theme";
 import {CSSInterpolation} from "@emotion/serialize";
 import {breakpointStrings, mediaBreakpoints} from "../../styles/breakpoints";
-import {cols, gridContainer, offsetCols} from "../../styles/grid";
+import {cols, gridContainer} from "../../styles/grid";
 
 const stylesActiveNavElement = css({
     ", &:hover": {
@@ -135,6 +135,10 @@ const stylesLogoLink = css(
             svg: {
                 transform: "scale(0.8)"
             },
+        },
+
+        "@media screen and (min-width: 0)": {
+            paddingLeft: 0,
         }
     }
 );
@@ -205,6 +209,7 @@ const stylesNavigationUl = (state: NavigationMenuStates) => {
 
     stylesBase[breakpointStrings.lg] = {
         textAlign: "right",
+        paddingRight: 0,
     }
 
     const stylesExpanded = css(
@@ -220,14 +225,17 @@ const stylesNavigationUl = (state: NavigationMenuStates) => {
         maxHeight: "0em",
     });
 
-    const stylesCollapsed = css(stylesCollapsing, {
+    const stylesCollapsed: CSSInterpolation = {
         display: "none",
-    });
-
+    };
+    stylesCollapsed[breakpointStrings.md] = {
+        display: "block",
+        maxHeight: "initial",
+    }
 
     switch (state) {
         case NavigationMenuStates.COLLAPSED:
-            return stylesCollapsed;
+            return css(stylesCollapsing, stylesCollapsed);
         case NavigationMenuStates.COLLAPSING:
             return stylesCollapsing;
         case NavigationMenuStates.EXPANDED:
