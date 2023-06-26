@@ -8,6 +8,7 @@ import {ServiceUpdateArchive} from "../components/service-updates";
 import {ServiceUpdateSummary} from "../components/service-updates/service-update-archive";
 import {App} from "../components/layouts/app";
 import {ProviderSummary, ProvidersArchiveHomePageLayout} from "../components/providers";
+import {PatientFeedback} from "../components/patient-feedback";
 
 const IndexPage: React.FC = ({ data }: PageProps<Queries.IndexPageQuery>) => {
     const heroImage = data.heroImage.edges[0].node.childImageSharp.gatsbyImageData;
@@ -56,6 +57,7 @@ const IndexPage: React.FC = ({ data }: PageProps<Queries.IndexPageQuery>) => {
                 <ConditionsArchive heading={conditionsTitle} text={conditionsText} frontPage={true} conditionsList={[...conditions, ...conditions, conditions[0]]} css={css({marginTop: "5em",})} />
                 <ServiceUpdateArchive serviceUpdates={serviceUpdates} frontPage={true} heading={serviceUpdatesTitle} text={serviceUpdatesText} css={css({marginTop: "4em",})} />
                 <ProvidersArchiveHomePageLayout providers={providers} heading={providersTitle} text={providersText} css={css({marginTop: "4em",})} />
+                <PatientFeedback css={css({marginTop: "5em",})} />
                 <div css={css({height: "1000px"})}/>
             </main>
         </App>
@@ -155,5 +157,20 @@ export const query = graphql`
         }
       }
     }
+    reviews: allMdx(filter: {fields: {post_type: {eq: "review"}}}) {
+      edges {
+        node {
+          frontmatter {
+            stars
+            source {
+              name
+              url
+            }
+          }
+          body
+        }
+      }
+    }
   }
 `
+

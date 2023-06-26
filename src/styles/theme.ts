@@ -20,7 +20,7 @@ export const defaultTotalColumnCount = 12;
 export const fontFamily = "Poppins, sans-serif";
 export const fontWeightBase = 300;
 export const fontWeightHeadings = 800;
-export const fontBaseSize = "17px";
+export const fontBaseSize = "16px";
 
 /*
 ===== Colours ====
@@ -52,3 +52,4 @@ colours["brandGradientReverse"] = `linear-gradient(to left, ${colours.brandPrima
 ===== Transitions ====
 */
 export const bounceTransition = "cubic-bezier(1, -1.28, 0.25, 1.95)";
+export const alternativeBounceTransition = "cubic-bezier(0.32, -0.04, 0, 1.71)";

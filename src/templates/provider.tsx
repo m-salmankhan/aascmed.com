@@ -27,6 +27,7 @@ export const query = graphql`
         name {
           fullname
           title
+          degree
           degree_abbr
         }
       }

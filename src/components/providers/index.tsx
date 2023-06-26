@@ -7,7 +7,8 @@ export interface ProviderSummary {
     name: {
         fullName: string
         title?: string
-        degreeAbbr: string
+        degreeAbbr?: string
+        degree?: string
     }
 }
 export {
