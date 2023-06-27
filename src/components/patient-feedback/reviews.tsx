@@ -129,9 +129,11 @@ const SliderReview: React.FC<SliderReviewProps> = ({className, review, number}) 
                     }
                 </div>
             </header>
-            <div css={stylesReviewBody}>
-                {review.body}
-            </div>
+            <Mark css={stylesReviewBody}>
+                <ReactMarkdown>
+                    {review.body}
+                </ReactMarkdown>
+            </Mark>
         </article>
     )
 }
