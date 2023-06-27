@@ -105,7 +105,7 @@ const SliderReview: React.FC<SliderReviewProps> = ({className, review, number}) 
 
     const availableStars = 5;
     const numWholeStars = Math.floor(review.stars);
-    const numHalfStars = (review.stars - numWholeStars) > 0 ? 1 : 0;
+    const numHalfStars = (review.stars - numWholeStars) > 0.25 ? 1 : 0;
     const numEmptyStars = availableStars - numWholeStars - numHalfStars;
     const stars = [
         ...(Array(numWholeStars).fill(StarStyles.WHOLE)),
@@ -121,11 +121,13 @@ const SliderReview: React.FC<SliderReviewProps> = ({className, review, number}) 
                 </div>
 
                 <H3 css={stylesH5}>({review.reviewerName}, <a href={review.source.url}>{review.source.name}</a>)</H3>
-                {
-                    stars.map((style, idx) =>
-                        <StarIcon css={{width: "1em", margin: "0 0.5em"}} style={style} order={idx} enabled={currentSlide===number} />
-                    )
-                }
+                <div title={`${review.stars} stars out of ${availableStars} `}>
+                    {
+                        stars.map((style, idx) =>
+                            <StarIcon css={{width: "1em", margin: "0 0.5em"}} style={style} order={idx} enabled={currentSlide===number} />
+                        )
+                    }
+                </div>
             </header>
             <div css={stylesReviewBody}>
                 {review.body}
