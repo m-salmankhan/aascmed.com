@@ -127,20 +127,18 @@ export const ServiceUpdateArchive: React.FC<ServiceUpdateArchiveProps> =
         }
         return (
             <section className={className}>
-                <Container>
-                    <div css={stylesTextWrapper}>
-                        {
-                            frontPage ?
-                                <H2 css={css(stylesH1, stylesHeading)}>{heading}</H2> :
-                                <H1 css={stylesHeading}>{heading}</H1>
-                        }
-                        <ReactMarkdown>
-                            {text}
-                        </ReactMarkdown>
-                    </div>
-                    <ServiceUpdateList serviceUpdates={serviceUpdates} frontPage={frontPage}/>
-                    <Link to={"/service-updates/"} css={css(cols(12), {color: "inherit"})}>(View All)</Link>
-                </Container>
+                <div css={stylesTextWrapper}>
+                    {
+                        frontPage ?
+                            <H2 css={css(stylesH1, stylesHeading)}>{heading}</H2> :
+                            <H1 css={stylesHeading}>{heading}</H1>
+                    }
+                    <ReactMarkdown>
+                        {text}
+                    </ReactMarkdown>
+                </div>
+                <ServiceUpdateList serviceUpdates={serviceUpdates} frontPage={frontPage}/>
+                <Link to={"/service-updates/"} css={css(cols(12), {color: "inherit"})}>(View All)</Link>
             </section>
         );
 }

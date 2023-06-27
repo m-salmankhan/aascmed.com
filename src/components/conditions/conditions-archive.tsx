@@ -190,19 +190,17 @@ const stylesConditionsHeading = css(
 export const ConditionsArchive: React.FC<ConditionsArchiveProps> = ({className, text, heading, frontPage, conditionsList = false, showViewAll = true}) => {
     return (
         <section className={className}>
-            <Container>
-                <div css={stylesConditionsTextWrapper}>
-                    {
-                        frontPage ?
-                            <H2 css={stylesConditionsHeading}>{heading}</H2> :
-                            <H1 css={stylesConditionsHeading}>{heading}</H1>
-                    }
-                    <ReactMarkdown>
-                        {text}
-                    </ReactMarkdown>
-                </div>
-                <ConditionList conditions={conditionsList} showViewAll={showViewAll} />
-            </Container>
+            <div css={stylesConditionsTextWrapper}>
+                {
+                    frontPage ?
+                        <H2 css={stylesConditionsHeading}>{heading}</H2> :
+                        <H1 css={stylesConditionsHeading}>{heading}</H1>
+                }
+                <ReactMarkdown>
+                    {text}
+                </ReactMarkdown>
+            </div>
+            <ConditionList conditions={conditionsList} showViewAll={showViewAll} />
         </section>
     );
 }

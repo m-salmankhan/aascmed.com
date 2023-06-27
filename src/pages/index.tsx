@@ -10,6 +10,7 @@ import {App} from "../components/layouts/app";
 import {ProviderSummary, ProvidersArchiveHomePageLayout} from "../components/providers";
 import {PatientFeedback} from "../components/patient-feedback";
 import {Review} from "../components/patient-feedback/reviews";
+import {Container} from "../components/containers";
 
 const IndexPage: React.FC = ({ data }: PageProps<Queries.IndexPageQuery>) => {
     const heroImage = data.heroImage.edges[0].node.childImageSharp.gatsbyImageData;
@@ -71,9 +72,11 @@ const IndexPage: React.FC = ({ data }: PageProps<Queries.IndexPageQuery>) => {
         <App>
             <main>
                 <Hero image={heroImage} heading={heroTitle} siteTitle={siteTitle} text={heroText}/>
-                <ConditionsArchive heading={conditionsTitle} text={conditionsText} frontPage={true} conditionsList={[...conditions, ...conditions, conditions[0]]} css={css({marginTop: "5em",})} />
-                <ServiceUpdateArchive serviceUpdates={serviceUpdates} frontPage={true} heading={serviceUpdatesTitle} text={serviceUpdatesText} css={css({marginTop: "4em",})} />
-                <ProvidersArchiveHomePageLayout providers={providers} heading={providersTitle} text={providersText} css={css({marginTop: "4em",})} />
+                <Container>
+                    <ConditionsArchive heading={conditionsTitle} text={conditionsText} frontPage={true} conditionsList={[...conditions, ...conditions, conditions[0]]} css={css({marginTop: "5em",})} />
+                    <ServiceUpdateArchive serviceUpdates={serviceUpdates} frontPage={true} heading={serviceUpdatesTitle} text={serviceUpdatesText} css={css({marginTop: "4em",})} />
+                    <ProvidersArchiveHomePageLayout providers={providers} heading={providersTitle} text={providersText} css={css({marginTop: "4em",})} />
+                </Container>
                 <PatientFeedback css={css({marginTop: "5em",})} averageRating={avgRating} reviews={reviews} />
                 <div css={css({height: "1000px"})}/>
             </main>

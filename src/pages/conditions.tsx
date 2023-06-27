@@ -4,8 +4,11 @@ import {Layout} from "../components/layouts/default";
 import {ConditionsArchive} from "../components/conditions";
 import {css} from "@emotion/react";
 import {ConditionSummary} from "../components/conditions/conditions-archive";
+import {Breadcrumbs} from "../components/breadcrumbs";
+import {Container} from "../components/containers";
+import {gridSpacing} from "../styles/theme";
 
-const Page = ({ data }: PageProps<Queries.ConditionsArchiveQuery>) => {
+const ConditionsPage = ({ data }: PageProps<Queries.ConditionsArchiveQuery>) => {
     const heading = data.copy.childPagesYaml.heading;
     const text = data.copy.childPagesYaml.text;
 
@@ -18,14 +21,20 @@ const Page = ({ data }: PageProps<Queries.ConditionsArchiveQuery>) => {
     return (
         <Layout>
             <main>
-                <ConditionsArchive
-                    heading={heading}
-                    text={text}
-                    frontPage={false}
-                    showViewAll={false}
-                    conditionsList={conditions}
-                    css={css({marginTop: "5em",})}
-                />
+                <Container>
+                    <Breadcrumbs path={[
+                        ["'", "Home"],
+                        ["/conditions/", "Conditions"]
+                    ]} css={css({marginTop: "3em"})} />
+                    <ConditionsArchive
+                        heading={heading}
+                        text={text}
+                        frontPage={false}
+                        showViewAll={false}
+                        conditionsList={conditions}
+                        css={{margin: `2em -${gridSpacing/2}`}}
+                    />
+                </Container>
 
             </main>
         </Layout>
@@ -61,4 +70,4 @@ export const query = graphql`
   }
 `
 
-export default Page
+export default ConditionsPage

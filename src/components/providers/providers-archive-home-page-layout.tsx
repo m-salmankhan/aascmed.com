@@ -166,15 +166,13 @@ export const ProvidersArchiveHomePageLayout: React.FC<ProvidersArchiveProps> =
         }
         return (
             <section className={className}>
-                <Container>
-                    <div css={stylesTextWrapper}>
-                        <H2 css={css(stylesH1, stylesHeading)}>{heading}</H2>
-                        <ReactMarkdown>
-                            {text}
-                        </ReactMarkdown>
-                    </div>
-                    <Providers providers={providers} />
-                </Container>
+                <div css={stylesTextWrapper}>
+                    <H2 css={css(stylesH1, stylesHeading)}>{heading}</H2>
+                    <ReactMarkdown>
+                        {text}
+                    </ReactMarkdown>
+                </div>
+                <Providers providers={providers} />
             </section>
         );
     }
