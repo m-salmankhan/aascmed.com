@@ -12,7 +12,7 @@ export enum IconStyles {
 type FaIconProps = {
     iconStyle: IconStyles,
     icon: string,
-    className?: string,
+    className: string | undefined,
     style?: CSSProperties,
 };
 

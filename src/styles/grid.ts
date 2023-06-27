@@ -32,7 +32,7 @@ const colsWidth = (columnSpan: number, totalColumnCount: number = defaultTotalCo
 export const cols = (colspan: number, breakpoint: number = 0, totalColumnCount: number = defaultTotalColumnCount) => {
     const breakpointStyles = {}
     breakpointStyles[`@media screen and (min-width: ${breakpoint}em)`] = {
-        width: colsWidth(colspan),
+        width: colsWidth(colspan, totalColumnCount),
         paddingLeft: `${gridSpacing/2}em`,
         paddingRight: `${gridSpacing/2}em`,
     };

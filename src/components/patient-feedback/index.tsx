@@ -1,12 +1,22 @@
 import React, {useEffect, useMemo, useRef, useState} from "react";
 import {stylesScreenReaderText} from "../../styles/accessibility";
 import {AverageRating} from "./star-rating";
-import {ReviewsSection} from "./reviews";
+import {Review, ReviewsSection} from "./reviews";
 
 interface PatientFeedbackProps {
     className?: string
+    averageRating: {
+        rating: number
+        source: {
+            name: string
+            url: string
+        }
+        date: string
+    }
+    reviews: Review[]
 }
-export const PatientFeedback: React.FC<PatientFeedbackProps> = ({className}) => {
+
+export const PatientFeedback: React.FC<PatientFeedbackProps> = ({className, averageRating,reviews}) => {
     const sectionRef = useRef<HTMLElement | null>(null);
     const intersectionObserverRef = useRef<IntersectionObserver | null>(null);
     const [enable, setEnable] = useState(false);
@@ -37,14 +47,13 @@ export const PatientFeedback: React.FC<PatientFeedbackProps> = ({className}) => 
         }
     }, [sectionRef, intersectionObserverRef]);
 
-    const source = {
-        url: "https://www.healthgrades.com/group-directory/il-illinois/aurora/allergy-asthma-and-sinus-centers-aurora-oyyn35r",
-        name: "Healthgrades"
-    }
     return (
         <section ref={sectionRef} className={className}>
             <h2 css={stylesScreenReaderText}>Patient Feedback</h2>
-            <AverageRating rating={0.98} source={source} date={"July 2020"} enabled={enable}/>
+            <AverageRating rating={averageRating.rating} source={averageRating.source} date={averageRating.date} enabled={enable}/>
+            {
+                reviews.length > 1 && <ReviewsSection reviews={reviews} inViewport={enable} />
+            }
         </section>
     );
 }

@@ -51,10 +51,20 @@ const IndexPage: React.FC = ({ data }: PageProps<Queries.IndexPageQuery>) => {
         image: edge.node.frontmatter.image.childImageSharp.gatsbyImageData,
     }));
 
+    const avgRating = {
+        rating: data.sectionCopy.childPagesYaml.patient_feedback.rating,
+        source: {
+            name: data.sectionCopy.childPagesYaml.patient_feedback.source_name,
+            url: data.sectionCopy.childPagesYaml.patient_feedback.source_url,
+        },
+        date: data.sectionCopy.childPagesYaml.patient_feedback.access_date,
+    };
+
     const reviews: Review[] = data.reviews.edges.map(edge => ({
         stars: edge.node.frontmatter.stars,
         body: edge.node.body,
         source: edge.node.frontmatter.source,
+        reviewerName: edge.node.frontmatter.reviewerName,
     }));
 
     return (
@@ -64,7 +74,7 @@ const IndexPage: React.FC = ({ data }: PageProps<Queries.IndexPageQuery>) => {
                 <ConditionsArchive heading={conditionsTitle} text={conditionsText} frontPage={true} conditionsList={[...conditions, ...conditions, conditions[0]]} css={css({marginTop: "5em",})} />
                 <ServiceUpdateArchive serviceUpdates={serviceUpdates} frontPage={true} heading={serviceUpdatesTitle} text={serviceUpdatesText} css={css({marginTop: "4em",})} />
                 <ProvidersArchiveHomePageLayout providers={providers} heading={providersTitle} text={providersText} css={css({marginTop: "4em",})} />
-                <PatientFeedback css={css({marginTop: "5em",})} />
+                <PatientFeedback css={css({marginTop: "5em",})} averageRating={avgRating} reviews={reviews} />
                 <div css={css({height: "1000px"})}/>
             </main>
         </App>
@@ -92,6 +102,12 @@ export const query = graphql`
         providers {
           heading
           text
+        }
+        patient_feedback {
+          rating
+          source_url
+          source_name
+          access_date
         }
       }
     }
@@ -168,6 +184,7 @@ export const query = graphql`
       edges {
         node {
           frontmatter {
+            reviewerName: title
             stars
             source {
               name

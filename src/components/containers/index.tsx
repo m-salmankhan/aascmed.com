@@ -24,8 +24,13 @@ stylesContainer[breakpointStrings.xl] = {
     width: `${containerWidths.xl}vw`,
 }
 
+interface ContainerProps {
+    children: any,
+    className: string | undefined
+}
+
 // Centered div of container width
-export const Container: React.FC<{children: any, className?: string}> = ({children, className}) =>
+export const Container: React.FC<ContainerProps> = ({children, className}) =>
     <div css={stylesContainer} className={className}>
         {children}
     </div>
@@ -65,7 +70,7 @@ stylesContainerPadded[breakpointStrings.xl] = {
 };
 
 // Centered div with padding to make it appear to be of width containerWidth
-export const PaddedContainer: React.FC<ComponentProps<HTMLDivElement>> = ({children, ...props}) =>
+export const PaddedContainer: React.FC<ContainerProps> = ({children, ...props}) =>
     <div css={css(stylesContainerPadded)} {...props}>
         {children}
     </div>

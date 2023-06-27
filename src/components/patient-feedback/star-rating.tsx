@@ -21,13 +21,14 @@ function calculateNumStars(rating: number): StarCount {
 }
 
 
-enum StarStyles {
+export enum StarStyles {
     WHOLE,
     HALF,
     EMPTY
 }
 
 interface StarIconProps {
+    className?: string
     style: StarStyles
     order: number
     enabled: boolean
@@ -47,7 +48,7 @@ const stylesVisibleStarIcon: CSSProperties = {
     transform: "scale(1)",
 }
 
-const StarIcon: React.FC<StarIconProps> = ({style, order, enabled}) => {
+export const StarIcon: React.FC<StarIconProps> = ({style, order, enabled, className}) => {
     const [visible, setVisible] = useState(false);
     const timeoutId = useRef<number | null>(null);
 
@@ -69,11 +70,11 @@ const StarIcon: React.FC<StarIconProps> = ({style, order, enabled}) => {
 
     switch (style) {
         case StarStyles.WHOLE:
-            return <FaIcons iconStyle={IconStyles.SOLID} icon="star" css={stylesStarIcon} style={visible ? stylesVisibleStarIcon : {}}/>
+            return <FaIcons className={className} iconStyle={IconStyles.SOLID} icon="star" css={stylesStarIcon} style={visible ? stylesVisibleStarIcon : {}}/>
         case StarStyles.HALF:
-            return <FaIcons iconStyle={IconStyles.SOLID} icon="star-half-alt" css={stylesStarIcon}  style={visible ? stylesVisibleStarIcon : {}}/>
+            return <FaIcons className={className} iconStyle={IconStyles.SOLID} icon="star-half-alt" css={stylesStarIcon}  style={visible ? stylesVisibleStarIcon : {}}/>
         case StarStyles.EMPTY:
-            return <FaIcons iconStyle={IconStyles.REGULAR} icon="star" css={stylesStarIcon} style={visible ? stylesVisibleStarIcon : {}} />
+            return <FaIcons className={className} iconStyle={IconStyles.REGULAR} icon="star" css={stylesStarIcon} style={visible ? stylesVisibleStarIcon : {}} />
     }
 }
 
