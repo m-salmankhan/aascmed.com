@@ -120,7 +120,7 @@ const SliderReview: React.FC<SliderReviewProps> = ({className, review, number}) 
                     <FaIcons className={"quote"} iconStyle={IconStyles.SOLID} icon="quote-left" />
                 </div>
 
-                <H3 css={stylesH5}>({review.reviewerName}, <a href={review.source.url}>{review.source.name}</a>)</H3>
+                <H3 css={stylesH5}>({review.reviewerName}, <a href={review.source.url} rel={"noopener noreferrer"} target={"_blank"}>{review.source.name}</a>)</H3>
                 <div title={`${review.stars} stars out of ${availableStars} `}>
                     {
                         stars.map((style, idx) =>

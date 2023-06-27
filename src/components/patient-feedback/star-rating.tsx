@@ -122,7 +122,7 @@ export const AverageRating: React.FC<AverageRatingProps> = ({rating, source, dat
                 }
             </div>
             <H3 css={stylesH1}>Average Rating {Math.round(rating * 100)}%</H3>
-            (<a href={source.url} rel={"noopener"}>{source.name}</a>, {date})
+            (<a href={source.url} rel={"noopener noreferrer"} target={"_blank"}>{source.name}</a>, {date})
         </div>
     )
 }
