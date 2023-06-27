@@ -2,6 +2,9 @@ import * as React from "react"
 import {graphql, Link, PageProps} from "gatsby"
 import { MDXProvider } from "@mdx-js/react";
 import {H1} from "../components/headings";
+import {App} from "../components/layouts/app";
+import {Layout} from "../components/layouts/default";
+import {Container} from "../components/containers";
 
 const ButtonList = (props) => <div {...props}/>
 const ContactUsBanner = (props) => <div {...props}/>
@@ -18,12 +21,18 @@ const Conditions = ({ data, children }: PageProps<Queries.ConditionPageQuery>, p
     const title = data.mdx.frontmatter.title || "Untitled"
 
     return (
-        <article>
-            <H1><>{title}</></H1>
-            <MDXProvider components={shortcodes as any}>
-                {children}
-            </MDXProvider>
-        </article>
+        <Layout>
+            <main>
+                <Container>
+                    <article>
+                        <H1><>{title}</></H1>
+                        <MDXProvider components={shortcodes as any}>
+                            {children}
+                        </MDXProvider>
+                    </article>
+                </Container>
+            </main>
+        </Layout>
     );
 }
 

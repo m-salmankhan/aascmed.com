@@ -11,6 +11,7 @@ import {cols, gridContainer} from "../../styles/grid";
 import {breakpointStrings, mediaBreakpoints} from "../../styles/breakpoints";
 import {CSSInterpolation} from "@emotion/serialize";
 import {StarIcon, StarStyles} from "./star-rating";
+import ReactMarkdown from "react-markdown";
 
 export interface Review {
     reviewerName: string,
@@ -129,11 +130,11 @@ const SliderReview: React.FC<SliderReviewProps> = ({className, review, number}) 
                     }
                 </div>
             </header>
-            <Mark css={stylesReviewBody}>
+            <div css={stylesReviewBody}>
                 <ReactMarkdown>
                     {review.body}
                 </ReactMarkdown>
-            </Mark>
+            </div>
         </article>
     )
 }

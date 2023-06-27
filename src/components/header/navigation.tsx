@@ -1,4 +1,4 @@
-import React, {MouseEventHandler, useEffect, useId, useRef, useState} from "react";
+import React, {CSSProperties, MouseEventHandler, useEffect, useId, useRef, useState} from "react";
 import {css} from "@emotion/react";
 import {Link} from "gatsby";
 import {stylesScreenReaderText} from "../../styles/accessibility";
@@ -8,14 +8,6 @@ import {bounceTransition, colours, gridSpacing} from "../../styles/theme";
 import {CSSInterpolation} from "@emotion/serialize";
 import {breakpointStrings, mediaBreakpoints} from "../../styles/breakpoints";
 import {cols, gridContainer} from "../../styles/grid";
-
-const stylesActiveNavElement = css({
-    ", &:hover": {
-        borderBottom: "5px solid white",
-        color: "#fff",
-        background: "none",
-    }
-});
 
 type NavItemProps = JSX.IntrinsicElements["li"] & {
     link: string,
@@ -28,7 +20,7 @@ const NavItem: React.FC<NavItemProps> = ({ link, onLinkClicked, children, ...pro
                 <a href={link} target="_BLANK" rel="noreferrer" >{children}</a> :
                 (link==="#") ?
                     <a href="https://www.zocdoc.com/practice/allergy-asthma-and-sinus-centers-3233" onClick={onLinkClicked} >{children}</a> :
-                    <Link css={stylesActiveNavElement} to={link}>{children}</Link>
+                    <Link to={link} activeClassName={"active"}>{children}</Link>
         }
     </li>
 
@@ -149,6 +141,7 @@ const stylesHorizontalLogo: CSSInterpolation = {
 }
 stylesHorizontalLogo[breakpointStrings.lg] = {
     display: "block",
+    height: "5em",
 }
 
 const stylesStackedLogo: CSSInterpolation = {
@@ -177,33 +170,42 @@ const stylesNavigationUl = (state: NavigationMenuStates) => {
         },
 
         "a, button": {
+            display: "inline-block",
             color: "#fff",
             textDecoration:" none",
             background:" transparent",
             border:" none",
+            borderBottom: `5px solid transparent`,
             verticalAlign:" middle",
             padding: "5px 0",
 
             "&.active, &.active:hover": {
                 borderBottom: "5px solid white",
-                color: "#fff",
-                background: "none",
             },
 
             "&:focus, &:hover, &:active":  {
-                color: colours.infoBlue,
-                background: colours.infoYellow,
                 outline: "none",
                 border: "none",
-                textDecoration: "none",
+                color: colours.infoBlue,
+                background: colours.infoYellow,
                 borderBottom: `5px solid ${colours.infoBlue}`,
+                textDecoration: "none",
             },
         }
     };
     stylesBase[breakpointStrings.md] = {
+        margin: 0,
         li: {
             display: "inline-block",
             padding: `0 ${gridSpacing/2}em`,
+
+            "&:first-of-type": {
+                paddingLeft: 0,
+            },
+            "&:last-of-type": {
+                paddingRight: 0,
+            },
+
         }
     }
 

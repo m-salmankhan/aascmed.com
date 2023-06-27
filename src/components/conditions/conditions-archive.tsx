@@ -18,17 +18,19 @@ export interface ConditionSummary {
     slug: string
 }
 
-interface ConditionsIndexProps {
+interface ConditionsArchiveProps {
     heading: string,
     text: string,
     className?: string,
     frontPage: boolean,
     conditionsList: ConditionSummary[],
+    showViewAll: boolean
 }
 
 interface ConditionListProps {
     className?: string,
     conditions: ConditionSummary[],
+    showViewAll: boolean
 }
 
 const stylesConditionsGrid = css(
@@ -133,7 +135,7 @@ const stylesLi = css(
     }
 );
 
-export const ConditionList: React.FC<ConditionListProps> = ({className, conditions}) =>
+export const ConditionList: React.FC<ConditionListProps> = ({className, conditions, showViewAll=true}) =>
     <ul className={className} css={stylesConditionsGrid}>
         {
             conditions.map(
@@ -151,16 +153,19 @@ export const ConditionList: React.FC<ConditionListProps> = ({className, conditio
                     </li>
             )
         }
-        <li css={css(stylesLi)}>
-            <Link to={"/conditions/"} css={css(stylesLink)}>
-                <div className="thumbnail view-all">
-                    <div className="overlay">
-                        <FaIcons iconStyle={IconStyles.SOLID} icon="plus" className={"icon"} />
+        {
+            showViewAll &&
+            <li css={css(stylesLi)}>
+                <Link to={"/conditions/"} css={css(stylesLink)}>
+                    <div className="thumbnail view-all">
+                        <div className="overlay">
+                            <FaIcons iconStyle={IconStyles.SOLID} icon="plus" className={"icon"}/>
+                        </div>
                     </div>
-                </div>
-                <H2 css={stylesH5} className={"heading"}>View All</H2>
-            </Link>
-        </li>
+                    <H2 css={stylesH5} className={"heading"}>View All</H2>
+                </Link>
+            </li>
+        }
     </ul>
 
 
@@ -182,7 +187,7 @@ const stylesConditionsHeading = css(
     }
 );
 
-export const ConditionsArchive: React.FC<ConditionsIndexProps> = ({className, text, heading, frontPage, conditionsList = false}) => {
+export const ConditionsArchive: React.FC<ConditionsArchiveProps> = ({className, text, heading, frontPage, conditionsList = false, showViewAll = true}) => {
     return (
         <section className={className}>
             <Container>
@@ -196,7 +201,7 @@ export const ConditionsArchive: React.FC<ConditionsIndexProps> = ({className, te
                         {text}
                     </ReactMarkdown>
                 </div>
-                <ConditionList conditions={conditionsList} />
+                <ConditionList conditions={conditionsList} showViewAll={showViewAll} />
             </Container>
         </section>
     );

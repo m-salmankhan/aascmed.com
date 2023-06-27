@@ -1,4 +1,4 @@
 import {Hero} from "./hero";
-import {Navigation} from "./navigation";
+import {NavBar} from "./NavBar";
 
-export {Hero, Navigation}
+export {Hero, NavBar}

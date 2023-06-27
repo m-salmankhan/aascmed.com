@@ -30,7 +30,7 @@ interface ContainerProps {
 }
 
 // Centered div of container width
-export const Container: React.FC<ContainerProps> = ({children, className}) =>
+export const Container: React.FC<ContainerProps> = ({children, className=undefined}) =>
     <div css={stylesContainer} className={className}>
         {children}
     </div>
