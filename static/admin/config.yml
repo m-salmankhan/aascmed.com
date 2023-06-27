@@ -17,7 +17,7 @@ collections:
     files:
       - label: "Home Page"
         name: home
-        file: content/pages/home.mdx
+        file: content/pages/home.yml
         fields:
           - name: hero
             label: Hero
