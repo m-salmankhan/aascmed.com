@@ -55,7 +55,7 @@ collections:
               - { name: source-url, label: Source URL, widget: text}
               - { name: source-name, label: Source Name, widget: text}
               - { name: access-date, label: Access Date (Month, Year), widget: text}
-              -
+
       - label: "Conditions Index Page"
         name: conditions
         file: content/pages/conditions.yml
@@ -63,7 +63,6 @@ collections:
           - name: heading
             label: Heading
             widget: text
-
           - name: text
             label: Text
             widget: markdown
