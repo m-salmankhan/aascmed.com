@@ -53,8 +53,7 @@ export const MainCol: React.FC<ColumnProps> = ({children, className}) => {
 }
 const stylesSideCol = css(
     cols(12),
-    offsetCols(1, mediaBreakpoints.md),
-    cols(3, mediaBreakpoints.md),
+    cols(4, mediaBreakpoints.md),
     {}
 );
 const stylesReorderSide: CSSInterpolation = {

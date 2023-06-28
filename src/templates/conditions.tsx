@@ -8,11 +8,10 @@ import {Breadcrumbs} from "../components/breadcrumbs";
 import {css} from "@emotion/react";
 import {ShareButtons} from "../components/social-media/share";
 import {Contents, ContentsPageItem} from "../components/posts/contents";
+import {Article} from "../components/posts/article";
+import {ButtonList, ContactBanner} from "../components/posts/shortcode-components";
 
-const ButtonList = (props) => <div {...props}/>
-const ContactUsBanner = (props) => <div {...props}/>
-
-const shortcodes = { Link, ButtonList, ContactUsBanner};
+const shortcodes = { Link, ButtonList, ContactBanner};
 const Conditions = ({ data, children, location }: PageProps<Queries.ConditionPageQuery>) => {
     if((data.mdx === null) || (data.mdx === undefined))
         throw Error("mdx is undefined");
@@ -31,7 +30,7 @@ const Conditions = ({ data, children, location }: PageProps<Queries.ConditionPag
                     ["/conditions/", "Conditions"],
                     [data.mdx.fields.slug, title]
                 ]} css={css({marginTop: "3em"})} />
-                <article>
+                <Article css={css({h3: {fontSize: "1rem"}})}>
                     <H1><>{title}</></H1>
                     <ShareButtons pageTitle={title} path={location.pathname} />
 
@@ -45,12 +44,10 @@ const Conditions = ({ data, children, location }: PageProps<Queries.ConditionPag
                                 </footer>
                         </MainCol>
                         <SideCol>
-                            {/*<pre>{JSON.stringify(data, null, 2)}</pre>*/}
                             <Contents items={tocItems} />
-                            {/*{data.mdx.tableOfContents}*/}
                         </SideCol>
                     </Columns>
-                </article>
+                </Article>
             </main>
         </TwoColLayout>
     );

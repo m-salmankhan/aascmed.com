@@ -107,7 +107,8 @@ stylesContents[breakpointStrings.md] = {
     borderTop: "none",
     borderBottom: "none",
     marginBottom: 0,
-    marginTop: "-4.75em",
+    marginTop: "-5.4em",
+    marginLeft: `2vw`,
 
     ol: {
         li: {

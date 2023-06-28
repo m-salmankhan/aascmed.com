@@ -8,6 +8,7 @@ const stylesApplication = css({
     fontSize: fontBaseSize,
     fontWeight: fontWeightBase,
     background: colours.bodyBackground,
+
     "*": {
         boxSizing: "border-box",
         fontFamily: fontFamily,
