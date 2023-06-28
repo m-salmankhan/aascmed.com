@@ -26,12 +26,13 @@ stylesContainer[breakpointStrings.xl] = {
 
 interface ContainerProps {
     children: any,
-    className: string | undefined
+    className: string | undefined,
+    id?: string
 }
 
 // Centered div of container width
-export const Container: React.FC<ContainerProps> = ({children, className=undefined}) =>
-    <div css={stylesContainer} className={className}>
+export const Container: React.FC<ContainerProps> = ({children, className= undefined, id}) =>
+    <div css={stylesContainer} className={className} id={id}>
         {children}
     </div>
 

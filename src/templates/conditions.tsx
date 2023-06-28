@@ -2,16 +2,18 @@ import * as React from "react"
 import {graphql, Link, PageProps} from "gatsby"
 import { MDXProvider } from "@mdx-js/react";
 import {H1} from "../components/headings";
-import {App} from "../components/layouts/app";
-import {Layout} from "../components/layouts/default";
 import {Container} from "../components/containers";
+import {Columns, MainCol, SideCol, TwoColLayout} from "../components/layouts/two-col";
+import {Breadcrumbs} from "../components/breadcrumbs";
+import {css} from "@emotion/react";
+import {ShareButtons} from "../components/social-media/share";
+import {Contents, ContentsPageItem} from "../components/posts/contents";
 
 const ButtonList = (props) => <div {...props}/>
 const ContactUsBanner = (props) => <div {...props}/>
 
 const shortcodes = { Link, ButtonList, ContactUsBanner};
-const Conditions = ({ data, children }: PageProps<Queries.ConditionPageQuery>, pageContext, location) => {
-    // <pre>{JSON.stringify(data, null, 2)}</pre>
+const Conditions = ({ data, children, location }: PageProps<Queries.ConditionPageQuery>) => {
     if((data.mdx === null) || (data.mdx === undefined))
         throw Error("mdx is undefined");
 
@@ -19,20 +21,38 @@ const Conditions = ({ data, children }: PageProps<Queries.ConditionPageQuery>, p
         throw Error("Frontmatter is undefined");
 
     const title = data.mdx.frontmatter.title || "Untitled"
+    const tocItems = data.mdx.tableOfContents.items as ContentsPageItem[];
 
     return (
-        <Layout>
+        <TwoColLayout>
             <main>
-                <Container>
-                    <article>
-                        <H1><>{title}</></H1>
-                        <MDXProvider components={shortcodes as any}>
-                            {children}
-                        </MDXProvider>
-                    </article>
-                </Container>
+                <Breadcrumbs path={[
+                    ["'", "Home"],
+                    ["/conditions/", "Conditions"],
+                    [data.mdx.fields.slug, title]
+                ]} css={css({marginTop: "3em"})} />
+                <article>
+                    <H1><>{title}</></H1>
+                    <ShareButtons pageTitle={title} path={location.pathname} />
+
+                    <Columns>
+                        <MainCol>
+                                <MDXProvider components={shortcodes as any}>
+                                    {children}
+                                </MDXProvider>
+                                <footer>
+                                    <ShareButtons pageTitle={title} path={location.pathname} />
+                                </footer>
+                        </MainCol>
+                        <SideCol>
+                            {/*<pre>{JSON.stringify(data, null, 2)}</pre>*/}
+                            <Contents items={tocItems} />
+                            {/*{data.mdx.tableOfContents}*/}
+                        </SideCol>
+                    </Columns>
+                </article>
             </main>
-        </Layout>
+        </TwoColLayout>
     );
 }
 
@@ -41,6 +61,9 @@ export const query = graphql`
     mdx(id: {eq: $id}) {
       id
       tableOfContents(maxDepth: 2)
+      fields {
+        slug
+      }
       frontmatter {
         description
         title

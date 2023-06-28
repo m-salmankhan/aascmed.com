@@ -26,6 +26,7 @@ export const fontBaseSize = "16px";
 ===== Colours ====
 */
 export const colours = {
+    bodyBackground: "#f7f7f7",
     brandPrimary: "#1C5E38",
     brandSecondary: "#4DA249",
     brandGradient: "TBA",

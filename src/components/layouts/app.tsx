@@ -1,5 +1,5 @@
 import {css} from "@emotion/react";
-import {fontBaseSize, fontFamily, fontWeightBase} from "../../styles/theme";
+import {colours, fontBaseSize, fontFamily, fontWeightBase} from "../../styles/theme";
 import {useEffect} from "react";
 
 const stylesApplication = css({
@@ -7,13 +7,14 @@ const stylesApplication = css({
     margin: 0,
     fontSize: fontBaseSize,
     fontWeight: fontWeightBase,
+    background: colours.bodyBackground,
     "*": {
         boxSizing: "border-box",
         fontFamily: fontFamily,
     },
 });
 
-export const App = ({children}) => {
+export const App = ({children, className}) => {
     useEffect(() => {
         if(typeof window.netlifyIdentity !== 'undefined') {
             window.netlifyIdentity.on('init', user => {
@@ -26,7 +27,7 @@ export const App = ({children}) => {
         }
     });
 
-    return <div css={stylesApplication}>
+    return <div css={stylesApplication} className={className}>
         {children}
     </div>
 }
