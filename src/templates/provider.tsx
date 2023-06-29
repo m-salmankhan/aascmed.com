@@ -16,7 +16,7 @@ const shortcodes = { Link, ButtonList, ContactBanner};
 const stylesImage = css({
     width: "70%",
     height: "auto",
-    borderRadius: "50",
+    borderRadius: "50%",
     overflow: "hidden",
 });
 
