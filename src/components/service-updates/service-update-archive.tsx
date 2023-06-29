@@ -37,7 +37,7 @@ const stylesLi = css(
     cols(6, mediaBreakpoints.md),
     cols(4, mediaBreakpoints.lg),
     {
-        margin: "0 0 1em",
+        margin: "1em 0 1em",
 
         header: {
             a: {
@@ -138,7 +138,10 @@ export const ServiceUpdateArchive: React.FC<ServiceUpdateArchiveProps> =
                     </ReactMarkdown>
                 </div>
                 <ServiceUpdateList serviceUpdates={serviceUpdates} frontPage={frontPage}/>
-                <Link to={"/service-updates/"} css={css(cols(12), {color: "inherit"})}>(View All)</Link>
+                {
+                    frontPage &&
+                    <Link to={"/service-updates/"} css={css(cols(12), {color: "inherit"})}>(View All)</Link>
+                }
             </section>
         );
 }

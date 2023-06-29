@@ -2,13 +2,23 @@ import * as React from "react"
 import {graphql, Link, PageProps} from "gatsby"
 import { MDXProvider } from "@mdx-js/react";
 import {H1} from "../components/headings";
+import {Columns, MainCol, SideCol, TwoColLayout} from "../components/layouts/two-col";
+import {Breadcrumbs} from "../components/breadcrumbs";
+import {css} from "@emotion/react";
+import {Article} from "../components/posts/article";
+import {ShareButtons} from "../components/social-media/share";
+import {PrimaryAnchor, PrimaryButton, stylesBtnPrimary, stylesBtnSecondary, stylesButton} from "../components/buttons";
+import {gridSpacing} from "../styles/theme";
+import {useEffect, useState} from "react";
 
 const ButtonList = (props) => <div {...props}/>
 const ContactUsBanner = (props) => <div {...props}/>
 
 const shortcodes = { Link, ButtonList, ContactUsBanner};
-const Conditions = ({ data, children }: PageProps<Queries.ServiceUpdatePageQuery>, pageContext, location) => {
-    // <pre>{JSON.stringify(data, null, 2)}</pre>
+const Conditions = ({ data, children, location }: PageProps<Queries.ServiceUpdatePageQuery>) => {
+    const [jsEnabled, setJsEnabled] = useState(false);
+    useEffect(() => setJsEnabled(true), [setJsEnabled]);
+
     if((data.mdx === null) || (data.mdx === undefined))
         throw Error("mdx is undefined");
 
@@ -20,20 +30,48 @@ const Conditions = ({ data, children }: PageProps<Queries.ServiceUpdatePageQuery
     const description = data.mdx.frontmatter.description || ""
 
     return (
-        <article>
-            <H1>{title}</H1>
-            <p>{date}</p>
-            <p>{description}</p>
-            <MDXProvider components={shortcodes as any}>
-                {children}
-            </MDXProvider>
-        </article>
+        <TwoColLayout>
+            <main>
+                <Breadcrumbs path={[
+                    ["'", "Home"],
+                    ["/service-updates/", "Service Updates"],
+                    [data.mdx.fields.slug, title]
+                ]} css={css({marginTop: "3em"})} />
+                <Article css={css({h3: {fontSize: "1rem"}})}>
+                    <H1>{title}</H1>
+                    <ShareButtons pageTitle={title} path={location.pathname} />
+                    <p>{date}</p>
+                    <Columns>
+                        <MainCol>
+                            <MDXProvider components={shortcodes as any}>
+                                {children}
+                            </MDXProvider>
+                            <footer>
+                                {jsEnabled ?
+                                    <PrimaryButton
+                                        onClick={() => {
+                                            history.back();
+                                            return false;
+                                        }}
+                                        css={{marginRight: gridSpacing/2 + `em`}}>Go back</PrimaryButton> :
+                                    <PrimaryAnchor css={{marginRight: gridSpacing/2 + `em`}} href={"/"}>Return to home</PrimaryAnchor>
+                                }
+                                <Link to={"/contact"} css={[stylesButton, stylesBtnSecondary]}>Get in touch</Link>
+                            </footer>
+                        </MainCol>
+                    </Columns>
+                </Article>
+            </main>
+        </TwoColLayout>
     );
 }
 
 export const query = graphql`
   query ServiceUpdatePage ($id: String) {
     mdx(id: {eq: $id}) {
+      fields {
+        slug
+      }
       frontmatter {
         date(formatString: "Do MMMM YYYY")
         title

@@ -73,7 +73,7 @@ const IndexPage: React.FC = ({ data }: PageProps<Queries.IndexPageQuery>) => {
             <main>
                 <Hero image={heroImage} heading={heroTitle} siteTitle={siteTitle} text={heroText}/>
                 <Container>
-                    <ConditionsArchive heading={conditionsTitle} text={conditionsText} frontPage={true} conditionsList={[...conditions, ...conditions, conditions[0]]} css={css({marginTop: "5em",})} />
+                    <ConditionsArchive heading={conditionsTitle} text={conditionsText} frontPage={true} conditionsList={conditions} css={css({marginTop: "5em",})} />
                     <ServiceUpdateArchive serviceUpdates={serviceUpdates} frontPage={true} heading={serviceUpdatesTitle} text={serviceUpdatesText} css={css({marginTop: "4em",})} />
                     <ProvidersArchiveHomePageLayout providers={providers} heading={providersTitle} text={providersText} css={css({marginTop: "4em",})} />
                 </Container>
@@ -128,7 +128,10 @@ export const query = graphql`
         title
       }
     }
-    conditions: allMdx(filter: {fields: {post_type: {eq: "conditions"}}}) {
+    conditions: allMdx(
+      filter: {fields: {post_type: {eq: "conditions"}}}
+      limit: 5
+    ) {
       edges {
         node {
           fields {
@@ -145,7 +148,10 @@ export const query = graphql`
         }
       }
     }
-    serviceUpdates: allMdx(filter: {fields: {post_type: {eq: "service-update"}}}) {
+    serviceUpdates: allMdx(
+      filter: {fields: {post_type: {eq: "service-update"}}}
+      limit: 3
+    ) {
       edges {
         node {
           fields {

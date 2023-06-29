@@ -13,6 +13,10 @@ const stylesApplication = css({
         boxSizing: "border-box",
         fontFamily: fontFamily,
     },
+
+    a: {
+        color: colours.brandPrimary,
+    }
 });
 
 export const App = ({children, className}) => {
