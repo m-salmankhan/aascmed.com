@@ -1,5 +1,5 @@
 import React from "react";
-import {graphql, PageProps} from "gatsby";
+import {graphql, Link, PageProps} from "gatsby";
 import {Hero} from "../components/header";
 import {css} from "@emotion/react";
 import {ConditionsArchive} from "../components/conditions/";
@@ -7,7 +7,7 @@ import {ConditionSummary} from "../components/conditions/conditions-archive";
 import {ServiceUpdateArchive} from "../components/service-updates";
 import {ServiceUpdateSummary} from "../components/service-updates/service-update-archive";
 import {App} from "../components/layouts/app";
-import {ProviderSummary, ProvidersArchiveHomePageLayout} from "../components/providers";
+import {ProvidersArchiveHomePageLayout, ProviderSummary} from "../components/providers";
 import {PatientFeedback} from "../components/patient-feedback";
 import {Review} from "../components/patient-feedback/reviews";
 import {Container} from "../components/containers";

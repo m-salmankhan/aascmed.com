@@ -16,6 +16,10 @@ export const stylesButton: CSSInterpolation = {
         background-color 0.5s ease 0s`,
     outline: "none",
     border: `0.25rem solid ${colours.brandPrimary}`,
+
+    "&:focus": {
+        transform: "scale(0.8)",
+    },
 }
 
 export const stylesBtnPrimary: CSSInterpolation = {
@@ -35,7 +39,7 @@ export const stylesBtnSecondary: CSSInterpolation = {
 
     "&:hover, &:focus": {
         outline: "none",
-        color: "#fff",
+        color: colours.bodyBackground,
         backgroundColor: colours.brandPrimary,
         borderColor: colours.bodyBackground,
     },

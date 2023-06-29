@@ -3,15 +3,12 @@ import {ProviderSummary} from "./index";
 import {css} from "@emotion/react";
 import {cols, gridContainer} from "../../styles/grid";
 import {mediaBreakpoints} from "../../styles/breakpoints";
-import {Container} from "../containers";
-import {H1, H2, stylesH1, stylesH2} from "../headings";
+import {H2, stylesH1, stylesH2} from "../headings";
 import ReactMarkdown from "react-markdown";
-import {GatsbyImage} from "gatsby-plugin-image";
-import {FaIcons, IconStyles} from "../font-awesome";
+import {IconStyles} from "../font-awesome";
 import {Link} from "gatsby";
-import {bounceTransition, colours, gridSpacing} from "../../styles/theme";
-import {CSSInterpolation} from "@emotion/serialize";
-import Color from "color";
+import {colours, gridSpacing} from "../../styles/theme";
+import {Thumbnail} from "../thumbnails";
 
 interface ProvidersArchiveProps {
     className?: string,
@@ -38,86 +35,14 @@ const stylesProviderItem = css(
     cols(12),
     cols(6, mediaBreakpoints.md),
     cols(3, mediaBreakpoints.lg),
-    {
-        marginBottom: `${gridSpacing}em`,
-        a: {
-            color: colours.brandPrimary,
-            textDecoration: "none",
-
-            ".thumbnail": {
-                position: "relative",
-                width: "70%",
-                margin: "0 auto",
-                borderRadius: "50em",
-                overflow: "hidden",
-
-                img: {
-                    borderRadius: "50em",
-                },
-
-                ".overlay": {
-                    borderRadius: "50em",
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    height: "100%",
-                    backgroundColor: "rgba(0, 0, 0, 0.9)",
-                    background: `linear-gradient(to top right, ${Color(colours.brandPrimary).darken(0.3).fade(0.1)}, ${Color(colours.brandSecondary).darken(0.3).fade(0.1)})`,
-                    opacity: 0,
-                    transition: "opacity .25s ease-in-out 0s",
-
-                    "@media (prefers-reduced-motion)": {
-                        transition: "opacity 0.05s ease-in-out 0s",
-                    },
-
-                    ".icon": {
-                        fill: "#fff",
-                        width: "3rem",
-                        height: "3rem",
-                        transition: `transform 1s ${bounceTransition} 0s`,
-
-                        "@media (prefers-reduced-motion)": {
-                            transition: `transform 0.05s ${bounceTransition} 0s`,
-                        }
-                    }
-                },
-            },
-            "&:hover, &:focus, &:active": {
-                outline: "none",
-                border: "none",
-                textDecoration: "underline",
-
-                ".thumbnail": {
-                    ".overlay": {
-                        opacity: 1,
-
-                        ".icon": {
-                            transform: "scale(1.5)",
-                        },
-                    },
-                },
-
-                ".heading": {
-                    textDecoration: "underline",
-                }
-            },
-
-            "&:focus, &:active": {
-                ".thumbnail .overlay": {
-                    background: `linear-gradient(to top right, ${Color(colours.brandPrimary).darken(0.8).fade(0.1)}, ${Color(colours.brandSecondary).darken(0.3).fade(0.1)})`,
-
-                    ".icon": {
-                        fill: colours.infoYellow,
-                    }
-                }
-            },
-
-        },
-    }
+    css`
+        margin-bottom: ${gridSpacing}em;
+    
+        a {
+            color: ${colours.brandPrimary};
+            text-decoration: none;
+        }
+    `
 );
 
 const Providers: React.FC<ProvidersProps> = ({className, providers}) => {
@@ -127,12 +52,13 @@ const Providers: React.FC<ProvidersProps> = ({className, providers}) => {
                 providers.map((provider, idx) =>
                     <li key={idx} css={stylesProviderItem}>
                         <Link to={provider.slug}>
-                            <div className={"thumbnail"}>
-                                <GatsbyImage image={provider.image} alt={`An image of ${provider.name.title} ${provider.name.fullName}`} />
-                                <div className={"overlay"}>
-                                    <FaIcons iconStyle={IconStyles.SOLID} icon="user-md" className={"icon"}/>
-                                </div>
-                            </div>
+                            <Thumbnail
+                                overlayIcon={"user-md"}
+                                overlayIconStyle={IconStyles.SOLID}
+                                image={provider.image}
+                                imageAlt={`An image of ${provider.name.title} ${provider.name.fullName}`}
+                                shape={"elipse"}
+                            />
                             <h3 className={"heading"} css={stylesH2}>{`${provider.name.fullName}, ${provider.name.degreeAbbr}`}</h3>
                             <div className="read-more">Read more...</div>
                         </Link>

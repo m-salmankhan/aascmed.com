@@ -32,7 +32,7 @@ const Provider = ({ data, location, children }: PageProps<Queries.ProviderQuery>
     const degreeAbbr = data.mdx.frontmatter.name?.degree_abbr || "";
 
     const image = getImage(data.mdx.frontmatter.image);
-    const review = data.mdx.frontmatter.review || "";
+    const review = data.mdx.frontmatter.review?.trim() || "";
 
     const pageTitle = `${honorific} ${name}`.trim();
     const pageHeading = `${name}, ${degreeAbbr}`.trim();
@@ -41,7 +41,7 @@ const Provider = ({ data, location, children }: PageProps<Queries.ProviderQuery>
         <TwoColLayout>
             <main>
                 <Breadcrumbs path={[
-                    ["'", "Home"],
+                    ["/", "Home"],
                     ["/providers/", "Providers"],
                     [data.mdx.fields.slug, data.mdx.frontmatter.name?.fullname]
                 ]} css={css({marginTop: "3em"})} />
@@ -61,10 +61,15 @@ const Provider = ({ data, location, children }: PageProps<Queries.ProviderQuery>
                         <SideCol>
                             <aside>
                                 <GatsbyImage css={stylesImage} alt={`A photo of ${honorific} ${name}`} image={image} />
-                                <H4>Featured Review</H4>
-                                <ReactMarkdown>
-                                    {review}
-                                </ReactMarkdown>
+                                {
+                                    !!review &&
+                                    <>
+                                        <H4>Featured Review</H4>
+                                        <ReactMarkdown>
+                                            {review}
+                                        </ReactMarkdown>
+                                    </>
+                                }
                             </aside>
                         </SideCol>
                     </Columns>

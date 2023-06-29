@@ -5,25 +5,6 @@ import {stylesH1, stylesH2, stylesH3, stylesH4, stylesH5, stylesH6} from "../hea
 import {breakpointStrings} from "../../styles/breakpoints";
 
 const stylesArticle: CSSInterpolation = {
-    "ul, ol": {
-        margin: 0,
-        padding: 0,
-        "ul, ol": {
-            margin: `${gridSpacing/2}em 0 ${gridSpacing/2}em 1em`,
-        },
-    },
-
-    ul: {
-        listStyleType: "disc",
-    },
-    li: {
-        margin: `${gridSpacing/3}em 0`,
-    },
-
-    p: {
-        marginBottom: "1.5em",
-    },
-
     h1: [stylesH1, {
         fontSize: "2.5em",
     }],
