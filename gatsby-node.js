@@ -125,7 +125,7 @@ exports.createPages = async ({graphql, actions, reporter}) => {
         console.log(node.internal.contentFilePath)
         createPage({
             path: node.fields.slug,
-            component: `${path.resolve(`./src/templates/conditions.tsx`)}?__contentFilePath=${node.internal.contentFilePath}`,
+            component: `${path.resolve(`./src/templates/condition.tsx`)}?__contentFilePath=${node.internal.contentFilePath}`,
             context: {
                 id: node.id,
             }

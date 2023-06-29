@@ -12,7 +12,7 @@ import {Article} from "../components/posts/article";
 import {ButtonList, ContactBanner} from "../components/posts/shortcode-components";
 
 const shortcodes = { Link, ButtonList, ContactBanner};
-const Conditions = ({ data, children, location }: PageProps<Queries.ConditionPageQuery>) => {
+const Condition = ({ data, children, location }: PageProps<Queries.ConditionPageQuery>) => {
     if((data.mdx === null) || (data.mdx === undefined))
         throw Error("mdx is undefined");
 
@@ -69,4 +69,4 @@ export const query = graphql`
   }
 `
 
-export default Conditions
+export default Condition
