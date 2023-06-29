@@ -122,7 +122,6 @@ exports.createPages = async ({graphql, actions, reporter}) => {
     const clinics = result.data.clinics.nodes;
 
     conditions.forEach((node) => {
-        console.log(node.internal.contentFilePath)
         createPage({
             path: node.fields.slug,
             component: `${path.resolve(`./src/templates/condition.tsx`)}?__contentFilePath=${node.internal.contentFilePath}`,

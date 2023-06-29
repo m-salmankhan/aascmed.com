@@ -9,6 +9,7 @@ import {IconStyles} from "../font-awesome";
 import {Link} from "gatsby";
 import {colours, gridSpacing} from "../../styles/theme";
 import {Thumbnail} from "../thumbnails";
+import Color from "color";
 
 interface ProvidersArchiveProps {
     className?: string,
@@ -39,8 +40,15 @@ const stylesProviderItem = css(
         margin-bottom: ${gridSpacing}em;
     
         a {
-            color: ${colours.brandPrimary};
-            text-decoration: none;
+          text-decoration: none;
+          
+          &:hover, &:focus, &:active {
+            text-decoration: underline;
+          }
+          
+          .read-more {
+            color: ${Color(colours.brandPrimary).desaturate(1).toString()}
+          }
         }
     `
 );
@@ -52,13 +60,13 @@ const Providers: React.FC<ProvidersProps> = ({className, providers}) => {
                 providers.map((provider, idx) =>
                     <li key={idx} css={stylesProviderItem}>
                         <Link to={provider.slug}>
-                            <Thumbnail
+                            {provider.image && <Thumbnail
                                 overlayIcon={"user-md"}
                                 overlayIconStyle={IconStyles.SOLID}
                                 image={provider.image}
                                 imageAlt={`An image of ${provider.name.title} ${provider.name.fullName}`}
                                 shape={"elipse"}
-                            />
+                            />}
                             <h3 className={"heading"} css={stylesH2}>{`${provider.name.fullName}, ${provider.name.degreeAbbr}`}</h3>
                             <div className="read-more">Read more...</div>
                         </Link>
