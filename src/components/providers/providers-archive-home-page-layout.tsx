@@ -44,6 +44,7 @@ const stylesProviderItem = css(
           
           &:hover, &:focus, &:active {
             text-decoration: underline;
+            outline: none;
           }
           
           .read-more {
@@ -95,9 +96,9 @@ const stylesHeading = css(
 
 export const ProvidersArchiveHomePageLayout: React.FC<ProvidersArchiveProps> =
     ({className, heading, text, providers}) => {
-        if(providers.length == 0) {
+        if(providers.length == 0)
             return <></>;
-        }
+
         return (
             <section className={className}>
                 <div css={stylesTextWrapper}>
@@ -106,7 +107,7 @@ export const ProvidersArchiveHomePageLayout: React.FC<ProvidersArchiveProps> =
                         {text}
                     </ReactMarkdown>
                 </div>
-                <Providers providers={providers} />
+                <Providers providers={providers as [ProviderSummary]} />
             </section>
         );
     }

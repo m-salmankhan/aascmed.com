@@ -15,7 +15,7 @@ import ReactMarkdown from "react-markdown";
 
 export interface Review {
     reviewerName: string,
-    body: string,
+    body: string | null,
     stars: number,
     source: {
         url: string,
@@ -125,7 +125,7 @@ const SliderReview: React.FC<SliderReviewProps> = ({className, review, number}) 
                 <div title={`${review.stars} stars out of ${availableStars} `}>
                     {
                         stars.map((style, idx) =>
-                            <StarIcon css={{width: "1em", margin: "0 0.5em"}} style={style} order={idx} enabled={currentSlide===number} />
+                            <StarIcon key={idx} css={{width: "1em", margin: "0 0.5em"}} style={style} order={idx} enabled={currentSlide===number} />
                         )
                     }
                 </div>
@@ -215,6 +215,7 @@ export const ReviewSlider: React.FC<ReviewSliderProps> = ({className, reviews, i
     return (
         // viewport
         <Container className={className}>
+            {/*@ts-ignore*/}
             <CarouselProvider
                 totalSlides={reviews.length}
                 isIntrinsicHeight={true}
@@ -224,13 +225,19 @@ export const ReviewSlider: React.FC<ReviewSliderProps> = ({className, reviews, i
             >
                 <div css={[gridContainer(), {padding: 2*gridSpacing + "em 0"}]}>
                     <div className={"prev"} css={css(stylesWithButtonWidths)}>
-                        <ButtonBack><span css={stylesScreenReaderText}>Back</span>
-                            <FaIcons iconStyle={IconStyles.SOLID} icon={"chevron-circle-left"}/>
+                        <ButtonBack>
+                            <>
+                                <span css={stylesScreenReaderText}>Back</span>
+                                <FaIcons iconStyle={IconStyles.SOLID} icon={"chevron-circle-left"}/>
+                            </>
                         </ButtonBack>
                     </div>
                     <div className={"next"} css={css(stylesWithButtonWidths)}>
-                        <ButtonNext><span css={stylesScreenReaderText}>Next</span>
-                            <FaIcons iconStyle={IconStyles.SOLID} icon={"chevron-circle-right"}/>
+                        <ButtonNext>
+                            <>
+                                <span css={stylesScreenReaderText}>Next</span>
+                                <FaIcons iconStyle={IconStyles.SOLID} icon={"chevron-circle-right"} />
+                            </>
                         </ButtonNext>
                     </div>
 

@@ -3,11 +3,11 @@
 */
 // width in vw that containers should be
 export const containerWidths = {
-    xs: "90",
-    sm: "85",
-    md: "80",
-    lg: "70",
-    xl: "65",
+    xs: 90,
+    sm: 85,
+    md: 80,
+    lg: 70,
+    xl: 65,
 }
 
 export const gridSpacing = 2;

@@ -4,16 +4,14 @@ import ReactMarkdown from "react-markdown";
 import {css} from "@emotion/react";
 import {cols, gridContainer} from "../../styles/grid";
 import {mediaBreakpoints} from "../../styles/breakpoints";
-import {CSSInterpolation} from "@emotion/serialize";
 import {IconStyles} from "../font-awesome";
 import {IGatsbyImageData} from "gatsby-plugin-image";
 import {Link} from "gatsby";
-import {bounceTransition, colours, gridSpacing} from "../../styles/theme";
-import Color from "color";
+import {gridSpacing} from "../../styles/theme";
 import {Thumbnail} from "../thumbnails";
 
 export interface ConditionSummary {
-    thumbnail: IGatsbyImageData,
+    thumbnail?: IGatsbyImageData,
     title: string,
     slug: string
 }
@@ -117,7 +115,7 @@ const stylesConditionsHeading = css(
     }
 );
 
-export const ConditionsArchive: React.FC<ConditionsArchiveProps> = ({className, text, heading, frontPage, conditionsList = false, showViewAll = true}) => {
+export const ConditionsArchive: React.FC<ConditionsArchiveProps> = ({className, text, heading, frontPage, conditionsList, showViewAll = true}) => {
     return (
         <section className={className}>
             <div css={stylesConditionsTextWrapper}>

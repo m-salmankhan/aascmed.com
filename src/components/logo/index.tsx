@@ -1,9 +1,9 @@
-import React from "react"
+import React, {HTMLProps} from "react"
 import propTypes from "prop-types"
 import logos from "./logo-sprites.svg"
 import {css} from "@emotion/react";
 
-type SVGProps = JSX.IntrinsicElements["svg"];
+type SVGProps = HTMLProps<SVGProps>;
 const stylesHorizontalLogo = css({
 
 });
@@ -21,7 +21,7 @@ export const StackedLogo: React.FC<SVGProps> = (props) =>
     </svg>
 
 type Orientation = "stacked" | "horizontal";
-type LogoSpriteProps = JSX.IntrinsicElements["svg"] & {
+type LogoSpriteProps = HTMLProps<SVGProps> & {
     orientation: Orientation,
 }
 export const LogoSprite: React.FC<LogoSpriteProps> = ({orientation, ...props}) => {

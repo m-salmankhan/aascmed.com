@@ -1,6 +1,6 @@
 import {css, Global} from "@emotion/react";
 import {colours, fontBaseSize, fontFamily, fontWeightBase, gridSpacing} from "../../styles/theme";
-import {useEffect} from "react";
+import React, {ReactNode, useEffect} from "react";
 import {CSSInterpolation} from "@emotion/serialize";
 
 const stylesGlobal: CSSInterpolation = {
@@ -42,11 +42,19 @@ const stylesGlobal: CSSInterpolation = {
 
 };
 
-export const App = ({children, className}) => {
+interface AppProps {
+    children?: ReactNode,
+    className?: string
+}
+
+export const App: React.FC<AppProps> = ({children, className}) => {
     useEffect(() => {
+        // @ts-ignore
         if(typeof window.netlifyIdentity !== 'undefined') {
+            // @ts-ignore
             window.netlifyIdentity.on('init', user => {
                 if (!user) {
+                    // @ts-ignore
                     window.netlifyIdentity.on('login', () => {
                         document.location.href = '/admin/';
                     });

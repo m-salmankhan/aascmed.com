@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react";
+import React, {HTMLProps, useEffect, useRef, useState} from "react";
 import {GatsbyImage, IGatsbyImageData} from "gatsby-plugin-image";
 import {Navigation} from "./navigation";
 import {css} from "@emotion/react";
@@ -8,11 +8,11 @@ import {breakpointStrings} from "../../styles/breakpoints";
 import {CSSInterpolation} from "@emotion/serialize";
 import ReactMarkdown from "react-markdown";
 
-interface HeroProps extends HTMLDivElement {
+interface HeroProps extends HTMLProps<HTMLDivElement> {
     siteTitle: string,
     heading: string,
     text: string,
-    image: IGatsbyImageData,
+    image?: IGatsbyImageData,
 }
 
 // what variables the parallax effect is made of
@@ -105,13 +105,6 @@ export const Hero: React.FC<HeroProps> = ({heading, text, image, siteTitle, chil
     const headerRef = useRef<HTMLElement | null>(null);
     const [parallax, setParallax] = useState<ParallaxParameters>({textTranslation: 0, backgroundOpacity: 0});
 
-    const [jsEnabled, setJSEnabled] = useState(false);
-    // set JSEnabled to true after initial render
-    useEffect(() => {
-        setJSEnabled(true);
-    }, [setJSEnabled]);
-
-
     // Parallax Effect
     useEffect(() => {
         const updateParallax = () => {
@@ -135,7 +128,7 @@ export const Hero: React.FC<HeroProps> = ({heading, text, image, siteTitle, chil
     return (
         <PaddedContainer css={stylesHero}>
             <header ref={headerRef}>
-                <GatsbyImage css={stylesHeroBackgroundImage} draggable={false} image={image} alt={""}/>
+                {image && <GatsbyImage css={stylesHeroBackgroundImage} draggable={false} image={image} alt={""}/>}
                 <Navigation css={stylesNavigation} siteTitle={siteTitle} frontPage={true} />
                 <div className="translate" css={css(stylesHeroContent)} style={{transform: `translate3d(0, -${parallax.textTranslation}%, 0)`}}>
                     <div>

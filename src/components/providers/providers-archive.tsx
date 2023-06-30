@@ -49,6 +49,7 @@ const stylesProviderHeader = css(
       
       a {
         text-decoration: none;
+        outline: none;
         
         .degree {
           color: ${Color(colours.brandPrimary).desaturate(1).toString()}

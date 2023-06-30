@@ -1,32 +1,29 @@
-import React, {ComponentProps} from "react";
+import React from "react";
 import {css} from "@emotion/react"
 import {containerWidths} from "../../styles/theme";
 import {breakpointStrings} from "../../styles/breakpoints";
 
-const stylesContainer = {
-    width: `${containerWidths.xs}vw`,
-    margin: "0 auto",
-}
+const stylesContainer = css`
+  width: ${containerWidths.xs}vw;
+  margin: 0 auto;
 
-stylesContainer[breakpointStrings.sm] = {
-    width: `${containerWidths.sm}vw`,
-}
-
-stylesContainer[breakpointStrings.md] = {
-    width: `${containerWidths.md}vw`,
-}
-
-stylesContainer[breakpointStrings.lg] = {
-    width: `${containerWidths.lg}vw`,
-}
-
-stylesContainer[breakpointStrings.xl] = {
-    width: `${containerWidths.xl}vw`,
-}
+  ${breakpointStrings.sm} {
+    width: ${containerWidths.sm}vw;
+  }
+  ${breakpointStrings.md} {
+    width: ${containerWidths.md}vw;
+  }
+  ${breakpointStrings.lg} {
+    width: ${containerWidths.lg}vw;
+  }
+  ${breakpointStrings.xl} {
+    width: ${containerWidths.xl}vw;
+  }
+`
 
 interface ContainerProps {
     children: any,
-    className: string | undefined,
+    className?: string,
     id?: string
 }
 
@@ -44,31 +41,28 @@ const paddingAmounts = {
     xl: (100-containerWidths.xl)/2,
 };
 
-const stylesContainerPadded = {
-    width: "100%",
-    paddingLeft: `${paddingAmounts.xs}vw`,
-    paddingRight: `${paddingAmounts.xs}vw`,
-};
+const stylesContainerPadded = css`
+  width: 100%;
+  padding-left: ${paddingAmounts.xs}vw;
+  padding-right: ${paddingAmounts.xs}vw;
 
-stylesContainerPadded[breakpointStrings.sm] = {
-    paddingLeft: `${paddingAmounts.sm}vw`,
-    paddingRight: `${paddingAmounts.sm}vw`,
-};
-
-stylesContainerPadded[breakpointStrings.md] = {
-    paddingLeft: `${paddingAmounts.md}vw`,
-    paddingRight: `${paddingAmounts.md}vw`,
-};
-
-stylesContainerPadded[breakpointStrings.lg] = {
-    paddingLeft: `${paddingAmounts.lg}vw`,
-    paddingRight: `${paddingAmounts.lg}vw`,
-};
-
-stylesContainerPadded[breakpointStrings.xl] = {
-    paddingLeft: `${paddingAmounts.xl}vw`,
-    paddingRight: `${paddingAmounts.xl}vw`,
-};
+  ${breakpointStrings.sm} {
+    padding-left: ${paddingAmounts.sm}vw;
+    padding-right: ${paddingAmounts.sm}vw;
+  }
+  ${breakpointStrings.md} {
+    padding-left: ${paddingAmounts.md}vw;
+    padding-right: ${paddingAmounts.md}vw;
+  }
+  ${breakpointStrings.lg} {
+    padding-left: ${paddingAmounts.lg}vw;
+    padding-right: ${paddingAmounts.lg}vw;
+  }
+  ${breakpointStrings.xl} {
+    padding-left: ${paddingAmounts.xl}vw;
+    padding-right: ${paddingAmounts.xl}vw;
+  }
+`;
 
 // Centered div with padding to make it appear to be of width containerWidth
 export const PaddedContainer: React.FC<ContainerProps> = ({children, ...props}) =>

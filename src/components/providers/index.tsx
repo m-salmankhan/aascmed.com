@@ -3,8 +3,8 @@ import {ProvidersArchiveHomePageLayout} from "./providers-archive-home-page-layo
 import {ProviderArchive} from "./providers-archive";
 export interface ProviderSummary {
     slug: string
-    excerpt: string
-    image: IGatsbyImageData | null
+    excerpt?: string
+    image?: IGatsbyImageData
     name: {
         fullName: string
         title?: string

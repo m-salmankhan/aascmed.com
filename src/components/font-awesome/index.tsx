@@ -1,6 +1,9 @@
 import React, {CSSProperties} from "react"
+// @ts-ignore
 import brands from "./brands.svg"
+// @ts-ignore
 import regular from "./regular.svg"
+// @ts-ignore
 import solid from "./solid.svg"
 
 export enum IconStyles {
@@ -12,7 +15,7 @@ export enum IconStyles {
 type FaIconProps = {
     iconStyle: IconStyles,
     icon: string,
-    className: string | undefined,
+    className?: string,
     style?: CSSProperties,
 };
 

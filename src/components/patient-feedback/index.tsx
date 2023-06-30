@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useRef, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {stylesScreenReaderText} from "../../styles/accessibility";
 import {AverageRating} from "./star-rating";
 import {Review, ReviewsSection} from "./reviews";
@@ -25,9 +25,9 @@ export const PatientFeedback: React.FC<PatientFeedbackProps> = ({className, aver
         rootMargin: '0px',
         threshold: 0.25,
     }
-    const observerCallback: IntersectionObserverCallback = (entries, observer) => {
+    const observerCallback: IntersectionObserverCallback = (entries) => {
         entries.forEach((entry) => {
-            setEnable(entry.isIntersecting && entry.intersectionRatio > observerOptions.threshold);
+            setEnable(entry.isIntersecting && entry.intersectionRatio > (observerOptions.threshold as number));
         });
     }
 
@@ -52,7 +52,7 @@ export const PatientFeedback: React.FC<PatientFeedbackProps> = ({className, aver
             <h2 css={stylesScreenReaderText}>Patient Feedback</h2>
             <AverageRating rating={averageRating.rating} source={averageRating.source} date={averageRating.date} enabled={enable}/>
             {
-                reviews.length > 1 && <ReviewsSection reviews={reviews} inViewport={enable} />
+                reviews.length > 1 && <ReviewsSection reviews={reviews as [Review]} inViewport={enable} />
             }
         </section>
     );
