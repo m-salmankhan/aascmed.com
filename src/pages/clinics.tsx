@@ -29,7 +29,7 @@ const PracticesPage = ({ data }: PageProps<Queries.PracticesArchiveQuery>) => {
                 <Container>
                     <Breadcrumbs path={[
                         ["/", "Home"],
-                        ["/practices/", "Practices"]
+                        ["/clinics/", "Clinics"]
                     ]} css={css({marginTop: "3em"})} />
                     <PracticeArchive
                         practices={practices} heading={heading}
