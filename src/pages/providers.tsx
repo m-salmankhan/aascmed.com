@@ -20,6 +20,7 @@ const stylesHeading = css(
     cols(12),
     cols(9, mediaBreakpoints.lg),
     {
+        fontSize: "2.5em",
         padding: 0,
         "@media screen": {
             padding: 0,
@@ -43,7 +44,7 @@ const ProvidersPage = ({ data }: PageProps<Queries.ProvidersPageQuery>) => {
             degree: edge.node.frontmatter?.name?.degree || "",
             degreeAbbr: edge.node.frontmatter?.name?.degree_abbr || "",
         },
-        image: edge.node.frontmatter?.image?.childImageSharp?.gatsbyImageData || null,
+        image: edge.node.frontmatter?.image?.childImageSharp?.gatsbyImageData,
         excerpt: edge.node.excerpt || "",
     }));
 
@@ -51,7 +52,7 @@ const ProvidersPage = ({ data }: PageProps<Queries.ProvidersPageQuery>) => {
         <Layout>
             <Container>
                 <Breadcrumbs path={[
-                    ["'", "Home"],
+                    ["/", "Home"],
                     ["/providers/", "Providers"]
                 ]} css={css({marginTop: "3em"})} />
 

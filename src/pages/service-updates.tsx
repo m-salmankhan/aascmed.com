@@ -6,25 +6,34 @@ import {css} from "@emotion/react";
 import {Container} from "../components/containers";
 import {ServiceUpdateArchive} from "../components/service-updates";
 import {ServiceUpdateSummary} from "../components/service-updates/service-update-archive";
+import {gridSpacing} from "../styles/theme";
 
-const ServiceUpdatePage: React.FC = ({ data, location }: PageProps<Queries.ServiceUpdatePageQuery>) => {
-    const serviceUpdatesCopy = data.sectionCopy.childPagesYaml;
-    const serviceUpdatesTitle = serviceUpdatesCopy.heading || "Service Updates"
-    const serviceUpdatesText = serviceUpdatesCopy.text || "";
+const ServiceUpdatePage: React.FC<PageProps<Queries.ServiceUpdatesQuery>> = ({ data }) => {
+    const serviceUpdatesCopy = data.sectionCopy?.childPagesYaml;
+    const serviceUpdatesTitle = serviceUpdatesCopy?.heading || "Service Updates"
+    const serviceUpdatesText = serviceUpdatesCopy?.text || "";
     const serviceUpdates: ServiceUpdateSummary[] = data.serviceUpdates.edges.map(edge => ({
-        slug: edge.node.fields.slug,
-        title: edge.node.frontmatter.title,
-        date: edge.node.frontmatter.date,
-        description: edge.node.frontmatter.description,
+        slug: edge.node.fields?.slug || "",
+        title: edge.node.frontmatter?.title || "Untitled",
+        date: edge.node.frontmatter?.date || "",
+        description: edge.node.frontmatter?.description || "",
     }));
     return (
         <Layout>
             <Container>
                 <Breadcrumbs path={[
-                    ["'", "Home"],
+                    ["/", "Home"],
                     ["/service-updates/", "Service Updates"]
                 ]} css={css({marginTop: "3em"})} />
-                <ServiceUpdateArchive heading={serviceUpdatesTitle} text={serviceUpdatesText} serviceUpdates={serviceUpdates} frontPage={false}/>
+                <ServiceUpdateArchive
+                    heading={serviceUpdatesTitle}
+                    text={serviceUpdatesText}
+                    serviceUpdates={serviceUpdates}
+                    frontPage={false}
+                    css={css({
+                        margin: `0 -${gridSpacing/2}em`,
+                    })}
+                />
             </Container>
         </Layout>
     )

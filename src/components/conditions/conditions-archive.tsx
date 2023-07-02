@@ -72,8 +72,8 @@ export const ConditionList: React.FC<ConditionListProps> = ({className, conditio
                             <Thumbnail
                                 css={stylesThumbnail}
                                 overlayIconStyle={IconStyles.SOLID}
-                                overlayIcon={"search"}
-                                image={condition.thumbnail}
+                                overlayIcon={"magnifying-glass"}
+                                gatsbyImage={condition.thumbnail}
                             />
                             <H2 css={stylesH5} className={"heading"}>{ condition.title }</H2>
                         </Link>

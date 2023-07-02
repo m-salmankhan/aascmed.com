@@ -1,4 +1,4 @@
-import {css, Global} from "@emotion/react";
+import {Global} from "@emotion/react";
 import {colours, fontBaseSize, fontFamily, fontWeightBase, gridSpacing} from "../../styles/theme";
 import React, {ReactNode, useEffect} from "react";
 import {CSSInterpolation} from "@emotion/serialize";
@@ -10,6 +10,8 @@ const stylesGlobal: CSSInterpolation = {
         fontSize: fontBaseSize,
         fontWeight: fontWeightBase,
         background: colours.bodyBackground,
+        scrollBehavior: "smooth",
+        scrollMargin: gridSpacing + "em",
     },
 
     "*": {

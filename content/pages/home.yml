@@ -23,3 +23,6 @@ patient-feedback:
   source-url: https://www.google.com/maps/place/Allergy+Asthma+and+Sinus+Centers+(Joliet)/@41.5625383,-88.123516,17z/data=!4m8!3m7!1s0x880e60f246708ec3:0x5096cd8fc3196673!8m2!3d41.5625343!4d-88.1209411!9m1!1b1!16s%2Fg%2F1tx1tsgs?hl=en-US&entry=ttu
   source-name: Google Reviews
   access-date: June 2023
+practices:
+  heading: Practice Locations
+  text: ""

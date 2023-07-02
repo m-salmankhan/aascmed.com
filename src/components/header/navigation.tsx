@@ -353,7 +353,7 @@ export const Navigation: React.FC<NavigationProps> = ({siteTitle, frontPage, cla
                 <ul id={listId} ref={listRef} css={stylesNavigationUl(collapsedState)} onTransitionEnd={transitionEndHandler} aria-hidden={collapsedState === NavigationMenuStates.COLLAPSED}>
                     <NavItem link="/conditions/">Patient Education</NavItem>
                     <NavItem link="/providers/">Our Team</NavItem>
-                    <NavItem link="/clinics/">Clinics</NavItem>
+                    <NavItem link="/clinics/">Locations</NavItem>
                     <NavItem link="https://id.patientfusion.com/signin">Patient Portal</NavItem>
                     <NavItem onLinkClicked={bookingsClickHandler} link="#">Bookings</NavItem>
                     <NavItem link="/contact/">Contact</NavItem>

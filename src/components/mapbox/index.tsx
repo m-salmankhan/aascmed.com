@@ -11,7 +11,7 @@ import {Global} from "@emotion/react";
 
 mapboxgl.accessToken = process.env["GATSBY_MAPBOX_API_KEY"] || "";
 
-interface MapBoxProps {
+export interface MapBoxProps {
     className?: string
     longitude: number
     latitude: number
@@ -19,6 +19,7 @@ interface MapBoxProps {
     alt?: string
     width?: number
     inView?: boolean
+    zoom: number
 }
 
 interface StaticMapBoxParameters {
@@ -29,7 +30,6 @@ interface StaticMapBoxParameters {
     height: number
     retina: boolean
     zoom: number
-
 }
 const mapSrc = ({label, latitude, longitude, width, height, retina, zoom}: StaticMapBoxParameters) =>
     `https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/pin-l-${label}+1C5E38(${longitude},${latitude})/${longitude},${latitude},${zoom},0/${width}x${height}${retina ? "@2x" : ""}?access_token=${process.env.GATSBY_MAPBOX_API_KEY}`;
@@ -41,15 +41,19 @@ enum ImageState {
 }
 
 const stylesStaticMap = (imageState: ImageState) => css`
+  height: 100%;
+  
   .lazy-container {
     position: relative;
+    object-fit: cover;
+    height: 100%;
     
     img {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
-      height: auto;
+      height: 100%;
       transition: opacity .5s ease 0s, filter .5s ease 0s;
       filter: blur(20px);
       display: block;
@@ -57,7 +61,6 @@ const stylesStaticMap = (imageState: ImageState) => css`
     
     img.lazy-preview {
       opacity: ${(imageState===ImageState.LOADED) ? 0 : 1};
-      display: ${(imageState===ImageState.COMPLETED) ? "none" : "inherit"};
     }
     
     img.map {
@@ -87,7 +90,7 @@ export const StaticMap: React.FC<MapBoxProps> = (props) => {
         longitude: props.longitude,
         latitude: props.latitude,
         retina: false,
-        zoom: 15,
+        zoom: props.zoom,
     }
 
     const image = {
@@ -108,10 +111,13 @@ export const StaticMap: React.FC<MapBoxProps> = (props) => {
                 <img alt={props.alt} src={image.src} srcSet={image.srcset} sizes={image.sizes} />
             </noscript>
             <div id={id} className={"lazy-container"}>
-                <img className={"lazy-preview"} src={previewSrc} alt={props.alt} onTransitionEnd={removePreviewImg} />
                 {
                     (props.inView === undefined ? true : props.inView) &&
                     <img className={"map"} src={image.src} srcSet={image.srcset} alt={props.alt} sizes={image.sizes} onLoad={unBlurImage} />
+                }
+                {
+                    loaded !== ImageState.COMPLETED &&
+                    <img className={"lazy-preview"} src={previewSrc} alt={props.alt} onTransitionEnd={removePreviewImg} />
                 }
             </div>
         </div>
@@ -157,7 +163,7 @@ export const MapBox: React.FC<MapBoxProps> = (props) => {
     const map = useRef<mapboxgl.Map | null>(null);
     const [lng, setLng] = useState(props.longitude);
     const [lat, setLat] = useState(props.latitude);
-    const [zoom, setZoom] = useState(15);
+    const [zoom, setZoom] = useState(props.zoom);
 
 
     useEffect(() => {

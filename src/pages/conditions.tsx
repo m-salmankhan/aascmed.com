@@ -9,13 +9,13 @@ import {Container} from "../components/containers";
 import {gridSpacing} from "../styles/theme";
 
 const ConditionsPage = ({ data }: PageProps<Queries.ConditionsArchiveQuery>) => {
-    const heading = data.copy.childPagesYaml.heading;
-    const text = data.copy.childPagesYaml.text;
+    const heading = data.copy?.childPagesYaml?.heading || "Conditions";
+    const text = data.copy?.childPagesYaml?.text || "";
 
     const conditions: ConditionSummary[] = data.conditions.edges.map(edge => ({
-        slug: edge.node.fields.slug,
-        title: edge.node.frontmatter.title,
-        thumbnail: edge.node.frontmatter.thumbnail.childImageSharp.gatsbyImageData,
+        slug: edge.node.fields?.slug || "",
+        title: edge.node.frontmatter?.title || "untitled",
+        thumbnail: edge.node.frontmatter?.thumbnail?.childImageSharp?.gatsbyImageData,
     }));
 
     return (

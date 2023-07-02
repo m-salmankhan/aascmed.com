@@ -56,6 +56,14 @@ collections:
               - { name: source-name, label: Source Name, widget: text}
               - { name: access-date, label: Access Date (Month, Year), widget: text}
 
+          - name: practices
+            label: Practices Section
+            widget: object
+            fields:
+              - { name: heading, label: Heading, widget: text }
+              - { name: text, label: Text, widget: markdown, required: false}
+
+
       - label: "Conditions Index Page"
         name: conditions
         file: content/pages/conditions.yml
@@ -66,6 +74,29 @@ collections:
           - name: text
             label: Text
             widget: markdown
+
+      - label: "Providers Index Page"
+        name: providers
+        file: content/pages/providers.yml
+        fields:
+          - name: heading
+            label: Heading
+            widget: text
+          - name: text
+            label: Text
+            widget: markdown
+
+      - label: "Clinics Index Page"
+        name: clinics
+        file: content/pages/clinics.yml
+        fields:
+          - name: heading
+            label: Heading
+            widget: text
+          - name: text
+            label: Text
+            widget: markdown
+
 
   - name: conditions
     label: Conditions

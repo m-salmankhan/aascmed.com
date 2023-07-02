@@ -49,41 +49,45 @@ const stylesShareSingleButton = css({
 
 });
 
-
-const SocialButton = ({network, url, title}) => {
+interface SocialButtonProps {
+    network: SocialNetworks,
+    url: string,
+    title: string
+}
+const SocialButton: React.FC<SocialButtonProps> = ({network, url, title}) => {
     switch(network) {
         case SocialNetworks.facebook:
             return(
                 <a title="Facebook" target="_BLANK" rel="noreferrer" css={stylesShareSingleButton} href={`https://www.facebook.com/sharer/sharer.php?u=${ encodeURIComponent(url) }`}>
-                    <FaIcons iconStyle={IconStyles.BRANDS} icon="facebook-square" />
+                    <FaIcons iconStyle={IconStyles.BRANDS} icon="square-facebook" />
                     <span css={stylesScreenReaderText}>Facebook</span>
                 </a>
             );
         case SocialNetworks.twitter:
             return(
                 <a title="Twitter" target="_BLANK" rel="noreferrer" css={stylesShareSingleButton} href={`https://twitter.com/intent/tweet/?text=${ encodeURIComponent(`Take a look at ${title} on Allergy, Asthma and Sinus Centers ${url}`)}` }>
-                    <FaIcons iconStyle={IconStyles.BRANDS} icon="twitter-square" />
+                    <FaIcons iconStyle={IconStyles.BRANDS} icon="square-twitter" />
                     <span css={stylesScreenReaderText}>Twitter</span>
                 </a>
             );
         case SocialNetworks.whatsapp:
             return(
                 <a title="Whatsapp" target="_BLANK" rel="noreferrer" css={stylesShareSingleButton} href={`https://wa.me/?text=${ encodeURIComponent(`Take a look at ${title} on Allergy, Asthma and Sinus Centers ${url}`)}` }>
-                    <FaIcons iconStyle={IconStyles.BRANDS} icon="whatsapp-square" />
+                    <FaIcons iconStyle={IconStyles.BRANDS} icon="square-whatsapp" />
                     <span css={stylesScreenReaderText}>Whatsapp</span>
                 </a>
             );
         case SocialNetworks.reddit:
             return(
                 <a title="Reddit" target="_BLANK" rel="noreferrer" css={stylesShareSingleButton} href={`https://www.reddit.com/submit/?url=${ encodeURIComponent(url) }`}>
-                    <FaIcons iconStyle={IconStyles.BRANDS} icon="reddit-square" />
+                    <FaIcons iconStyle={IconStyles.BRANDS} icon="square-reddit" />
                     <span css={stylesScreenReaderText}>Reddit</span>
                 </a>
             );
         case SocialNetworks.pinterest:
             return(
                 <a title="Pinterest" target="_BLANK" rel="noreferrer" css={stylesShareSingleButton} href={`https://www.pinterest.com/pin/create/button/?url=${ encodeURIComponent(url) }`}>
-                    <FaIcons iconStyle={IconStyles.BRANDS} icon="pinterest-square" />
+                    <FaIcons iconStyle={IconStyles.BRANDS} icon="square-pinterest" />
                     <span css={stylesScreenReaderText}>Facebook</span>
                 </a>
             );

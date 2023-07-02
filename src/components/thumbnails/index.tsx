@@ -3,10 +3,11 @@ import {css} from "@emotion/react";
 import {bounceTransition, colours} from "../../styles/theme";
 import {FaIcons, IconStyles} from "../font-awesome";
 import {GatsbyImage, IGatsbyImageData} from "gatsby-plugin-image";
+import {MapBoxProps, StaticMap} from "../mapbox";
 import Color from "color";
 
 const stylesThumbnail = (iconSize: number, showOverlay: boolean, elipse: boolean) => css`
-  border-radius: ${elipse ? "50%" : "inherit"};
+    border-radius: ${elipse ? "50%" : "inherit"};
     position: relative;
     overflow: hidden;
     transition: transform .25s ease 0s;
@@ -85,14 +86,16 @@ interface ThumbnailProps {
     overlayIcon: string
     overlayIconStyle: IconStyles,
     overlayIconSize?: number,
-    image?: IGatsbyImageData,
+    gatsbyImage?: IGatsbyImageData,
+    mapboxStaticMap?: MapBoxProps,
     imageAlt?: string,
     shape?: "elipse" | "rect",
     showOverlay?: boolean
 }
 export const Thumbnail: React.FC<ThumbnailProps> = ({
                                                         className,
-                                                        image,
+                                                        gatsbyImage,
+                                                        mapboxStaticMap,
                                                         imageAlt,
                                                         overlayIconStyle,
                                                         overlayIcon,
@@ -102,7 +105,8 @@ export const Thumbnail: React.FC<ThumbnailProps> = ({
 }) => {
     return(
         <div className={className} css={css(stylesThumbnail(overlayIconSize || 3, showOverlay || false, shape==="elipse"))}>
-            {image && <GatsbyImage alt={imageAlt || ""} image={image}/>}
+            {gatsbyImage && <GatsbyImage alt={imageAlt || ""} image={gatsbyImage}/>}
+            {mapboxStaticMap && <StaticMap {...mapboxStaticMap} />}
             <div className={"overlay"}>
                 <FaIcons iconStyle={overlayIconStyle} icon={overlayIcon} className={"icon"} />
             </div>

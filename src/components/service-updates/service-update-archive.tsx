@@ -1,13 +1,10 @@
-import {Container} from "../containers";
 import {H1, H2, H3, stylesH1, stylesH4} from "../headings";
 import {css} from "@emotion/react";
 import ReactMarkdown from "react-markdown";
 import React from "react";
-import {ConditionList} from "../conditions/conditions-archive";
 import {cols, gridContainer} from "../../styles/grid";
 import {mediaBreakpoints} from "../../styles/breakpoints";
 import {Link} from "gatsby";
-import {CSSInterpolation} from "@emotion/serialize";
 import {colours, gridSpacing} from "../../styles/theme";
 import Color from "color";
 
@@ -113,6 +110,7 @@ const stylesHeading = css(
     cols(12),
     cols(9, mediaBreakpoints.lg),
     {
+        fontSize: "2.5rem",
         padding: 0,
         "@media screen": {
             padding: 0,
@@ -137,7 +135,7 @@ export const ServiceUpdateArchive: React.FC<ServiceUpdateArchiveProps> =
                         {text}
                     </ReactMarkdown>
                 </div>
-                <ServiceUpdateList serviceUpdates={serviceUpdates} frontPage={frontPage}/>
+                <ServiceUpdateList serviceUpdates={serviceUpdates as [ServiceUpdateSummary]} frontPage={frontPage}/>
                 {
                     frontPage &&
                     <Link to={"/service-updates/"} css={css(cols(12), {color: "inherit"})}>(View All)</Link>

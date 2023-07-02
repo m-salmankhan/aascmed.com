@@ -132,7 +132,7 @@ const SliderReview: React.FC<SliderReviewProps> = ({className, review, number}) 
             </header>
             <div css={stylesReviewBody}>
                 <ReactMarkdown>
-                    {review.body}
+                    {review.body || ""}
                 </ReactMarkdown>
             </div>
         </article>
@@ -228,7 +228,7 @@ export const ReviewSlider: React.FC<ReviewSliderProps> = ({className, reviews, i
                         <ButtonBack>
                             <>
                                 <span css={stylesScreenReaderText}>Back</span>
-                                <FaIcons iconStyle={IconStyles.SOLID} icon={"chevron-circle-left"}/>
+                                <FaIcons iconStyle={IconStyles.SOLID} icon={"circle-chevron-left"}/>
                             </>
                         </ButtonBack>
                     </div>
@@ -236,7 +236,7 @@ export const ReviewSlider: React.FC<ReviewSliderProps> = ({className, reviews, i
                         <ButtonNext>
                             <>
                                 <span css={stylesScreenReaderText}>Next</span>
-                                <FaIcons iconStyle={IconStyles.SOLID} icon={"chevron-circle-right"} />
+                                <FaIcons iconStyle={IconStyles.SOLID} icon={"circle-chevron-right"} />
                             </>
                         </ButtonNext>
                     </div>

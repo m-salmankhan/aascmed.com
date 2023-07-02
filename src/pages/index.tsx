@@ -11,7 +11,7 @@ import {ProvidersArchiveHomePageLayout, ProviderSummary} from "../components/pro
 import {PatientFeedback} from "../components/patient-feedback";
 import {Review} from "../components/patient-feedback/reviews";
 import {Container} from "../components/containers";
-import {PracticeArchiveList} from "../components/practices/practice-archive";
+import {PracticeArchive, PracticeArchiveList, PracticeSummary} from "../components/practices/practice-archive";
 
 const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
     const heroImage = data.heroImage?.childImageSharp?.gatsbyImageData;
@@ -72,17 +72,33 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
         reviewerName: edge.node.frontmatter?.reviewerName || "",
     }));
 
+    const practicesCopy = data.sectionCopy?.childPagesYaml?.practices;
+    const practicesTitle = practicesCopy?.heading || "Practices"
+    const practicesText = practicesCopy?.text || "";
+    const practices: PracticeSummary[] = data.practices.edges.map(edge => ({
+        slug: edge.node.fields?.slug || "",
+        clinic_name: edge.node.frontmatter?.title || "Untitled Clinic",
+        longitude: edge.node.frontmatter?.lon || 0,
+        latitude: edge.node.frontmatter?.lat || 0,
+        address: edge.node.frontmatter?.address || "",
+        phone: edge.node.frontmatter?.phone || "",
+        fax: edge.node.frontmatter?.fax || "",
+    }));
+
+
     return (
         <App>
-            <main>
-                <Hero image={heroImage} heading={heroTitle} siteTitle={siteTitle} text={heroText}/>
+            <Hero image={heroImage} heading={heroTitle} siteTitle={siteTitle} text={heroText}/>
+            <main id={"main"}>
                 <Container>
                     <ConditionsArchive showViewAll={true} heading={conditionsTitle} text={conditionsText} frontPage={true} conditionsList={conditions} css={css({marginTop: "5em",})} />
                     <ServiceUpdateArchive serviceUpdates={serviceUpdates} frontPage={true} heading={serviceUpdatesTitle} text={serviceUpdatesText} css={css({marginTop: "4em",})} />
                     <ProvidersArchiveHomePageLayout providers={providers} heading={providersTitle} text={providersText} css={css({marginTop: "4em",})} />
                 </Container>
                 <PatientFeedback css={css({marginTop: "5em",})} averageRating={avgRating} reviews={reviews} />
-                <PracticeArchiveList />
+                <Container>
+                    <PracticeArchive css={css({marginTop: "5em",})} practices={practices} heading={practicesTitle} text={practicesText} isHomePage={true} />
+                </Container>
                 <div css={css({height: "1000px"})} />
             </main>
         </App>
@@ -117,6 +133,10 @@ export const query = graphql`
           source_name
           access_date
         }
+        practices {
+          heading
+          text
+        }
       }
     }
     heroImage: file(relativePath: {eq: "hero-bg.png"}) {
@@ -130,10 +150,7 @@ export const query = graphql`
         title
       }
     }
-    conditions: allMdx(
-      filter: {fields: {post_type: {eq: "conditions"}}}
-      limit: 5
-    ) {
+    conditions: allMdx(filter: {fields: {post_type: {eq: "conditions"}}}, limit: 5) {
       edges {
         node {
           fields {
@@ -207,6 +224,22 @@ export const query = graphql`
         }
       }
     }
+    practices: allMdx(filter: {fields: {post_type: {eq: "clinics"}}}) {
+      edges {
+        node {
+          fields {
+            slug
+          }
+          frontmatter {
+            title
+            lat
+            lon
+            address
+            phone
+            fax
+          }
+        }
+      }
+    }
   }
 `
-

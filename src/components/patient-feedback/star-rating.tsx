@@ -72,7 +72,7 @@ export const StarIcon: React.FC<StarIconProps> = ({style, order, enabled, classN
         case StarStyles.WHOLE:
             return <FaIcons className={className} iconStyle={IconStyles.SOLID} icon="star" css={stylesStarIcon} style={visible ? stylesVisibleStarIcon : {}}/>
         case StarStyles.HALF:
-            return <FaIcons className={className} iconStyle={IconStyles.SOLID} icon="star-half-alt" css={stylesStarIcon}  style={visible ? stylesVisibleStarIcon : {}}/>
+            return <FaIcons className={className} iconStyle={IconStyles.SOLID} icon="star-half-stroke" css={stylesStarIcon}  style={visible ? stylesVisibleStarIcon : {}}/>
         case StarStyles.EMPTY:
             return <FaIcons className={className} iconStyle={IconStyles.REGULAR} icon="star" css={stylesStarIcon} style={visible ? stylesVisibleStarIcon : {}} />
     }

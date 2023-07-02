@@ -62,9 +62,9 @@ const Providers: React.FC<ProvidersProps> = ({className, providers}) => {
                     <li key={idx} css={stylesProviderItem}>
                         <Link to={provider.slug}>
                             {provider.image && <Thumbnail
-                                overlayIcon={"user-md"}
+                                overlayIcon={"user-doctor"}
                                 overlayIconStyle={IconStyles.SOLID}
-                                image={provider.image}
+                                gatsbyImage={provider.image}
                                 imageAlt={`An image of ${provider.name.title} ${provider.name.fullName}`}
                                 shape={"elipse"}
                             />}
@@ -87,6 +87,7 @@ const stylesHeading = css(
     cols(12),
     cols(9, mediaBreakpoints.lg),
     {
+        fontSize: "2.5rem",
         padding: 0,
         "@media screen": {
             padding: 0,
