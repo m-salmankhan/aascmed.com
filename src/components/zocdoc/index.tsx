@@ -1,4 +1,4 @@
-import React, {HTMLProps, MouseEventHandler, useEffect, useRef, useState} from "react";
+import React, {HTMLProps, MouseEventHandler, useEffect, useState} from "react";
 import {H1, stylesH3} from "../headings";
 import {css} from "@emotion/react";
 import {bounceTransition, colours, gridSpacing} from "../../styles/theme";
@@ -11,6 +11,7 @@ export const ZocDocURL = "https://www.zocdoc.com/practice/allergy-asthma-and-sin
 const resetLinkStyles = css`
   text-decoration: none;
   color: inherit;
+  z-index: 100;
 `
 
 enum BubbleStates {
@@ -21,63 +22,92 @@ enum BubbleStates {
     INVISIBLE,
 
     // hidden to users & screen readers
-    REMOVED
+    REMOVED,
+
+    // visually remove element
+    PRE_COLLAPSE,
+    // remove element from DOM
+    COLLAPSED,
+    // add element back in DOM (but still visually hidden)
+    PRE_EXPAND
 }
 
-const stylesBookNowBubble = (state: BubbleStates, collapse: boolean) => css`
-  position: relative;
-  background: #fff;
-  box-shadow: 0 0 1em rgba(0, 0, 0, 0.25);
-  padding: ${gridSpacing/2}em;
-  z-index: 10;
-  margin-bottom: 1em;
-  
-  transition: transform .5s ease-in-out 0s;
-  transform: scale(${state === BubbleStates.INVISIBLE ? 0 : (collapse ? 0 : 1)});
+const stylesBookNowBubble = (state: BubbleStates) => {
+    const hidden =
+        (state === BubbleStates.PRE_COLLAPSE) ||
+        (state === BubbleStates.INVISIBLE) ||
+        (state === BubbleStates.PRE_EXPAND);
 
-  a:focus &, a:active & {
-    border: 2px solid ${colours.brandPrimary};
-  }
-  
-  button {
-    cursor: pointer;
-    position: absolute;
-    top: 2em;
-    right: 1em;
-    background: none;
-    outline: none;
-    border: none;
-    padding: 0.1em;
-    transition: transform .5s ${bounceTransition} 0s;
+    return (css`
+      position: relative;
+      background: #fff;
+      box-shadow: 0 0 1em rgba(0, 0, 0, 0.25);
+      padding: ${gridSpacing/2}em;
+      z-index: 10;
+      margin-bottom: 1em;
+      
+      transition: transform .5s ease-in-out 0s;
+      will-change: transform;
+      transform: scale(${hidden ? 0 : 1});
     
-    &:hover, &:focus {
-      border-radius: 50%;
-      background: ${colours.infoBlue};
-
-      svg {
-        fill: ${colours.infoYellow};
+      a:focus &, a:active & {
+        border: 2px solid ${colours.brandPrimary};
       }
-    }
+      
+      button {
+        cursor: pointer;
+        position: absolute;
+        top: 2em;
+        right: 1em;
+        background: none;
+        outline: none;
+        border: none;
+        padding: 0.1em;
+        transition: transform .5s ${bounceTransition} 0s;
+        
+        &:hover, &:focus {
+          border-radius: 50%;
+          background: ${colours.infoBlue};
     
-    &:focus {
-      transform: scale(1.5);
-    }
-
-
-    svg {
-      width: 1.5em;
-      height: 1.5em;
-      vertical-align: middle;
-    }
-  }
-  
-`;
+          svg {
+            fill: ${colours.infoYellow};
+          }
+        }
+        
+        &:focus {
+          transform: scale(1.5);
+        }
+    
+    
+        svg {
+          width: 1.5em;
+          height: 1.5em;
+          vertical-align: middle;
+        }
+      }
+    `)
+};
 
 interface BubbleProps extends HTMLProps<HTMLAnchorElement> {
     collapse: boolean
 }
 const Bubble: React.FC<BubbleProps> = ({children, collapse, ...props}) => {
     const [visibilityState, setVisibilityState] = useState(BubbleStates.VISIBLE);
+
+    useEffect(() => {
+        switch (visibilityState) {
+            case BubbleStates.VISIBLE:
+                if(collapse) setVisibilityState(BubbleStates.PRE_COLLAPSE);
+                break
+            // button should reappear
+            case BubbleStates.COLLAPSED:
+                if(!collapse) setVisibilityState(BubbleStates.PRE_EXPAND);
+                break
+            case BubbleStates.PRE_EXPAND:
+                setVisibilityState(BubbleStates.VISIBLE);
+                break
+        }
+    }, [visibilityState, setVisibilityState, collapse]);
 
     // starts hide transition
     // after this, bubble is still visible to screen readers
@@ -90,17 +120,21 @@ const Bubble: React.FC<BubbleProps> = ({children, collapse, ...props}) => {
     }
 
     // stops being visible to screen readers
-    const removeBubble = () => {
-        if(visibilityState === BubbleStates.INVISIBLE) {
-            setVisibilityState(BubbleStates.REMOVED);
+    const handleTransitionEnd = () => {
+        switch (visibilityState) {
+            case BubbleStates.INVISIBLE:
+                setVisibilityState(BubbleStates.REMOVED);
+                break
+            case BubbleStates.PRE_COLLAPSE:
+                setVisibilityState(BubbleStates.COLLAPSED);
+                break
         }
     }
 
-    if(visibilityState === BubbleStates.REMOVED) return <></>;
-
+    if(visibilityState === BubbleStates.REMOVED || visibilityState === BubbleStates.COLLAPSED) return <></>;
     return (
-        <a {...props} css={resetLinkStyles}>
-            <div css={stylesBookNowBubble(visibilityState, collapse)} onTransitionEnd={removeBubble}>
+        <a {...props} css={[resetLinkStyles]}>
+            <div css={stylesBookNowBubble(visibilityState)} onTransitionEnd={handleTransitionEnd}>
                 <H1 css={stylesH3}>Book online</H1>
                 <button onClick={hideBubble}>
                     <span css={stylesScreenReaderText}>Dismiss</span>
@@ -193,7 +227,6 @@ const stylesZocDoc = css`
   ${breakpointStrings.lg} {
     width: 20%;
   }
-
 `;
 export const ZocDoc = () => {
     const [collapse, setCollapse] = useState(false);
