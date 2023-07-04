@@ -23,8 +23,8 @@ export interface PracticeSummary {
 
 const stylesPracticeArchiveListItem = css(
     cols(12),
-    cols(2, mediaBreakpoints.md),
-    cols(4, mediaBreakpoints.lg),
+    cols(6, mediaBreakpoints.md),
+    cols(3, mediaBreakpoints.lg),
     css`
       width: 100%;
       

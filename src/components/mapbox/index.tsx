@@ -45,7 +45,6 @@ const stylesStaticMap = (imageState: ImageState) => css`
   
   .lazy-container {
     position: relative;
-    object-fit: cover;
     height: 100%;
     
     img {
@@ -57,6 +56,7 @@ const stylesStaticMap = (imageState: ImageState) => css`
       transition: opacity .5s ease 0s, filter .5s ease 0s;
       filter: blur(20px);
       display: block;
+      object-fit: cover;
     }
     
     img.lazy-preview {

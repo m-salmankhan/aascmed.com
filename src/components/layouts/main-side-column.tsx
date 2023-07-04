@@ -8,7 +8,7 @@ import {Container} from "../containers";
 import {gridSpacing} from "../../styles/theme";
 import {CSSInterpolation} from "@emotion/serialize";
 
-interface TwoColLayoutProps {
+interface PrimarySecondaryColumnsLayoutProps {
     children: ReactNode,
     className?: string
 }
@@ -16,7 +16,7 @@ interface ColumnProps {
     children: ReactNode,
     className?: string
 }
-export const TwoColLayout: React.FC<TwoColLayoutProps> = ({children, className}) => {
+export const PrimarySecondaryColumnsLayout: React.FC<PrimarySecondaryColumnsLayoutProps> = ({children, className}) => {
     return (
         <App className={className} >
             <NavBar />
@@ -27,7 +27,7 @@ export const TwoColLayout: React.FC<TwoColLayoutProps> = ({children, className})
     );
 }
 
-export const Columns: React.FC<TwoColLayoutProps> = ({children, className}) =>
+export const Columns: React.FC<PrimarySecondaryColumnsLayoutProps> = ({children, className}) =>
     <div css={[gridContainer(), {margin: `0 -${gridSpacing/2}em`}]} className={className}>
         {children}
     </div>

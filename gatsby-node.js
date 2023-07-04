@@ -153,5 +153,17 @@ exports.createPages = async ({graphql, actions, reporter}) => {
         });
     });
 
+
+    clinics.forEach((node) => {
+        createPage({
+            path: node.fields.slug,
+            component: `${path.resolve(`./src/templates/clinic.tsx`)}?__contentFilePath=${node.internal.contentFilePath}`,
+            context: {
+                id: node.id,
+                template: 'clinic',
+            }
+        });
+    });
+
 }
 

@@ -2,19 +2,17 @@ import * as React from "react"
 import {graphql, Link, PageProps} from "gatsby"
 import { MDXProvider } from "@mdx-js/react";
 import {H1} from "../components/headings";
-import {Columns, MainCol, SideCol, TwoColLayout} from "../components/layouts/two-col";
+import {Columns, MainCol, PrimarySecondaryColumnsLayout} from "../components/layouts/main-side-column";
 import {Breadcrumbs} from "../components/breadcrumbs";
 import {css} from "@emotion/react";
 import {Article} from "../components/posts/article";
 import {ShareButtons} from "../components/social-media/share";
-import {PrimaryAnchor, PrimaryButton, stylesBtnPrimary, stylesBtnSecondary, stylesButton} from "../components/buttons";
+import {PrimaryAnchor, PrimaryButton, stylesBtnSecondary, stylesButton} from "../components/buttons";
 import {gridSpacing} from "../styles/theme";
 import {useEffect, useState} from "react";
+import {ButtonList, ContactBanner} from "../components/posts/shortcode-components";
 
-const ButtonList = (props) => <div {...props}/>
-const ContactUsBanner = (props) => <div {...props}/>
-
-const shortcodes = { Link, ButtonList, ContactUsBanner};
+const shortcodes = { Link, ButtonList, ContactBanner};
 const Conditions = ({ data, children, location }: PageProps<Queries.ServiceUpdatePageQuery>) => {
     const [jsEnabled, setJsEnabled] = useState(false);
     useEffect(() => setJsEnabled(true), [setJsEnabled]);
@@ -27,15 +25,14 @@ const Conditions = ({ data, children, location }: PageProps<Queries.ServiceUpdat
 
     const title = data.mdx.frontmatter.title || "Untitled"
     const date = data.mdx.frontmatter.date || ""
-    const description = data.mdx.frontmatter.description || ""
 
     return (
-        <TwoColLayout>
+        <PrimarySecondaryColumnsLayout>
             <main>
                 <Breadcrumbs path={[
                     ["'", "Home"],
                     ["/service-updates/", "Service Updates"],
-                    [data.mdx.fields.slug, title]
+                    [data.mdx.fields?.slug, title]
                 ]} css={css({marginTop: "3em"})} />
                 <Article css={css({h3: {fontSize: "1rem"}})}>
                     <H1>{title}</H1>
@@ -62,7 +59,7 @@ const Conditions = ({ data, children, location }: PageProps<Queries.ServiceUpdat
                     </Columns>
                 </Article>
             </main>
-        </TwoColLayout>
+        </PrimarySecondaryColumnsLayout>
     );
 }
 

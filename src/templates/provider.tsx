@@ -1,6 +1,6 @@
 import * as React from "react"
 import {graphql, Link, PageProps} from "gatsby"
-import {Columns, MainCol, SideCol, TwoColLayout} from "../components/layouts/two-col";
+import {Columns, MainCol, SideCol, PrimarySecondaryColumnsLayout} from "../components/layouts/main-side-column";
 import {Breadcrumbs} from "../components/breadcrumbs";
 import {css} from "@emotion/react";
 import {Article} from "../components/posts/article";
@@ -8,7 +8,7 @@ import {H1, H4} from "../components/headings";
 import {ShareButtons} from "../components/social-media/share";
 import {MDXProvider} from "@mdx-js/react";
 import {ButtonList, ContactBanner} from "../components/posts/shortcode-components";
-import {GatsbyImage, getImage} from "gatsby-plugin-image";
+import {GatsbyImage} from "gatsby-plugin-image";
 import ReactMarkdown from "react-markdown";
 
 const shortcodes = { Link, ButtonList, ContactBanner};
@@ -31,19 +31,19 @@ const Provider = ({ data, location, children }: PageProps<Queries.ProviderQuery>
     const honorific = data.mdx.frontmatter.name?.title + "." || "";
     const degreeAbbr = data.mdx.frontmatter.name?.degree_abbr || "";
 
-    const image = getImage(data.mdx.frontmatter.image);
+    const image = data.mdx.frontmatter.image?.childImageSharp?.gatsbyImageData;
     const review = data.mdx.frontmatter.review?.trim() || "";
 
     const pageTitle = `${honorific} ${name}`.trim();
     const pageHeading = `${name}, ${degreeAbbr}`.trim();
 
     return (
-        <TwoColLayout>
+        <PrimarySecondaryColumnsLayout>
             <main>
                 <Breadcrumbs path={[
                     ["/", "Home"],
                     ["/providers/", "Providers"],
-                    [data.mdx.fields.slug, data.mdx.frontmatter.name?.fullname]
+                    [data.mdx.fields?.slug, data.mdx.frontmatter.name?.fullname]
                 ]} css={css({marginTop: "3em"})} />
                 <Article css={css({h3: {fontSize: "1rem"}})}>
                     <Columns>
@@ -60,7 +60,10 @@ const Provider = ({ data, location, children }: PageProps<Queries.ProviderQuery>
                         </MainCol>
                         <SideCol>
                             <aside>
-                                <GatsbyImage css={stylesImage} alt={`A photo of ${honorific} ${name}`} image={image} />
+                                {
+                                    image &&
+                                    <GatsbyImage css={stylesImage} alt={`A photo of ${honorific} ${name}`} image={image} />
+                                }
                                 {
                                     !!review &&
                                     <>
@@ -75,7 +78,7 @@ const Provider = ({ data, location, children }: PageProps<Queries.ProviderQuery>
                     </Columns>
                 </Article>
             </main>
-        </TwoColLayout>
+        </PrimarySecondaryColumnsLayout>
     );
 }
 

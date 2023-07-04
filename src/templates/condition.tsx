@@ -2,8 +2,7 @@ import * as React from "react"
 import {graphql, Link, PageProps} from "gatsby"
 import { MDXProvider } from "@mdx-js/react";
 import {H1} from "../components/headings";
-import {Container} from "../components/containers";
-import {Columns, MainCol, SideCol, TwoColLayout} from "../components/layouts/two-col";
+import {Columns, MainCol, SideCol, PrimarySecondaryColumnsLayout} from "../components/layouts/main-side-column";
 import {Breadcrumbs} from "../components/breadcrumbs";
 import {css} from "@emotion/react";
 import {ShareButtons} from "../components/social-media/share";
@@ -20,15 +19,15 @@ const Condition = ({ data, children, location }: PageProps<Queries.ConditionPage
         throw Error("Frontmatter is undefined");
 
     const title = data.mdx.frontmatter.title || "Untitled"
-    const tocItems = data.mdx.tableOfContents.items as ContentsPageItem[];
+    const tocItems = data.mdx.tableOfContents?.items as ContentsPageItem[];
 
     return (
-        <TwoColLayout>
+        <PrimarySecondaryColumnsLayout>
             <main>
                 <Breadcrumbs path={[
                     ["", "Home"],
                     ["/conditions/", "Conditions"],
-                    [data.mdx.fields.slug, title]
+                    [data.mdx?.fields?.slug, title]
                 ]} css={css({marginTop: "3em"})} />
                 <Article css={css({h3: {fontSize: "1rem"}})}>
                     <H1><>{title}</></H1>
@@ -49,7 +48,7 @@ const Condition = ({ data, children, location }: PageProps<Queries.ConditionPage
                     </Columns>
                 </Article>
             </main>
-        </TwoColLayout>
+        </PrimarySecondaryColumnsLayout>
     );
 }
 
