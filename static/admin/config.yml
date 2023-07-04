@@ -202,7 +202,7 @@ collections:
       - { name: address, label: Address, widget: text }
       - { name: phone, label: Phone, widget: string }
       - { name: fax, label: Fax, widget: string }
-      - { name: lon, label: Longitude, widget: number, valueType: float, step: 0.0001 }
-      - { name: lat, label: Latitude, widget: number, valueType: float, step: 0.0001 }
+      - { name: lat, label: Latitude, widget: number, value_type: float, step: 0.0001 }
+      - { name: lon, label: Longitude, widget: number, value_type: float, step: 0.0001 }
       - { name: placeId, label: Google Maps Place ID, widget: string, isRequired: false }
-      - { name: body, label: Body, widget: markdown }
+      - { name: body, label: Body, widget: markdown, isRequired: false }
