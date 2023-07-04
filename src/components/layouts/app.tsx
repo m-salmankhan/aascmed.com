@@ -2,6 +2,7 @@ import {Global} from "@emotion/react";
 import {colours, fontBaseSize, fontFamily, fontWeightBase, gridSpacing} from "../../styles/theme";
 import React, {ReactNode, useEffect} from "react";
 import {CSSInterpolation} from "@emotion/serialize";
+import {ZocDoc} from "../zocdoc";
 
 const stylesGlobal: CSSInterpolation = {
     "html, css": {
@@ -68,5 +69,6 @@ export const App: React.FC<AppProps> = ({children, className}) => {
     return <div className={className}>
         <Global styles={stylesGlobal} />
         {children}
+        <ZocDoc />
     </div>
 }
