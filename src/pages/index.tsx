@@ -99,7 +99,6 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
                 <Container>
                     <PracticeArchive css={css({marginTop: "5em",})} practices={practices} heading={practicesTitle} text={practicesText} isHomePage={true} />
                 </Container>
-                <iframe src={"https://www.zocdoc.com/practice/allergy-asthma-and-sinus-centers-3233"} height={1000} width={1000} />
                 <div css={css({height: "1000px"})} />
             </main>
         </App>
