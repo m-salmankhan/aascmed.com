@@ -84,7 +84,7 @@ collections:
           - name: lastUpdated
             label: Last Updated
             widget: datetime
-            date_format: 'yyyy.MM.DD'
+            date_format: 'yyyy.MM.dd'
             time_format: false
 
       - label: "Contact Page"
