@@ -1,6 +1,6 @@
-import {ReactNode} from "react";
+import React, {ReactNode} from "react";
 import {
-    PrimaryAnchor,
+    PrimaryAnchor, SecondaryAnchor,
     SecondaryButton,
     stylesBtnSecondary,
     stylesButton
@@ -8,8 +8,9 @@ import {
 import {Link} from "gatsby";
 import {colours, gridSpacing} from "../../styles/theme";
 import {css} from "@emotion/react";
-import {H1, stylesH2, stylesH3, stylesH4} from "../headings";
+import {H1, stylesH2} from "../headings";
 import {CSSInterpolation} from "@emotion/serialize";
+import {ZocDocURL} from "../zocdoc";
 
 interface ShortCodeProps {
     children?: ReactNode,
@@ -37,7 +38,7 @@ export const ButtonList: React.FC<ShortCodeProps> = ({className, children}) =>
         {children}
         <PrimaryAnchor href={"#frequently-asked-questions"} css={stylesFAQBtn}>Skip to FAQ</PrimaryAnchor>
         <Link css={[stylesButton, stylesBtnSecondary, stylesContactBtn]} to={"/contact"}>Get in Touch</Link>
-        <SecondaryButton onClick={() => {}}>Book online with ZocDoc</SecondaryButton>
+        <SecondaryAnchor href={ZocDocURL} target={"_BLANK"} rel={"noopener"}>Book online with ZocDoc</SecondaryAnchor>
     </nav>
 
 
@@ -57,6 +58,7 @@ export const ContactBanner: React.FC<ShortCodeProps> = ({className, children}) =
     <aside className={className} css={stylesContactBanner}>
         <H1>Questions? Drop us a note!</H1>
         <p>If you have any questions, get in touch with us! You can contact us by telephone on (815) 729 9900 or by email at info@aascmed.com. Or you can fill in our contact form.</p>
+        {children}
         <Link css={[stylesButton, stylesBtnSecondary, {marginRight: `${gridSpacing/2}em`}]} to={"/contact"}>Contact Us</Link>
         <SecondaryButton onClick={() => {}}>Book online with ZocDoc</SecondaryButton>
     </aside>
