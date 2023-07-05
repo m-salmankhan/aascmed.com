@@ -11,7 +11,6 @@ export const ZocDocURL = "https://www.zocdoc.com/practice/allergy-asthma-and-sin
 const resetLinkStyles = css`
   text-decoration: none;
   color: inherit;
-  z-index: 100;
 `
 
 enum BubbleStates {
@@ -45,19 +44,26 @@ const stylesBookNowBubble = (state: BubbleStates) => {
       padding: ${gridSpacing/2}em;
       z-index: 10;
       margin-bottom: 1em;
-      
+      margin-right: 1em;
+      border-radius: 1em;
+      border-bottom-right-radius: 0em;
+
+
       transition: transform .5s ease-in-out 0s;
-      will-change: transform;
       transform: scale(${hidden ? 0 : 1});
     
       a:focus &, a:active & {
         border: 2px solid ${colours.brandPrimary};
       }
       
+      h1 {
+        margin-top: 0;
+      }
+      
       button {
         cursor: pointer;
         position: absolute;
-        top: 2em;
+        top: 1em;
         right: 1em;
         background: none;
         outline: none;
@@ -150,12 +156,14 @@ const Bubble: React.FC<BubbleProps> = ({children, collapse, ...props}) => {
 const stylesBookButton = (collapsed: boolean) => css`
   background: ${colours.brandGradientReverse};
   color: #fff;
+  box-shadow: 0 0 1em rgba(0, 0, 0, 0.25);
   border-radius: 5em;
+  border-bottom-right-radius: ${collapsed ? 5 : 0}em;
+  border-top-right-radius: ${collapsed ? 5 : 0}em;
   padding: 1em ${collapsed ? "1em" : "1.5em"};
-  margin: 0 0 0 auto;
+  margin: 0 ${collapsed ? 1 : 0}em 0 auto;
   
-  will-change: max-width;
-  transition: max-width 1s ease-in-out 0s;
+  transition: max-width 1s ease-in-out 0s, border-radius .5s ease 0s, margin .5s ease 0s;
   white-space: nowrap;
   overflow: hidden;
   max-width: ${collapsed ? "4em" : "15em"};
@@ -189,7 +197,6 @@ const stylesBookButton = (collapsed: boolean) => css`
 
     white-space: nowrap;
     overflow: hidden;
-    will-change: max-width;
     transition: max-width 1s ease-in-out 0s;
     max-width: ${collapsed ? "0em" : "15em"};
     
@@ -215,7 +222,8 @@ const BookButton: React.FC<BookButtonProps> = ({collapse, ...props}) => {
 const stylesZocDoc = css`
   position: fixed;
   bottom: ${gridSpacing}em;
-  right: ${gridSpacing}em;
+  right: 0;
+  z-index: 10;
   
   width: 75%;
   ${breakpointStrings.sm} {
@@ -243,9 +251,9 @@ export const ZocDoc = () => {
     }, [setCollapse]);
 
     return (
-        <div css={stylesZocDoc}>
+        <aside css={stylesZocDoc}>
             <Bubble href={ZocDocURL} target={"_BLANK"} rel={"noopener"} collapse={collapse} />
             <BookButton href={ZocDocURL} target={"_BLANK"} rel={"noopener"} collapse={collapse} />
-        </div>
+        </aside>
     );
 }
