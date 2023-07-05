@@ -73,6 +73,22 @@ collections:
 
       - label: "Contact Page"
         name: contact
+        file: content/pages/privacy.yml
+        fields:
+          - name: heading
+            label: Heading
+            widget: text
+          - name: text
+            label: Text
+            widget: markdown
+          - name: lastUpdated
+            label: Last Updated
+            widget: datetime
+            date_format: 'YYYY.MM.DD'
+            time_format: false
+
+      - label: "Contact Page"
+        name: contact
         file: content/pages/contact.yml
         fields:
           - name: heading
