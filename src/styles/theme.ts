@@ -2,6 +2,8 @@
 ===== GRID ====
 */
 // width in vw that containers should be
+import {keyframes} from "@emotion/react";
+
 export const containerWidths = {
     xs: 90,
     sm: 85,
@@ -54,3 +56,15 @@ colours["brandGradientReverse"] = `linear-gradient(to left, ${colours.brandPrima
 */
 export const bounceTransition = "cubic-bezier(1, -1.28, 0.25, 1.95)";
 export const alternativeBounceTransition = "cubic-bezier(0.32, -0.04, 0, 1.71)";
+
+export const nudge = keyframes`
+    0% {
+      transform: rotate(-1deg) translateX(-5px);
+    }
+    50% {
+      transform: rotate(1deg) translateX(5px);
+    }
+    100% {
+      transform: rotate(0) translateX(0);
+    }
+`;

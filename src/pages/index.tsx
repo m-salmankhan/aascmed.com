@@ -11,7 +11,9 @@ import {ProvidersArchiveHomePageLayout, ProviderSummary} from "../components/pro
 import {PatientFeedback} from "../components/patient-feedback";
 import {Review} from "../components/patient-feedback/reviews";
 import {Container} from "../components/containers";
-import {PracticeArchive, PracticeArchiveList, PracticeSummary} from "../components/practices/practice-archive";
+import {PracticeArchive, PracticeSummary} from "../components/practices/practice-archive";
+import {ContactForm} from "../components/contact";
+import {ContactSection} from "../components/contact/home-page-layout";
 
 const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
     const heroImage = data.heroImage?.childImageSharp?.gatsbyImageData;
@@ -97,6 +99,7 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
                 </Container>
                 <PatientFeedback css={css({marginTop: "5em",})} averageRating={avgRating} reviews={reviews} />
                 <Container>
+                    <ContactSection css={css({marginTop: "5em",})} />
                     <PracticeArchive css={css({marginTop: "5em",})} practices={practices} heading={practicesTitle} text={practicesText} isHomePage={true} />
                 </Container>
                 <div css={css({height: "1000px"})} />

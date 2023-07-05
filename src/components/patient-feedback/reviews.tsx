@@ -90,7 +90,7 @@ const SliderReview: React.FC<SliderReviewProps> = ({className, review, number}) 
 
     useEffect(() => {
         if(reviewRef.current) {
-            const el = reviewRef.current as HTMLElement;
+            const el = reviewRef.current;
 
             const callback = () => {
                 setHeight(el.scrollHeight)

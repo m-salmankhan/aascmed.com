@@ -7,6 +7,7 @@ import {css} from "@emotion/react";
 import {MapBox} from "../components/mapbox";
 import {PrimaryAnchor} from "../components/buttons";
 import {Table} from "../components/tables";
+import {ContactForm} from "../components/contact";
 
 const Clinic: React.FC<PageProps<Queries.ClinicQuery>>  = ({ data }) => {
     const clinicName = data.mdx?.frontmatter?.title || "Untitled";
@@ -63,6 +64,8 @@ const Clinic: React.FC<PageProps<Queries.ClinicQuery>>  = ({ data }) => {
                                 Open directions in Google Maps
                             </PrimaryAnchor>
                         }
+                        <H2 css={stylesH1}>Contact</H2>
+                        <ContactForm/>
                     </Column>
                     <Column>
                         <H2 css={[stylesH1, css`margin-top: 0`]}>Contact</H2>
