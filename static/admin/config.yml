@@ -71,8 +71,8 @@ collections:
               - { name: text, label: Text, widget: markdown}
 
 
-      - label: "Contact Page"
-        name: contact
+      - label: "Privacy"
+        name: privacy
         file: content/pages/privacy.yml
         fields:
           - name: heading
