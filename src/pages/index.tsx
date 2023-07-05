@@ -12,8 +12,7 @@ import {PatientFeedback} from "../components/patient-feedback";
 import {Review} from "../components/patient-feedback/reviews";
 import {Container} from "../components/containers";
 import {PracticeArchive, PracticeSummary} from "../components/practices/practice-archive";
-import {ContactForm} from "../components/contact";
-import {ContactSection} from "../components/contact/home-page-layout";
+import {ContactSection} from "../components/contact/full-form";
 
 const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
     const heroImage = data.heroImage?.childImageSharp?.gatsbyImageData;
@@ -87,6 +86,9 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
         fax: edge.node.frontmatter?.fax || "",
     }));
 
+    const contactCopy = data.sectionCopy?.childPagesYaml?.contact;
+    const contactTitle = contactCopy?.heading || "Contact Us"
+    const contactText = contactCopy?.text || "";
 
     return (
         <App>
@@ -99,7 +101,7 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
                 </Container>
                 <PatientFeedback css={css({marginTop: "5em",})} averageRating={avgRating} reviews={reviews} />
                 <Container>
-                    <ContactSection css={css({marginTop: "5em",})} />
+                    <ContactSection css={css({marginTop: "5em",})} title={contactTitle} text={contactText} />
                     <PracticeArchive css={css({marginTop: "5em",})} practices={practices} heading={practicesTitle} text={practicesText} isHomePage={true} />
                 </Container>
                 <div css={css({height: "1000px"})} />
@@ -137,6 +139,10 @@ export const query = graphql`
           access_date
         }
         practices {
+          heading
+          text
+        }
+        contact {
           heading
           text
         }
