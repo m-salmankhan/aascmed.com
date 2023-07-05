@@ -5,9 +5,6 @@ import {Breadcrumbs} from "../components/breadcrumbs";
 import {Columns, MainCol, PrimarySecondaryColumnsLayout, SideCol} from "../components/layouts/main-side-column";
 import {Article} from "../components/posts/article";
 import {H1, H4} from "../components/headings";
-import {ShareButtons} from "../components/social-media/share";
-import {MDXProvider} from "@mdx-js/react";
-import {ButtonList, ContactBanner} from "../components/posts/shortcode-components";
 import ReactMarkdown from "react-markdown";
 
 const PrivacyPage = ({ data, location, children }: PageProps<Queries.PrivacyPageQuery>) => {
@@ -21,13 +18,15 @@ const PrivacyPage = ({ data, location, children }: PageProps<Queries.PrivacyPage
                     ["/", "Home"],
                     ["/privacy/", heading],
                 ]} css={css({marginTop: "3em"})} />
-                <Article css={css({h3: {fontSize: "1rem"}})}>
+                <Article>
                     <Columns>
                         <MainCol>
                             <H1>{heading}</H1>
                             <ReactMarkdown>
                                 {text}
                             </ReactMarkdown>
+                            <p>Last Updated: {data.copy?.childPagesYaml?.lastUpdated}</p>
+                            <p>We may change this privacy policy. If we change this policy, the above date will be amended to reflect the update.</p>
                         </MainCol>
                     </Columns>
                 </Article>
@@ -42,6 +41,7 @@ export const query = graphql`
       childPagesYaml {
         heading
         text
+        lastUpdated(formatString: "YYYY.MM.DD")
       }
     }
   }
