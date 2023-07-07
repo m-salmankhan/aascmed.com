@@ -1,5 +1,5 @@
 import React from "react";
-import {graphql, PageProps} from "gatsby";
+import {graphql, HeadProps, PageProps} from "gatsby";
 import {Hero} from "../components/header";
 import {css} from "@emotion/react";
 import {ConditionsArchive} from "../components/conditions/";
@@ -13,6 +13,7 @@ import {Review} from "../components/patient-feedback/reviews";
 import {Container} from "../components/containers";
 import {PracticeArchive, PracticeSummary} from "../components/practices/practice-archive";
 import {ContactSection} from "../components/contact/full-form";
+import {SEO} from "../components/seo";
 
 const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
     const heroImage = data.heroImage?.childImageSharp?.gatsbyImageData;
@@ -110,12 +111,23 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
     );
 }
 
+export const Head = (props: HeadProps<Queries.IndexPageQuery>) => {
+    const description = props.data.sectionCopy?.childPagesYaml?.meta_description || "";
+
+    return (
+        <SEO description={description} slug={props.location.pathname} title={""}>
+            <meta name={"og:type"} content={"website"} />
+        </SEO>
+    )
+}
+
 export default IndexPage
 
 export const query = graphql`
   query IndexPage {
     sectionCopy: file(relativePath: {eq: "pages/home.yml"}) {
       childPagesYaml {
+        meta_description
         conditions {
           heading
           text

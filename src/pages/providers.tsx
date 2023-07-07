@@ -1,5 +1,5 @@
 import * as React from "react"
-import {graphql, PageProps} from "gatsby"
+import {graphql, HeadProps, PageProps} from "gatsby"
 import {Layout} from "../components/layouts/default";
 import {Container} from "../components/containers";
 import {Breadcrumbs} from "../components/breadcrumbs";
@@ -10,6 +10,7 @@ import {cols} from "../styles/grid";
 import {mediaBreakpoints} from "../styles/breakpoints";
 import {ProviderArchive, ProviderSummary} from "../components/providers";
 import {gridSpacing} from "../styles/theme";
+import {SEO} from "../components/seo";
 
 const stylesTextWrapper = css(
     cols(12),
@@ -71,10 +72,22 @@ const ProvidersPage = ({ data }: PageProps<Queries.ProvidersPageQuery>) => {
     )
 }
 
+export const Head = (props: HeadProps<Queries.ProvidersPageQuery>) => {
+    const description = props.data.copy?.childPagesYaml?.meta_description || "";
+    const heading = props.data.copy?.childPagesYaml?.heading || "";
+
+    return (
+        <SEO description={description} slug={props.location.pathname} title={heading}>
+            <meta name={"og:type"} content={"website"} />
+        </SEO>
+    )
+}
+
 export const query = graphql`
   query ProvidersPage {
     copy: file(relativePath: {eq: "pages/providers.yml"}) {
       childPagesYaml {
+        meta_description
         heading
         text
       }

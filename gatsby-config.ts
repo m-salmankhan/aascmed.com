@@ -3,7 +3,8 @@ import type { GatsbyConfig } from "gatsby";
 const config: GatsbyConfig = {
     siteMetadata: {
         title: `Allergy, Asthma and Sinus Centers`,
-        siteUrl: `https://www.aascmed.com`
+        siteUrl: `https://aascmed-new.netlify.app`,
+        twitterHandle: `@DrMaazAllergy`,
     },
     // More easily incorporate content into your pages through automatic TypeScript type generation and better GraphQL IntelliSense.
     // If you use VSCode you can also use the GraphQL plugin

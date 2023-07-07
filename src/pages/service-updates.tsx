@@ -1,4 +1,4 @@
-import {graphql, PageProps} from "gatsby";
+import {graphql, HeadProps, PageProps} from "gatsby";
 import React from "react";
 import {Layout} from "../components/layouts/default";
 import {Breadcrumbs} from "../components/breadcrumbs";
@@ -7,6 +7,7 @@ import {Container} from "../components/containers";
 import {ServiceUpdateArchive} from "../components/service-updates";
 import {ServiceUpdateSummary} from "../components/service-updates/service-update-archive";
 import {gridSpacing} from "../styles/theme";
+import {SEO} from "../components/seo";
 
 const ServiceUpdatePage: React.FC<PageProps<Queries.ServiceUpdatesQuery>> = ({ data }) => {
     const serviceUpdatesCopy = data.sectionCopy?.childPagesYaml;
@@ -39,12 +40,24 @@ const ServiceUpdatePage: React.FC<PageProps<Queries.ServiceUpdatesQuery>> = ({ d
     )
 }
 
+export const Head = (props: HeadProps<Queries.ServiceUpdatesQuery>) => {
+    const description = props.data.sectionCopy?.childPagesYaml?.meta_description || "";
+    const heading = props.data.sectionCopy?.childPagesYaml?.heading || "";
+
+    return (
+        <SEO description={description} slug={props.location.pathname} title={heading}>
+            <meta name={"og:type"} content={"website"} />
+        </SEO>
+    )
+}
+
 export default ServiceUpdatePage;
 
 export const query = graphql`
   query ServiceUpdates {
     sectionCopy: file(relativePath: {eq: "pages/service-updates.yml"}) {
       childPagesYaml {
+        meta_description
         heading
         text
       }

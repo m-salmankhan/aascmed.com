@@ -1,15 +1,23 @@
 import * as React from "react"
-import {graphql, PageProps} from "gatsby"
-import {Column, Columns, HalfColumnsLayout} from "../components/layouts/half-columns";
-import {H1, H2, H3, stylesH1, stylesH5} from "../components/headings";
-import {Breadcrumbs} from "../components/breadcrumbs";
-import {css} from "@emotion/react";
-import {MapBox} from "../components/mapbox";
-import {PrimaryAnchor} from "../components/buttons";
-import {Table} from "../components/tables";
-import {ContactForm} from "../components/contact";
+import { graphql, HeadProps, Link, PageProps } from "gatsby"
+import { Column, Columns, HalfColumnsLayout } from "../components/layouts/half-columns";
+import { H1, H2, H3, stylesH1, stylesH5 } from "../components/headings";
+import { Breadcrumbs } from "../components/breadcrumbs";
+import { css } from "@emotion/react";
+import { MapBox } from "../components/mapbox";
+import { PrimaryAnchor } from "../components/buttons";
+import { Table } from "../components/tables";
+import { ContactForm } from "../components/contact";
+import { SEO } from "../components/seo";
+import { MDXProvider } from "@mdx-js/react";
+import { ButtonList, ContactBanner } from "../components/posts/shortcode-components";
+import { cols } from "../styles/grid";
+import { mediaBreakpoints } from "../styles/breakpoints";
+import { gridSpacing } from "../styles/theme";
 
-const Clinic: React.FC<PageProps<Queries.ClinicQuery>>  = ({ data }) => {
+const shortcodes = { Link, ButtonList, ContactBanner };
+
+const Clinic: React.FC<PageProps<Queries.ClinicQuery>> = ({ data, children }) => {
     const clinicName = data.mdx?.frontmatter?.title || "Untitled";
 
     const clinicAddress = data.mdx?.frontmatter?.address || "";
@@ -42,12 +50,15 @@ const Clinic: React.FC<PageProps<Queries.ClinicQuery>>  = ({ data }) => {
                     ["/", "Home"],
                     ["/clinics/", "Clinics"],
                     [data.mdx?.fields?.slug, clinicName]
-                ]} css={css({marginTop: "3em"})} />
+                ]} css={css({ marginTop: "3em" })} />
 
                 <H1 css={stylesPageTitle}>{clinicName} Practice</H1>
-
                 <Columns>
                     <Column>
+                        <MDXProvider components={shortcodes as any}>
+                            {children}
+                        </MDXProvider>
+
                         <MapBox
                             css={css`height: 25em`}
                             longitude={longitude} latitude={latitude}
@@ -65,7 +76,7 @@ const Clinic: React.FC<PageProps<Queries.ClinicQuery>>  = ({ data }) => {
                             </PrimaryAnchor>
                         }
                         <H2 css={stylesH1}>Contact</H2>
-                        <ContactForm/>
+                        <ContactForm />
                     </Column>
                     <Column>
                         <H2 css={[stylesH1, css`margin-top: 0`]}>Contact</H2>
@@ -87,17 +98,17 @@ const Clinic: React.FC<PageProps<Queries.ClinicQuery>>  = ({ data }) => {
                                 </tr>
                             </thead>
                             <tbody>
-                            {
-                                clinicOpeningTimes.map(
-                                    (day, idx) =>
-                                        <tr>
-                                            <td>{day.day}</td>
-                                            <td>
-                                                {day.hours} { day.notes && <>({day.notes})</>}
-                                            </td>
-                                        </tr>
-                                )
-                            }
+                                {
+                                    clinicOpeningTimes.map(
+                                        (day, idx) =>
+                                            <tr>
+                                                <td>{day.day}</td>
+                                                <td>
+                                                    {day.hours} {day.notes && <>({day.notes})</>}
+                                                </td>
+                                            </tr>
+                                    )
+                                }
                             </tbody>
                             <tr className={"faux-head"}>
                                 <td colSpan={2}>Shot Hours</td>
@@ -108,18 +119,28 @@ const Clinic: React.FC<PageProps<Queries.ClinicQuery>>  = ({ data }) => {
                                         <tr>
                                             <td>{day.day}</td>
                                             <td>
-                                                {day.hours} { day.notes && <>({day.notes})</>}
+                                                {day.hours} {day.notes && <>({day.notes})</>}
                                             </td>
                                         </tr>
                                 )
                             }
                         </Table>
-                        {/*<pre>{JSON.stringify(data, null, 2)}</pre>*/}
                     </Column>
                 </Columns>
 
             </main>
         </HalfColumnsLayout>
+    )
+}
+
+export const Head = (props: HeadProps<Queries.ClinicQuery>) => {
+    const clinicName = props.data.mdx?.frontmatter?.title || "Untitled";
+    const description = props.data.mdx?.frontmatter?.description || "";
+
+    return (
+        <SEO description={description} slug={props.location.pathname} title={`${clinicName} Practice`}>
+            <meta name={"og:type"} content={"website"} />
+        </SEO>
     )
 }
 
@@ -129,6 +150,7 @@ export const query = graphql`
       id
       frontmatter {
         title
+        description
         address
         opening {
           day

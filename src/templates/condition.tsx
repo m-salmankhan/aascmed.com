@@ -1,21 +1,23 @@
 import * as React from "react"
-import {graphql, Link, PageProps} from "gatsby"
+import { graphql, HeadProps, Link, PageProps } from "gatsby"
 import { MDXProvider } from "@mdx-js/react";
-import {H1} from "../components/headings";
-import {Columns, MainCol, SideCol, PrimarySecondaryColumnsLayout} from "../components/layouts/main-side-column";
-import {Breadcrumbs} from "../components/breadcrumbs";
-import {css} from "@emotion/react";
-import {ShareButtons} from "../components/social-media/share";
-import {Contents, ContentsPageItem} from "../components/posts/contents";
-import {Article} from "../components/posts/article";
-import {ButtonList, ContactBanner} from "../components/posts/shortcode-components";
+import { H1 } from "../components/headings";
+import { Columns, MainCol, SideCol, PrimarySecondaryColumnsLayout } from "../components/layouts/main-side-column";
+import { Breadcrumbs } from "../components/breadcrumbs";
+import { css } from "@emotion/react";
+import { ShareButtons } from "../components/social-media/share";
+import { Contents, ContentsPageItem } from "../components/posts/contents";
+import { Article } from "../components/posts/article";
+import { ButtonList, ContactBanner } from "../components/posts/shortcode-components";
+import { SEO } from "../components/seo";
+import { useSiteMetadata } from "../hooks/useSiteMetadata";
 
-const shortcodes = { Link, ButtonList, ContactBanner};
+const shortcodes = { Link, ButtonList, ContactBanner };
 const Condition = ({ data, children, location }: PageProps<Queries.ConditionPageQuery>) => {
-    if((data.mdx === null) || (data.mdx === undefined))
+    if ((data.mdx === null) || (data.mdx === undefined))
         throw Error("mdx is undefined");
 
-    if((data.mdx.frontmatter === null) || (data.mdx.frontmatter === undefined))
+    if ((data.mdx.frontmatter === null) || (data.mdx.frontmatter === undefined))
         throw Error("Frontmatter is undefined");
 
     const title = data.mdx.frontmatter.title || "Untitled"
@@ -28,19 +30,19 @@ const Condition = ({ data, children, location }: PageProps<Queries.ConditionPage
                     ["", "Home"],
                     ["/conditions/", "Conditions"],
                     [data.mdx?.fields?.slug, title]
-                ]} css={css({marginTop: "3em"})} />
-                <Article css={css({h3: {fontSize: "1rem"}})}>
+                ]} css={css({ marginTop: "3em" })} />
+                <Article css={css({ h3: { fontSize: "1rem" } })}>
                     <H1><>{title}</></H1>
                     <ShareButtons pageTitle={title} path={location.pathname} />
 
                     <Columns>
                         <MainCol>
-                                <MDXProvider components={shortcodes as any}>
-                                    {children}
-                                </MDXProvider>
-                                <footer>
-                                    <ShareButtons pageTitle={title} path={location.pathname} />
-                                </footer>
+                            <MDXProvider components={shortcodes as any}>
+                                {children}
+                            </MDXProvider>
+                            <footer>
+                                <ShareButtons pageTitle={title} path={location.pathname} />
+                            </footer>
                         </MainCol>
                         <SideCol>
                             <Contents items={tocItems} />
@@ -51,6 +53,22 @@ const Condition = ({ data, children, location }: PageProps<Queries.ConditionPage
         </PrimarySecondaryColumnsLayout>
     );
 }
+
+export const Head = (props: HeadProps<Queries.ConditionPageQuery>) => {
+    const { url } = useSiteMetadata();
+    const title = props.data.mdx?.frontmatter?.title || "Untitled";
+    const description = props.data.mdx?.frontmatter?.description || "";
+    const image = props.data.mdx?.frontmatter?.thumbnail?.publicURL;
+
+    return (
+        <SEO description={description} slug={props.location.pathname} title={title} image={url + image}>
+            <meta name={"og:type"} content={"article"} />
+            <meta name={"article:section"} content={"conditions"} />
+        </SEO>
+    )
+}
+
+
 
 export const query = graphql`
   query ConditionPage($id: String) {
@@ -63,6 +81,12 @@ export const query = graphql`
       frontmatter {
         description
         title
+        thumbnail {
+            childImageSharp {
+                gatsbyImageData(width: 800)
+            }
+            publicURL
+          }
       }
     }
   }

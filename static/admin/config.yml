@@ -19,6 +19,10 @@ collections:
         name: home
         file: content/pages/home.yml
         fields:
+          - name: meta_description
+            label: "Meta Description"
+            widget: text
+
           - name: hero
             label: Hero
             widget: object
@@ -75,6 +79,9 @@ collections:
         name: privacy
         file: content/pages/privacy.yml
         fields:
+          - name: meta_description
+            label: "Meta Description"
+            widget: text
           - name: heading
             label: Heading
             widget: text
@@ -91,6 +98,9 @@ collections:
         name: contact
         file: content/pages/contact.yml
         fields:
+          - name: meta_description
+            label: "Meta Description"
+            widget: text
           - name: heading
             label: Heading
             widget: text
@@ -102,6 +112,10 @@ collections:
         name: conditions
         file: content/pages/conditions.yml
         fields:
+          - name: meta_description
+            label: "Meta Description"
+            widget: text
+
           - name: heading
             label: Heading
             widget: text
@@ -113,6 +127,10 @@ collections:
         name: providers
         file: content/pages/providers.yml
         fields:
+          - name: meta_description
+            label: "Meta Description"
+            widget: text
+
           - name: heading
             label: Heading
             widget: text
@@ -124,6 +142,10 @@ collections:
         name: clinics
         file: content/pages/clinics.yml
         fields:
+          - name: meta_description
+            label: "Meta Description"
+            widget: text
+
           - name: heading
             label: Heading
             widget: text
@@ -219,6 +241,9 @@ collections:
       preview: false
     fields:
       - { name: title, label: Title }
+      - name: description
+        label: Description
+        widget: text
       - name: "opening"
         label: "Opening Times"
         widget: "list"
