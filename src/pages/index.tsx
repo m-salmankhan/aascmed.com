@@ -92,7 +92,7 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
 
     return (
         <App>
-            <Hero image={heroImage} heading={heroTitle} siteTitle={siteTitle} text={heroText}/>
+            <Hero image={heroImage} heading={heroTitle} text={heroText}/>
             <main id={"main"}>
                 <Container>
                     <ConditionsArchive showViewAll={true} heading={conditionsTitle} text={conditionsText} frontPage={true} conditionsList={conditions} css={css({marginTop: "5em",})} />

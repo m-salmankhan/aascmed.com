@@ -9,20 +9,10 @@ const stylesNavBar = css({
 });
 
 export const NavBar = () => {
-    const data = useStaticQuery(graphql`
-        query SiteTitle {
-          site {
-            siteMetadata {
-              title
-            }
-          }
-        }
-      `);
-
     return (
         <header css={stylesNavBar}>
             <Container>
-                <Navigation siteTitle={data.site.siteMetadata.title} frontPage={false} css={css({padding: "1em 0"})}/>
+                <Navigation frontPage={false} css={css({padding: "1em 0"})}/>
             </Container>
         </header>
     );

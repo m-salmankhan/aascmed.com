@@ -1,4 +1,4 @@
-import React, {CSSProperties, MouseEventHandler, useEffect, useId, useRef, useState} from "react";
+import React, {ComponentProps, MouseEventHandler, useEffect, useId, useRef, useState} from "react";
 import {css} from "@emotion/react";
 import {Link} from "gatsby";
 import {stylesScreenReaderText} from "../../styles/accessibility";
@@ -8,253 +8,272 @@ import {bounceTransition, colours, gridSpacing} from "../../styles/theme";
 import {CSSInterpolation} from "@emotion/serialize";
 import {breakpointStrings, mediaBreakpoints} from "../../styles/breakpoints";
 import {cols, gridContainer} from "../../styles/grid";
+import {useSiteMetadata} from "../../hooks/useSiteMetadata";
 
-type NavItemProps = JSX.IntrinsicElements["li"] & {
+type NavItemProps = ComponentProps<"li"> & {
     link: string,
     onLinkClicked?: MouseEventHandler<HTMLAnchorElement>,
 };
-const NavItem: React.FC<NavItemProps> = ({ link, onLinkClicked, children, ...props }) =>
+const NavItem: React.FC<NavItemProps> = ({link, onLinkClicked, children, ...props}) =>
     <li {...props}>
         {
             (link.startsWith(`https://`)) ?
-                <a href={link} target="_BLANK" rel="noreferrer" >{children}</a> :
-                (link==="#") ?
-                    <a href="https://www.zocdoc.com/practice/allergy-asthma-and-sinus-centers-3233" onClick={onLinkClicked} >{children}</a> :
+                <a href={link} target="_BLANK" rel="noreferrer">{children}</a> :
+                (link === "#") ?
+                    <a href="https://www.zocdoc.com/practice/allergy-asthma-and-sinus-centers-3233"
+                       onClick={onLinkClicked}>{children}</a> :
                     <Link to={link} activeClassName={"active"}>{children}</Link>
         }
     </li>
 
 
-interface NavigationProps {
-    siteTitle: string,
-}
-
 enum NavigationMenuStates {
-    EXPANDED,
-    COLLAPSING,
-    COLLAPSED,
-    PRE_EXPANDING,
-    EXPANDING,
+    EXPANDED = "expanding",
+    PRE_COLLAPSING = "pre-collapsing",
+    COLLAPSING = "collapsing",
+    COLLAPSED = "collapsed",
+    PRE_EXPANDING = "pre-expanding",
+    EXPANDING = "expanding",
 }
 
-const stylesSkipToMain = css(stylesScreenReaderText, {
-    display: "block",
-    backgroundColor: "#fff",
-    color: "$brand-primary",
-    boxShadow:" 0 0 1rem rgba(#000, 0.5)",
-    border: "1px solid $brand-primary",
-    fontWeight: "bold",
-    position: "fixed",
-    top: 0,
-    left: 0,
-    zIndex: 1,
-    "&:focus": {
-        border: 0,
-        clip: "auto",
-        clipPath: "none",
-        height: "auto",
-        margin: 0,
-        overflow: "visible",
-        padding: "1rem",
-        position: "absolute",
-        top: 0,
-        left: 0,
-        width: "auto",
-        wordWrap: "normal",
-        outline: "none",
-    }
-});
+const stylesSkipToMain = css(stylesScreenReaderText, css`
+  display: block;
+  background-color: #fff;
+  color: ${colours.brandPrimary};
+  box-shadow: 0 0 1rem rgba(0, 0, 0, 0.5);
+  border: 1px solid ${colours.brandPrimary};
+  font-weight: bold;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1;
+
+  &:focus {
+    border: 0;
+    clip-path: none;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    padding: 1rem;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: auto;
+    word-wrap: normal;
+    outline: none;
+  }
+`);
 
 const stylesNav = css(
     gridContainer(mediaBreakpoints.lg),
-    {
-        justifyContent: "space-between",
-        alignItems: "center",
-    }
+    css`
+      justify-content: space-between;
+      align-items: center;
+    `
 );
 
-const stylesToggleButton: CSSInterpolation = {
-    textAlign: "center",
+const stylesToggleButton = css`
+  text-align: center;
 
-    button: {
-        fontSize: "1rem",
-        textTransform: "uppercase",
-        fontWeight: "bold",
-        border: "none",
-        outline: "none",
-        background: "none",
-        color: "white",
-        margin: "1rem auto",
-        cursor: "pointer",
-        padding: "0.5rem",
+  ${breakpointStrings.md} {
+    display: none;
+  }
 
-        svg: {
-            width: "1rem",
-            height: "1rem",
-            fill: "#fff",
-            verticalAlign: "middle",
-            marginRight: "0.5rem",
-            transition: "transform 0.5s ease-in-out 0s",
-        },
+  button {
+    font-size: 1rem;
+    text-transform: uppercase;
+    font-weight: bold;
+    border: none;
+    outline: none;
+    background: none;
+    color: white;
+    margin: 1rem auto;
+    cursor: pointer;
+    padding: 0.5rem;
 
-        "&:focus": {
-            background: "#fff",
-            color: colours.brandPrimary,
-
-            svg: {
-                fill: colours.brandPrimary,
-                transform: "rotate(180deg)",
-            }
-        }
+    svg {
+      width: 1rem;
+      height: 1rem;
+      fill: #fff;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+      transition: transform 0.5s ease-in-out 0s;
     }
-};
 
-stylesToggleButton[breakpointStrings.md] = {
-    display: "none",
-}
+    &:focus {
+      background: #fff;
+      color: ${colours.brandPrimary};
+
+      svg {
+        fill: ${colours.brandPrimary};
+        transform: rotate(180deg);
+      }
+    }
+  }
+`;
 
 
 const stylesLogoLink = css(
     cols(3, mediaBreakpoints.lg),
-    {
-        svg: {
-            width: "100%",
-            fill: "#fff",
-            transition: `transform 1s ${bounceTransition} 0s`,
-        },
+    css`
+      svg {
+        width: 100%;
+        fill: #fff;
+        transition: transform 1s ${bounceTransition} 0s;
+      }
+    ;
 
-        "&:focus, &:active": {
-            svg: {
-                transform: "scale(0.8)"
-            },
-        },
-
-        "@media screen and (min-width: 0)": {
-            paddingLeft: 0,
+      &:focus, &:active {
+        svg {
+          transform: scale(0.8);
         }
-    }
+      }
+
+      @media screen and (min-width: 0) {
+        padding-left: 0;
+      }
+    `
 );
 
 // only show one logo at a time
-const stylesHorizontalLogo: CSSInterpolation = {
-    display: "none",
-}
-stylesHorizontalLogo[breakpointStrings.lg] = {
-    display: "block",
-    height: "5em",
-}
+const stylesHorizontalLogo: CSSInterpolation = css`
+  display: none;
 
-const stylesStackedLogo: CSSInterpolation = {
-    margin: `0 auto ${gridSpacing}em`,
-    display: "block",
-}
-stylesStackedLogo[breakpointStrings.lg] = {
-    display: "none",
-}
+  ${breakpointStrings.lg} {
+    display: block;
+    height: 5em;
+  }
+`;
 
+const stylesStackedLogo = css`
+  margin: 0 auto ${gridSpacing}em;
+  display: block;
 
-const stylesNavigationUl = (state: NavigationMenuStates) => {
-    const stylesBase: CSSInterpolation = {
-        padding: 0,
-        margin: "0 auto",
-        textAlign: "center",
-        listStyle: "none",
-        overflow: "hidden",
-        transition: "max-height 1s ease-in-out 0s",
+  ${breakpointStrings.lg} {
+    display: none;
+  }
+`;
 
-        li: {
-            fontWeight: "bold",
-            display: "block",
-            letterSpacing: "0.025rem",
-            padding: `${gridSpacing/4}em 0`,
-        },
+const expandedHeight = "60em";
 
-        "a, button": {
-            display: "inline-block",
-            color: "#fff",
-            textDecoration:" none",
-            background:" transparent",
-            border:" none",
-            borderBottom: `5px solid transparent`,
-            verticalAlign:" middle",
-            padding: "5px 0",
+const stylesNavigationUl = css(
+    cols(9, mediaBreakpoints.lg),
+    css`
+      padding: 0;
+      margin: 0 auto;
+      text-align: center;
+      list-style: none;
+      overflow: hidden;
+      transition: max-height 1s ease-in-out 0s;
 
-            "&.active, &.active:hover": {
-                borderBottom: "5px solid white",
-            },
+      li {
+        font-weight: bold;
+        display: block;
+        letter-spacing: 0.025rem;
+        padding: ${gridSpacing / 4}em 0;
+      }
 
-            "&:focus, &:hover, &:active":  {
-                outline: "none",
-                border: "none",
-                color: colours.infoBlue,
-                background: colours.infoYellow,
-                borderBottom: `5px solid ${colours.infoBlue}`,
-                textDecoration: "none",
-            },
+      a, button {
+        display: inline-block;
+        color: #fff;
+        text-decoration: none;
+        background: transparent;
+        border: none;
+        border-bottom: 5px solid transparent;
+        vertical-align: middle;
+        padding: 5px 0;
+
+        &.active, &.active:hover {
+          border-bottom: 5px solid white;
         }
-    };
-    stylesBase[breakpointStrings.md] = {
-        margin: 0,
-        li: {
-            display: "inline-block",
-            padding: `0 ${gridSpacing/2}em`,
 
-            "&:first-of-type": {
-                paddingLeft: 0,
-            },
-            "&:last-of-type": {
-                paddingRight: 0,
-            },
-
+        &:focus, &:hover, &:active {
+          outline: none;
+          border: none;
+          color: ${colours.infoBlue};
+          background: ${colours.infoYellow};
+          border-bottom: 5px solid ${colours.infoBlue};
+          text-decoration: none;
         }
-    }
+      }
 
-    stylesBase[breakpointStrings.lg] = {
-        textAlign: "right",
-        paddingRight: 0,
-    }
+      ${breakpointStrings.md} {
+        margin: 0;
 
-    const stylesExpanded = css(
-        cols(9, mediaBreakpoints.lg),
-        stylesBase,
-    );
+        li {
+          display: inline-block;
+          padding: 0 ${gridSpacing / 2}em;
 
-    const stylesExpanding = css(stylesBase, {
-        maxHeight: "60em",
-    });
+          &:first-of-type {
+            padding-left: 0;
+          }
 
-    const stylesCollapsing = css(stylesBase, {
-        maxHeight: "0em",
-    });
+          &:last-of-type {
+            padding-right: 0;
+          }
+        }
+      }
 
-    const stylesCollapsed: CSSInterpolation = {
-        display: "none",
-    };
-    stylesCollapsed[breakpointStrings.md] = {
-        display: "block",
-        maxHeight: "initial",
-    }
+      ${breakpointStrings.lg} {
+        text-align: right;
+        padding-right: 0;
+      }
 
-    switch (state) {
-        case NavigationMenuStates.COLLAPSED:
-            return css(stylesCollapsing, stylesCollapsed);
-        case NavigationMenuStates.COLLAPSING:
-            return stylesCollapsing;
-        case NavigationMenuStates.EXPANDED:
-            return stylesExpanding;
-        case NavigationMenuStates.EXPANDING:
-            return stylesExpanding;
-        case NavigationMenuStates.PRE_EXPANDING:
-            return stylesCollapsing;
-    }
-}
+      // Reset max-height so all content is visible
+      &.${NavigationMenuStates.EXPANDED} {
+        max-height: initial;
+      }
+
+      // Reset max-height so all content is visible
+      &.${NavigationMenuStates.PRE_COLLAPSING} {
+        max-height: ${expandedHeight};
+      }
+
+      // Change max-height to animate collapse
+      &.${NavigationMenuStates.COLLAPSING} {
+        max-height: 0;
+      }
+
+      // Hide from screen readers when animation complete
+      &.${NavigationMenuStates.COLLAPSED} {
+        display: none;
+        // Don't hide if screen size large
+        ${breakpointStrings.md} {
+          display: block;
+        }
+      }
+
+      // Add max-height 0 again so that the transition can occur
+      &.${NavigationMenuStates.PRE_EXPANDING} {
+        max-height: 0;
+
+        // Don't change max-height on big screens
+        // This isn't really needed though; it will never be that big on horizontal layout
+        ${breakpointStrings.md} {
+          max-height: initial;
+        }
+      }
+
+      // Change max-height to animate expansion
+      &.${NavigationMenuStates.EXPANDING} {
+        max-height: ${expandedHeight};
+
+        // Don't change max-height on big screens
+        // This isn't really needed though; it will never be that big on horizontal layout
+        ${breakpointStrings.md} {
+          max-height: initial;
+        }
+      }
+    `
+);
 
 interface NavigationProps {
-    siteTitle: string,
     frontPage: boolean,
     className?: string,
 }
-export const Navigation: React.FC<NavigationProps> = ({siteTitle, frontPage, className}) => {
+
+export const Navigation: React.FC<NavigationProps> = ({frontPage, className}) => {
+    const {title} = useSiteMetadata();
     const [collapsedState, setCollapsedState] = useState(NavigationMenuStates.EXPANDED);
     const listId = useId();
     const listRef = useRef<HTMLUListElement | null>(null);
@@ -263,30 +282,47 @@ export const Navigation: React.FC<NavigationProps> = ({siteTitle, frontPage, cla
     // set JSEnabled to true
     useEffect(() => {
         setJSEnabled(true);
-        if(!matchMedia(`screen and (min-width: ${mediaBreakpoints.md}em)`).matches) {
+        if (!matchMedia(`
+    screen
+    and(min - width
+: ${mediaBreakpoints.md}
+    em
+)
+    `).matches) {
             setCollapsedState(NavigationMenuStates.COLLAPSED);
         }
     }, [setJSEnabled]);
 
-    // progress the state after making it visible again
+    // progress the state after adding necessary styles for transition to occur
+    // These do not result in a transition event so the state must be forwarded here
     useEffect(() => {
         if (collapsedState === NavigationMenuStates.PRE_EXPANDING) {
             setCollapsedState(NavigationMenuStates.EXPANDING);
+            return;
+        }
+
+        if (collapsedState === NavigationMenuStates.PRE_COLLAPSING) {
+            setCollapsedState(NavigationMenuStates.COLLAPSING);
+            return;
         }
     }, [collapsedState, setCollapsedState]);
 
     const transitionEndHandler = () => {
         switch (collapsedState) {
+            // This doesn't case a transition so there is no handler
             case NavigationMenuStates.COLLAPSED:
-                setCollapsedState(NavigationMenuStates.EXPANDING);
                 break
 
+            // This doesn't case a transition so there is no handler
             case NavigationMenuStates.EXPANDED:
-                setCollapsedState(NavigationMenuStates.COLLAPSING);
                 break
 
             // This doesn't case a transition so there is no handler
             case NavigationMenuStates.PRE_EXPANDING:
+                break
+
+            // This doesn't case a transition so there is no handler
+            case NavigationMenuStates.PRE_COLLAPSING:
                 break
 
             case NavigationMenuStates.EXPANDING:
@@ -299,20 +335,25 @@ export const Navigation: React.FC<NavigationProps> = ({siteTitle, frontPage, cla
         }
     };
 
-    const bookingsClickHandler = () => {
-
-    }
-
     const toggleMenu = () => {
         switch (collapsedState) {
+            case NavigationMenuStates.EXPANDED:
+                setCollapsedState(NavigationMenuStates.PRE_COLLAPSING);
+                break
+
+            // temporary state; changed immediately in useEffect()
+            case NavigationMenuStates.PRE_COLLAPSING:
+                break
+
+            case NavigationMenuStates.COLLAPSING:
+                setCollapsedState(NavigationMenuStates.EXPANDING);
+                break
+
             case NavigationMenuStates.COLLAPSED:
                 setCollapsedState(NavigationMenuStates.PRE_EXPANDING);
                 break
 
-            case NavigationMenuStates.EXPANDED:
-                setCollapsedState(NavigationMenuStates.COLLAPSING);
-                break
-
+            // temporary state; changed immediately in useEffect()
             case NavigationMenuStates.PRE_EXPANDING:
                 break
 
@@ -320,9 +361,6 @@ export const Navigation: React.FC<NavigationProps> = ({siteTitle, frontPage, cla
                 setCollapsedState(NavigationMenuStates.COLLAPSING);
                 break
 
-            case NavigationMenuStates.COLLAPSING:
-                setCollapsedState(NavigationMenuStates.EXPANDING);
-                break
         }
     }
 
@@ -331,11 +369,11 @@ export const Navigation: React.FC<NavigationProps> = ({siteTitle, frontPage, cla
             <a css={stylesSkipToMain} href="#main">Skip to main content</a>
             <nav css={stylesNav}>
                 <Link css={stylesLogoLink} to="/">
-                    <HorizontalLogo css={stylesHorizontalLogo} />
-                    <StackedLogo css={stylesStackedLogo} />
+                    <HorizontalLogo css={stylesHorizontalLogo}/>
+                    <StackedLogo css={stylesStackedLogo}/>
                     {(frontPage) ?
-                        <h1 css={stylesScreenReaderText}>{ siteTitle }</h1> :
-                        <span css={stylesScreenReaderText}>{ siteTitle }</span>
+                        <h1 css={stylesScreenReaderText}>{title}</h1> :
+                        <span css={stylesScreenReaderText}>{title}</span>
                     }
                 </Link>
 
@@ -343,19 +381,22 @@ export const Navigation: React.FC<NavigationProps> = ({siteTitle, frontPage, cla
                 {
                     jsEnabled ?
                         <div css={css(stylesToggleButton)}>
-                            <button aria-expanded={collapsedState !== NavigationMenuStates.COLLAPSED} onClick={toggleMenu} aria-controls={listId}>
-                                <FaIcons iconStyle={IconStyles.SOLID} icon="bars" />
+                            <button aria-expanded={collapsedState !== NavigationMenuStates.COLLAPSED}
+                                    onClick={toggleMenu} aria-controls={listId}>
+                                <FaIcons iconStyle={IconStyles.SOLID} icon="bars"/>
                                 Menu
                             </button>
                         </div> : <></>
                 }
 
-                <ul id={listId} ref={listRef} css={stylesNavigationUl(collapsedState)} onTransitionEnd={transitionEndHandler} aria-hidden={collapsedState === NavigationMenuStates.COLLAPSED}>
+                <ul className={collapsedState} id={listId} ref={listRef} css={stylesNavigationUl}
+                    onTransitionEnd={transitionEndHandler}
+                    aria-hidden={collapsedState === NavigationMenuStates.COLLAPSED}>
                     <NavItem link="/conditions/">Patient Education</NavItem>
                     <NavItem link="/providers/">Our Team</NavItem>
                     <NavItem link="/clinics/">Locations</NavItem>
                     <NavItem link="https://id.patientfusion.com/signin">Patient Portal</NavItem>
-                    <NavItem onLinkClicked={bookingsClickHandler} link="#">Bookings</NavItem>
+                    <NavItem link="#">Bookings</NavItem>
                     <NavItem link="/contact/">Contact</NavItem>
                 </ul>
             </nav>

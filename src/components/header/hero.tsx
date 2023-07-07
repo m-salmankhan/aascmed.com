@@ -9,7 +9,6 @@ import {CSSInterpolation} from "@emotion/serialize";
 import ReactMarkdown from "react-markdown";
 
 interface HeroProps extends HTMLProps<HTMLDivElement> {
-    siteTitle: string,
     heading: string,
     text: string,
     image?: IGatsbyImageData,
@@ -101,7 +100,7 @@ const getParallaxValues = (height: number): ParallaxParameters => {
     }
 }
 
-export const Hero: React.FC<HeroProps> = ({heading, text, image, siteTitle, children}) => {
+export const Hero: React.FC<HeroProps> = ({heading, text, image, children}) => {
     const headerRef = useRef<HTMLElement | null>(null);
     const [parallax, setParallax] = useState<ParallaxParameters>({textTranslation: 0, backgroundOpacity: 0});
 
@@ -129,7 +128,7 @@ export const Hero: React.FC<HeroProps> = ({heading, text, image, siteTitle, chil
         <PaddedContainer css={stylesHero}>
             <header ref={headerRef}>
                 {image && <GatsbyImage css={stylesHeroBackgroundImage} draggable={false} image={image} alt={""}/>}
-                <Navigation css={stylesNavigation} siteTitle={siteTitle} frontPage={true} />
+                <Navigation css={stylesNavigation} frontPage={true} />
                 <div className="translate" css={css(stylesHeroContent)} style={{transform: `translate3d(0, -${parallax.textTranslation}%, 0)`}}>
                     <div>
                         {children}
