@@ -1,39 +1,37 @@
-import React, {ComponentProps, MouseEventHandler, useEffect, useId, useRef, useState} from "react";
-import {css} from "@emotion/react";
-import {Link} from "gatsby";
-import {stylesScreenReaderText} from "../../styles/accessibility";
-import {HorizontalLogo, StackedLogo} from "../logo";
-import {FaIcons, IconStyles} from "../font-awesome";
-import {bounceTransition, colours, gridSpacing} from "../../styles/theme";
-import {CSSInterpolation} from "@emotion/serialize";
-import {breakpointStrings, mediaBreakpoints} from "../../styles/breakpoints";
-import {cols, gridContainer} from "../../styles/grid";
-import {useSiteMetadata} from "../../hooks/useSiteMetadata";
+import React, { ComponentProps, MouseEventHandler, useEffect, useId, useRef, useState } from "react";
+import { css } from "@emotion/react";
+import { Link } from "gatsby";
+import { stylesScreenReaderText } from "../../styles/accessibility";
+import { HorizontalLogo, StackedLogo } from "../logo";
+import { FaIcons, IconStyles } from "../font-awesome";
+import { bounceTransition, colours, gridSpacing } from "../../styles/theme";
+import { CSSInterpolation } from "@emotion/serialize";
+import { breakpointStrings, mediaBreakpoints } from "../../styles/breakpoints";
+import { cols, gridContainer } from "../../styles/grid";
+import { useSiteMetadata } from "../../hooks/useSiteMetadata";
+import { ZocDocURL } from "../zocdoc";
 
 type NavItemProps = ComponentProps<"li"> & {
-    link: string,
-    onLinkClicked?: MouseEventHandler<HTMLAnchorElement>,
+  link: string,
+  onLinkClicked?: MouseEventHandler<HTMLAnchorElement>,
 };
-const NavItem: React.FC<NavItemProps> = ({link, onLinkClicked, children, ...props}) =>
-    <li {...props}>
-        {
-            (link.startsWith(`https://`)) ?
-                <a href={link} target="_BLANK" rel="noreferrer">{children}</a> :
-                (link === "#") ?
-                    <a href="https://www.zocdoc.com/practice/allergy-asthma-and-sinus-centers-3233"
-                       onClick={onLinkClicked}>{children}</a> :
-                    <Link to={link} activeClassName={"active"}>{children}</Link>
-        }
-    </li>
+const NavItem: React.FC<NavItemProps> = ({ link, onLinkClicked, children, ...props }) =>
+  <li {...props}>
+    {
+      (link.startsWith(`https://`)) ?
+        <a href={link} target="_BLANK" rel="noreferrer">{children}</a> :
+        <Link to={link} activeClassName={"active"}>{children}</Link>
+    }
+  </li>
 
 
 enum NavigationMenuStates {
-    EXPANDED = "expanding",
-    PRE_COLLAPSING = "pre-collapsing",
-    COLLAPSING = "collapsing",
-    COLLAPSED = "collapsed",
-    PRE_EXPANDING = "pre-expanding",
-    EXPANDING = "expanding",
+  EXPANDED = "expanding",
+  PRE_COLLAPSING = "pre-collapsing",
+  COLLAPSING = "collapsing",
+  COLLAPSED = "collapsed",
+  PRE_EXPANDING = "pre-expanding",
+  EXPANDING = "expanding",
 }
 
 const stylesSkipToMain = css(stylesScreenReaderText, css`
@@ -65,8 +63,8 @@ const stylesSkipToMain = css(stylesScreenReaderText, css`
 `);
 
 const stylesNav = css(
-    gridContainer(mediaBreakpoints.lg),
-    css`
+  gridContainer(mediaBreakpoints.lg),
+  css`
       justify-content: space-between;
       align-items: center;
     `
@@ -114,8 +112,8 @@ const stylesToggleButton = css`
 
 
 const stylesLogoLink = css(
-    cols(3, mediaBreakpoints.lg),
-    css`
+  cols(3, mediaBreakpoints.lg),
+  css`
       svg {
         width: 100%;
         fill: #fff;
@@ -157,8 +155,8 @@ const stylesStackedLogo = css`
 const expandedHeight = "60em";
 
 const stylesNavigationUl = css(
-    cols(9, mediaBreakpoints.lg),
-    css`
+  cols(9, mediaBreakpoints.lg),
+  css`
       padding: 0;
       margin: 0 auto;
       text-align: center;
@@ -268,139 +266,139 @@ const stylesNavigationUl = css(
 );
 
 interface NavigationProps {
-    frontPage: boolean,
-    className?: string,
+  frontPage: boolean,
+  className?: string,
 }
 
-export const Navigation: React.FC<NavigationProps> = ({frontPage, className}) => {
-    const {title} = useSiteMetadata();
-    const [collapsedState, setCollapsedState] = useState(NavigationMenuStates.EXPANDED);
-    const listId = useId();
-    const listRef = useRef<HTMLUListElement | null>(null);
-    const [jsEnabled, setJSEnabled] = useState(false);
+export const Navigation: React.FC<NavigationProps> = ({ frontPage, className }) => {
+  const { title } = useSiteMetadata();
+  const [collapsedState, setCollapsedState] = useState(NavigationMenuStates.EXPANDED);
+  const listId = useId();
+  const listRef = useRef<HTMLUListElement | null>(null);
+  const [jsEnabled, setJSEnabled] = useState(false);
 
-    // set JSEnabled to true
-    useEffect(() => {
-        setJSEnabled(true);
-        if (!matchMedia(`
+  // set JSEnabled to true
+  useEffect(() => {
+    setJSEnabled(true);
+    if (!matchMedia(`
     screen
     and(min - width
 : ${mediaBreakpoints.md}
     em
 )
     `).matches) {
-            setCollapsedState(NavigationMenuStates.COLLAPSED);
-        }
-    }, [setJSEnabled]);
+      setCollapsedState(NavigationMenuStates.COLLAPSED);
+    }
+  }, [setJSEnabled]);
 
-    // progress the state after adding necessary styles for transition to occur
-    // These do not result in a transition event so the state must be forwarded here
-    useEffect(() => {
-        if (collapsedState === NavigationMenuStates.PRE_EXPANDING) {
-            setCollapsedState(NavigationMenuStates.EXPANDING);
-            return;
-        }
-
-        if (collapsedState === NavigationMenuStates.PRE_COLLAPSING) {
-            setCollapsedState(NavigationMenuStates.COLLAPSING);
-            return;
-        }
-    }, [collapsedState, setCollapsedState]);
-
-    const transitionEndHandler = () => {
-        switch (collapsedState) {
-            // This doesn't case a transition so there is no handler
-            case NavigationMenuStates.COLLAPSED:
-                break
-
-            // This doesn't case a transition so there is no handler
-            case NavigationMenuStates.EXPANDED:
-                break
-
-            // This doesn't case a transition so there is no handler
-            case NavigationMenuStates.PRE_EXPANDING:
-                break
-
-            // This doesn't case a transition so there is no handler
-            case NavigationMenuStates.PRE_COLLAPSING:
-                break
-
-            case NavigationMenuStates.EXPANDING:
-                setCollapsedState(NavigationMenuStates.EXPANDED);
-                break
-
-            case NavigationMenuStates.COLLAPSING:
-                setCollapsedState(NavigationMenuStates.COLLAPSED);
-                break
-        }
-    };
-
-    const toggleMenu = () => {
-        switch (collapsedState) {
-            case NavigationMenuStates.EXPANDED:
-                setCollapsedState(NavigationMenuStates.PRE_COLLAPSING);
-                break
-
-            // temporary state; changed immediately in useEffect()
-            case NavigationMenuStates.PRE_COLLAPSING:
-                break
-
-            case NavigationMenuStates.COLLAPSING:
-                setCollapsedState(NavigationMenuStates.EXPANDING);
-                break
-
-            case NavigationMenuStates.COLLAPSED:
-                setCollapsedState(NavigationMenuStates.PRE_EXPANDING);
-                break
-
-            // temporary state; changed immediately in useEffect()
-            case NavigationMenuStates.PRE_EXPANDING:
-                break
-
-            case NavigationMenuStates.EXPANDING:
-                setCollapsedState(NavigationMenuStates.COLLAPSING);
-                break
-
-        }
+  // progress the state after adding necessary styles for transition to occur
+  // These do not result in a transition event so the state must be forwarded here
+  useEffect(() => {
+    if (collapsedState === NavigationMenuStates.PRE_EXPANDING) {
+      setCollapsedState(NavigationMenuStates.EXPANDING);
+      return;
     }
 
-    return (
-        <div className={className}>
-            <a css={stylesSkipToMain} href="#main">Skip to main content</a>
-            <nav css={stylesNav}>
-                <Link css={stylesLogoLink} to="/">
-                    <HorizontalLogo css={stylesHorizontalLogo}/>
-                    <StackedLogo css={stylesStackedLogo}/>
-                    {(frontPage) ?
-                        <h1 css={stylesScreenReaderText}>{title}</h1> :
-                        <span css={stylesScreenReaderText}>{title}</span>
-                    }
-                </Link>
+    if (collapsedState === NavigationMenuStates.PRE_COLLAPSING) {
+      setCollapsedState(NavigationMenuStates.COLLAPSING);
+      return;
+    }
+  }, [collapsedState, setCollapsedState]);
 
-                {/* Toggle Button (show only if JS enabled) */}
-                {
-                    jsEnabled ?
-                        <div css={css(stylesToggleButton)}>
-                            <button aria-expanded={collapsedState !== NavigationMenuStates.COLLAPSED}
-                                    onClick={toggleMenu} aria-controls={listId}>
-                                <FaIcons iconStyle={IconStyles.SOLID} icon="bars"/>
-                                Menu
-                            </button>
-                        </div> : <></>
-                }
+  const transitionEndHandler = () => {
+    switch (collapsedState) {
+      // This doesn't case a transition so there is no handler
+      case NavigationMenuStates.COLLAPSED:
+        break
 
-                <ul className={collapsedState} id={listId} ref={listRef} css={stylesNavigationUl}
-                    onTransitionEnd={transitionEndHandler}
-                    aria-hidden={collapsedState === NavigationMenuStates.COLLAPSED}>
-                    <NavItem link="/conditions/">Patient Education</NavItem>
-                    <NavItem link="/providers/">Our Team</NavItem>
-                    <NavItem link="/clinics/">Locations</NavItem>
-                    <NavItem link="https://id.patientfusion.com/signin">Patient Portal</NavItem>
-                    <NavItem link="#">Bookings</NavItem>
-                    <NavItem link="/contact/">Contact</NavItem>
-                </ul>
-            </nav>
-        </div>
-    )
+      // This doesn't case a transition so there is no handler
+      case NavigationMenuStates.EXPANDED:
+        break
+
+      // This doesn't case a transition so there is no handler
+      case NavigationMenuStates.PRE_EXPANDING:
+        break
+
+      // This doesn't case a transition so there is no handler
+      case NavigationMenuStates.PRE_COLLAPSING:
+        break
+
+      case NavigationMenuStates.EXPANDING:
+        setCollapsedState(NavigationMenuStates.EXPANDED);
+        break
+
+      case NavigationMenuStates.COLLAPSING:
+        setCollapsedState(NavigationMenuStates.COLLAPSED);
+        break
+    }
+  };
+
+  const toggleMenu = () => {
+    switch (collapsedState) {
+      case NavigationMenuStates.EXPANDED:
+        setCollapsedState(NavigationMenuStates.PRE_COLLAPSING);
+        break
+
+      // temporary state; changed immediately in useEffect()
+      case NavigationMenuStates.PRE_COLLAPSING:
+        break
+
+      case NavigationMenuStates.COLLAPSING:
+        setCollapsedState(NavigationMenuStates.EXPANDING);
+        break
+
+      case NavigationMenuStates.COLLAPSED:
+        setCollapsedState(NavigationMenuStates.PRE_EXPANDING);
+        break
+
+      // temporary state; changed immediately in useEffect()
+      case NavigationMenuStates.PRE_EXPANDING:
+        break
+
+      case NavigationMenuStates.EXPANDING:
+        setCollapsedState(NavigationMenuStates.COLLAPSING);
+        break
+
+    }
+  }
+
+  return (
+    <div className={className}>
+      <a css={stylesSkipToMain} href="#main">Skip to main content</a>
+      <nav css={stylesNav}>
+        <Link css={stylesLogoLink} to="/">
+          <HorizontalLogo css={stylesHorizontalLogo} />
+          <StackedLogo css={stylesStackedLogo} />
+          {(frontPage) ?
+            <h1 css={stylesScreenReaderText}>{title}</h1> :
+            <span css={stylesScreenReaderText}>{title}</span>
+          }
+        </Link>
+
+        {/* Toggle Button (show only if JS enabled) */}
+        {
+          jsEnabled ?
+            <div css={css(stylesToggleButton)}>
+              <button aria-expanded={collapsedState !== NavigationMenuStates.COLLAPSED}
+                onClick={toggleMenu} aria-controls={listId}>
+                <FaIcons iconStyle={IconStyles.SOLID} icon="bars" />
+                Menu
+              </button>
+            </div> : <></>
+        }
+
+        <ul className={collapsedState} id={listId} ref={listRef} css={stylesNavigationUl}
+          onTransitionEnd={transitionEndHandler}
+          aria-hidden={collapsedState === NavigationMenuStates.COLLAPSED}>
+          <NavItem link="/conditions/">Patient Education</NavItem>
+          <NavItem link="/providers/">Our Team</NavItem>
+          <NavItem link="/clinics/">Locations</NavItem>
+          <NavItem link="https://login.patientfusion.com">Patient Portal</NavItem>
+          <NavItem link={ZocDocURL}>Bookings</NavItem>
+          <NavItem link="/contact/">Contact</NavItem>
+        </ul>
+      </nav>
+    </div>
+  )
 }
 

@@ -1,12 +1,12 @@
-import React, {ComponentProps, ReactNode, useId} from "react";
-import {inputBorderWidths, inputFocusShadow, inputMargins, inputPadding, stylesLabel} from "./index";
-import {css} from "@emotion/react";
-import {colours} from "../../styles/theme";
+import React, { ComponentProps, ReactNode, useId } from "react";
+import { inputBorderWidths, inputFocusShadow, inputMargins, inputPadding, stylesLabel } from "./index";
+import { css } from "@emotion/react";
+import { colours } from "../../styles/theme";
 
 interface DropdownInputProps extends Omit<ComponentProps<"select">, "id"> {
-    label: string | ReactNode
-    children: ReactNode
-    error?: string | ReactNode
+  label: string | ReactNode
+  children: ReactNode
+  error?: string | ReactNode
 }
 
 const stylesDropdownInput = (error: boolean) => css`
@@ -29,14 +29,14 @@ const stylesDropdownInput = (error: boolean) => css`
   }
 `
 
-export const DropdownInput: React.FC<DropdownInputProps> = (props) => {
-    const id = useId();
-    return (
-        <div className={props.className} css={stylesDropdownInput(!!props.error)}>
-            <label css={stylesLabel(!!props.error)} htmlFor={id}>{props.label}</label>
-            <select>
-                {props.children}
-            </select>
-        </div>
-    );
+export const DropdownInput: React.FC<DropdownInputProps> = ({ className, error, label, ...props }) => {
+  const id = useId();
+  return (
+    <div className={className} css={stylesDropdownInput(!!error)}>
+      <label css={stylesLabel(!!error)} htmlFor={id}>{label}</label>
+      <select {...props}>
+        {props.children}
+      </select>
+    </div>
+  );
 }

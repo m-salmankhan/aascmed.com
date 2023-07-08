@@ -1,124 +1,125 @@
 import React from "react";
-import {graphql, HeadProps, PageProps} from "gatsby";
-import {Hero} from "../components/header";
-import {css} from "@emotion/react";
-import {ConditionsArchive} from "../components/conditions/";
-import {ConditionSummary} from "../components/conditions/conditions-archive";
-import {ServiceUpdateArchive} from "../components/service-updates";
-import {ServiceUpdateSummary} from "../components/service-updates/service-update-archive";
-import {App} from "../components/layouts/app";
-import {ProvidersArchiveHomePageLayout, ProviderSummary} from "../components/providers";
-import {PatientFeedback} from "../components/patient-feedback";
-import {Review} from "../components/patient-feedback/reviews";
-import {Container} from "../components/containers";
-import {PracticeArchive, PracticeSummary} from "../components/practices/practice-archive";
-import {ContactSection} from "../components/contact/full-form";
-import {SEO} from "../components/seo";
+import { graphql, HeadProps, PageProps } from "gatsby";
+import { Hero } from "../components/header";
+import { css } from "@emotion/react";
+import { ConditionsArchive } from "../components/conditions/";
+import { ConditionSummary } from "../components/conditions/conditions-archive";
+import { ServiceUpdateArchive } from "../components/service-updates";
+import { ServiceUpdateSummary } from "../components/service-updates/service-update-archive";
+import { App } from "../components/layouts/app";
+import { ProvidersArchiveHomePageLayout, ProviderSummary } from "../components/providers";
+import { PatientFeedback } from "../components/patient-feedback";
+import { Review } from "../components/patient-feedback/reviews";
+import { Container } from "../components/containers";
+import { PracticeArchive, PracticeSummary } from "../components/practices/practice-archive";
+import { ContactSection } from "../components/contact/full-form";
+import { SEO } from "../components/seo";
+import { Footer } from "../components/footer";
 
 const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
-    const heroImage = data.heroImage?.childImageSharp?.gatsbyImageData;
-    const siteTitle = data.siteTitle?.siteMetadata?.title || "Allergy Asthma and Sinus Centres";
+  const heroImage = data.heroImage?.childImageSharp?.gatsbyImageData;
+  const siteTitle = data.siteTitle?.siteMetadata?.title || "Allergy Asthma and Sinus Centres";
 
-    const heroCopy = data?.sectionCopy?.childPagesYaml?.hero;
-    const heroTitle = heroCopy?.heading || siteTitle;
-    const heroText = heroCopy?.text || "";
+  const heroCopy = data?.sectionCopy?.childPagesYaml?.hero;
+  const heroTitle = heroCopy?.heading || siteTitle;
+  const heroText = heroCopy?.text || "";
 
-    const conditionsCopy = data.sectionCopy?.childPagesYaml?.conditions;
-    const conditionsTitle = conditionsCopy?.heading || "Learn more about the conditions we treat."
-    const conditionsText = conditionsCopy?.text || "";
-    const conditions: ConditionSummary[] = data.conditions.edges.map(edge => ({
-        slug: edge.node.fields?.slug || "",
-        title: edge.node.frontmatter?.title || "",
-        thumbnail: edge.node.frontmatter?.thumbnail?.childImageSharp?.gatsbyImageData,
-    }));
+  const conditionsCopy = data.sectionCopy?.childPagesYaml?.conditions;
+  const conditionsTitle = conditionsCopy?.heading || "Learn more about the conditions we treat."
+  const conditionsText = conditionsCopy?.text || "";
+  const conditions: ConditionSummary[] = data.conditions.edges.map(edge => ({
+    slug: edge.node.fields?.slug || "",
+    title: edge.node.frontmatter?.title || "",
+    thumbnail: edge.node.frontmatter?.thumbnail?.childImageSharp?.gatsbyImageData,
+  }));
 
-    const serviceUpdatesCopy = data.sectionCopy?.childPagesYaml?.service_updates;
-    const serviceUpdatesTitle = serviceUpdatesCopy?.heading || "Service Updates"
-    const serviceUpdatesText = serviceUpdatesCopy?.text || "";
-    const serviceUpdates: ServiceUpdateSummary[] = data.serviceUpdates.edges.map(edge => ({
-        slug: edge.node.fields?.slug || "",
-        title: edge.node.frontmatter?.title || "",
-        date: edge.node.frontmatter?.date || "",
-        description: edge.node.frontmatter?.description || "",
-    }));
+  const serviceUpdatesCopy = data.sectionCopy?.childPagesYaml?.service_updates;
+  const serviceUpdatesTitle = serviceUpdatesCopy?.heading || "Service Updates"
+  const serviceUpdatesText = serviceUpdatesCopy?.text || "";
+  const serviceUpdates: ServiceUpdateSummary[] = data.serviceUpdates.edges.map(edge => ({
+    slug: edge.node.fields?.slug || "",
+    title: edge.node.frontmatter?.title || "",
+    date: edge.node.frontmatter?.date || "",
+    description: edge.node.frontmatter?.description || "",
+  }));
 
-    const providersCopy = data.sectionCopy?.childPagesYaml?.providers;
-    const providersTitle = providersCopy?.heading || "Meet the team"
-    const providersText = providersCopy?.text || "";
-    const providers: ProviderSummary[] = data.providers.edges.map(edge => ({
-        slug: edge.node.fields?.slug || "",
-        name: {
-            fullName: edge.node.frontmatter?.name?.fullname || "",
-            title: edge.node.frontmatter?.name?.title || "",
-            degreeAbbr: edge.node.frontmatter?.name?.degree_abbr || "",
-        },
-        image: edge.node.frontmatter?.image?.childImageSharp?.gatsbyImageData,
-    }));
+  const providersCopy = data.sectionCopy?.childPagesYaml?.providers;
+  const providersTitle = providersCopy?.heading || "Meet the team"
+  const providersText = providersCopy?.text || "";
+  const providers: ProviderSummary[] = data.providers.edges.map(edge => ({
+    slug: edge.node.fields?.slug || "",
+    name: {
+      fullName: edge.node.frontmatter?.name?.fullname || "",
+      title: edge.node.frontmatter?.name?.title || "",
+      degreeAbbr: edge.node.frontmatter?.name?.degree_abbr || "",
+    },
+    image: edge.node.frontmatter?.image?.childImageSharp?.gatsbyImageData,
+  }));
 
-    const avgRating = {
-        rating: data.sectionCopy?.childPagesYaml?.patient_feedback?.rating || 0,
-        source: {
-            name: data.sectionCopy?.childPagesYaml?.patient_feedback?.source_name || "",
-            url: data.sectionCopy?.childPagesYaml?.patient_feedback?.source_url || "",
-        },
-        date: data.sectionCopy?.childPagesYaml?.patient_feedback?.access_date || "",
-    };
+  const avgRating = {
+    rating: data.sectionCopy?.childPagesYaml?.patient_feedback?.rating || 0,
+    source: {
+      name: data.sectionCopy?.childPagesYaml?.patient_feedback?.source_name || "",
+      url: data.sectionCopy?.childPagesYaml?.patient_feedback?.source_url || "",
+    },
+    date: data.sectionCopy?.childPagesYaml?.patient_feedback?.access_date || "",
+  };
 
-    const reviews: Review[] = data.reviews.edges.map(edge => ({
-        stars: edge.node.frontmatter?.stars || 0,
-        body: edge.node.body,
-        source: {
-            url: edge.node.frontmatter?.source?.url || "",
-            name: edge.node.frontmatter?.source?.name || "",
-        },
-        reviewerName: edge.node.frontmatter?.reviewerName || "",
-    }));
+  const reviews: Review[] = data.reviews.edges.map(edge => ({
+    stars: edge.node.frontmatter?.stars || 0,
+    body: edge.node.body,
+    source: {
+      url: edge.node.frontmatter?.source?.url || "",
+      name: edge.node.frontmatter?.source?.name || "",
+    },
+    reviewerName: edge.node.frontmatter?.reviewerName || "",
+  }));
 
-    const practicesCopy = data.sectionCopy?.childPagesYaml?.practices;
-    const practicesTitle = practicesCopy?.heading || "Practices"
-    const practicesText = practicesCopy?.text || "";
-    const practices: PracticeSummary[] = data.practices.edges.map(edge => ({
-        slug: edge.node.fields?.slug || "",
-        clinic_name: edge.node.frontmatter?.title || "Untitled Clinic",
-        longitude: edge.node.frontmatter?.lon || 0,
-        latitude: edge.node.frontmatter?.lat || 0,
-        address: edge.node.frontmatter?.address || "",
-        phone: edge.node.frontmatter?.phone || "",
-        fax: edge.node.frontmatter?.fax || "",
-    }));
+  const practicesCopy = data.sectionCopy?.childPagesYaml?.practices;
+  const practicesTitle = practicesCopy?.heading || "Practices"
+  const practicesText = practicesCopy?.text || "";
+  const practices: PracticeSummary[] = data.practices.edges.map(edge => ({
+    slug: edge.node.fields?.slug || "",
+    clinic_name: edge.node.frontmatter?.title || "Untitled Clinic",
+    longitude: edge.node.frontmatter?.lon || 0,
+    latitude: edge.node.frontmatter?.lat || 0,
+    address: edge.node.frontmatter?.address || "",
+    phone: edge.node.frontmatter?.phone || "",
+    fax: edge.node.frontmatter?.fax || "",
+  }));
 
-    const contactCopy = data.sectionCopy?.childPagesYaml?.contact;
-    const contactTitle = contactCopy?.heading || "Contact Us"
-    const contactText = contactCopy?.text || "";
+  const contactCopy = data.sectionCopy?.childPagesYaml?.contact;
+  const contactTitle = contactCopy?.heading || "Contact Us"
+  const contactText = contactCopy?.text || "";
 
-    return (
-        <App>
-            <Hero image={heroImage} heading={heroTitle} text={heroText}/>
-            <main id={"main"}>
-                <Container>
-                    <ConditionsArchive showViewAll={true} heading={conditionsTitle} text={conditionsText} frontPage={true} conditionsList={conditions} css={css({marginTop: "5em",})} />
-                    <ServiceUpdateArchive serviceUpdates={serviceUpdates} frontPage={true} heading={serviceUpdatesTitle} text={serviceUpdatesText} css={css({marginTop: "4em",})} />
-                    <ProvidersArchiveHomePageLayout providers={providers} heading={providersTitle} text={providersText} css={css({marginTop: "4em",})} />
-                </Container>
-                <PatientFeedback css={css({marginTop: "5em",})} averageRating={avgRating} reviews={reviews} />
-                <Container>
-                    <ContactSection css={css({marginTop: "5em",})} title={contactTitle} text={contactText} />
-                    <PracticeArchive css={css({marginTop: "5em",})} practices={practices} heading={practicesTitle} text={practicesText} isHomePage={true} />
-                </Container>
-                <div css={css({height: "1000px"})} />
-            </main>
-        </App>
-    );
+  return (
+    <App>
+      <Hero image={heroImage} heading={heroTitle} text={heroText} />
+      <main id={"main"}>
+        <Container>
+          <ConditionsArchive showViewAll={true} heading={conditionsTitle} text={conditionsText} frontPage={true} conditionsList={conditions} css={css({ marginTop: "5em", })} />
+          <ServiceUpdateArchive serviceUpdates={serviceUpdates} frontPage={true} heading={serviceUpdatesTitle} text={serviceUpdatesText} css={css({ marginTop: "4em", })} />
+          <ProvidersArchiveHomePageLayout providers={providers} heading={providersTitle} text={providersText} css={css({ marginTop: "4em", })} />
+        </Container>
+        <PatientFeedback css={css({ marginTop: "5em", })} averageRating={avgRating} reviews={reviews} />
+        <Container>
+          <ContactSection css={css({ marginTop: "5em", })} title={contactTitle} text={contactText} />
+          <PracticeArchive css={css({ marginTop: "5em", })} practices={practices} heading={practicesTitle} text={practicesText} isHomePage={true} />
+        </Container>
+      </main>
+      <Footer />
+    </App>
+  );
 }
 
 export const Head = (props: HeadProps<Queries.IndexPageQuery>) => {
-    const description = props.data.sectionCopy?.childPagesYaml?.meta_description || "";
+  const description = props.data.sectionCopy?.childPagesYaml?.meta_description || "";
 
-    return (
-        <SEO description={description} slug={props.location.pathname} title={""}>
-            <meta name={"og:type"} content={"website"} />
-        </SEO>
-    )
+  return (
+    <SEO description={description} slug={props.location.pathname} title={""}>
+      <meta name={"og:type"} content={"website"} />
+    </SEO>
+  )
 }
 
 export default IndexPage

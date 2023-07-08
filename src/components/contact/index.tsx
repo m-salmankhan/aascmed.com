@@ -1,8 +1,8 @@
-import {Checkbox, DropdownInput, TextArea, TextInput} from "../forms";
-import {graphql, useStaticQuery} from "gatsby";
+import { Checkbox, DropdownInput, TextArea, TextInput } from "../forms";
+import { graphql, useStaticQuery } from "gatsby";
 import React from "react";
-import {PrimaryButton} from "../buttons";
-import {css} from "@emotion/react";
+import { PrimaryButton } from "../buttons";
+import { css } from "@emotion/react";
 
 interface ContactFormProps {
     className?: string
@@ -59,10 +59,10 @@ export const ContactForm: React.FC<ContactFormProps> = (props) => {
                 rows={5}
                 name={"message"}
             />
-            <DropdownInput label={"Preferred Location"}>
-                <option selected={true} disabled={true}>Select a clinic</option>
+            <DropdownInput label={"Preferred Location"} defaultValue={"none"}>
+                <option value={"none"} disabled={true}>Select a clinic</option>
                 {data.allMdx.clinics.map((clinic, idx) =>
-                    <option key={idx}>{clinic.node?.frontmatter?.title}</option>
+                    <option key={idx} value={clinic.node?.frontmatter?.title || idx}>{clinic.node?.frontmatter?.title}</option>
                 )}
             </DropdownInput>
             <Checkbox label={"I am a new patient"} />
