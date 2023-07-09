@@ -1,4 +1,3 @@
-import * as React from "react"
 import { graphql, HeadProps, Link, PageProps } from "gatsby"
 import { MDXProvider } from "@mdx-js/react";
 import { H1 } from "../components/headings";
@@ -10,7 +9,6 @@ import { Contents, ContentsPageItem } from "../components/posts/contents";
 import { Article } from "../components/posts/article";
 import { ButtonList, ContactBanner } from "../components/posts/shortcode-components";
 import { SEO } from "../components/seo";
-import { useSiteMetadata } from "../hooks/useSiteMetadata";
 
 const shortcodes = { Link, ButtonList, ContactBanner };
 const Condition = ({ data, children, location }: PageProps<Queries.ConditionPageQuery>) => {

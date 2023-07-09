@@ -1,4 +1,3 @@
-import * as React from "react"
 import { graphql, HeadProps, Link, PageProps } from "gatsby"
 import { Columns, MainCol, SideCol, PrimarySecondaryColumnsLayout } from "../components/layouts/main-side-column";
 import { Breadcrumbs } from "../components/breadcrumbs";
@@ -86,8 +85,6 @@ const Provider = ({ data, location, children }: PageProps<Queries.ProviderQuery>
 
 
 export const Head = (props: HeadProps<Queries.ProviderQuery>) => {
-  const { url } = useSiteMetadata();
-
   const name = props.data.mdx?.frontmatter?.name?.fullname || "Untitled";
   const honorific = props.data.mdx?.frontmatter?.name?.title + "." || "";
 
