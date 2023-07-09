@@ -31,7 +31,7 @@ const ServiceUpdate = ({ data, children, location }: PageProps<Queries.ServiceUp
         <PrimarySecondaryColumnsLayout>
             <main css={css`margin-bottom: 5rem;`}>
                 <Breadcrumbs path={[
-                    ["'", "Home"],
+                    ["/", "Home"],
                     ["/service-updates/", "Service Updates"],
                     [data.mdx.fields?.slug, title]
                 ]} css={css({ marginTop: "3em" })} />

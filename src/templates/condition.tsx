@@ -25,7 +25,7 @@ const Condition = ({ data, children, location }: PageProps<Queries.ConditionPage
         <PrimarySecondaryColumnsLayout>
             <main>
                 <Breadcrumbs path={[
-                    ["", "Home"],
+                    ["/", "Home"],
                     ["/conditions/", "Conditions"],
                     [data.mdx?.fields?.slug, title]
                 ]} css={css({ marginTop: "3em" })} />
