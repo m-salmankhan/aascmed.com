@@ -3,10 +3,7 @@ import { Layout } from "../components/layouts/default";
 import { Container } from "../components/containers";
 import { Breadcrumbs } from "../components/breadcrumbs";
 import { css } from "@emotion/react";
-import { H2, SectionHeader, stylesH1 } from "../components/headings";
-import ReactMarkdown from "react-markdown";
-import { cols } from "../styles/grid";
-import { mediaBreakpoints } from "../styles/breakpoints";
+import { SectionHeader, stylesBigH1 } from "../components/headings";
 import { ProviderArchive, ProviderSummary } from "../components/providers";
 import { gridSpacing } from "../styles/theme";
 import { SEO } from "../components/seo";
@@ -40,11 +37,10 @@ const ProvidersPage = ({ data }: PageProps<Queries.ProvidersPageQuery>) => {
         ]} css={css({ marginTop: "3em" })} />
 
         <div css={stylesExpandGridPadding}>
-          <SectionHeader heading={pageHeading} bodyText={pageText} />
+          <SectionHeader heading={<h1 css={stylesBigH1}>{pageHeading}</h1>} bodyText={pageText} />
           <ProviderArchive providers={providers} />
         </div>
       </Container>
-      {/*<pre>{JSON.stringify(data, null, 2)}</pre>*/}
     </Layout>
   )
 }
