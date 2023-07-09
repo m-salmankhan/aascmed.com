@@ -29,7 +29,7 @@ const ServiceUpdate = ({ data, children, location }: PageProps<Queries.ServiceUp
 
     return (
         <PrimarySecondaryColumnsLayout>
-            <main>
+            <main css={css`margin-bottom: 5rem;`}>
                 <Breadcrumbs path={[
                     ["'", "Home"],
                     ["/service-updates/", "Service Updates"],
