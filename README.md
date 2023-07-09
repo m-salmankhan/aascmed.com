@@ -1,6 +1,8 @@
 <div style="text-align: center">
-  <img src="https://new.aascmed.com/assets/favicon/favicon.svg" alt="Allergy, Asthma and Sinus Centers Logo" style="max-width: 10em; height: auto; margin: 1rem auto;"/>
-
+   <div style="width: 10em; height: auto; margin: 1rem auto;">
+     <img src="https://new.aascmed.com/assets/favicon/favicon.svg" alt="Allergy, Asthma and Sinus Centers Logo" />
+   </div>
+  
   # Allergy, Asthma and Sinus Centers Website
   [![Netlify Status](https://api.netlify.com/api/v1/badges/8aff015c-4beb-4c18-968b-e8bb93ab42b5/deploy-status)](https://app.netlify.com/sites/aascmed/deploys)
 </div>
