@@ -94,10 +94,10 @@ export const Head = (props: HeadProps<Queries.ProviderQuery>) => {
   const pageTitle = `${honorific} ${name}`.trim();
   const description = props.data.mdx?.frontmatter?.description || "";
 
-  const image = props.data.mdx?.frontmatter?.image?.publicURL;
+  const image = props.data.mdx?.frontmatter?.image?.publicURL || undefined;
 
   return (
-    <SEO description={description} slug={props.location.pathname} title={pageTitle} image={url + image}>
+    <SEO description={description} slug={props.location.pathname} title={pageTitle} image={image}>
       <meta name={"og:type"} content={"profile"} />
     </SEO>
   )

@@ -55,13 +55,12 @@ const Condition = ({ data, children, location }: PageProps<Queries.ConditionPage
 }
 
 export const Head = (props: HeadProps<Queries.ConditionPageQuery>) => {
-    const { url } = useSiteMetadata();
     const title = props.data.mdx?.frontmatter?.title || "Untitled";
     const description = props.data.mdx?.frontmatter?.description || "";
-    const image = props.data.mdx?.frontmatter?.thumbnail?.publicURL;
+    const image = props.data.mdx?.frontmatter?.thumbnail?.publicURL || undefined;
 
     return (
-        <SEO description={description} slug={props.location.pathname} title={title} image={url + image}>
+        <SEO description={description} slug={props.location.pathname} title={title} image={image}>
             <meta name={"og:type"} content={"article"} />
             <meta name={"article:section"} content={"conditions"} />
         </SEO>
