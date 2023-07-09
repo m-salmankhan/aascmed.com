@@ -5,7 +5,8 @@ import { PrimaryButton } from "../buttons";
 import { css } from "@emotion/react";
 
 interface ContactFormProps {
-    className?: string
+    className?: string,
+    clinic?: string
 }
 export const ContactForm: React.FC<ContactFormProps> = (props) => {
     const data: Queries.ClinicNamesQuery = useStaticQuery(graphql`
@@ -59,12 +60,16 @@ export const ContactForm: React.FC<ContactFormProps> = (props) => {
                 rows={5}
                 name={"message"}
             />
-            <DropdownInput label={"Preferred Location"} defaultValue={"none"}>
-                <option value={"none"} disabled={true}>Select a clinic</option>
-                {data.allMdx.clinics.map((clinic, idx) =>
-                    <option key={idx} value={clinic.node?.frontmatter?.title || idx}>{clinic.node?.frontmatter?.title}</option>
-                )}
-            </DropdownInput>
+            {
+                props.clinic === undefined ?
+                    <DropdownInput label={"Preferred Location"} name="clinic" defaultValue={"none"}>
+                        <option value={"none"} disabled={true}>Select a clinic</option>
+                        {data.allMdx.clinics.map((clinic, idx) =>
+                            <option key={idx} value={clinic.node?.frontmatter?.title || idx}>{clinic.node?.frontmatter?.title}</option>
+                        )}
+                    </DropdownInput> :
+                    <input type="hidden" name="clinic" value={props.clinic} />
+            }
             <Checkbox label={"I am a new patient"} />
             <Checkbox
                 label={<><strong>I confirm that the above message does not contain any personal health data.</strong> This message will be transmitted over email.</>}
