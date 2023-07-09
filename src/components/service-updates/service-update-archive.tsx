@@ -1,11 +1,11 @@
-import {H1, H2, H3, stylesH1, stylesH4} from "../headings";
-import {css} from "@emotion/react";
+import { H1, H2, H3, SectionHeader, stylesBigH1, stylesH1, stylesH4 } from "../headings";
+import { css } from "@emotion/react";
 import ReactMarkdown from "react-markdown";
 import React from "react";
-import {cols, gridContainer} from "../../styles/grid";
-import {mediaBreakpoints} from "../../styles/breakpoints";
-import {Link} from "gatsby";
-import {colours, gridSpacing} from "../../styles/theme";
+import { cols, gridContainer } from "../../styles/grid";
+import { mediaBreakpoints } from "../../styles/breakpoints";
+import { Link } from "gatsby";
+import { colours, gridSpacing } from "../../styles/theme";
 import Color from "color";
 
 export interface ServiceUpdateSummary {
@@ -40,7 +40,7 @@ const stylesLi = css(
             a: {
                 display: "block",
                 textDecoration: "none",
-                marginBottom: `${gridSpacing/4}`,
+                marginBottom: `${gridSpacing / 4}`,
 
                 "h1, h2, h3": {
                     margin: `0.5em 0 1em`,
@@ -65,7 +65,7 @@ const stylesLi = css(
     }
 );
 
-export const ServiceUpdateList: React.FC<ServiceUpdateListProps> = ({className, serviceUpdates, frontPage}) => {
+export const ServiceUpdateList: React.FC<ServiceUpdateListProps> = ({ className, serviceUpdates, frontPage }) => {
     return (
         <ul className={className} css={stylesList}>
             {
@@ -77,7 +77,7 @@ export const ServiceUpdateList: React.FC<ServiceUpdateListProps> = ({className, 
                                     <div className={"date"}>{post.date}</div>
                                     {
                                         frontPage ? <H3 css={stylesH4} className={"title"}>{post.title}</H3> :
-                                                    <H2 css={stylesH4} className={"title"}>{post.title}</H2>
+                                            <H2 css={stylesH4} className={"title"}>{post.title}</H2>
                                     }
                                 </Link>
                             </header>
@@ -101,45 +101,27 @@ interface ServiceUpdateArchiveProps {
     text: string,
 }
 
-const stylesTextWrapper = css(
-    cols(12),
-    cols(8, mediaBreakpoints.md),
-);
-
-const stylesHeading = css(
-    cols(12),
-    cols(9, mediaBreakpoints.lg),
-    {
-        fontSize: "2.5rem",
-        padding: 0,
-        "@media screen": {
-            padding: 0,
-        }
-    }
-);
 
 export const ServiceUpdateArchive: React.FC<ServiceUpdateArchiveProps> =
-    ({className, heading, text, serviceUpdates, frontPage}) => {
-        if(serviceUpdates.length == 0) {
+    ({ className, heading, text, serviceUpdates, frontPage }) => {
+        if (serviceUpdates.length == 0) {
             return <></>;
         }
         return (
             <section className={className}>
-                <div css={stylesTextWrapper}>
-                    {
+                <SectionHeader
+                    heading={
                         frontPage ?
-                            <H2 css={css(stylesH1, stylesHeading)}>{heading}</H2> :
-                            <H1 css={stylesHeading}>{heading}</H1>
+                            <h2 css={stylesBigH1}>{heading}</h2> :
+                            <h1 css={stylesBigH1}>{heading}</h1>
                     }
-                    <ReactMarkdown>
-                        {text}
-                    </ReactMarkdown>
-                </div>
-                <ServiceUpdateList serviceUpdates={serviceUpdates as [ServiceUpdateSummary]} frontPage={frontPage}/>
+                    bodyText={text}
+                />
+                <ServiceUpdateList serviceUpdates={serviceUpdates as [ServiceUpdateSummary]} frontPage={frontPage} />
                 {
                     frontPage &&
-                    <Link to={"/service-updates/"} css={css(cols(12), {color: "inherit"})}>(View All)</Link>
+                    <Link to={"/service-updates/"} css={css(cols(12), { color: "inherit" })}>(View All)</Link>
                 }
             </section>
         );
-}
+    }

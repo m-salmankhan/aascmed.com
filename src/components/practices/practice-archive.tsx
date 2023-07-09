@@ -1,15 +1,15 @@
-import React, {useEffect, useRef, useState} from "react";
-import {H1, H2, H3, stylesH1} from "../headings";
-import {css} from "@emotion/react";
+import React, { useEffect, useRef, useState } from "react";
+import { H1, H2, H3, SectionHeader, stylesBigH1, stylesH1 } from "../headings";
+import { css } from "@emotion/react";
 import ReactMarkdown from "react-markdown";
-import {cols, gridContainer} from "../../styles/grid";
-import {mediaBreakpoints} from "../../styles/breakpoints";
-import {Container} from "../containers";
-import {Link} from "gatsby";
-import {Thumbnail} from "../thumbnails";
-import {IconStyles} from "../font-awesome";
-import {MapBoxProps} from "../mapbox";
-import {gridSpacing} from "../../styles/theme";
+import { cols, gridContainer } from "../../styles/grid";
+import { mediaBreakpoints } from "../../styles/breakpoints";
+import { Container } from "../containers";
+import { Link } from "gatsby";
+import { Thumbnail } from "../thumbnails";
+import { IconStyles } from "../font-awesome";
+import { MapBoxProps } from "../mapbox";
+import { gridSpacing } from "../../styles/theme";
 
 export interface PracticeSummary {
     slug: string,
@@ -49,7 +49,7 @@ interface PracticeListItemProps {
     isFrontPage?: boolean,
     practice: PracticeSummary
 }
-const PracticeArchiveListItem: React.FC<PracticeListItemProps> = ({className, practice, inView, isFrontPage}) => {
+const PracticeArchiveListItem: React.FC<PracticeListItemProps> = ({ className, practice, inView, isFrontPage }) => {
     const staticMapProps: MapBoxProps = {
         longitude: practice.longitude,
         latitude: practice.latitude,
@@ -61,9 +61,9 @@ const PracticeArchiveListItem: React.FC<PracticeListItemProps> = ({className, pr
         <li className={className} css={stylesPracticeArchiveListItem}>
             <Link to={practice.slug}>
                 <Thumbnail overlayIcon={"house-medical"}
-                           overlayIconStyle={IconStyles.SOLID}
-                           mapboxStaticMap={staticMapProps}
-                           css={css`height: 15rem`}
+                    overlayIconStyle={IconStyles.SOLID}
+                    mapboxStaticMap={staticMapProps}
+                    css={css`height: 15rem`}
                 />
             </Link>
             {
@@ -102,11 +102,11 @@ export const PracticeArchiveList: React.FC<PracticeArchiveListProps> = (props) =
     const componentRef = useRef<HTMLUListElement | null>(null);
 
     useEffect(() => {
-        if(componentRef.current === null) return;
-        if(observerRef.current !== null) return;
+        if (componentRef.current === null) return;
+        if (observerRef.current !== null) return;
 
         const observer = new IntersectionObserver((entries, observer) => {
-            if(entries[0].isIntersecting) {
+            if (entries[0].isIntersecting) {
                 setInView(true);
                 observer.unobserve(entries[0].target);
             }
@@ -128,23 +128,6 @@ export const PracticeArchiveList: React.FC<PracticeArchiveListProps> = (props) =
     )
 }
 
-const stylesTextWrapper = css(
-    cols(12),
-    cols(8, mediaBreakpoints.md),
-);
-
-const stylesHeading = css(
-    cols(12),
-    cols(9, mediaBreakpoints.lg),
-    {
-        padding: 0,
-        fontSize: "2.5rem",
-        "@media screen": {
-            padding: 0,
-        }
-    }
-);
-
 interface PracticeArchiveProps {
     className?: string,
     practices: PracticeSummary[],
@@ -152,24 +135,19 @@ interface PracticeArchiveProps {
     text: string,
     isHomePage: boolean
 }
-export const PracticeArchive: React.FC<PracticeArchiveProps> = ({className, practices, heading, text, isHomePage}) => {
-    if(practices.length === 0) return <></>;
+export const PracticeArchive: React.FC<PracticeArchiveProps> = ({ className, practices, heading, text, isHomePage }) => {
+    if (practices.length === 0) return <></>;
 
     return (
         <section className={className}>
-            <div css={stylesTextWrapper}>
-                {
+            <SectionHeader
+                heading={
                     isHomePage ?
-                        <H2 css={css(stylesH1, stylesHeading)}>{heading}</H2> :
-                        <H1 css={css(stylesH1, stylesHeading)}>{heading}</H1>
+                        <h2 css={stylesBigH1}>{heading}</h2> :
+                        <h1 css={stylesBigH1}>{heading}</h1>
                 }
-                {
-                    text &&
-                    <ReactMarkdown>
-                        {text}
-                    </ReactMarkdown>
-                }
-            </div>
+                bodyText={text}
+            />
             <PracticeArchiveList practices={practices as [PracticeSummary]} />
         </section>
     );

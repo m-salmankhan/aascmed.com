@@ -1,12 +1,11 @@
-import * as React from "react"
-import {graphql, HeadProps, Link, PageProps} from "gatsby"
-import {css} from "@emotion/react";
-import {Breadcrumbs} from "../components/breadcrumbs";
-import {Columns, MainCol, PrimarySecondaryColumnsLayout, SideCol} from "../components/layouts/main-side-column";
-import {Article} from "../components/posts/article";
-import {H1, H4} from "../components/headings";
+import { graphql, HeadProps, Link, PageProps } from "gatsby"
+import { css } from "@emotion/react";
+import { Breadcrumbs } from "../components/breadcrumbs";
+import { Columns, MainCol, PrimarySecondaryColumnsLayout, SideCol } from "../components/layouts/main-side-column";
+import { Article } from "../components/posts/article";
+import { H1, H4 } from "../components/headings";
 import ReactMarkdown from "react-markdown";
-import {SEO} from "../components/seo";
+import { SEO } from "../components/seo";
 
 const PrivacyPage = ({ data, location, children }: PageProps<Queries.PrivacyPageQuery>) => {
     const heading = data.copy?.childPagesYaml?.heading || "Privacy Policy";
@@ -18,7 +17,7 @@ const PrivacyPage = ({ data, location, children }: PageProps<Queries.PrivacyPage
                 <Breadcrumbs path={[
                     ["/", "Home"],
                     ["/privacy/", heading],
-                ]} css={css({marginTop: "3em"})} />
+                ]} css={css({ marginTop: "3em" })} />
                 <Article>
                     <Columns>
                         <MainCol>

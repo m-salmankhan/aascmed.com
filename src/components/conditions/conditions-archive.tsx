@@ -1,14 +1,14 @@
-import {H1, H2, stylesH5} from "../headings";
+import { H1, H2, SectionHeader, stylesBigH1, stylesH5 } from "../headings";
 import React from "react";
 import ReactMarkdown from "react-markdown";
-import {css} from "@emotion/react";
-import {cols, gridContainer} from "../../styles/grid";
-import {mediaBreakpoints} from "../../styles/breakpoints";
-import {IconStyles} from "../font-awesome";
-import {IGatsbyImageData} from "gatsby-plugin-image";
-import {Link} from "gatsby";
-import {gridSpacing} from "../../styles/theme";
-import {Thumbnail} from "../thumbnails";
+import { css } from "@emotion/react";
+import { cols, gridContainer } from "../../styles/grid";
+import { mediaBreakpoints } from "../../styles/breakpoints";
+import { IconStyles } from "../font-awesome";
+import { IGatsbyImageData } from "gatsby-plugin-image";
+import { Link } from "gatsby";
+import { gridSpacing } from "../../styles/theme";
+import { Thumbnail } from "../thumbnails";
 
 export interface ConditionSummary {
     thumbnail?: IGatsbyImageData,
@@ -62,7 +62,7 @@ const stylesLi = css(
     `
 );
 
-export const ConditionList: React.FC<ConditionListProps> = ({className, conditions, showViewAll=true}) =>
+export const ConditionList: React.FC<ConditionListProps> = ({ className, conditions, showViewAll = true }) =>
     <ul className={className} css={stylesConditionsGrid}>
         {
             conditions.map(
@@ -75,7 +75,7 @@ export const ConditionList: React.FC<ConditionListProps> = ({className, conditio
                                 overlayIcon={"magnifying-glass"}
                                 gatsbyImage={condition.thumbnail}
                             />
-                            <H2 css={stylesH5} className={"heading"}>{ condition.title }</H2>
+                            <H2 css={stylesH5} className={"heading"}>{condition.title}</H2>
                         </Link>
                     </li>
             )
@@ -98,36 +98,18 @@ export const ConditionList: React.FC<ConditionListProps> = ({className, conditio
 
 
 
-const stylesConditionsTextWrapper = css(
-    cols(12),
-    cols(8, mediaBreakpoints.md),
-);
 
-const stylesConditionsHeading = css(
-    cols(12),
-    cols(9, mediaBreakpoints.lg),
-    {
-        padding: 0,
-        fontSize: "2.5rem",
-        "@media screen": {
-            padding: 0,
-        }
-    }
-);
-
-export const ConditionsArchive: React.FC<ConditionsArchiveProps> = ({className, text, heading, frontPage, conditionsList, showViewAll = true}) => {
+export const ConditionsArchive: React.FC<ConditionsArchiveProps> = ({ className, text, heading, frontPage, conditionsList, showViewAll = true }) => {
     return (
         <section className={className}>
-            <div css={stylesConditionsTextWrapper}>
-                {
+            <SectionHeader
+                heading={
                     frontPage ?
-                        <H2 css={stylesConditionsHeading}>{heading}</H2> :
-                        <H1 css={stylesConditionsHeading}>{heading}</H1>
+                        <h2 css={stylesBigH1}>{heading}</h2> :
+                        <h1 css={stylesBigH1}>{heading}</h1>
                 }
-                <ReactMarkdown>
-                    {text}
-                </ReactMarkdown>
-            </div>
+                bodyText={text}
+            />
             <ConditionList conditions={conditionsList} showViewAll={showViewAll} />
         </section>
     );

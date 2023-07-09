@@ -1,15 +1,15 @@
 import React from "react";
-import {ProviderSummary} from "./index";
-import {css} from "@emotion/react";
-import {cols, gridContainer} from "../../styles/grid";
-import {H2} from "../headings";
-import {Link} from "gatsby";
-import {Thumbnail} from "../thumbnails";
-import {IconStyles} from "../font-awesome";
-import {breakpointStrings, mediaBreakpoints} from "../../styles/breakpoints";
+import { ProviderSummary } from "./index";
+import { css } from "@emotion/react";
+import { cols, gridContainer } from "../../styles/grid";
+import { H2 } from "../headings";
+import { Link } from "gatsby";
+import { Thumbnail } from "../thumbnails";
+import { IconStyles } from "../font-awesome";
+import { breakpointStrings, mediaBreakpoints } from "../../styles/breakpoints";
 import Color from "color";
-import {colours, gridSpacing} from "../../styles/theme";
-import {SecondaryButton, stylesBtnSecondary, stylesButton} from "../buttons";
+import { colours, gridSpacing } from "../../styles/theme";
+import { stylesBtnSecondary, stylesButton } from "../buttons";
 
 interface ProviderArchiveProps {
     className?: string
@@ -29,7 +29,7 @@ const stylesProviderArchive = css(
 );
 
 const stylesProvider = css`
-    margin: ${gridSpacing*1.5}em 0;
+    margin: ${gridSpacing * 1.5}em 0;
 `;
 
 const stylesProviderArticle = css(
@@ -45,7 +45,7 @@ const stylesProviderHeader = css(
     css`
       width: 100%;
       text-align: center; 
-      margin-bottom: ${gridSpacing/2}em;
+      margin-bottom: ${gridSpacing / 2}em;
       
       a {
         text-decoration: none;
@@ -82,8 +82,8 @@ const stylesProviderExcerpt = css(
     `
 );
 
-const Provider: React.FC<ProviderProps> = ({className, provider}) => {
-    const nameWithTitle = (!!provider.name.title ? `${provider.name.title}. ` : "" ) + provider.name.fullName;
+const Provider: React.FC<ProviderProps> = ({ className, provider }) => {
+    const nameWithTitle = (!!provider.name.title ? `${provider.name.title}. ` : "") + provider.name.fullName;
     return (
         <li className={className} css={stylesProvider}>
             <article css={stylesProviderArticle}>
@@ -115,7 +115,7 @@ const Provider: React.FC<ProviderProps> = ({className, provider}) => {
     )
 }
 
-export const ProviderArchive: React.FC<ProviderArchiveProps> = ({className, providers}) =>
+export const ProviderArchive: React.FC<ProviderArchiveProps> = ({ className, providers }) =>
     <ul className={className} css={stylesProviderArchive}>
         {providers.map((provider, idx) => <Provider provider={provider} key={idx} />)}
     </ul>

@@ -1,14 +1,14 @@
 import React from "react";
-import {ProviderSummary} from "./index";
-import {css} from "@emotion/react";
-import {cols, gridContainer} from "../../styles/grid";
-import {mediaBreakpoints} from "../../styles/breakpoints";
-import {H2, stylesH1, stylesH2} from "../headings";
+import { ProviderSummary } from "./index";
+import { css } from "@emotion/react";
+import { cols, gridContainer } from "../../styles/grid";
+import { mediaBreakpoints } from "../../styles/breakpoints";
+import { H2, SectionHeader, stylesBigH1, stylesH1, stylesH2 } from "../headings";
 import ReactMarkdown from "react-markdown";
-import {IconStyles} from "../font-awesome";
-import {Link} from "gatsby";
-import {colours, gridSpacing} from "../../styles/theme";
-import {Thumbnail} from "../thumbnails";
+import { IconStyles } from "../font-awesome";
+import { Link } from "gatsby";
+import { colours, gridSpacing } from "../../styles/theme";
+import { Thumbnail } from "../thumbnails";
 import Color from "color";
 
 interface ProvidersArchiveProps {
@@ -54,7 +54,7 @@ const stylesProviderItem = css(
     `
 );
 
-const Providers: React.FC<ProvidersProps> = ({className, providers}) => {
+const Providers: React.FC<ProvidersProps> = ({ className, providers }) => {
     return (
         <ul className={className} css={stylesProviders}>
             {
@@ -78,36 +78,20 @@ const Providers: React.FC<ProvidersProps> = ({className, providers}) => {
     )
 }
 
-const stylesTextWrapper = css(
-    cols(12),
-    cols(8, mediaBreakpoints.md),
-);
-
-const stylesHeading = css(
-    cols(12),
-    cols(9, mediaBreakpoints.lg),
-    {
-        fontSize: "2.5rem",
-        padding: 0,
-        "@media screen": {
-            padding: 0,
-        }
-    }
-);
 
 export const ProvidersArchiveHomePageLayout: React.FC<ProvidersArchiveProps> =
-    ({className, heading, text, providers}) => {
-        if(providers.length == 0)
+    ({ className, heading, text, providers }) => {
+        if (providers.length == 0)
             return <></>;
 
         return (
             <section className={className}>
-                <div css={stylesTextWrapper}>
-                    <H2 css={css(stylesH1, stylesHeading)}>{heading}</H2>
-                    <ReactMarkdown>
-                        {text}
-                    </ReactMarkdown>
-                </div>
+                <SectionHeader
+                    heading={
+                        <h2 css={stylesBigH1}>{heading}</h2>
+                    }
+                    bodyText={text}
+                />
                 <Providers providers={providers as [ProviderSummary]} />
             </section>
         );
