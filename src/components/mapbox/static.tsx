@@ -15,12 +15,12 @@ const mapSrc = ({ label, latitude, longitude, width, height, retina, zoom }: Sta
     `https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/pin-l-${label}+1C5E38(${longitude},${latitude})/${longitude},${latitude},${zoom},0/${width}x${height}${retina ? "@2x" : ""}?access_token=${process.env.GATSBY_MAPBOX_API_KEY}`;
 
 enum ImageState {
-    INITIAL,
-    LOADED,
-    COMPLETED
+    INITIAL = "init",
+    LOADED = "loaded",
+    COMPLETED = "completed"
 }
 
-const stylesStaticMap = (imageState: ImageState) => css`
+const stylesStaticMap = css`
   height: 100%;
   
   .lazy-container {
@@ -40,11 +40,18 @@ const stylesStaticMap = (imageState: ImageState) => css`
     }
     
     img.lazy-preview {
-      opacity: ${(imageState === ImageState.LOADED) ? 0 : 1};
+        opacity: 1;
+
+        &.loaded {
+            opacity: 0;
+        }
     }
     
     img.map {
-      filter: ${(imageState === ImageState.LOADED) ? "none" : "inherit"};
+      filter: inherit;
+      &.loaded {
+        filter: none;
+      }
     }
   }
 `;
@@ -85,19 +92,19 @@ export const StaticMap: React.FC<MapBoxProps> = (props) => {
     }
 
     return (
-        <div className={props.className} css={css(stylesStaticMap(loaded))}>
+        <div className={props.className} css={css(stylesStaticMap)}>
             <noscript>
                 <Global styles={css`#${id} { display: none; }`} />
                 <img alt={props.alt} src={image.src} srcSet={image.srcset} sizes={image.sizes} />
             </noscript>
-            <div id={id} className={"lazy-container"}>
+            <div id={id} className={`lazy-container`}>
                 {
                     (props.inView === undefined ? true : props.inView) &&
-                    <img className={"map"} src={image.src} srcSet={image.srcset} alt={props.alt} sizes={image.sizes} onLoad={unBlurImage} />
+                    <img className={`map ${loaded}`} src={image.src} srcSet={image.srcset} alt={props.alt} sizes={image.sizes} onLoad={unBlurImage} />
                 }
                 {
                     loaded !== ImageState.COMPLETED &&
-                    <img className={"lazy-preview"} src={previewSrc} alt={props.alt} onTransitionEnd={removePreviewImg} />
+                    <img className={`lazy-preview ${loaded}`} src={previewSrc} alt={props.alt} onTransitionEnd={removePreviewImg} />
                 }
             </div>
         </div>
