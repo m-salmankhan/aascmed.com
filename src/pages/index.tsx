@@ -116,7 +116,7 @@ export const Head = (props: HeadProps<Queries.IndexPageQuery>) => {
   const description = props.data.sectionCopy?.childPagesYaml?.meta_description || "";
 
   return (
-    <SEO description={description} slug={props.location.pathname} title={""} image={`/assets/favicon-300x300.png`}>
+    <SEO description={description} slug={props.location.pathname} title={""} image={`/assets/favicon/favicon-300x300.png`}>
       <meta name={"og:type"} content={"website"} />
     </SEO>
   )

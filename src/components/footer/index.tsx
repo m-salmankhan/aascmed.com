@@ -68,12 +68,13 @@ export const Footer = () => {
                     <H3 css={stylesH1}>External Sites</H3>
                     <nav>
                         <ul>
-                            <li><Link to={"https://login.patientfusion.com/"}>Patient Portal</Link></li>
-                            <li><Link to={"https://www.facebook.com/AllergyAsthmaAndSinusCenters/"}>Facebook</Link></li>
-                            <li><Link to={"https://twitter.com/DrMaazAllergy"}>Twitter</Link></li>
+                            <li><a href={"https://login.patientfusion.com/"} target="_BLANK" rel="noopener">Patient Portal</a></li>
+                            <li><a href={"https://www.facebook.com/AllergyAsthmaAndSinusCenters/"} target="_BLANK" rel="noopener">Facebook</a></li>
+                            <li><a href={"https://twitter.com/DrMaazAllergy"} target="_BLANK" rel="noopener">Twitter</a></li>
+                            <li><a href={"/admin"} target="_BLANK" rel="noopener">Site Admin</a></li>
                         </ul>
                     </nav>
-                    <p>Website by <a href="https://msalmankhan.co.uk/">Salman Khan</a></p>
+                    <p>Website by <a href="https://msalmankhan.co.uk/" target="_BLANK" rel="noopener">Salman Khan.</a></p>
                 </div>
             </Container>
         </footer>
