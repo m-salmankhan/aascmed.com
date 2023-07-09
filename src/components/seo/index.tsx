@@ -1,3 +1,4 @@
+import React from "react";
 import { useSiteMetadata } from "../../hooks/useSiteMetadata";
 import { ReactNode } from "react";
 import { colours } from "../../styles/theme";

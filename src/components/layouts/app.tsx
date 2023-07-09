@@ -1,11 +1,13 @@
-import {Global} from "@emotion/react";
-import {colours, fontBaseSize, fontFamily, fontWeightBase, gridSpacing} from "../../styles/theme";
-import React, {ReactNode, useEffect} from "react";
-import {CSSInterpolation} from "@emotion/serialize";
-import {ZocDoc} from "../zocdoc";
+import { Global } from "@emotion/react";
+import { colours, fontBaseSize, fontFamily, fontWeightBase, gridSpacing } from "../../styles/theme";
+import React, { ReactNode, useEffect } from "react";
+import { CSSInterpolation } from "@emotion/serialize";
+import { ZocDoc } from "../zocdoc";
 
 const stylesGlobal: CSSInterpolation = {
-    "html, css": {
+    "html, body": {
+        padding: 0,
+        margin: 0,
         height: "100%",
         fontFamily: fontFamily,
         fontSize: fontBaseSize,
@@ -28,7 +30,7 @@ const stylesGlobal: CSSInterpolation = {
         margin: 0,
         padding: 0,
         "ul, ol": {
-            margin: `${gridSpacing/2}em 0 ${gridSpacing/2}em 1em`,
+            margin: `${gridSpacing / 2}em 0 ${gridSpacing / 2}em 1em`,
         },
     },
 
@@ -36,7 +38,7 @@ const stylesGlobal: CSSInterpolation = {
         listStyleType: "disc",
     },
     li: {
-        margin: `${gridSpacing/3}em 0`,
+        margin: `${gridSpacing / 3}em 0`,
     },
 
     p: {
@@ -50,10 +52,10 @@ interface AppProps {
     className?: string
 }
 
-export const App: React.FC<AppProps> = ({children, className}) => {
+export const App: React.FC<AppProps> = ({ children, className }) => {
     useEffect(() => {
         // @ts-ignore
-        if(typeof window.netlifyIdentity !== 'undefined') {
+        if (typeof window.netlifyIdentity !== 'undefined') {
             // @ts-ignore
             window.netlifyIdentity.on('init', user => {
                 if (!user) {
