@@ -1,6 +1,8 @@
 <div style="text-align: center">
    <div style="width: 10em; height: auto; margin: 1rem auto;">
-     <img src="https://new.aascmed.com/assets/favicon/favicon.svg" alt="Allergy, Asthma and Sinus Centers Logo" />
+
+![Allergy, Asthma and Sinus Centers Logo](https://new.aascmed.com/assets/favicon/favicon.svg | width=300)
+
    </div>
   
   # Allergy, Asthma and Sinus Centers Website
