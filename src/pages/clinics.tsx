@@ -33,6 +33,7 @@ const PracticesPage = ({ data }: PageProps<Queries.PracticesArchiveQuery>) => {
             practices={practices} heading={heading}
             text={text}
             isHomePage={false}
+            lazyLoad={false}
             css={css({ margin: `0 -${gridSpacing / 2}em` })}
           />
         </Container>

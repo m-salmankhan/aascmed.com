@@ -94,14 +94,17 @@ const stylesPracticeArchiveList = css(
 );
 interface PracticeArchiveListProps {
     className?: string,
+    lazyLoad?: boolean,
     practices: [PracticeSummary]
 }
 export const PracticeArchiveList: React.FC<PracticeArchiveListProps> = (props) => {
-    const [inView, setInView] = useState(false);
+    const lazyLoad = props.lazyLoad || false;
+    const [inView, setInView] = useState(!lazyLoad);
     const observerRef = useRef<IntersectionObserver | null>(null);
     const componentRef = useRef<HTMLUListElement | null>(null);
 
     useEffect(() => {
+        if (!lazyLoad) return;
         if (componentRef.current === null) return;
         if (observerRef.current !== null) return;
 
@@ -133,9 +136,10 @@ interface PracticeArchiveProps {
     practices: PracticeSummary[],
     heading: string,
     text: string,
+    lazyLoad?: boolean,
     isHomePage: boolean
 }
-export const PracticeArchive: React.FC<PracticeArchiveProps> = ({ className, practices, heading, text, isHomePage }) => {
+export const PracticeArchive: React.FC<PracticeArchiveProps> = ({ className, practices, heading, text, isHomePage, lazyLoad }) => {
     if (practices.length === 0) return <></>;
 
     return (
@@ -148,7 +152,7 @@ export const PracticeArchive: React.FC<PracticeArchiveProps> = ({ className, pra
                 }
                 bodyText={text}
             />
-            <PracticeArchiveList practices={practices as [PracticeSummary]} />
+            <PracticeArchiveList practices={practices as [PracticeSummary]} lazyLoad={lazyLoad} />
         </section>
     );
 }

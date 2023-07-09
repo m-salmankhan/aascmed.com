@@ -18,6 +18,7 @@ const config: GatsbyConfig = {
         "gatsby-transformer-sharp",
         "gatsby-plugin-image",
         `gatsby-transformer-yaml`,
+        "gatsby-plugin-webpack-bundle-analyser-v2",
         {
             resolve: 'gatsby-source-filesystem',
             options: {

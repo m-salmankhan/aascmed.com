@@ -1,11 +1,11 @@
-import React, {HTMLProps, useEffect, useRef, useState} from "react";
-import {GatsbyImage, IGatsbyImageData} from "gatsby-plugin-image";
-import {Navigation} from "./navigation";
-import {css} from "@emotion/react";
-import {PaddedContainer} from "../containers";
-import {colours, fontBaseSize, gridSpacing} from "../../styles/theme";
-import {breakpointStrings} from "../../styles/breakpoints";
-import {CSSInterpolation} from "@emotion/serialize";
+import React, { HTMLProps, useEffect, useRef, useState } from "react";
+import { GatsbyImage, IGatsbyImageData } from "gatsby-plugin-image";
+import { Navigation } from "./navigation";
+import { css } from "@emotion/react";
+import { PaddedContainer } from "../containers";
+import { colours, fontBaseSize, gridSpacing } from "../../styles/theme";
+import { breakpointStrings } from "../../styles/breakpoints";
+import { CSSInterpolation } from "@emotion/serialize";
 import ReactMarkdown from "react-markdown";
 
 interface HeroProps extends HTMLProps<HTMLDivElement> {
@@ -22,7 +22,7 @@ interface ParallaxParameters {
 
 const stylesHero = css({
     minHeight: "60vh",
-    marginBottom: `${2*gridSpacing}em`,
+    marginBottom: `${2 * gridSpacing}em`,
     backgroundColor: "green",
     backgroundRepeat: "no-repeat",
     backgroundSize: "cover",
@@ -40,7 +40,7 @@ const stylesHeroContent: CSSInterpolation = {
     zIndex: 1,
     position: "relative",
     width: "100%",
-    margin: `${gridSpacing/2}em 0`,
+    margin: `${gridSpacing / 2}em 0`,
     willChange: "transform",
 
     "h1, h2": {
@@ -55,7 +55,7 @@ const stylesHeroContent: CSSInterpolation = {
 };
 
 stylesHeroContent[breakpointStrings.md] = {
-    margin: `${gridSpacing*2}em 0`,
+    margin: `${gridSpacing * 2}em 0`,
     width: "75%",
 };
 
@@ -92,7 +92,7 @@ const stylesHeroOverlay = css({
 
 const getParallaxValues = (height: number): ParallaxParameters => {
     const percentage = window.scrollY / height;
-    const backgroundOpacity = Math.min(Math.pow(percentage, 1-percentage), 1);
+    const backgroundOpacity = Math.min(Math.pow(percentage, 1 - percentage), 1);
     const textTranslation = (backgroundOpacity === 1) ? 100 : percentage * 30;
     return {
         backgroundOpacity,
@@ -100,14 +100,14 @@ const getParallaxValues = (height: number): ParallaxParameters => {
     }
 }
 
-export const Hero: React.FC<HeroProps> = ({heading, text, image, children}) => {
+export const Hero: React.FC<HeroProps> = ({ heading, text, image, children }) => {
     const headerRef = useRef<HTMLElement | null>(null);
-    const [parallax, setParallax] = useState<ParallaxParameters>({textTranslation: 0, backgroundOpacity: 0});
+    const [parallax, setParallax] = useState<ParallaxParameters>({ textTranslation: 0, backgroundOpacity: 0 });
 
     // Parallax Effect
     useEffect(() => {
         const updateParallax = () => {
-            if(!headerRef.current)
+            if (!headerRef.current)
                 return;
 
             const header = headerRef.current as HTMLElement;
@@ -127,9 +127,9 @@ export const Hero: React.FC<HeroProps> = ({heading, text, image, children}) => {
     return (
         <PaddedContainer css={stylesHero}>
             <header ref={headerRef}>
-                {image && <GatsbyImage css={stylesHeroBackgroundImage} draggable={false} image={image} alt={""}/>}
+                {image && <GatsbyImage css={stylesHeroBackgroundImage} draggable={false} image={image} alt={""} loading="eager" />}
                 <Navigation css={stylesNavigation} frontPage={true} />
-                <div className="translate" css={css(stylesHeroContent)} style={{transform: `translate3d(0, -${parallax.textTranslation}%, 0)`}}>
+                <div className="translate" css={css(stylesHeroContent)} style={{ transform: `translate3d(0, -${parallax.textTranslation}%, 0)` }}>
                     <div>
                         {children}
                         <h2>{heading}</h2>
@@ -138,8 +138,8 @@ export const Hero: React.FC<HeroProps> = ({heading, text, image, children}) => {
                         </ReactMarkdown>
                     </div>
                 </div>
-                <div/>
-                <div css={stylesHeroOverlay} style={{opacity: parallax.backgroundOpacity}}/>
+                <div />
+                <div css={stylesHeroOverlay} style={{ opacity: parallax.backgroundOpacity }} />
             </header>
         </PaddedContainer>
     );
