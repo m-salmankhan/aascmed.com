@@ -71,7 +71,7 @@ export const Footer = () => {
                             <li><a href={"https://login.patientfusion.com/"} target="_BLANK" rel="noopener">Patient Portal</a></li>
                             <li><a href={"https://www.facebook.com/AllergyAsthmaAndSinusCenters/"} target="_BLANK" rel="noopener">Facebook</a></li>
                             <li><a href={"https://twitter.com/DrMaazAllergy"} target="_BLANK" rel="noopener">Twitter</a></li>
-                            <li><a href={"/admin"} target="_BLANK" rel="noopener">Site Admin</a></li>
+                            <li><a href={"/admin"} target="_BLANK" rel="noopener">Site Administration</a></li>
                         </ul>
                     </nav>
                     <p>Website by <a href="https://msalmankhan.co.uk/" target="_BLANK" rel="noopener">Salman Khan.</a></p>
