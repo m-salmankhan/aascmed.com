@@ -15,6 +15,7 @@ import { PracticeArchive, PracticeSummary } from "../components/practices/practi
 import { ContactSection } from "../components/contact/full-form";
 import { SEO } from "../components/seo";
 import { Footer } from "../components/footer";
+import { useSiteMetadata } from "../hooks/useSiteMetadata";
 
 const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
   const heroImage = data.heroImage?.childImageSharp?.gatsbyImageData;
@@ -113,10 +114,11 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
 }
 
 export const Head = (props: HeadProps<Queries.IndexPageQuery>) => {
+  const { url } = useSiteMetadata();
   const description = props.data.sectionCopy?.childPagesYaml?.meta_description || "";
 
   return (
-    <SEO description={description} slug={props.location.pathname} title={""}>
+    <SEO description={description} slug={props.location.pathname} title={""} image={`${url}/assets/favicon-300x300.png`}>
       <meta name={"og:type"} content={"website"} />
     </SEO>
   )
