@@ -1,16 +1,15 @@
-import React, {ReactNode} from "react";
+import React, { ReactNode } from "react";
 import {
     PrimaryAnchor, SecondaryAnchor,
-    SecondaryButton,
     stylesBtnSecondary,
     stylesButton
 } from "../buttons";
-import {Link} from "gatsby";
-import {colours, gridSpacing} from "../../styles/theme";
-import {css} from "@emotion/react";
-import {H1, stylesH2} from "../headings";
-import {CSSInterpolation} from "@emotion/serialize";
-import {ZocDocURL} from "../zocdoc";
+import { Link } from "gatsby";
+import { colours, gridSpacing } from "../../styles/theme";
+import { css } from "@emotion/react";
+import { H1, stylesH2 } from "../headings";
+import { CSSInterpolation } from "@emotion/serialize";
+import { ZocDocURL } from "../zocdoc";
 
 interface ShortCodeProps {
     children?: ReactNode,
@@ -18,7 +17,7 @@ interface ShortCodeProps {
 }
 
 const stylesButtonList = css({
-    margin: `${gridSpacing/2}em 0`,
+    margin: `${gridSpacing / 2}em 0`,
 });
 
 const stylesFAQBtn = css({
@@ -30,10 +29,10 @@ const stylesFAQBtn = css({
 });
 
 const stylesContactBtn = css({
-    margin: `${gridSpacing/2}em`
+    margin: `${gridSpacing / 2}em`
 });
 
-export const ButtonList: React.FC<ShortCodeProps> = ({className, children}) =>
+export const ButtonList: React.FC<ShortCodeProps> = ({ className, children }) =>
     <nav className={className} css={stylesButtonList}>
         {children}
         <PrimaryAnchor href={"#frequently-asked-questions"} css={stylesFAQBtn}>Skip to FAQ</PrimaryAnchor>
@@ -43,7 +42,7 @@ export const ButtonList: React.FC<ShortCodeProps> = ({className, children}) =>
 
 
 const stylesContactBanner: CSSInterpolation = {
-    margin: `${gridSpacing*2}em 0`,
+    margin: `${gridSpacing * 2}em 0`,
     background: colours.brandPrimary,
     padding: `${gridSpacing}em`,
     color: colours.bodyBackground,
@@ -54,11 +53,11 @@ const stylesContactBanner: CSSInterpolation = {
     }]
 }
 
-export const ContactBanner: React.FC<ShortCodeProps> = ({className, children}) =>
+export const ContactBanner: React.FC<ShortCodeProps> = ({ className, children }) =>
     <aside className={className} css={stylesContactBanner}>
         <H1>Questions? Drop us a note!</H1>
         <p>If you have any questions, get in touch with us! You can contact us by telephone on (815) 729 9900 or by email at info@aascmed.com. Or you can fill in our contact form.</p>
         {children}
-        <Link css={[stylesButton, stylesBtnSecondary, {marginRight: `${gridSpacing/2}em`}]} to={"/contact"}>Contact Us</Link>
-        <SecondaryButton onClick={() => {}}>Book online with ZocDoc</SecondaryButton>
+        <Link css={[stylesButton, stylesBtnSecondary, { marginRight: `${gridSpacing / 2}em` }]} to={"/contact"}>Contact Us</Link>
+        <SecondaryAnchor href={ZocDocURL} target="_BLANK" rel="noopener">Book online with ZocDoc</SecondaryAnchor>
     </aside>

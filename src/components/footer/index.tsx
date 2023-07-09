@@ -4,7 +4,7 @@ import { Container } from "../containers";
 import { cols, gridContainer } from "../../styles/grid";
 import { mediaBreakpoints } from "../../styles/breakpoints";
 import { H3, stylesH1 } from "../headings";
-import { Logo, StackedLogo } from "../logo";
+import { Logo } from "../logo";
 import { Link } from "gatsby";
 
 const stylesFooter = css`

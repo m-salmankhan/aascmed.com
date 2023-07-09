@@ -1,6 +1,6 @@
-import {useSiteMetadata} from "../../hooks/useSiteMetadata";
-import React, {ReactNode} from "react";
-import {colours} from "../../styles/theme";
+import { useSiteMetadata } from "../../hooks/useSiteMetadata";
+import { ReactNode } from "react";
+import { colours } from "../../styles/theme";
 
 interface SEOProps {
     description: string
@@ -49,7 +49,7 @@ export const SEO = (props: SEOProps) => {
             }
 
             {/* Twitter Cards */}
-            <meta name={"twitter:card"} content={"summary"}/>
+            <meta name={"twitter:card"} content={"summary"} />
             {
                 twitterHandle &&
                 <meta name={"twitter:site"} content={twitterHandle} />

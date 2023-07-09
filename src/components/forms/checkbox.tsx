@@ -1,12 +1,12 @@
-import React, {ComponentProps, ReactNode, useId} from "react";
-import {inputFocusShadow, inputMargins, stylesLabel} from "./index";
-import {ErrorNotice} from "./notices";
-import {css} from "@emotion/react";
-import {colours} from "../../styles/theme";
+import React, { ComponentProps, ReactNode, useId } from "react";
+import { inputMargins, stylesLabel } from "./index";
+import { ErrorNotice } from "./notices";
+import { css } from "@emotion/react";
+import { colours } from "../../styles/theme";
 
 interface CheckboxProps extends Omit<ComponentProps<"input">, "id" | "type"> {
-    label: string | ReactNode
-    error?: string | ReactNode
+  label: string | ReactNode
+  error?: string | ReactNode
 }
 
 const stylesCheckboxInput = (error: boolean) => css`
@@ -30,17 +30,17 @@ const stylesCheckboxInput = (error: boolean) => css`
 `;
 
 export const Checkbox: React.FC<CheckboxProps> = (props) => {
-    const id = useId();
+  const id = useId();
 
-    return (
-        <div css={stylesCheckboxInput(!!props.error)} className={props.className}>
-            {
-                props.error &&
-                <ErrorNotice css={css`margin-bottom: 1em;`}>{props.error}</ErrorNotice>
-            }
+  return (
+    <div css={stylesCheckboxInput(!!props.error)} className={props.className}>
+      {
+        props.error &&
+        <ErrorNotice css={css`margin-bottom: 1em;`}>{props.error}</ErrorNotice>
+      }
 
-            <input id={id} type={"checkbox"} {...props} />
-            <label css={stylesLabel(!!props.error)} htmlFor={id}>{props.label} {props.required && "(required)"}</label>
-        </div>
-    );
+      <input id={id} type={"checkbox"} {...props} />
+      <label css={stylesLabel(!!props.error)} htmlFor={id}>{props.label} {props.required && "(required)"}</label>
+    </div>
+  );
 }

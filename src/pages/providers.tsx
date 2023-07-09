@@ -3,30 +3,13 @@ import { Layout } from "../components/layouts/default";
 import { Container } from "../components/containers";
 import { Breadcrumbs } from "../components/breadcrumbs";
 import { css } from "@emotion/react";
-import { H2, stylesH1 } from "../components/headings";
+import { H2, SectionHeader, stylesH1 } from "../components/headings";
 import ReactMarkdown from "react-markdown";
 import { cols } from "../styles/grid";
 import { mediaBreakpoints } from "../styles/breakpoints";
 import { ProviderArchive, ProviderSummary } from "../components/providers";
 import { gridSpacing } from "../styles/theme";
 import { SEO } from "../components/seo";
-
-const stylesTextWrapper = css(
-  cols(12),
-  cols(8, mediaBreakpoints.md),
-);
-
-const stylesHeading = css(
-  cols(12),
-  cols(9, mediaBreakpoints.lg),
-  {
-    fontSize: "2.5em",
-    padding: 0,
-    "@media screen": {
-      padding: 0,
-    }
-  }
-);
 
 const stylesExpandGridPadding = css`
     margin: 0 ${-gridSpacing / 2}em;
@@ -57,12 +40,7 @@ const ProvidersPage = ({ data }: PageProps<Queries.ProvidersPageQuery>) => {
         ]} css={css({ marginTop: "3em" })} />
 
         <div css={stylesExpandGridPadding}>
-          <div css={stylesTextWrapper}>
-            <H2 css={css(stylesH1, stylesHeading)}>{pageHeading}</H2>
-            <ReactMarkdown>
-              {pageText}
-            </ReactMarkdown>
-          </div>
+          <SectionHeader heading={pageHeading} bodyText={pageText} />
           <ProviderArchive providers={providers} />
         </div>
       </Container>

@@ -1,9 +1,10 @@
-import React, {ReactNode} from "react";
-import {css} from "@emotion/react";
-import {bounceTransition, colours} from "../../styles/theme";
-import {FaIcons, IconStyles} from "../font-awesome";
-import {GatsbyImage, IGatsbyImageData} from "gatsby-plugin-image";
-import {MapBoxProps, StaticMap} from "../mapbox";
+import React from "react";
+import { css } from "@emotion/react";
+import { bounceTransition, colours } from "../../styles/theme";
+import { FaIcons, IconStyles } from "../font-awesome";
+import { GatsbyImage, IGatsbyImageData } from "gatsby-plugin-image";
+import { MapBoxProps } from "../mapbox";
+import { StaticMap } from "../mapbox/static";
 import Color from "color";
 
 const stylesThumbnail = (iconSize: number, showOverlay: boolean, elipse: boolean) => css`
@@ -93,19 +94,19 @@ interface ThumbnailProps {
     showOverlay?: boolean
 }
 export const Thumbnail: React.FC<ThumbnailProps> = ({
-                                                        className,
-                                                        gatsbyImage,
-                                                        mapboxStaticMap,
-                                                        imageAlt,
-                                                        overlayIconStyle,
-                                                        overlayIcon,
-                                                        overlayIconSize,
-                                                        showOverlay,
-                                                        shape,
+    className,
+    gatsbyImage,
+    mapboxStaticMap,
+    imageAlt,
+    overlayIconStyle,
+    overlayIcon,
+    overlayIconSize,
+    showOverlay,
+    shape,
 }) => {
-    return(
-        <div className={className} css={css(stylesThumbnail(overlayIconSize || 3, showOverlay || false, shape==="elipse"))}>
-            {gatsbyImage && <GatsbyImage alt={imageAlt || ""} image={gatsbyImage}/>}
+    return (
+        <div className={className} css={css(stylesThumbnail(overlayIconSize || 3, showOverlay || false, shape === "elipse"))}>
+            {gatsbyImage && <GatsbyImage alt={imageAlt || ""} image={gatsbyImage} />}
             {mapboxStaticMap && <StaticMap {...mapboxStaticMap} />}
             <div className={"overlay"}>
                 <FaIcons iconStyle={overlayIconStyle} icon={overlayIcon} className={"icon"} />

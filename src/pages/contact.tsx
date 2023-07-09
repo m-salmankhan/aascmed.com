@@ -1,8 +1,6 @@
 import { graphql, HeadProps, PageProps } from "gatsby"
 import { Layout } from "../components/layouts/default";
-import { ConditionsArchive } from "../components/conditions";
 import { css } from "@emotion/react";
-import { ConditionSummary } from "../components/conditions/conditions-archive";
 import { Breadcrumbs } from "../components/breadcrumbs";
 import { Container } from "../components/containers";
 import { gridSpacing } from "../styles/theme";

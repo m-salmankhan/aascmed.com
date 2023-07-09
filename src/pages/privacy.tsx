@@ -3,7 +3,7 @@ import { css } from "@emotion/react";
 import { Breadcrumbs } from "../components/breadcrumbs";
 import { Columns, MainCol, PrimarySecondaryColumnsLayout, SideCol } from "../components/layouts/main-side-column";
 import { Article } from "../components/posts/article";
-import { H1, H4 } from "../components/headings";
+import { H1 } from "../components/headings";
 import ReactMarkdown from "react-markdown";
 import { SEO } from "../components/seo";
 

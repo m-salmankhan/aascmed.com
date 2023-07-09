@@ -2,11 +2,10 @@ import { App } from "./app";
 import { NavBar } from "../header";
 import React, { ReactNode } from "react";
 import { css } from "@emotion/react";
-import { cols, gridContainer, offsetCols } from "../../styles/grid";
+import { cols, gridContainer } from "../../styles/grid";
 import { breakpointStrings, mediaBreakpoints } from "../../styles/breakpoints";
 import { Container } from "../containers";
 import { gridSpacing } from "../../styles/theme";
-import { CSSInterpolation } from "@emotion/serialize";
 import { Footer } from "../footer";
 
 interface HalfColumnProps {

@@ -1,11 +1,9 @@
-import React, {useEffect, useRef, useState} from "react";
-import {Link} from "gatsby";
-import {setState} from "gatsby/dist/utils/worker/child/state";
-import {css} from "@emotion/react";
-import {colours, gridSpacing} from "../../styles/theme";
+import React, { useEffect, useRef, useState } from "react";
+import { Link } from "gatsby";
+import { colours, gridSpacing } from "../../styles/theme";
 import Color from "color";
-import {breakpointStrings, mediaBreakpoints} from "../../styles/breakpoints";
-import {H2, stylesH1} from "../headings";
+import { breakpointStrings, mediaBreakpoints } from "../../styles/breakpoints";
+import { H2, stylesH1 } from "../headings";
 
 type url = string;
 export interface ContentsPageItem {
@@ -19,14 +17,14 @@ interface ContentsItemProps {
     activeIDs: string[],
 }
 
-const ContentsItem: React.FC<ContentsItemProps> = ({heading, active, activeIDs}) => {
+const ContentsItem: React.FC<ContentsItemProps> = ({ heading, active, activeIDs }) => {
     return (
         <li>
             <Link className={active ? "active" : ""} to={heading.url}>{heading.title}</Link>
-            { (heading.subHeadings.length > 0) &&
+            {(heading.subHeadings.length > 0) &&
                 <ol>
-                    {heading.subHeadings.map( (subHeading, idx) =>
-                        <ContentsItem key={idx} heading={subHeading} active={!!activeIDs.find(id => id === subHeading.url.slice(1))} activeIDs={activeIDs}/>
+                    {heading.subHeadings.map((subHeading, idx) =>
+                        <ContentsItem key={idx} heading={subHeading} active={!!activeIDs.find(id => id === subHeading.url.slice(1))} activeIDs={activeIDs} />
                     )}
                 </ol>
             }
@@ -59,7 +57,7 @@ const stylesContents = {
             paddingLeft: "1em",
         },
         li: {
-            margin: `${gridSpacing/4}em 0`,
+            margin: `${gridSpacing / 4}em 0`,
 
             a: {
                 textDecoration: "underline",
@@ -131,7 +129,7 @@ interface Heading {
     subHeadings: Heading[]
     active: boolean
 }
-export const Contents: React.FC<ContentsProps> = ({className, items}) => {
+export const Contents: React.FC<ContentsProps> = ({ className, items }) => {
     const [activeIDs, setActiveIDs] = useState<string[]>([]);
     // Initialise Observer
     const observerRef = useRef<IntersectionObserver | null>(null);
@@ -141,15 +139,15 @@ export const Contents: React.FC<ContentsProps> = ({className, items}) => {
         };
         const observerCallback: IntersectionObserverCallback = (entries) => {
             entries.forEach((entry) => {
-                if(entry.isIntersecting && entry.intersectionRatio > observerOptions.threshold) {
+                if (entry.isIntersecting && entry.intersectionRatio > observerOptions.threshold) {
                     setActiveIDs(ids => [...ids, entry.target.id]);
                 } else {
-                    setActiveIDs(ids => ids.filter(id => id!==entry.target.id));
+                    setActiveIDs(ids => ids.filter(id => id !== entry.target.id));
                 }
             })
         };
 
-        if(observerRef.current === null) {
+        if (observerRef.current === null) {
             const observer = new IntersectionObserver(observerCallback, observerOptions);
             observerRef.current = observer;
 
@@ -163,18 +161,18 @@ export const Contents: React.FC<ContentsProps> = ({className, items}) => {
     // Analyse Heading Elements
     const [headingElements, setHeadingElements] = useState<Heading[] | null>(null);
     useEffect(() => {
-        if(headingElements === null) {
+        if (headingElements === null) {
             function itemsLoop(xs: ContentsPageItem[] | undefined): Heading[] {
                 if (typeof xs === "undefined")
                     return [];
 
                 return xs.map((item) => ({
-                        element: document.querySelector(item.url),
-                        url: item.url,
-                        title: item.title,
-                        subHeadings: itemsLoop(item.items),
-                        active: false,
-                    })
+                    element: document.querySelector(item.url),
+                    url: item.url,
+                    title: item.title,
+                    subHeadings: itemsLoop(item.items),
+                    active: false,
+                })
                 );
             }
 
@@ -184,7 +182,7 @@ export const Contents: React.FC<ContentsProps> = ({className, items}) => {
 
     // Observe Heading Elements
     useEffect(() => {
-        if(headingElements !== null && observerRef.current !== null) {
+        if (headingElements !== null && observerRef.current !== null) {
             const headings = headingElements as Heading[];
             const observer = observerRef.current as IntersectionObserver;
             const observeHeadings = (xs: Heading[]) => {
@@ -201,8 +199,8 @@ export const Contents: React.FC<ContentsProps> = ({className, items}) => {
         <section className={className} css={stylesContents}>
             <H2 css={stylesH1}>Contents</H2>
             <ol>
-                {headingElements?.map( (heading, key) =>
-                    <ContentsItem heading={heading} key={key} active={!!activeIDs.find(id => id === heading.url.slice(1))} activeIDs={activeIDs}/>
+                {headingElements?.map((heading, key) =>
+                    <ContentsItem heading={heading} key={key} active={!!activeIDs.find(id => id === heading.url.slice(1))} activeIDs={activeIDs} />
                 )}
             </ol>
         </section>

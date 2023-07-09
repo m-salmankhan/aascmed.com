@@ -1,6 +1,5 @@
-import { H1, H2, SectionHeader, stylesBigH1, stylesH5 } from "../headings";
+import { H2, SectionHeader, stylesBigH1, stylesH5 } from "../headings";
 import React from "react";
-import ReactMarkdown from "react-markdown";
 import { css } from "@emotion/react";
 import { cols, gridContainer } from "../../styles/grid";
 import { mediaBreakpoints } from "../../styles/breakpoints";

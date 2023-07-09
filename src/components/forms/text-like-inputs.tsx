@@ -1,19 +1,19 @@
-import React, {HTMLProps, ReactNode, useId} from "react";
-import {css} from "@emotion/react";
-import {colours} from "../../styles/theme";
-import {ErrorNotice} from "./notices";
+import React, { ReactNode, useId } from "react";
+import { css } from "@emotion/react";
+import { colours } from "../../styles/theme";
+import { ErrorNotice } from "./notices";
 import Color from "color";
-import {inputBorderWidths, inputFocusShadow, inputMargins, inputPadding, stylesLabel} from "./index";
+import { inputBorderWidths, inputFocusShadow, inputMargins, inputPadding, stylesLabel } from "./index";
 
-interface InputProps extends Omit<React.ComponentPropsWithoutRef<"input"> , "type" | "id"> {
-    type: "text" | "email" | "password" | "tel" | "search" | "url",
-    label: string | ReactNode
-    error?: ReactNode | string
+interface InputProps extends Omit<React.ComponentPropsWithoutRef<"input">, "type" | "id"> {
+  type: "text" | "email" | "password" | "tel" | "search" | "url",
+  label: string | ReactNode
+  error?: ReactNode | string
 }
 
-interface TextAreaProps extends Omit<React.ComponentPropsWithoutRef<"textarea"> , "type" | "id"> {
-    label: string | ReactNode
-    error?: ReactNode | string
+interface TextAreaProps extends Omit<React.ComponentPropsWithoutRef<"textarea">, "type" | "id"> {
+  label: string | ReactNode
+  error?: ReactNode | string
 }
 
 const stylesTextInputs = (error: boolean) => css`
@@ -47,29 +47,29 @@ const stylesTextInputs = (error: boolean) => css`
 `
 
 export const TextInput: React.FC<InputProps> = (props) => {
-    const id = useId();
-    return (
-        <div css={stylesTextInputs(!!props.error)} className={props.className}>
-            <label css={stylesLabel(!!props.error)} htmlFor={id}>{props.label} {props.required && "(required)"}:</label>
-            {
-                props.error &&
-                <ErrorNotice css={css`margin-bottom: 1em;`}>{props.error}</ErrorNotice>
-            }
-            <input id={id} {...props} />
-        </div>
-    );
+  const id = useId();
+  return (
+    <div css={stylesTextInputs(!!props.error)} className={props.className}>
+      <label css={stylesLabel(!!props.error)} htmlFor={id}>{props.label} {props.required && "(required)"}:</label>
+      {
+        props.error &&
+        <ErrorNotice css={css`margin-bottom: 1em;`}>{props.error}</ErrorNotice>
+      }
+      <input id={id} {...props} />
+    </div>
+  );
 }
 
 export const TextArea: React.FC<TextAreaProps> = (props) => {
-    const id = useId();
-    return (
-        <div css={stylesTextInputs(!!props.error)} className={props.className}>
-            <label css={stylesLabel(!!props.error)} htmlFor={id}>{props.label} {props.required && "(required)"}:</label>
-            {
-                props.error &&
-                <ErrorNotice css={css`margin-bottom: 1em;`}>{props.error}</ErrorNotice>
-            }
-            <textarea id={id} {...props} />
-        </div>
-    );
+  const id = useId();
+  return (
+    <div css={stylesTextInputs(!!props.error)} className={props.className}>
+      <label css={stylesLabel(!!props.error)} htmlFor={id}>{props.label} {props.required && "(required)"}:</label>
+      {
+        props.error &&
+        <ErrorNotice css={css`margin-bottom: 1em;`}>{props.error}</ErrorNotice>
+      }
+      <textarea id={id} {...props} />
+    </div>
+  );
 }

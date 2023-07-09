@@ -1,7 +1,7 @@
 import { ContactForm } from "./index";
 import { css } from "@emotion/react";
 import React from "react";
-import { H2, stylesBigH1 } from "../headings";
+import { stylesBigH1 } from "../headings";
 import { cols, gridContainer } from "../../styles/grid";
 import { breakpointStrings, mediaBreakpoints } from "../../styles/breakpoints";
 import { colours, gridSpacing } from "../../styles/theme";

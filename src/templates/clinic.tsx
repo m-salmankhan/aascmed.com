@@ -1,19 +1,15 @@
-import * as React from "react"
 import { graphql, HeadProps, Link, PageProps } from "gatsby"
 import { Column, Columns, HalfColumnsLayout } from "../components/layouts/half-columns";
 import { H1, H2, H3, stylesH1, stylesH5 } from "../components/headings";
 import { Breadcrumbs } from "../components/breadcrumbs";
 import { css } from "@emotion/react";
-import { MapBox } from "../components/mapbox";
+import { MapBox } from "../components/mapbox/dynamic";
 import { PrimaryAnchor } from "../components/buttons";
 import { Table } from "../components/tables";
 import { ContactForm } from "../components/contact";
 import { SEO } from "../components/seo";
 import { MDXProvider } from "@mdx-js/react";
 import { ButtonList, ContactBanner } from "../components/posts/shortcode-components";
-import { cols } from "../styles/grid";
-import { mediaBreakpoints } from "../styles/breakpoints";
-import { gridSpacing } from "../styles/theme";
 
 const shortcodes = { Link, ButtonList, ContactBanner };
 

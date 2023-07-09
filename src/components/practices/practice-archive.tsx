@@ -1,15 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
-import { H1, H2, H3, SectionHeader, stylesBigH1, stylesH1 } from "../headings";
+import { H2, H3, SectionHeader, stylesBigH1 } from "../headings";
 import { css } from "@emotion/react";
-import ReactMarkdown from "react-markdown";
 import { cols, gridContainer } from "../../styles/grid";
 import { mediaBreakpoints } from "../../styles/breakpoints";
-import { Container } from "../containers";
 import { Link } from "gatsby";
 import { Thumbnail } from "../thumbnails";
 import { IconStyles } from "../font-awesome";
 import { MapBoxProps } from "../mapbox";
-import { gridSpacing } from "../../styles/theme";
 
 export interface PracticeSummary {
     slug: string,
@@ -55,7 +52,8 @@ const PracticeArchiveListItem: React.FC<PracticeListItemProps> = ({ className, p
         latitude: practice.latitude,
         label: practice.clinic_name,
         zoom: 16,
-        inView: inView
+        inView: inView,
+        width: 15,
     }
     return (
         <li className={className} css={stylesPracticeArchiveListItem}>

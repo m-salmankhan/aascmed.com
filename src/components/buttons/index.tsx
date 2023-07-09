@@ -1,7 +1,6 @@
-import {CSSInterpolation} from "@emotion/serialize";
-import {bounceTransition, colours} from "../../styles/theme";
-import React, {HTMLProps} from "react";
-import {Link} from "gatsby";
+import { CSSInterpolation } from "@emotion/serialize";
+import { bounceTransition, colours } from "../../styles/theme";
+import React, { HTMLProps } from "react";
 
 export const stylesButton: CSSInterpolation = {
     display: "inline-block",
@@ -45,23 +44,23 @@ export const stylesBtnSecondary: CSSInterpolation = {
     },
 }
 
-export const PrimaryButton: React.FC<HTMLProps<HTMLButtonElement>> = ({children, ...props}) =>
+export const PrimaryButton: React.FC<HTMLProps<HTMLButtonElement>> = ({ children, ...props }) =>
     <button {...props} css={[stylesButton, stylesBtnPrimary]}>
         {children}
     </button>
 
-export const SecondaryButton: React.FC<HTMLProps<HTMLButtonElement>> = ({children, ...props}) =>
+export const SecondaryButton: React.FC<HTMLProps<HTMLButtonElement>> = ({ children, ...props }) =>
     <button {...props} css={[stylesButton, stylesBtnSecondary]}>
         {children}
     </button>
 
 
-export const PrimaryAnchor: React.FC<HTMLProps<HTMLAnchorElement>> = ({children, ...props}) =>
+export const PrimaryAnchor: React.FC<HTMLProps<HTMLAnchorElement>> = ({ children, ...props }) =>
     <a {...props} css={[stylesButton, stylesBtnPrimary]}>
         {children}
     </a>
 
-export const SecondaryAnchor: React.FC<HTMLProps<HTMLAnchorElement>> = ({children, ...props}) =>
+export const SecondaryAnchor: React.FC<HTMLProps<HTMLAnchorElement>> = ({ children, ...props }) =>
     <a {...props} css={[stylesButton, stylesBtnSecondary]}>
         {children}
     </a>

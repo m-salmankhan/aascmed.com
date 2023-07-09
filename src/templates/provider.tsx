@@ -10,7 +10,6 @@ import { ButtonList, ContactBanner } from "../components/posts/shortcode-compone
 import { GatsbyImage } from "gatsby-plugin-image";
 import ReactMarkdown from "react-markdown";
 import { SEO } from "../components/seo";
-import { useSiteMetadata } from "../hooks/useSiteMetadata";
 
 const shortcodes = { Link, ButtonList, ContactBanner };
 
