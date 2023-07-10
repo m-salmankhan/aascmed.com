@@ -109,6 +109,18 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
       </main>
       <Footer />
       <Script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></Script>
+      <script dangerouslySetInnerHTML={{
+        __html: `
+        if (window.netlifyIdentity) {
+          window.netlifyIdentity.on('init', user => {
+            if (!user) {
+              window.netlifyIdentity.on('login', () => {
+                document.location.href = '/admin/';
+              });
+            }
+          });
+        }
+      `}} />
     </App>
   );
 }
