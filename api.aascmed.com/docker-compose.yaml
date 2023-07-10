@@ -1,0 +1,12 @@
+version: "3.9"
+services:
+  api:
+    container_name: api.aascmed.com
+    build: .
+    restart: unless-stopped
+    env_file:
+      - ./.env
+    ports:
+      - "80:80"
+    volumes:
+      - ./src:/code
