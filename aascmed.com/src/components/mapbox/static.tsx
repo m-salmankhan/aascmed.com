@@ -1,5 +1,5 @@
 import { css, Global } from "@emotion/react"
-import { useState, useId } from "react"
+import { useState, useId, useRef, useEffect } from "react"
 import { MapBoxProps } from "."
 
 interface StaticMapBoxParameters {
@@ -68,6 +68,16 @@ export const StaticMap: React.FC<MapBoxProps> = (props) => {
         setLoaded(ImageState.COMPLETED);
     }
 
+    const imageRef = useRef<HTMLImageElement | null>(null);
+    useEffect(() => {
+        if (!imageRef.current) return;
+
+        if (imageRef.current.complete) {
+            unBlurImage();
+        }
+    }, [imageRef, unBlurImage]);
+
+
     const previewSrc = "/assets/map-lazy.jpg";
 
     const baseParameters: StaticMapBoxParameters = {
@@ -100,7 +110,7 @@ export const StaticMap: React.FC<MapBoxProps> = (props) => {
             <div id={id} className={`lazy-container`}>
                 {
                     (props.inView === undefined ? true : props.inView) &&
-                    <img onLoad={unBlurImage} className={`map ${loaded}`} src={image.src} srcSet={image.srcset} alt={props.alt} sizes={image.sizes} />
+                    <img ref={ } onLoad={unBlurImage} className={`map ${loaded}`} src={image.src} srcSet={image.srcset} alt={props.alt} sizes={image.sizes} />
                 }
                 {
                     loaded !== ImageState.COMPLETED &&
