@@ -1,5 +1,5 @@
 import React from "react";
-import { graphql, HeadProps, PageProps } from "gatsby";
+import { graphql, HeadProps, PageProps, Script } from "gatsby";
 import { Hero } from "../components/header";
 import { css } from "@emotion/react";
 import { ConditionsArchive } from "../components/conditions/";
@@ -108,6 +108,7 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
         </Container>
       </main>
       <Footer />
+      <Script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></Script>
     </App>
   );
 }

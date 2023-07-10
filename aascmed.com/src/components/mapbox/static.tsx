@@ -100,7 +100,7 @@ export const StaticMap: React.FC<MapBoxProps> = (props) => {
             <div id={id} className={`lazy-container`}>
                 {
                     (props.inView === undefined ? true : props.inView) &&
-                    <img className={`map ${loaded}`} src={image.src} srcSet={image.srcset} alt={props.alt} sizes={image.sizes} onLoad={unBlurImage} />
+                    <img onLoad={unBlurImage} className={`map ${loaded}`} src={image.src} srcSet={image.srcset} alt={props.alt} sizes={image.sizes} />
                 }
                 {
                     loaded !== ImageState.COMPLETED &&
