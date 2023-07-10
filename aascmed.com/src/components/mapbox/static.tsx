@@ -105,7 +105,7 @@ export const StaticMap: React.FC<MapBoxProps> = (props) => {
         <div className={props.className} css={css(stylesStaticMap)}>
             <noscript>
                 <Global styles={css`#${id} { display: none; }`} />
-                <img alt={props.alt} src={image.src} srcSet={image.srcset} sizes={image.sizes} />
+                <img alt={props.alt} className={`map ${ImageState.COMPLETED}`} src={image.src} srcSet={image.srcset} sizes={image.sizes} />
             </noscript>
             <div id={id} className={`lazy-container`}>
                 {
