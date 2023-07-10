@@ -54,7 +54,7 @@ Index (or archive) pages are pages which list items of a particular type (e.g. c
    - **Heading**: The page heading
    - **Text**: The page text
 3. Click "Publish" in the top right to save these changes.
-4. 
+
 #### Privacy Policy
 1. In the left-hand-side sidebar, select "pages" and then from the main page, select "Privacy"
 2. Update all necessary fields:
@@ -90,7 +90,7 @@ Index (or archive) pages are pages which list items of a particular type (e.g. c
 2. Update all necessary fields:
    -  **Title**: Filename; set this to the provider name
    -  **Name**:
-      -  **Full Name:"" Full name of provider
+      -  **Full Name:** Full name of provider
       -  **Degree**: Full text version of their degree (or other certifications); e.g. Doctor of Medicine
       -  **Degree Abberviation** e.g. MD, DO, PA-C
       -  **Title**: Honorific Title (e.g. Dr. )
