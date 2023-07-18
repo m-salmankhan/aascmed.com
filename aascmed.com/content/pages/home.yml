@@ -1,4 +1,6 @@
-meta_description: For over 30 years, we have been providing expert care to sufferers of allergy, asthma, and sinus related problems across the Chicagoland area.
+meta_description: For over 30 years, we have been providing expert care to
+  sufferers of allergy, asthma, and sinus related problems across the
+  Chicagoland area Illinois.
 hero:
   heading: Leaders in Allergy, Asthma and Sinus Healthcare
   text: >
@@ -8,7 +10,9 @@ hero:
 
     Our highly qualified team operates across our four clinics and has the knowledge and experience to deliver the personalized and expert care you deserve.
 conditions:
-  heading: Learn more about the conditions we treat
+  heading: |-
+    Asthma Clinic Services
+    Learn more about the conditions we treat
   text: >
     We use the latest cutting-edge technology to treat a variety of allergy,
     asthma and sinus related conditions. To view more details about a specific
