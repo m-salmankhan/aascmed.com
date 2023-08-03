@@ -13,7 +13,7 @@ const PracticesPage = ({ data }: PageProps<Queries.PracticesArchiveQuery>) => {
 
   const practices: PracticeSummary[] = data.practices.edges.map(edge => ({
     slug: edge.node.fields?.slug || "",
-    clinic_name: edge.node.frontmatter?.title || "Untitled Clinic",
+    clinic_name: edge.node.frontmatter?.clinic_name || "Untitled Clinic",
     longitude: edge.node.frontmatter?.lon || 0,
     latitude: edge.node.frontmatter?.lat || 0,
     address: edge.node.frontmatter?.address || "",
@@ -71,7 +71,7 @@ export const query = graphql`
             slug
           }
           frontmatter {
-            title
+            clinic_name
             lat
             lon
             address

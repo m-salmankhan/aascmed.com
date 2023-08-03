@@ -7,7 +7,7 @@ import {
 import { Link } from "gatsby";
 import { colours, gridSpacing } from "../../styles/theme";
 import { css } from "@emotion/react";
-import { H1, stylesH2 } from "../headings";
+import {H2, stylesH2} from "../headings";
 import { CSSInterpolation } from "@emotion/serialize";
 import { ZocDocURL } from "../zocdoc";
 
@@ -55,7 +55,7 @@ const stylesContactBanner: CSSInterpolation = {
 
 export const ContactBanner: React.FC<ShortCodeProps> = ({ className, children }) =>
     <aside className={className} css={stylesContactBanner}>
-        <H1>Questions? Drop us a note!</H1>
+        <H2>Questions? Drop us a note!</H2>
         <p>If you have any questions, get in touch with us! You can contact us by telephone on (815) 729 9900 or by email at info@aascmed.com. Or you can fill in our contact form.</p>
         {children}
         <Link css={[stylesButton, stylesBtnSecondary, { marginRight: `${gridSpacing / 2}em` }]} to={"/contact"}>Contact Us</Link>

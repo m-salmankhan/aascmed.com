@@ -7,6 +7,7 @@ interface SEOProps {
     description: string
     slug: string
     title: string
+    appendBusinessNameToTitle?: boolean
     image?: string
     children?: ReactNode
 }
@@ -24,10 +25,13 @@ const Favicons = () =>
 export const SEO = (props: SEOProps) => {
     const siteMetadata = useSiteMetadata();
     const siteTitle = siteMetadata.title;
+    const appendBusinessNameToTitle = props.appendBusinessNameToTitle || false;
     const siteURL = siteMetadata.url;
     const twitterHandle = siteMetadata.twitter;
 
-    const pageTitle = (props.title ? props.title + " | " : "") + siteTitle;
+    const pageTitle = props.title ?
+        (props.title + appendBusinessNameToTitle ? ` | ${siteTitle}` : "") :
+        siteTitle;
     const socialImage = props.image ? siteURL + props.image : `${siteURL}/assets/favicon/favicon-300x300.png`;
 
     return (

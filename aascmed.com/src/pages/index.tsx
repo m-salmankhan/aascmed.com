@@ -80,7 +80,7 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
   const practicesText = practicesCopy?.text || "";
   const practices: PracticeSummary[] = data.practices.edges.map(edge => ({
     slug: edge.node.fields?.slug || "",
-    clinic_name: edge.node.frontmatter?.title || "Untitled Clinic",
+    clinic_name: edge.node.frontmatter?.clinic_name || "Untitled Clinic",
     longitude: edge.node.frontmatter?.lon || 0,
     latitude: edge.node.frontmatter?.lat || 0,
     address: edge.node.frontmatter?.address || "",
@@ -129,7 +129,7 @@ export const Head = (props: HeadProps<Queries.IndexPageQuery>) => {
   const description = props.data.sectionCopy?.childPagesYaml?.meta_description || "";
 
   return (
-    <SEO description={description} slug={props.location.pathname} title={""}>
+    <SEO description={description} slug={props.location.pathname} title={"Allergy, Asthma and Sinus Centers in Illinois"}>
       <meta name={"og:type"} content={"website"} />
     </SEO>
   )
@@ -266,7 +266,7 @@ export const query = graphql`
             slug
           }
           frontmatter {
-            title
+            clinic_name
             lat
             lon
             address

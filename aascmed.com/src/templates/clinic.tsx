@@ -14,7 +14,8 @@ import { ButtonList, ContactBanner } from "../components/posts/shortcode-compone
 const shortcodes = { Link, ButtonList, ContactBanner };
 
 const Clinic: React.FC<PageProps<Queries.ClinicQuery>> = ({ data, children }) => {
-    const clinicName = data.mdx?.frontmatter?.title || "Untitled";
+    const clinicName = data.mdx?.frontmatter?.clinic_name || "Untitled";
+    const pageTitle = data.mdx?.frontmatter.page_title || "Untitled";
 
     const clinicAddress = data.mdx?.frontmatter?.address || "";
     const clinicPhone = data.mdx?.frontmatter?.phone || "";
@@ -48,7 +49,7 @@ const Clinic: React.FC<PageProps<Queries.ClinicQuery>> = ({ data, children }) =>
                     [data.mdx?.fields?.slug, clinicName]
                 ]} css={css({ marginTop: "3em" })} />
 
-                <H1 css={stylesPageTitle}>{clinicName} Practice</H1>
+                <H1 css={stylesPageTitle}>{pageTitle}</H1>
                 <Columns>
                     <Column>
                         <MDXProvider components={shortcodes as any}>
@@ -130,7 +131,7 @@ const Clinic: React.FC<PageProps<Queries.ClinicQuery>> = ({ data, children }) =>
 }
 
 export const Head = (props: HeadProps<Queries.ClinicQuery>) => {
-    const clinicName = props.data.mdx?.frontmatter?.title || "Untitled";
+    const clinicName = props.data.mdx?.frontmatter?.page_title || "Untitled";
     const description = props.data.mdx?.frontmatter?.description || "";
 
     return (
@@ -145,7 +146,8 @@ export const query = graphql`
     mdx(id: {eq: $id}) {
       id
       frontmatter {
-        title
+        page_title
+        clinic_name
         description
         address
         opening {
