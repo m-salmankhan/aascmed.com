@@ -7,10 +7,10 @@ import { css } from "@emotion/react";
 import { ShareButtons } from "../components/social-media/share";
 import { Contents, ContentsPageItem } from "../components/posts/contents";
 import { Article } from "../components/posts/article";
-import { ButtonList, ContactBanner } from "../components/posts/shortcode-components";
+import { ButtonList, ContactBanner, FAQ } from "../components/posts/shortcode-components";
 import { SEO } from "../components/seo";
 
-const shortcodes = { Link, ButtonList, ContactBanner };
+const shortcodes = { Link, ButtonList, ContactBanner, FAQ };
 const Condition = ({ data, children, location }: PageProps<Queries.ConditionPageQuery>) => {
     if ((data.mdx === null) || (data.mdx === undefined))
         throw Error("mdx is undefined");
@@ -19,6 +19,7 @@ const Condition = ({ data, children, location }: PageProps<Queries.ConditionPage
         throw Error("Frontmatter is undefined");
 
     const title = data.mdx.frontmatter.title || "Untitled"
+    const heading = data.mdx.frontmatter.heading || "Untitled"
     const tocItems = data.mdx.tableOfContents?.items as ContentsPageItem[];
 
     return (
@@ -27,10 +28,10 @@ const Condition = ({ data, children, location }: PageProps<Queries.ConditionPage
                 <Breadcrumbs path={[
                     ["/", "Home"],
                     ["/conditions/", "Conditions"],
-                    [data.mdx?.fields?.slug, title]
+                    [data.mdx?.fields?.slug, heading]
                 ]} css={css({ marginTop: "3em" })} />
-                <Article css={css({ h3: { fontSize: "1rem" } })}>
-                    <H1><>{title}</></H1>
+                <Article>
+                    <H1><>{heading}</></H1>
                     <ShareButtons pageTitle={title} path={location.pathname} />
 
                     <Columns>
@@ -78,6 +79,7 @@ export const query = graphql`
       frontmatter {
         description
         title
+        heading
         thumbnail {
             childImageSharp {
                 gatsbyImageData(width: 800)

@@ -7,7 +7,7 @@ import {
 import { Link } from "gatsby";
 import { colours, gridSpacing } from "../../styles/theme";
 import { css } from "@emotion/react";
-import {H2, stylesH2} from "../headings";
+import { H2, stylesH2 } from "../headings";
 import { CSSInterpolation } from "@emotion/serialize";
 import { ZocDocURL } from "../zocdoc";
 
@@ -35,7 +35,7 @@ const stylesContactBtn = css({
 export const ButtonList: React.FC<ShortCodeProps> = ({ className, children }) =>
     <nav className={className} css={stylesButtonList}>
         {children}
-        <PrimaryAnchor href={"#frequently-asked-questions"} css={stylesFAQBtn}>Skip to FAQ</PrimaryAnchor>
+        <PrimaryAnchor href={"#faq"} css={stylesFAQBtn}>Skip to FAQ</PrimaryAnchor>
         <Link css={[stylesButton, stylesBtnSecondary, stylesContactBtn]} to={"/contact"}>Get in Touch</Link>
         <SecondaryAnchor href={ZocDocURL} target={"_BLANK"} rel={"noopener"}>Book online with ZocDoc</SecondaryAnchor>
     </nav>
@@ -47,7 +47,7 @@ const stylesContactBanner: CSSInterpolation = {
     padding: `${gridSpacing}em`,
     color: colours.bodyBackground,
 
-    "h1": [stylesH2, {
+    "h1, h2": [{
         marginTop: 0,
         color: colours.bodyBackground,
     }]
@@ -61,3 +61,21 @@ export const ContactBanner: React.FC<ShortCodeProps> = ({ className, children })
         <Link css={[stylesButton, stylesBtnSecondary, { marginRight: `${gridSpacing / 2}em` }]} to={"/contact"}>Contact Us</Link>
         <SecondaryAnchor href={ZocDocURL} target="_BLANK" rel="noopener">Book online with ZocDoc</SecondaryAnchor>
     </aside>
+
+interface FAQProps {
+    children: ReactNode;
+}
+const stylesFAQ = css`
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-size: 1rem;
+}
+`;
+export const FAQ: React.FC<FAQProps> = (props) =>
+    <div id="faq" css={stylesFAQ}>
+        {props.children}
+    </div>

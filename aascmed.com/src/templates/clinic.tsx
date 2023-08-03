@@ -10,12 +10,13 @@ import { ContactForm } from "../components/contact";
 import { SEO } from "../components/seo";
 import { MDXProvider } from "@mdx-js/react";
 import { ButtonList, ContactBanner } from "../components/posts/shortcode-components";
+import { Article } from "../components/posts/article";
 
 const shortcodes = { Link, ButtonList, ContactBanner };
 
 const Clinic: React.FC<PageProps<Queries.ClinicQuery>> = ({ data, children }) => {
     const clinicName = data.mdx?.frontmatter?.clinic_name || "Untitled";
-    const pageTitle = data.mdx?.frontmatter.page_title || "Untitled";
+    const pageTitle = data.mdx?.frontmatter?.page_title || "Untitled";
 
     const clinicAddress = data.mdx?.frontmatter?.address || "";
     const clinicPhone = data.mdx?.frontmatter?.phone || "";
@@ -52,10 +53,6 @@ const Clinic: React.FC<PageProps<Queries.ClinicQuery>> = ({ data, children }) =>
                 <H1 css={stylesPageTitle}>{pageTitle}</H1>
                 <Columns>
                     <Column>
-                        <MDXProvider components={shortcodes as any}>
-                            {children}
-                        </MDXProvider>
-
                         <MapBox
                             css={css`height: 25em`}
                             longitude={longitude} latitude={latitude}
@@ -74,9 +71,16 @@ const Clinic: React.FC<PageProps<Queries.ClinicQuery>> = ({ data, children }) =>
                         }
                         <H2 css={stylesH1}>Contact</H2>
                         <ContactForm clinic={data.mdx?.frontmatter?.title || undefined} />
+
+                        <Article>
+                            <h2>About the Clinic</h2>
+                            <MDXProvider components={shortcodes as any}>
+                                {children}
+                            </MDXProvider>
+                        </Article>
                     </Column>
                     <Column>
-                        <H2 css={[stylesH1, css`margin-top: 0`]}>Contact</H2>
+                        <H2 css={[stylesH1, css`margin-top: 0`]}>Contact Information</H2>
                         <H3 css={stylesH5}>Address</H3>
                         <address css={css`white-space: pre-wrap; font-style: normal`}>
                             {clinicAddress}
@@ -124,18 +128,17 @@ const Clinic: React.FC<PageProps<Queries.ClinicQuery>> = ({ data, children }) =>
                         </Table>
                     </Column>
                 </Columns>
-
             </main>
         </HalfColumnsLayout>
     )
 }
 
 export const Head = (props: HeadProps<Queries.ClinicQuery>) => {
-    const clinicName = props.data.mdx?.frontmatter?.page_title || "Untitled";
+    const pageTitle = props.data.mdx?.frontmatter?.page_title || "Untitled";
     const description = props.data.mdx?.frontmatter?.description || "";
 
     return (
-        <SEO description={description} slug={props.location.pathname} title={`${clinicName} Practice`}>
+        <SEO description={description} slug={props.location.pathname} title={`${pageTitle}`} appendBusinessNameToTitle={false}>
             <meta name={"og:type"} content={"website"} />
         </SEO>
     )

@@ -25,12 +25,12 @@ const Favicons = () =>
 export const SEO = (props: SEOProps) => {
     const siteMetadata = useSiteMetadata();
     const siteTitle = siteMetadata.title;
-    const appendBusinessNameToTitle = props.appendBusinessNameToTitle || false;
+    const appendBusinessNameToTitle = props.appendBusinessNameToTitle === undefined ? true : props.appendBusinessNameToTitle;
     const siteURL = siteMetadata.url;
     const twitterHandle = siteMetadata.twitter;
 
     const pageTitle = props.title ?
-        (props.title + appendBusinessNameToTitle ? ` | ${siteTitle}` : "") :
+        (props.title + (appendBusinessNameToTitle ? ` | ${siteTitle}` : "")) :
         siteTitle;
     const socialImage = props.image ? siteURL + props.image : `${siteURL}/assets/favicon/favicon-300x300.png`;
 

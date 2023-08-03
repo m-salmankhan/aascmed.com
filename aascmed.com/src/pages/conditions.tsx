@@ -14,7 +14,7 @@ const ConditionsPage = ({ data }: PageProps<Queries.ConditionsArchiveQuery>) => 
 
   const conditions: ConditionSummary[] = data.conditions.edges.map(edge => ({
     slug: edge.node.fields?.slug || "",
-    title: edge.node.frontmatter?.title || "untitled",
+    title: edge.node.frontmatter?.heading || "untitled",
     thumbnail: edge.node.frontmatter?.thumbnail?.childImageSharp?.gatsbyImageData,
   }));
 
@@ -74,7 +74,7 @@ export const query = graphql`
                 gatsbyImageData(width: 800)
               }
             }
-            title
+            heading
           }
         }
       }

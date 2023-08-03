@@ -29,7 +29,7 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
   const conditionsText = conditionsCopy?.text || "";
   const conditions: ConditionSummary[] = data.conditions.edges.map(edge => ({
     slug: edge.node.fields?.slug || "",
-    title: edge.node.frontmatter?.title || "",
+    title: edge.node.frontmatter?.heading || "",
     thumbnail: edge.node.frontmatter?.thumbnail?.childImageSharp?.gatsbyImageData,
   }));
 
@@ -129,7 +129,7 @@ export const Head = (props: HeadProps<Queries.IndexPageQuery>) => {
   const description = props.data.sectionCopy?.childPagesYaml?.meta_description || "";
 
   return (
-    <SEO description={description} slug={props.location.pathname} title={"Allergy, Asthma and Sinus Centers in Illinois"}>
+    <SEO description={description} slug={props.location.pathname} title={"Allergy, Asthma and Sinus Centers in Illinois"} appendBusinessNameToTitle={false}>
       <meta name={"og:type"} content={"website"} />
     </SEO>
   )
@@ -197,7 +197,7 @@ export const query = graphql`
                 gatsbyImageData(width: 800)
               }
             }
-            title
+            heading
           }
         }
       }
