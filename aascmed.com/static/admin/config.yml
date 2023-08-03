@@ -167,6 +167,7 @@ collections:
     format: frontmatter
     extension: mdx
     create: true
+    identifier_field: heading
     fields:
       - { name: title, label: Title  (for <title>)}
       - { name: heading, label: Heading (<h1> and archive display) }
@@ -243,6 +244,7 @@ collections:
     public_folder: ''
     editor:
       preview: false
+    identifier_field: clinic_name
     fields:
       - name: page_title
         label: Page Title
