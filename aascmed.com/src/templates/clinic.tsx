@@ -47,6 +47,7 @@ const Clinic: React.FC<PageProps<Queries.ClinicQuery>> = ({ data, children }) =>
         "@context": "https://schema.org",
         "@type": "MedicalClinic",
         logo: `${siteMetadata.url}/assets/favicon/300x300.png`,
+        image: `${siteMetadata.url}/assets/favicon/300x300.png`,
         name: `${siteMetadata.title} ${clinicName}`,
         medicalSpeciality: ["Pediatric", "Pulmonary", "PublicHealth"],
         address: clinicAddress,
@@ -55,7 +56,7 @@ const Clinic: React.FC<PageProps<Queries.ClinicQuery>> = ({ data, children }) =>
             latitude: latitude,
             longitude: longitude
         },
-        url: `${siteMetadata.url}/${data.mdx?.fields?.slug}`,
+        url: `${siteMetadata.url}${data.mdx?.fields?.slug}`,
         telephone: clinicPhone,
         faxNumber: clinicFax,
         email: "info@aascmed.com",
