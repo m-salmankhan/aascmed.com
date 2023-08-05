@@ -12,7 +12,6 @@ from ..dependencies.email import send_email, email_dep_type
 from ..email_templates import contact_form_notification_template, new_patient_forms_template
 
 router = APIRouter()
-import traceback
 
 
 @router.post("/contact/", tags=["contact"])
@@ -21,7 +20,7 @@ async def contact_form(
         mailer: email_dep_type = Depends(send_email)
 ):
     has_error = False
-    field_errors = contact_schemas.ContactFormFieldErrors()
+    field_errors = {}
 
     subject_present = check_required_field_present(data.subject)
     name_present = check_required_field_present(data.full_name)
@@ -58,11 +57,15 @@ async def contact_form(
 
     if not has_error:
         if email_valid_error is not None:
-            field_errors["email"] = [f"Please enter a valid email address. {email_valid_error}"]
+            field_errors["email_address"] = [f"Please enter a valid email address. {email_valid_error}"]
             has_error = True
 
     if has_error:
-        raise HTTPException(status_code=400, detail=encoders.jsonable_encoder(encoders.jsonable_encoder(contact_schemas.ContactFormErrorResponse(field_errors=field_errors))))
+        print(field_errors)
+        pydantic_field_errors = contact_schemas.ContactFormFieldErrors(**field_errors)
+        raise HTTPException(status_code=400, detail=encoders.jsonable_encoder(encoders.jsonable_encoder(
+            contact_schemas.ContactFormErrorResponse(field_errors=pydantic_field_errors)
+        )))
 
     cleaned_subject = escape(data.subject)
 
@@ -93,7 +96,10 @@ async def contact_form(
             print("status code")
             print(response_status_code)
             raise HTTPException(status_code=500,
-                                detail=encoders.jsonable_encoder(contact_schemas.ContactFormErrorResponse(error="An unexpected error occurred when sending the email.")))
+                                detail=encoders.jsonable_encoder(
+                                    contact_schemas.ContactFormErrorResponse(
+                                        error="An unexpected error occurred when sending the email.")
+                                ))
 
         if not data.newPatient:
             return
@@ -133,8 +139,6 @@ async def contact_form(
             )
 
     except Exception as e:
-        print(e)
-        print(traceback.format_exc())
         raise HTTPException(status_code=500,
                             detail=encoders.jsonable_encoder(contact_schemas.ContactFormErrorResponse(error="An unexpected error occurred.")))
 
