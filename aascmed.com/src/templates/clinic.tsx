@@ -49,7 +49,7 @@ const Clinic: React.FC<PageProps<Queries.ClinicQuery>> = ({ data, children }) =>
         logo: `${siteMetadata.url}/assets/favicon/300x300.png`,
         image: `${siteMetadata.url}/assets/favicon/300x300.png`,
         name: `${siteMetadata.title} ${clinicName}`,
-        medicalSpeciality: ["Pediatric", "Pulmonary", "PublicHealth"],
+        medicalSpecialty: ["Pediatric", "Pulmonary", "PublicHealth"],
         address: clinicAddress,
         geo: {
             "@type": "GeoCoordinates",
@@ -60,7 +60,7 @@ const Clinic: React.FC<PageProps<Queries.ClinicQuery>> = ({ data, children }) =>
         telephone: clinicPhone,
         faxNumber: clinicFax,
         email: "info@aascmed.com",
-        openingHours: clinicOpeningTimes.map((entry) => {
+        openingHoursSpecification: clinicOpeningTimes.map((entry) => {
             const closed = entry.hours.toLowerCase().trim() === "closed";
             const hours = entry.hours.split("-").map(x => x.trim());
 
@@ -162,10 +162,8 @@ const Clinic: React.FC<PageProps<Queries.ClinicQuery>> = ({ data, children }) =>
                         </Table>
                     </Column>
                 </Columns>
-                <script type="application/ld+json">
-                    {JSON.stringify(structuredData)}
-                </script>
             </main>
+            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}></script>
         </HalfColumnsLayout>
     )
 }
