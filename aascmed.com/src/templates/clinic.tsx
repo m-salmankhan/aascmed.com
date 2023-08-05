@@ -46,8 +46,8 @@ const Clinic: React.FC<PageProps<Queries.ClinicQuery>> = ({ data, children }) =>
     const structuredData = {
         "@context": "https://schema.org",
         "@type": "MedicalClinic",
-        logo: `${siteMetadata.url}/assets/favicon/300x300.png`,
-        image: `${siteMetadata.url}/assets/favicon/300x300.png`,
+        logo: `${siteMetadata.url}/assets/logos/logo.png`,
+        image: `${siteMetadata.url}/assets/logos/logo.png`,
         name: `${siteMetadata.title} ${clinicName}`,
         medicalSpecialty: ["Pediatric", "Pulmonary", "PublicHealth"],
         address: clinicAddress,
