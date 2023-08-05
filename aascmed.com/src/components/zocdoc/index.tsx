@@ -1,10 +1,10 @@
-import React, {HTMLProps, MouseEventHandler, useEffect, useState} from "react";
-import {H1, stylesH3} from "../headings";
-import {css} from "@emotion/react";
-import {bounceTransition, colours, gridSpacing} from "../../styles/theme";
-import {breakpointStrings} from "../../styles/breakpoints";
-import {FaIcons, IconStyles} from "../font-awesome";
-import {stylesScreenReaderText} from "../../styles/accessibility";
+import React, { HTMLProps, MouseEventHandler, useEffect, useState } from "react";
+import { stylesH3 } from "../headings";
+import { css } from "@emotion/react";
+import { bounceTransition, colours, gridSpacing } from "../../styles/theme";
+import { breakpointStrings } from "../../styles/breakpoints";
+import { FaIcons, IconStyles } from "../font-awesome";
+import { stylesScreenReaderText } from "../../styles/accessibility";
 
 export const ZocDocURL = "https://www.zocdoc.com/practice/allergy-asthma-and-sinus-centers-3233";
 
@@ -14,34 +14,34 @@ const resetLinkStyles = css`
 `
 
 enum BubbleStates {
-    // visible to user & screen readers
-    VISIBLE,
+  // visible to user & screen readers
+  VISIBLE,
 
-    // hidden to users, visible to screen readers
-    INVISIBLE,
+  // hidden to users, visible to screen readers
+  INVISIBLE,
 
-    // hidden to users & screen readers
-    REMOVED,
+  // hidden to users & screen readers
+  REMOVED,
 
-    // visually remove element
-    PRE_COLLAPSE,
-    // remove element from DOM
-    COLLAPSED,
-    // add element back in DOM (but still visually hidden)
-    PRE_EXPAND
+  // visually remove element
+  PRE_COLLAPSE,
+  // remove element from DOM
+  COLLAPSED,
+  // add element back in DOM (but still visually hidden)
+  PRE_EXPAND
 }
 
 const stylesBookNowBubble = (state: BubbleStates) => {
-    const hidden =
-        (state === BubbleStates.PRE_COLLAPSE) ||
-        (state === BubbleStates.INVISIBLE) ||
-        (state === BubbleStates.PRE_EXPAND);
+  const hidden =
+    (state === BubbleStates.PRE_COLLAPSE) ||
+    (state === BubbleStates.INVISIBLE) ||
+    (state === BubbleStates.PRE_EXPAND);
 
-    return (css`
+  return (css`
       position: relative;
       background: #fff;
       box-shadow: 0 0 1em rgba(0, 0, 0, 0.25);
-      padding: ${gridSpacing/2}em;
+      padding: ${gridSpacing / 2}em;
       z-index: 10;
       margin-bottom: 1em;
       margin-right: 1em;
@@ -95,62 +95,62 @@ const stylesBookNowBubble = (state: BubbleStates) => {
 };
 
 interface BubbleProps extends HTMLProps<HTMLAnchorElement> {
-    collapse: boolean
+  collapse: boolean
 }
-const Bubble: React.FC<BubbleProps> = ({children, collapse, ...props}) => {
-    const [visibilityState, setVisibilityState] = useState(BubbleStates.VISIBLE);
+const Bubble: React.FC<BubbleProps> = ({ children, collapse, ...props }) => {
+  const [visibilityState, setVisibilityState] = useState(BubbleStates.VISIBLE);
 
-    useEffect(() => {
-        switch (visibilityState) {
-            case BubbleStates.VISIBLE:
-                if(collapse) setVisibilityState(BubbleStates.PRE_COLLAPSE);
-                break
-            // button should reappear
-            case BubbleStates.COLLAPSED:
-                if(!collapse) setVisibilityState(BubbleStates.PRE_EXPAND);
-                break
-            case BubbleStates.PRE_EXPAND:
-                setVisibilityState(BubbleStates.VISIBLE);
-                break
-        }
-    }, [visibilityState, setVisibilityState, collapse]);
-
-    // starts hide transition
-    // after this, bubble is still visible to screen readers
-    const hideBubble: MouseEventHandler = (e) => {
-        e.preventDefault();
-        if(visibilityState === BubbleStates.VISIBLE) {
-            setVisibilityState(BubbleStates.INVISIBLE);
-        }
-        return false;
+  useEffect(() => {
+    switch (visibilityState) {
+      case BubbleStates.VISIBLE:
+        if (collapse) setVisibilityState(BubbleStates.PRE_COLLAPSE);
+        break
+      // button should reappear
+      case BubbleStates.COLLAPSED:
+        if (!collapse) setVisibilityState(BubbleStates.PRE_EXPAND);
+        break
+      case BubbleStates.PRE_EXPAND:
+        setVisibilityState(BubbleStates.VISIBLE);
+        break
     }
+  }, [visibilityState, setVisibilityState, collapse]);
 
-    // stops being visible to screen readers
-    const handleTransitionEnd = () => {
-        switch (visibilityState) {
-            case BubbleStates.INVISIBLE:
-                setVisibilityState(BubbleStates.REMOVED);
-                break
-            case BubbleStates.PRE_COLLAPSE:
-                setVisibilityState(BubbleStates.COLLAPSED);
-                break
-        }
+  // starts hide transition
+  // after this, bubble is still visible to screen readers
+  const hideBubble: MouseEventHandler = (e) => {
+    e.preventDefault();
+    if (visibilityState === BubbleStates.VISIBLE) {
+      setVisibilityState(BubbleStates.INVISIBLE);
     }
+    return false;
+  }
 
-    if(visibilityState === BubbleStates.REMOVED || visibilityState === BubbleStates.COLLAPSED) return <></>;
-    return (
-        <a {...props} css={[resetLinkStyles]}>
-            <div css={stylesBookNowBubble(visibilityState)} onTransitionEnd={handleTransitionEnd}>
-                <H1 css={stylesH3}>Book online</H1>
-                <button onClick={hideBubble}>
-                    <span css={stylesScreenReaderText}>Dismiss</span>
-                    <FaIcons iconStyle={IconStyles.SOLID} icon={"xmark"}/>
-                </button>
-                <p>See available appointment times and book an appointment right here.</p>
-                <p>It's fast, free and secure.</p>
-            </div>
-        </a>
-    )
+  // stops being visible to screen readers
+  const handleTransitionEnd = () => {
+    switch (visibilityState) {
+      case BubbleStates.INVISIBLE:
+        setVisibilityState(BubbleStates.REMOVED);
+        break
+      case BubbleStates.PRE_COLLAPSE:
+        setVisibilityState(BubbleStates.COLLAPSED);
+        break
+    }
+  }
+
+  if (visibilityState === BubbleStates.REMOVED || visibilityState === BubbleStates.COLLAPSED) return <></>;
+  return (
+    <a {...props} css={[resetLinkStyles]}>
+      <div css={stylesBookNowBubble(visibilityState)} onTransitionEnd={handleTransitionEnd}>
+        <h2 css={stylesH3}>Book online</h2>
+        <button onClick={hideBubble}>
+          <span css={stylesScreenReaderText}>Dismiss</span>
+          <FaIcons iconStyle={IconStyles.SOLID} icon={"xmark"} />
+        </button>
+        <p>See available appointment times and book an appointment right here.</p>
+        <p>It's fast, free and secure.</p>
+      </div>
+    </a>
+  )
 }
 
 const stylesBookButton = (collapsed: boolean) => css`
@@ -206,17 +206,17 @@ const stylesBookButton = (collapsed: boolean) => css`
   }
 `;
 interface BookButtonProps extends HTMLProps<HTMLAnchorElement> {
-    collapse: boolean
+  collapse: boolean
 }
-const BookButton: React.FC<BookButtonProps> = ({collapse, ...props}) => {
-    return (
-        <a {...props} css={resetLinkStyles}>
-            <div css={stylesBookButton(collapse)}>
-                <FaIcons className={"icon"} iconStyle={IconStyles.SOLID} icon={"calendar-check"} />
-                <div className={"text"}>Book online</div>
-            </div>
-        </a>
-    )
+const BookButton: React.FC<BookButtonProps> = ({ collapse, ...props }) => {
+  return (
+    <a {...props} css={resetLinkStyles}>
+      <div css={stylesBookButton(collapse)}>
+        <FaIcons className={"icon"} iconStyle={IconStyles.SOLID} icon={"calendar-check"} />
+        <div className={"text"}>Book online</div>
+      </div>
+    </a>
+  )
 }
 
 const stylesZocDoc = css`
@@ -237,23 +237,23 @@ const stylesZocDoc = css`
   }
 `;
 export const ZocDoc = () => {
-    const [collapse, setCollapse] = useState(false);
+  const [collapse, setCollapse] = useState(false);
 
-    useEffect(() => {
-        const callBack = () => {
-            setCollapse(window.scrollY > 600);
-        }
-        window.addEventListener("scroll", callBack);
+  useEffect(() => {
+    const callBack = () => {
+      setCollapse(window.scrollY > 600);
+    }
+    window.addEventListener("scroll", callBack);
 
-        return () => {
-            window.removeEventListener("scroll", callBack);
-        }
-    }, [setCollapse]);
+    return () => {
+      window.removeEventListener("scroll", callBack);
+    }
+  }, [setCollapse]);
 
-    return (
-        <aside css={stylesZocDoc}>
-            <Bubble href={ZocDocURL} target={"_BLANK"} rel={"noopener"} collapse={collapse} />
-            <BookButton href={ZocDocURL} target={"_BLANK"} rel={"noopener"} collapse={collapse} />
-        </aside>
-    );
+  return (
+    <aside css={stylesZocDoc}>
+      <Bubble href={ZocDocURL} target={"_BLANK"} rel={"noopener"} collapse={collapse} />
+      <BookButton href={ZocDocURL} target={"_BLANK"} rel={"noopener"} collapse={collapse} />
+    </aside>
+  );
 }

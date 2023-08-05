@@ -73,6 +73,7 @@ export const query = graphql`
     mdx(id: {eq: $id}) {
       id
       tableOfContents(maxDepth: 2)
+      body
       fields {
         slug
       }
