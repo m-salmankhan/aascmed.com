@@ -72,7 +72,7 @@ export const query = graphql`
   query ConditionPage($id: String) {
     mdx(id: {eq: $id}) {
       id
-      tableOfContents(maxDepth: 2)
+      tableOfContents(maxDepth: 3)
       body
       fields {
         slug
