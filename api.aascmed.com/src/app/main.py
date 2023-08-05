@@ -7,8 +7,8 @@ from .routes import contact
 
 app = FastAPI()
 app.include_router(contact.router)
-
 origins = [os.getenv("HOST")]
+print(origins)
 
 app.add_middleware(
     CORSMiddleware,

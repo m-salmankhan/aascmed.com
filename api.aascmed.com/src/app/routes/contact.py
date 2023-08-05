@@ -14,7 +14,12 @@ from ..email_templates import contact_form_notification_template, new_patient_fo
 router = APIRouter()
 
 
-@router.post("/contact/", tags=["contact"])
+@router.post("/contact/", tags=["contact"], responses={
+    400: {
+        "model": contact_schemas.HTTP400Response,
+        "description": "Details of what went wrong."
+    }
+})
 async def contact_form(
         data: contact_schemas.ContactFormSubmission,
         mailer: email_dep_type = Depends(send_email)
@@ -61,7 +66,6 @@ async def contact_form(
             has_error = True
 
     if has_error:
-        print(field_errors)
         pydantic_field_errors = contact_schemas.ContactFormFieldErrors(**field_errors)
         raise HTTPException(status_code=400, detail=encoders.jsonable_encoder(encoders.jsonable_encoder(
             contact_schemas.ContactFormErrorResponse(field_errors=pydantic_field_errors)
@@ -79,6 +83,7 @@ async def contact_form(
         ("%submission.phone%", escape(data.phone_number)),
         ("%submission.message%", escape(data.message)),
         ("%submission.patient_status%", "New Patient" if data.newPatient else "Existing Patient"),
+        ("%submission.clinic%", escape(data.clinic)),
     ]
     email_reply_to = (email_addr, escape(data.full_name))
 

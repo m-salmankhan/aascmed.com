@@ -33,3 +33,7 @@ class ContactFormErrorResponse(BaseModel):
     field_errors: Optional[ContactFormFieldErrors] = None
     # if another error occurred (not a field validation error)
     error: Optional[str] = None
+
+
+class HTTP400Response(BaseModel):
+    detail: ContactFormErrorResponse
