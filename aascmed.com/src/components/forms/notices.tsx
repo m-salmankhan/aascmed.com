@@ -1,22 +1,22 @@
-import React, {ReactNode, useState} from "react";
-import {css} from "@emotion/react";
-import {FaIcons, IconStyles} from "../font-awesome";
-import {stylesScreenReaderText} from "../../styles/accessibility";
-import {bounceTransition, colours, nudge} from "../../styles/theme";
+import React, { MouseEventHandler, ReactNode, useState } from "react";
+import { css } from "@emotion/react";
+import { FaIcons, IconStyles } from "../font-awesome";
+import { stylesScreenReaderText } from "../../styles/accessibility";
+import { bounceTransition, colours, nudge } from "../../styles/theme";
 
 interface NoticeProps {
-    className?: string
-    children: ReactNode
+  className?: string
+  children: ReactNode
 }
 
 enum NoticeStates {
-    VISIBLE,
-    INVISIBLE,
-    REMOVED
+  VISIBLE,
+  INVISIBLE,
+  REMOVED
 }
 
 const stylesNotice = (state: NoticeStates) => {
-    return css`
+  return css`
       position: relative;
       padding: 1em;
       border-radius: .5em;
@@ -86,33 +86,85 @@ const stylesError = css`
   }
 `
 
-export const ErrorNotice : React.FC<NoticeProps> = (props) => {
-    const [state, setState] = useState(NoticeStates.VISIBLE);
+export const ErrorNotice: React.FC<NoticeProps> = (props) => {
+  const [state, setState] = useState(NoticeStates.VISIBLE);
 
-    const animateOut = () => {
-        setState(NoticeStates.INVISIBLE);
-    }
+  const animateOut: MouseEventHandler = (e) => {
+    e.preventDefault();
+    setState(NoticeStates.INVISIBLE);
+  }
 
-    const removeFromDOM = () => {
-        setState(NoticeStates.REMOVED);
-    }
+  const removeFromDOM = () => {
+    setState(NoticeStates.REMOVED);
+  }
 
-    if(state === NoticeStates.REMOVED) return <></>;
-    return (
-        <div className={props.className} css={[stylesNotice(state), stylesError]} onTransitionEnd={removeFromDOM}>
-            <div onTransitionEnd={(event) => event.stopPropagation()}>
-                <button className={"collapse"} onClick={animateOut}>
-                    <span css={stylesScreenReaderText}>Close</span>
-                    <FaIcons iconStyle={IconStyles.SOLID} icon={"xmark"} className={"icon"} />
-                </button>
-                <div className={"heading"}>
-                    <FaIcons iconStyle={IconStyles.SOLID} icon={"triangle-exclamation"} className={"icon"} />
-                    Error:
-                </div>
-                <div className={"body"}>
-                    {props.children}
-                </div>
-            </div>
+  if (state === NoticeStates.REMOVED) return <></>;
+  return (
+    <div className={props.className} css={[stylesNotice(state), stylesError]} onTransitionEnd={removeFromDOM}>
+      <div onTransitionEnd={(event) => event.stopPropagation()}>
+        <button className={"collapse"} onClick={animateOut}>
+          <span css={stylesScreenReaderText}>Close</span>
+          <FaIcons iconStyle={IconStyles.SOLID} icon={"xmark"} className={"icon"} />
+        </button>
+        <div className={"heading"}>
+          <FaIcons iconStyle={IconStyles.SOLID} icon={"triangle-exclamation"} className={"icon"} />
+          Error:
         </div>
-    );
+        <div className={"body"}>
+          {props.children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+const stylesSuccess = css`
+  background: ${colours.successBg};
+  border: 1px solid ${colours.successTxt};
+  color: ${colours.successTxt};
+  
+  .icon {
+    fill: ${colours.successTxt};
+  }
+  
+  button.collapse:focus {
+    background: ${colours.successTxt};
+    
+    svg {
+      fill: ${colours.successBg};
+    }
+  }
+`
+
+export const SuccessNotice: React.FC<NoticeProps> = (props) => {
+  const [state, setState] = useState(NoticeStates.VISIBLE);
+
+  const animateOut: MouseEventHandler = (e) => {
+    e.preventDefault();
+    setState(NoticeStates.INVISIBLE);
+  }
+
+  const removeFromDOM = () => {
+    setState(NoticeStates.REMOVED);
+  }
+
+  if (state === NoticeStates.REMOVED) return <></>;
+  return (
+    <div className={props.className} css={[stylesNotice(state), stylesSuccess]} onTransitionEnd={removeFromDOM}>
+      <div onTransitionEnd={(event) => event.stopPropagation()}>
+        <button className={"collapse"} onClick={animateOut}>
+          <span css={stylesScreenReaderText}>Close</span>
+          <FaIcons iconStyle={IconStyles.SOLID} icon={"xmark"} className={"icon"} />
+        </button>
+        <div className={"heading"}>
+          <FaIcons iconStyle={IconStyles.SOLID} icon={"circle-check"} className={"icon"} />
+          Success!
+        </div>
+        <div className={"body"}>
+          {props.children}
+        </div>
+      </div>
+    </div>
+  );
 }
