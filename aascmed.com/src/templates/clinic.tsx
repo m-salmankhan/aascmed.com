@@ -58,8 +58,20 @@ const Clinic: React.FC<PageProps<Queries.ClinicQuery>> = ({ data, children }) =>
         url: `${siteMetadata.url}/${data.mdx?.fields?.slug}`,
         telephone: clinicPhone,
         faxNumber: clinicFax,
-        openingHours: clinicOpeningTimes.map((entry) => `${entry.day.substring(0, 2)} ${entry.hours}`),
-        email: "info@aascmed.com"
+        email: "info@aascmed.com",
+        openingHours: clinicOpeningTimes.map((entry) => {
+            const closed = entry.hours.toLowerCase().trim() === "closed";
+            const hours = entry.hours.split("-").map(x => x.trim());
+
+            const openingHoursSpecification = {
+                "@type": "OpeningHoursSpecification",
+                dayOfWeek: entry.day,
+                opens: closed ? undefined : hours[0],
+                closes: closed ? undefined : hours[1],
+            }
+
+            return openingHoursSpecification;
+        }),
     }
 
     return (
