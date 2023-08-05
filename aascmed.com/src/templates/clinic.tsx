@@ -103,7 +103,7 @@ const Clinic: React.FC<PageProps<Queries.ClinicQuery>> = ({ data, children }) =>
                             </PrimaryAnchor>
                         }
                         <H2 css={stylesH1}>Contact</H2>
-                        <ContactForm clinic={data.mdx?.frontmatter?.title || undefined} />
+                        <ContactForm clinic={data.mdx?.frontmatter?.clinic_name || undefined} />
 
                         <Article>
                             <h2>About the Clinic</h2>
