@@ -11,10 +11,12 @@ import { SEO } from "../components/seo";
 import { MDXProvider } from "@mdx-js/react";
 import { ButtonList, ContactBanner } from "../components/posts/shortcode-components";
 import { Article } from "../components/posts/article";
+import { useSiteMetadata } from "../hooks/useSiteMetadata";
 
 const shortcodes = { Link, ButtonList, ContactBanner };
 
 const Clinic: React.FC<PageProps<Queries.ClinicQuery>> = ({ data, children }) => {
+    const siteMetadata = useSiteMetadata();
     const clinicName = data.mdx?.frontmatter?.clinic_name || "Untitled";
     const pageTitle = data.mdx?.frontmatter?.page_title || "Untitled";
 
@@ -40,6 +42,25 @@ const Clinic: React.FC<PageProps<Queries.ClinicQuery>> = ({ data, children }) =>
     const stylesPageTitle = css`
         font-size: 2.5em;
     `;
+
+    const structuredData = {
+        "@context": "https://schema.org",
+        "@type": "MedicalClinic",
+        logo: `${siteMetadata.url}/assets/favicon/300x300.png`,
+        name: `${siteMetadata.title} ${clinicName}`,
+        medicalSpeciality: ["Pediatric", "Pulmonary", "PublicHealth"],
+        address: clinicAddress,
+        geo: {
+            "@type": "GeoCoordinates",
+            latitude: latitude,
+            longitude: longitude
+        },
+        url: `${siteMetadata.url}/${data.mdx?.fields?.slug}`,
+        telephone: clinicPhone,
+        faxNumber: clinicFax,
+        openingHours: clinicOpeningTimes.map((entry) => `${entry.day.substring(0, 2)} ${entry.hours}`),
+        email: "info@aascmed.com"
+    }
 
     return (
         <HalfColumnsLayout>
@@ -128,6 +149,9 @@ const Clinic: React.FC<PageProps<Queries.ClinicQuery>> = ({ data, children }) =>
                         </Table>
                     </Column>
                 </Columns>
+                <script type="application/ld+json">
+                    {JSON.stringify(structuredData)}
+                </script>
             </main>
         </HalfColumnsLayout>
     )
