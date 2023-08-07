@@ -166,14 +166,15 @@ export const Contents: React.FC<ContentsProps> = ({ className, items }) => {
                 if (typeof xs === "undefined")
                     return [];
 
-                return xs.map((item) => ({
+                const headingsList = xs.map((item) => ({
                     element: document.querySelector(item.url),
                     url: item.url,
                     title: item.title,
                     subHeadings: itemsLoop(item.items),
                     active: false,
-                })
-                );
+                }));
+                console.log(headingsList.filter(x => x.element === null))
+                return headingsList.filter((x) => x.element !== null);
             }
 
             setHeadingElements(itemsLoop(items));
