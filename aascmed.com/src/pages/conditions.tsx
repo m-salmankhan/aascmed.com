@@ -23,7 +23,7 @@ const ConditionsPage = ({ data }: PageProps<Queries.ConditionsArchiveQuery>) => 
       <main>
         <Container>
           <Breadcrumbs path={[
-            ["'", "Home"],
+            ["/", "Home"],
             ["/conditions/", "Conditions"]
           ]} css={css({ marginTop: "3em" })} />
           <ConditionsArchive
