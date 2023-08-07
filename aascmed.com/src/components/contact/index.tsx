@@ -25,7 +25,7 @@ export const ContactForm: React.FC<ContactFormProps> = (props) => {
     const [formState, setFormState] = useState(FormState.DEFAULT);
     const [formData, setFormData] = useState<FormData | undefined>(undefined);
     const [fieldErrors, setFieldErrors] = useState<ContactFormFieldErrors | undefined>();
-    const [errorMsg, setErrorMsg] = useState("An unexpected error occurred.");
+    const [errorMsg, setErrorMsg] = useState("An unexpected error occurred. Please try again or email us at info@aascmed.com if the problem persists.");
     const formRef = useRef<HTMLFormElement>(null);
 
     const data: Queries.ClinicNamesQuery = useStaticQuery(graphql`
