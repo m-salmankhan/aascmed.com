@@ -173,7 +173,7 @@ export const Contents: React.FC<ContentsProps> = ({ className, items }) => {
                     subHeadings: itemsLoop(item.items),
                     active: false,
                 }));
-                console.error("Heading levels skipped:" + JSON.stringify(headingsList.filter(x => x.element === null)))
+                console.error("Heading levels skipped:" + headingsList.filter(x => x.element === null).toString())
                 return headingsList.filter((x) => x.element !== null);
             }
 
