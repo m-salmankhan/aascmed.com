@@ -63,7 +63,8 @@ export const ContactBanner: React.FC<ShortCodeProps> = ({ className, children })
     </aside>
 
 interface FAQProps {
-    children: ReactNode;
+    children: ReactNode
+    className?: string
 }
 const stylesFAQ = css`
 h1,
