@@ -2,6 +2,7 @@ import React from "react";
 import { useSiteMetadata } from "../../hooks/useSiteMetadata";
 import { ReactNode } from "react";
 import { colours } from "../../styles/theme";
+import { Script } from "gatsby";
 
 interface SEOProps {
     description: string
@@ -36,6 +37,8 @@ export const SEO = (props: SEOProps) => {
 
     return (
         <>
+            <Script async src="https://www.googletagmanager.com/gtag/js?id=G-9XCDLT1NCL"></Script>
+
             <title>{pageTitle}</title>
             <meta name={"description"} content={props.description} />
             <link rel={"canonical"} href={siteURL + props.slug} />

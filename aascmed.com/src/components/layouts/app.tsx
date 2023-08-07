@@ -3,6 +3,7 @@ import { colours, fontBaseSize, fontFamily, fontWeightBase, gridSpacing } from "
 import React, { ReactNode, useEffect } from "react";
 import { CSSInterpolation } from "@emotion/serialize";
 import { ZocDoc } from "../zocdoc";
+import { Script } from "gatsby";
 
 const stylesGlobal: CSSInterpolation = {
     "html, body": {
@@ -65,6 +66,14 @@ export const App: React.FC<AppProps> = ({ children, className }) => {
                     });
                 }
             });
+        }
+    });
+
+    useEffect(() => {
+        // @ts-ignore
+        if (typeof window.dataLayer !== 'undefined') {
+            // @ts-ignore
+            window.dataLayer = window.dataLayer || []; function gtag() { dataLayer.push(arguments); } gtag('js', new Date()); gtag('config', 'G-9XCDLT1NCL');
         }
     });
 
