@@ -53,6 +53,8 @@
 # 301 redirect Contact
 # ===============================================================================
 /contact/index.php /contact/ 301
+/contact/index.php* /contact/ 301
+/contact/* /contact/ 301
 
 # 301 redirect Privacy Policy
 # ===============================================================================
