@@ -1,11 +1,13 @@
 import { Checkbox, DropdownInput, TextArea, TextInput } from "../forms";
 import { graphql, useStaticQuery } from "gatsby";
-import React, { EventHandler, FormEventHandler, useEffect, useRef, useState } from "react";
+import React, { FormEventHandler, useEffect, useRef, useState } from "react";
 import { PrimaryButton } from "../buttons";
 import { css } from "@emotion/react";
 import { API } from "../../api";
 import { ContactFormFieldErrors } from "../../api/types";
 import { ErrorNotice, SuccessNotice } from "../forms/notices";
+import { Loading } from "../loading";
+import { stylesH4 } from "../headings";
 
 
 enum FormState {
@@ -23,7 +25,7 @@ export const ContactForm: React.FC<ContactFormProps> = (props) => {
     const [formState, setFormState] = useState(FormState.DEFAULT);
     const [formData, setFormData] = useState<FormData | undefined>(undefined);
     const [fieldErrors, setFieldErrors] = useState<ContactFormFieldErrors | undefined>();
-    const [errorMsg, setErrorMsg] = useState("");
+    const [errorMsg, setErrorMsg] = useState("An unexpected error occurred.");
     const formRef = useRef<HTMLFormElement>(null);
 
     const data: Queries.ClinicNamesQuery = useStaticQuery(graphql`
@@ -92,7 +94,10 @@ export const ContactForm: React.FC<ContactFormProps> = (props) => {
     return (
         <>
             {
-                formState === FormState.SUBMITTING && <p><strong>Loading...</strong></p>
+                formState === FormState.SUBMITTING &&
+                <Loading>
+                    <span css={stylesH4}>Sending</span>
+                </Loading>
             }
             {
                 formState === FormState.SUCCESS &&
