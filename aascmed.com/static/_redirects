@@ -1,0 +1,59 @@
+# 301 redirect all /services/ to /conditions
+# ===============================================================================
+/services/ /conditions/ 301
+/services/index.php /conditions/ 301
+/services/asthma_respiratory_problems.php /conditions/asthma-respiratory-problems/ 301
+/services/food_chemical_drug_insect.php /conditions/drug-chemical-allergy/ 301
+/services/eczema_hives_rashes.php /conditions/eczema-hives-rashes/ 301
+/services/sinus_nasal_allergies.php /conditions/sinus-nasal-allergy/ 301
+/services/immunodeficiency.php /conditions/immunodeficiency/ 301
+# without .php
+/services/asthma_respiratory_problems/ /conditions/asthma-respiratory-problems/ 301
+/services/food_chemical_drug_insect/ /conditions/drug-chemical-allergy/ 301
+/services/eczema_hives_rashes/ /conditions/eczema-hives-rashes/ 301
+/services/sinus_nasal_allergies/ /conditions/sinus-nasal-allergy/ 301
+/services/immunodeficiency/ /conditions/immunodeficiency/ 301
+
+# 303 redirect all /blog and show conditions page instead
+/blog/* /conditions/ 301
+
+# 301 redirect all providers
+# ===============================================================================
+/providers/index.php /providers/ 301
+/providers/maaz.php /providers/maaz-mohiuddin/ 301
+/providers/adriana.php /providers/renee-lantner/ 301
+/providers/syed.php /providers/syed-rizvi/ 301
+/providers/renee.php /providers/adriana-flores-munoz/ 301
+
+/providers/maaz /providers/maaz-mohiuddin/ 301
+/providers/adriana /providers/renee-lantner/ 301
+/providers/syed /providers/syed-rizvi/ 301
+/providers/renee /providers/adriana-flores-munoz/ 301
+
+# 301 redirect all clinics
+# ===============================================================================
+/clinics/index.php /clinics/ 301
+/clinics/bolingbrook.php /clinics/bolingbrook/ 301
+/clinics/crest-hill.php /clinics/crest-hill/ 301
+/clinics/aurora.php /clinics/aurora/ 301
+/clinics/western-springs.php /clinics/western-springs/ 301
+/clinics/joliet.php /clinics/crest-hill/ 301
+
+/clinics/bolingbrookhp /clinics/bolingbrook/ 301
+/clinics/crest-hill /clinics/crest-hill/ 301
+/clinics/aurora /clinics/aurora/ 301
+/clinics/western-springs /clinics/western-springs/ 301
+/clinics/joliet /clinics/crest-hill/ 301
+
+# 303 redirect Patient Information
+# ===============================================================================
+/clinics/education.php /conditions/ 303
+/clinics/resources.php /conditions/ 303
+
+# 301 redirect Contact
+# ===============================================================================
+/contact/index.php /contact/ 301
+
+# 301 redirect Privacy Policy
+# ===============================================================================
+/privacy-policy.php /privacy/ 301
