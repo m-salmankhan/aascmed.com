@@ -44,7 +44,7 @@ const Provider = ({ data, location, children }: PageProps<Queries.ProviderQuery>
           ["/", "Home"],
           ["/providers/", "Providers"],
           [data.mdx.fields?.slug, data.mdx.frontmatter.name?.fullname]
-        ]} css={css({ marginTop: "3em" })} />
+        ]} css={css({ marginTop: "3em", marginBottom: "1em" })} />
         <Article css={css({ h3: { fontSize: "1rem" } })}>
           <Columns>
             <MainCol>
