@@ -38,6 +38,7 @@ export const SEO = (props: SEOProps) => {
         <>
             <title>{pageTitle}</title>
             <meta name={"description"} content={props.description} />
+            <link rel={"canonical"} href={siteURL + props.slug} />
             <Favicons />
 
             {/* OpenGraph */}
