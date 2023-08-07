@@ -69,14 +69,6 @@ export const App: React.FC<AppProps> = ({ children, className }) => {
         }
     });
 
-    useEffect(() => {
-        // @ts-ignore
-        if (typeof window.dataLayer !== 'undefined') {
-            // @ts-ignore
-            window.dataLayer = window.dataLayer || []; function gtag() { dataLayer.push(arguments); } gtag('js', new Date()); gtag('config', 'G-9XCDLT1NCL');
-        }
-    });
-
     return <div className={className}>
         <Global styles={stylesGlobal} />
         {children}
