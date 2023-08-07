@@ -39,7 +39,7 @@ export const SEO = (props: SEOProps) => {
         <>
             <Script async src="https://www.googletagmanager.com/gtag/js?id=G-9XCDLT1NCL"></Script>
             <Script id={"gtag"} dangerouslySetInnerHTML={{ __html: `window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-9XCDLT1NCL');` }} />
-
+            <html lang="en-US" />
             <title>{pageTitle}</title>
             <meta name={"description"} content={props.description} />
             <link rel={"canonical"} href={siteURL + props.slug} />
