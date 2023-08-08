@@ -22,6 +22,12 @@ enum ImageState {
 
 const stylesStaticMap = css`
   height: 100%;
+
+  &.noscript {
+    img.lazy-preview {
+        display: none;
+    }
+  }
   
   .lazy-container {
     position: relative;
@@ -46,10 +52,6 @@ const stylesStaticMap = css`
 
         &.loaded {
             opacity: 0;
-        }
-
-        .noscript & {
-            display: none;
         }
     }
     
