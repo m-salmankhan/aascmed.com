@@ -2,8 +2,8 @@ backend:
   name: git-gateway
   repo: m-salmankhan/aascmed-monorepo
 
-display_url: https://new.aascmed.com
-logo_url: https://new.aascmed.com/assets/favicon/favicon.svg
+display_url: https://aascmed.com
+logo_url: https://aascmed.com/assets/favicon/favicon.svg
 
 media_folder: aascmed.com/static/assets/uploads
 public_folder: /assets/uploads
