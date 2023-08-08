@@ -24,7 +24,7 @@ const stylesStaticMap = css`
   height: 100%;
 
   &.noscript {
-    img.lazy-preview {
+    img.init {
         display: none;
     }
   }
