@@ -22,6 +22,12 @@ enum ImageState {
 
 const stylesStaticMap = css`
   height: 100%;
+
+  &.noscript {
+    img.init {
+        display: none;
+    }
+  }
   
   .lazy-container {
     position: relative;
@@ -33,6 +39,8 @@ const stylesStaticMap = css`
       left: 0;
       width: 100%;
       height: 100%;
+      object-fit: cover;
+      object-position: center;
       transition: opacity .5s ease 0s, filter .5s ease 0s;
       filter: blur(20px);
       display: block;
@@ -102,10 +110,11 @@ export const StaticMap: React.FC<MapBoxProps> = (props) => {
     }
 
     return (
-        <div className={props.className} css={css(stylesStaticMap)}>
+        <div className={props.className + " noscript"} css={css(stylesStaticMap)}>
             <noscript>
-                <Global styles={css`#${id} { display: none; }`} />
-                <img alt={props.alt} className={`map ${ImageState.COMPLETED}`} src={image.src} srcSet={image.srcset} sizes={image.sizes} />
+                <div className="lazy-container">
+                    <img alt={props.alt} className={`map ${ImageState.COMPLETED}`} src={image.src} srcSet={image.srcset} sizes={image.sizes} />
+                </div>
             </noscript>
             <div id={id} className={`lazy-container`}>
                 {
