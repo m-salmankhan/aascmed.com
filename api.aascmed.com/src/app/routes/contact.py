@@ -115,13 +115,13 @@ async def contact_form(
         new_patient_email_subject = "Patient Registration Forms for Allergy, Asthma and Sinus Centers"
         new_patient_email_substitutions = [("%submission.full_name%", escape(data.full_name))]
         new_patient_email_attachments = [
-            convert_to_attachment("https://www.aascmed.com/documents/patient_information.pdf",
+            convert_to_attachment("https://www.aascmed.com/assets/forms/patient_information.pdf",
                                   "patient_information.pdf"),
-            convert_to_attachment("https://www.aascmed.com/documents/financial_policy.pdf",
+            convert_to_attachment("https://www.aascmed.com/assets/forms/financial_policy.pdf",
                                   "financial_policy.pdf"),
-            convert_to_attachment("https://www.aascmed.com/documents/consent_for_release_use_of_confidential_information_and_receipt_of_notice_of_privacy_practices.pdf",
+            convert_to_attachment("https://www.aascmed.com/assets/forms/consent_for_release_use_of_confidential_information_and_receipt_of_notice_of_privacy_practices.pdf",
                                   "consent_for_release_use_of_confidential_information_and_receipt_of_notice_of_privacy_practices.pdf"),
-            convert_to_attachment("https://www.aascmed.com/documents/consent_form_for_messages.pdf",
+            convert_to_attachment("https://www.aascmed.com/assets/forms/consent_form_for_messages.pdf",
                                   "consent_form_for_messages.pdf"),
         ]
 
