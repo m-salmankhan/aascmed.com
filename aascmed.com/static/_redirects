@@ -44,8 +44,8 @@
 
 # 301 redirect Patient Information
 # ===============================================================================
-/clinics/education.php /conditions/ 301
-/clinics/resources.php /conditions/ 301
+/education.php /conditions/ 301
+/resources.php /conditions/ 301
 
 # 301 redirect Contact
 # ===============================================================================
