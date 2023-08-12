@@ -1,3 +1,6 @@
+# 301 redirect /index.php
+/index.php /
+
 # 301 redirect all /services/ to /conditions
 # ===============================================================================
 /services/ /conditions/ 301
