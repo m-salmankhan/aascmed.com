@@ -52,7 +52,7 @@
 
 # 301 redirect Contact
 # ===============================================================================
-/contact/index.php /contact/ 301
+/contact.php /contact/ 301
 /contact/index.php* /contact/ 301
 /contact/* /contact/ 301
 
