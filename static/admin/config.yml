@@ -5,7 +5,7 @@ backend:
 display_url: https://aascmed.com
 logo_url: https://aascmed.com/assets/favicon/favicon.svg
 
-media_folder: aascmed.com/static/assets/uploads
+media_folder: static/assets/uploads
 public_folder: /assets/uploads
 
 media_library:
@@ -20,7 +20,7 @@ collections:
     files:
       - label: "Home Page"
         name: home
-        file: aascmed.com/content/pages/home.yml
+        file: /content/pages/home.yml
         fields:
           - name: meta_description
             label: "Meta Description"
@@ -80,7 +80,7 @@ collections:
 
       - label: "Privacy"
         name: privacy
-        file: aascmed.com/content/pages/privacy.yml
+        file: /content/pages/privacy.yml
         fields:
           - name: meta_description
             label: "Meta Description"
@@ -99,7 +99,7 @@ collections:
 
       - label: "Contact Page"
         name: contact
-        file: aascmed.com/content/pages/contact.yml
+        file: /content/pages/contact.yml
         fields:
           - name: meta_description
             label: "Meta Description"
@@ -113,7 +113,7 @@ collections:
 
       - label: "Conditions Index Page"
         name: conditions
-        file: aascmed.com/content/pages/conditions.yml
+        file: /content/pages/conditions.yml
         fields:
           - name: meta_description
             label: "Meta Description"
@@ -128,7 +128,7 @@ collections:
 
       - label: "Providers Index Page"
         name: providers
-        file: aascmed.com/content/pages/providers.yml
+        file: /content/pages/providers.yml
         fields:
           - name: meta_description
             label: "Meta Description"
@@ -143,7 +143,7 @@ collections:
 
       - label: "Clinics Index Page"
         name: clinics
-        file: aascmed.com/content/pages/clinics.yml
+        file: /content/pages/clinics.yml
         fields:
           - name: meta_description
             label: "Meta Description"
@@ -159,7 +159,7 @@ collections:
 
   - name: conditions
     label: Conditions
-    folder: aascmed.com/content/conditions
+    folder: /content/conditions
     media_folder: ''
     public_folder: ''
     editor:
@@ -185,7 +185,7 @@ collections:
 
   - name: service-updates
     label: Service Updates
-    folder: aascmed.com/content/service-updates
+    folder: /content/service-updates
     format: frontmatter
     extension: mdx
     create: true
@@ -199,7 +199,7 @@ collections:
 
   - name: providers
     label: Providers
-    folder: aascmed.com/content/providers
+    folder: /content/providers
     format: frontmatter
     extension: mdx
     create: true
@@ -225,7 +225,7 @@ collections:
 
   - name: reviews
     label: Reviews
-    folder: aascmed.com/content/reviews
+    folder: /content/reviews
     format: frontmatter
     extension: mdx
     create: true
@@ -244,7 +244,7 @@ collections:
 
   - name: clinics
     label: Clinics
-    folder: aascmed.com/content/clinics
+    folder: /content/clinics
     format: frontmatter
     extension: mdx
     create: true
