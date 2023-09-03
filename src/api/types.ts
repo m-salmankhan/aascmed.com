@@ -17,6 +17,7 @@ export interface ContactFormFields {
     clinic: string
     newPatient: boolean
     disclaimer: boolean
+    source_url: string
 }
 
 export interface ContactFormFieldErrors {
@@ -28,6 +29,7 @@ export interface ContactFormFieldErrors {
     clinic?: string[]
     new_patient?: string[]
     disclaimer?: string[]
+    source_url?: string[]
 }
 
 export interface ContactFormErrorResponse {

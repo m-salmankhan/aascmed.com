@@ -1,5 +1,5 @@
 import { Checkbox, DropdownInput, TextArea, TextInput } from "../forms";
-import { graphql, useStaticQuery } from "gatsby";
+import { Script, graphql, useStaticQuery } from "gatsby";
 import React, { FormEventHandler, useEffect, useRef, useState } from "react";
 import { PrimaryButton } from "../buttons";
 import { css } from "@emotion/react";
@@ -67,6 +67,7 @@ export const ContactForm: React.FC<ContactFormProps> = (props) => {
             message: (formData.get("message")?.toString() || ""),
             newPatient: !!(formData.get("new_patient")?.valueOf()),
             disclaimer: !!(formData.get("disclaimer")?.valueOf()),
+            source_url: window.location.href,
         }).then(res => {
             console.log(res)
             // no error messages
