@@ -4,8 +4,8 @@ on:
   push
 
 jobs:
-  build:
-    name: Build
+  build-docker:
+    name: Build and Push Docker Image
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
