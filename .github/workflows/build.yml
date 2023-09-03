@@ -16,7 +16,7 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: |
-            ghcr.io/m-salmankhan/aascmed-monorepo/api
+            ghcr.io/${{ github.repository }}/api
           tags: |
             type=ref,event=branch
             type=ref,event=pr
