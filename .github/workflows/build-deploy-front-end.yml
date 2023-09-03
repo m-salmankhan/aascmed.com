@@ -17,10 +17,9 @@ jobs:
           node-version: "latest"
 
       # create .env.production
-      - run: >
+      - run: |
           echo "GATBSY_API_BASE_URL=${{ vars.GATBSY_API_BASE_URL }}" >> .env.production
           echo "GATSBY_MAPBOX_API_KEY=${{ vars.GATSBY_MAPBOX_API_KEY }}" >> .env.production
-          cat .env.production
 
       - run: npm install
       
