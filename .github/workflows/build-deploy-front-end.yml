@@ -20,6 +20,8 @@ jobs:
       - run: >
           echo "GATBSY_API_BASE_URL=${{ vars.GATBSY_API_BASE_URL }}" >> .env.production
           echo "GATSBY_MAPBOX_API_KEY=${{ vars.GATSBY_MAPBOX_API_KEY }}" >> .env.production
+          cat .env.production
+
       - run: npm install
       
       - run: npm run build
@@ -30,5 +32,5 @@ jobs:
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
         with:
           # 5. "gatsby build" creates "public" folder, which is what we are deploying
-          args: deploy --dir=public --prod
+          args: deploy --dir=public --prod --message="${{ github.ref_name }}@{{ github.sha }}"
           secrets: '["NETLIFY_AUTH_TOKEN", "NETLIFY_SITE_ID"]'
