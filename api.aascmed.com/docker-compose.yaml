@@ -7,6 +7,6 @@ services:
     env_file:
       - ./.env
     ports:
-      - "8080:80"
+      - "8000:80"
     volumes:
       - ./src:/code
