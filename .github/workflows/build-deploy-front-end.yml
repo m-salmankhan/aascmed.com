@@ -15,15 +15,16 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: "latest"
-      - run: npm install
-      
-      - run: npm run build
-      
+
       # create .env.production
       - run: >
           echo "GATBSY_API_BASE_URL=${{ vars.GATBSY_API_BASE_URL }} >> .env.production
           echo "GATSBY_MAPBOX_API_KEY=${{ vars.GATSBY_MAPBOX_API_KEY }} >> .env.production
 
+      - run: npm install
+      
+      - run: npm run build
+      
       - uses: netlify/actions/cli@master
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
