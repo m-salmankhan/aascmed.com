@@ -1,5 +1,0 @@
-variable "description" {
-}
-
-variable "ports" {
-}

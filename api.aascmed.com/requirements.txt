@@ -1,6 +1,0 @@
-fastapi
-pydantic
-uvicorn
-email-validator
-sendgrid
-requests
