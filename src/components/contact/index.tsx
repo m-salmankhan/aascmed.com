@@ -67,6 +67,7 @@ export const ContactForm: React.FC<ContactFormProps> = (props) => {
             message: (formData.get("message")?.toString() || ""),
             newPatient: !!(formData.get("new_patient")?.valueOf()),
             disclaimer: !!(formData.get("disclaimer")?.valueOf()),
+            source_url: window.location.href,
         }).then(res => {
             console.log(res)
             // no error messages
