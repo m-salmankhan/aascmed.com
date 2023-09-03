@@ -101,7 +101,11 @@ export const ContactForm: React.FC<ContactFormProps> = (props) => {
             }
             {
                 formState === FormState.SUCCESS &&
-                <SuccessNotice css={css`margin-bottom: 1em;`}>Message successfully sent! If you are a new patient, check your email for the patient registration forms.</SuccessNotice>
+                <>
+                    <SuccessNotice css={css`margin-bottom: 1em;`}>Message successfully sent! If you are a new patient, check your email for the patient registration forms.</SuccessNotice>
+                    {/* Facebook Pixel Code */}
+                    <Script dangerouslySetInnerHTML={{ __html: `fbq('track', 'Contact');` }} />
+                </>
             }
             {
                 formState === FormState.ERROR &&
