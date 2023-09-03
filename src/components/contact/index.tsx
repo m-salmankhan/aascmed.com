@@ -1,5 +1,5 @@
 import { Checkbox, DropdownInput, TextArea, TextInput } from "../forms";
-import { graphql, useStaticQuery } from "gatsby";
+import { Script, graphql, useStaticQuery } from "gatsby";
 import React, { FormEventHandler, useEffect, useRef, useState } from "react";
 import { PrimaryButton } from "../buttons";
 import { css } from "@emotion/react";
