@@ -1,6 +1,6 @@
 backend:
   name: git-gateway
-  repo: m-salmankhan/aascmed-monorepo
+  repo: m-salmankhan/aascmed.com
 
 display_url: https://aascmed.com
 logo_url: https://aascmed.com/assets/favicon/favicon.svg
