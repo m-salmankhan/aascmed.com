@@ -10,15 +10,20 @@ jobs:
         working-directory: ./aascmed.com
 
     steps:
-      # Check out the current repository code
       - uses: actions/checkout@v2
-      # 3. https://github.com/actions/setup-node#usage
+      
       - uses: actions/setup-node@v3
         with:
           node-version: "latest"
       - run: npm install
+      
       - run: npm run build
-      # 4. Deploy the gatsby build to Netlify
+      
+      # create .env.production
+      - run: >
+          touch .env.production
+          echo "${{ vars.REPOSITORY_VAR }}
+
       - uses: netlify/actions/cli@master
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
