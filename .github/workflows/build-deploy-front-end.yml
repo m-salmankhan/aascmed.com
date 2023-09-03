@@ -3,7 +3,7 @@ on:
   push:
     branches: [main]
     paths:
-      - assumed.com
+      - aascmed.com
 
 jobs:
   build:
