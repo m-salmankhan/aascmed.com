@@ -41,6 +41,7 @@ const Clinic: React.FC<PageProps<Queries.ClinicQuery>> = ({ data, children }) =>
         return {
             day: day?.day || "",
             hours: closed ? "Closed" : `${to12Hr(hours[0])} - ${to12Hr(hours[1])}` || "",
+            hours24: day?.hours || "",
             notes: day?.notes || "",
         }
     }) || [];
@@ -52,6 +53,7 @@ const Clinic: React.FC<PageProps<Queries.ClinicQuery>> = ({ data, children }) =>
         return {
             day: day?.day || "",
             hours: closed ? "Closed" : `${to12Hr(hours[0])} - ${to12Hr(hours[1])}` || "",
+            hours24: day?.hours || "",
             notes: day?.notes || "",
         }
     }) || [];
@@ -78,8 +80,8 @@ const Clinic: React.FC<PageProps<Queries.ClinicQuery>> = ({ data, children }) =>
         faxNumber: clinicFax,
         email: "info@aascmed.com",
         openingHoursSpecification: clinicOpeningTimes.map((entry) => {
-            const closed = entry.hours.toLowerCase().trim() === "closed";
-            const hours = entry.hours.split("-").map(x => x.trim());
+            const closed = entry.hours24.toLowerCase().trim() === "closed";
+            const hours = entry.hours24.split("-").map(x => x.trim());
 
             const openingHoursSpecification = {
                 "@type": "OpeningHoursSpecification",
