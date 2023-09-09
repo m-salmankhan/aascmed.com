@@ -28,11 +28,21 @@ const Clinic: React.FC<PageProps<Queries.ClinicQuery>> = ({ data, children }) =>
     const longitude = data.mdx?.frontmatter?.lon || 0;
     const latitude = data.mdx?.frontmatter?.lat || 0;
 
-    const clinicOpeningTimes = data.mdx?.frontmatter?.opening?.map(day => ({
-        day: day?.day || "",
-        hours: day?.hours || "",
-        notes: day?.notes || "",
-    })) || [];
+    const clinicOpeningTimes = data.mdx?.frontmatter?.opening?.map(day => {
+        const closed = day?.hours.toLowerCase().trim() === "closed";
+        const hours = day?.hours.split("-").map(x => x.trim());
+        const to12Hr = (time: str) => {
+            const [hrs, mins] = time.split(":");
+            return (hrs <= 12) ? `${hrs}:{mins} AM` : `${hrs-12}:{mins} PM`;
+        }
+        
+        return {
+            day: day?.day || "",
+            hours: closed ? "Closed" || `${to12Hr(hours[0)} - ${to12Hr(hours[1])}`,
+            notes: day?.notes || "",
+        }
+    }) || [];
+    
     const clinicShotTimes = data.mdx?.frontmatter?.shot?.map(day => ({
         day: day?.day || "",
         hours: day?.hours || "",
