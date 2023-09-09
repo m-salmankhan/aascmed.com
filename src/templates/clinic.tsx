@@ -40,7 +40,7 @@ const Clinic: React.FC<PageProps<Queries.ClinicQuery>> = ({ data, children }) =>
         
         return {
             day: day?.day || "",
-            hours: closed ? "Closed" : `${to12Hr(hours[0)} - ${to12Hr(hours[1])}` || "",
+            hours: closed ? "Closed" : `${to12Hr(hours[0])} - ${to12Hr(hours[1])}` || "",
             notes: day?.notes || "",
         }
     }) || [];
@@ -51,7 +51,7 @@ const Clinic: React.FC<PageProps<Queries.ClinicQuery>> = ({ data, children }) =>
 
         return {
             day: day?.day || "",
-            hours: closed ? "Closed" : `${to12Hr(hours[0)} - ${to12Hr(hours[1])}` || "",
+            hours: closed ? "Closed" : `${to12Hr(hours[0])} - ${to12Hr(hours[1])}` || "",
             notes: day?.notes || "",
         }
     }) || [];
