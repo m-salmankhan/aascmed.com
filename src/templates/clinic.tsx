@@ -17,7 +17,7 @@ const shortcodes = { Link, ButtonList, ContactBanner };
 
 const to12Hr = (time: str) => {
     const [hrs, mins] = time.split(":");
-    return (hrs <= 12) ? `${`${hrs}`.padStart(2, "0")}:${mins} AM` : `${hrs-12}:${mins} PM`;
+    return (hrs <= 12) ? `${`${hrs}`.padStart(2, "0")}:${mins} AM` : `${`${hrs-12}`.padStart(2, "0")}:${mins} PM`;
 }
 
 
