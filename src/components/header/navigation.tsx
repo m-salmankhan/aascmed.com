@@ -272,7 +272,7 @@ interface NavigationProps {
 
 export const Navigation: React.FC<NavigationProps> = ({ frontPage, className }) => {
   const { title } = useSiteMetadata();
-  const [collapsedState, setCollapsedState] = useState(NavigationMenuStates.EXPANDED);
+  const [collapsedState, setCollapsedState] = useState(NavigationMenuStates.COLLAPSED);
   const listId = useId();
   const listRef = useRef<HTMLUListElement | null>(null);
   const [jsEnabled, setJSEnabled] = useState(false);
@@ -280,15 +280,6 @@ export const Navigation: React.FC<NavigationProps> = ({ frontPage, className }) 
   // set JSEnabled to true
   useEffect(() => {
     setJSEnabled(true);
-    if (!matchMedia(`
-    screen
-    and(min - width
-: ${mediaBreakpoints.md}
-    em
-)
-    `).matches) {
-      setCollapsedState(NavigationMenuStates.COLLAPSED);
-    }
   }, [setJSEnabled]);
 
   // progress the state after adding necessary styles for transition to occur
@@ -387,7 +378,7 @@ export const Navigation: React.FC<NavigationProps> = ({ frontPage, className }) 
             </div> : <></>
         }
 
-        <ul className={collapsedState} id={listId} ref={listRef} css={stylesNavigationUl}
+        <ul className={`${collapsedState} {jsEnabled || "noscript"}`} id={listId} ref={listRef} css={stylesNavigationUl}
           onTransitionEnd={transitionEndHandler}
           aria-hidden={collapsedState === NavigationMenuStates.COLLAPSED}>
           <NavItem link="/conditions/">Patient Education</NavItem>
