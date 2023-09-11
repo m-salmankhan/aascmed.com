@@ -261,7 +261,7 @@ const stylesNavigationUl = css`
           max-height: initial;
         }
       }
-`);
+`;
 
 interface NavigationProps {
   frontPage: boolean,
