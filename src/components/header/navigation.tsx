@@ -6,6 +6,7 @@ import { HorizontalLogo, StackedLogo } from "../logo";
 import { FaIcons, IconStyles } from "../font-awesome";
 import { bounceTransition, colours, gridSpacing } from "../../styles/theme";
 import { CSSInterpolation } from "@emotion/serialize";
+import { Global } from "@emotion/react";
 import { breakpointStrings, mediaBreakpoints } from "../../styles/breakpoints";
 import { cols, gridContainer } from "../../styles/grid";
 import { useSiteMetadata } from "../../hooks/useSiteMetadata";
@@ -153,10 +154,8 @@ const stylesStackedLogo = css`
 `;
 
 const expandedHeight = "60em";
-
-const stylesNavigationUl = css(
-  cols(9, mediaBreakpoints.lg),
-  css`
+const stylesNavContainer = cols(9, mediaBreakpoints.lg);
+const stylesNavigationUl = css`
       padding: 0;
       margin: 0 auto;
       text-align: center;
@@ -262,8 +261,7 @@ const stylesNavigationUl = css(
           max-height: initial;
         }
       }
-    `
-);
+`;
 
 interface NavigationProps {
   frontPage: boolean,
@@ -366,28 +364,43 @@ export const Navigation: React.FC<NavigationProps> = ({ frontPage, className }) 
           }
         </Link>
 
-        {/* Toggle Button (show only if JS enabled) */}
-        {
-          jsEnabled ?
-            <div css={css(stylesToggleButton)}>
-              <button aria-expanded={collapsedState !== NavigationMenuStates.COLLAPSED}
-                onClick={toggleMenu} aria-controls={listId}>
-                <FaIcons iconStyle={IconStyles.SOLID} icon="bars" />
-                Menu
-              </button>
-            </div> : <></>
-        }
+        <div className={"js-only"} css={stylesNavContainer}>
+          <div css={css(stylesToggleButton)}>
+            <button aria-expanded={collapsedState !== NavigationMenuStates.COLLAPSED}
+              onClick={toggleMenu} aria-controls={listId}>
+              <FaIcons iconStyle={IconStyles.SOLID} icon="bars" />
+              Menu
+            </button>
+          </div> 
 
-        <ul className={`${collapsedState} {jsEnabled || "noscript"}`} id={listId} ref={listRef} css={stylesNavigationUl}
-          onTransitionEnd={transitionEndHandler}
-          aria-hidden={collapsedState === NavigationMenuStates.COLLAPSED}>
-          <NavItem link="/conditions/">Patient Education</NavItem>
-          <NavItem link="/providers/">Our Team</NavItem>
-          <NavItem link="/clinics/">Locations</NavItem>
-          <NavItem link="https://login.patientfusion.com">Patient Portal</NavItem>
-          <NavItem link={ZocDocURL}>Bookings</NavItem>
-          <NavItem link="/contact/">Contact</NavItem>
-        </ul>
+          <ul className={collapsedState} id={listId} ref={listRef} css={stylesNavigationUl}
+            onTransitionEnd={transitionEndHandler}
+            aria-hidden={collapsedState === NavigationMenuStates.COLLAPSED}>
+            <NavItem link="/conditions/">Patient Education</NavItem>
+            <NavItem link="/providers/">Our Team</NavItem>
+            <NavItem link="/clinics/">Locations</NavItem>
+            <NavItem link="https://login.patientfusion.com">Patient Portal</NavItem>
+            <NavItem link={ZocDocURL}>Bookings</NavItem>
+            <NavItem link="/contact/">Contact</NavItem>
+          </ul>
+        </div>
+
+        <noscript css={stylesNavContainer}>
+          <Global styles={css`
+            .js-only {
+              display: none;
+            }
+          `} />
+          <ul className={NavigationMenuStates.EXPANDED} id={listId} ref={listRef} css={stylesNavigationUl}>
+            <NavItem link="/conditions/">Patient Education</NavItem>
+            <NavItem link="/providers/">Our Team</NavItem>
+            <NavItem link="/clinics/">Locations</NavItem>
+            <NavItem link="https://login.patientfusion.com">Patient Portal</NavItem>
+            <NavItem link={ZocDocURL}>Bookings</NavItem>
+            <NavItem link="/contact/">Contact</NavItem>
+          </ul>
+        </noscript>
+
       </nav>
     </div>
   )
