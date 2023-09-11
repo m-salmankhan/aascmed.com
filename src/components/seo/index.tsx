@@ -41,7 +41,7 @@ export const SEO = (props: SEOProps) => {
             <Script async src="https://www.googletagmanager.com/gtag/js?id=G-9XCDLT1NCL"></Script>
             <Script id={"gtag"} dangerouslySetInnerHTML={{ __html: `window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-9XCDLT1NCL');` }} />
 
-            {/* Facebook Pixel Code */}
+            {/* Facebook Pixel Code
             <Script dangerouslySetInnerHTML={{
                 __html: `!function(f,b,e,v,n,t,s)
 {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -54,10 +54,8 @@ s.parentNode.insertBefore(t,s)}(window,document,'script',
  fbq('init', '856080292125355'); 
 fbq('track', 'PageView');`}} />
             <noscript>
-                <img height="1" width="1"
-                    src="https://www.facebook.com/tr?id=856080292125355&ev=PageView
-&noscript=1"/>
-            </noscript>
+                <img height="1" width="1" src="https://www.facebook.com/tr?id=856080292125355&ev=PageView&noscript=1"/>
+            </noscript> */}
 
 
             <html lang="en-US" />
