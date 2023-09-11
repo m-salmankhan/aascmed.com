@@ -154,10 +154,8 @@ const stylesStackedLogo = css`
 `;
 
 const expandedHeight = "60em";
-
-const stylesNavigationUl = css(
-  cols(9, mediaBreakpoints.lg),
-  css`
+const stylesNavContainer = cols(9, mediaBreakpoints.lg);
+const stylesNavigationUl = css`
       padding: 0;
       margin: 0 auto;
       text-align: center;
@@ -263,8 +261,7 @@ const stylesNavigationUl = css(
           max-height: initial;
         }
       }
-    `
-);
+`);
 
 interface NavigationProps {
   frontPage: boolean,
@@ -367,7 +364,7 @@ export const Navigation: React.FC<NavigationProps> = ({ frontPage, className }) 
           }
         </Link>
 
-        <div className={"js-only"}>
+        <div className={"js-only"} css={stylesNavContainer}>
           <div css={css(stylesToggleButton)}>
             <button aria-expanded={collapsedState !== NavigationMenuStates.COLLAPSED}
               onClick={toggleMenu} aria-controls={listId}>
@@ -388,7 +385,7 @@ export const Navigation: React.FC<NavigationProps> = ({ frontPage, className }) 
           </ul>
         </div>
 
-        <noscript>
+        <noscript css={stylesNavContainer}>
           <Global styles={css`
             .js-only {
               display: none;
