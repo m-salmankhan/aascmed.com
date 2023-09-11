@@ -366,28 +366,44 @@ export const Navigation: React.FC<NavigationProps> = ({ frontPage, className }) 
           }
         </Link>
 
-        {/* Toggle Button (show only if JS enabled) */}
+        {/* Menu for JS enabled */}
         {
-          jsEnabled ?
+          jsEnabled &&
+          <>
             <div css={css(stylesToggleButton)}>
               <button aria-expanded={collapsedState !== NavigationMenuStates.COLLAPSED}
                 onClick={toggleMenu} aria-controls={listId}>
                 <FaIcons iconStyle={IconStyles.SOLID} icon="bars" />
                 Menu
               </button>
-            </div> : <></>
+            </div> 
+
+            <ul className={collapsedState} id={listId} ref={listRef} css={stylesNavigationUl}
+              onTransitionEnd={transitionEndHandler}
+              aria-hidden={collapsedState === NavigationMenuStates.COLLAPSED}>
+              <NavItem link="/conditions/">Patient Education</NavItem>
+              <NavItem link="/providers/">Our Team</NavItem>
+              <NavItem link="/clinics/">Locations</NavItem>
+              <NavItem link="https://login.patientfusion.com">Patient Portal</NavItem>
+              <NavItem link={ZocDocURL}>Bookings</NavItem>
+              <NavItem link="/contact/">Contact</NavItem>
+            </ul>
+          </>
         }
 
-        <ul className={`${collapsedState} {jsEnabled || "noscript"}`} id={listId} ref={listRef} css={stylesNavigationUl}
-          onTransitionEnd={transitionEndHandler}
-          aria-hidden={collapsedState === NavigationMenuStates.COLLAPSED}>
-          <NavItem link="/conditions/">Patient Education</NavItem>
-          <NavItem link="/providers/">Our Team</NavItem>
-          <NavItem link="/clinics/">Locations</NavItem>
-          <NavItem link="https://login.patientfusion.com">Patient Portal</NavItem>
-          <NavItem link={ZocDocURL}>Bookings</NavItem>
-          <NavItem link="/contact/">Contact</NavItem>
-        </ul>
+        <noscript>
+          <ul className={NavigationMenuStates.EXPANDED} id={listId} ref={listRef} css={stylesNavigationUl}
+            onTransitionEnd={transitionEndHandler}
+            aria-hidden={collapsedState === NavigationMenuStates.COLLAPSED}>
+            <NavItem link="/conditions/">Patient Education</NavItem>
+            <NavItem link="/providers/">Our Team</NavItem>
+            <NavItem link="/clinics/">Locations</NavItem>
+            <NavItem link="https://login.patientfusion.com">Patient Portal</NavItem>
+            <NavItem link={ZocDocURL}>Bookings</NavItem>
+            <NavItem link="/contact/">Contact</NavItem>
+          </ul>
+        </noscript>
+
       </nav>
     </div>
   )
