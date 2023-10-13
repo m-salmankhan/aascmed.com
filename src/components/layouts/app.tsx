@@ -49,11 +49,12 @@ const stylesGlobal: CSSInterpolation = {
 };
 
 interface AppProps {
-    children?: ReactNode,
+    children?: ReactNode
+    useTracking?: boolean
     className?: string
 }
 
-export const App: React.FC<AppProps> = ({ children, className }) => {
+export const App: React.FC<AppProps> = ({ children, className, useTracking }) => {
     useEffect(() => {
         // @ts-ignore
         if (typeof window.netlifyIdentity !== 'undefined') {
@@ -70,11 +71,15 @@ export const App: React.FC<AppProps> = ({ children, className }) => {
     });
 
     return <div className={className}>
+        { !!useTracking &&
+        <>
         {/* Google Tag Manager (noscript)*/}
         <noscript>
             <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MCKJQ4GK" height="0" width="0" style={{display:"none", visibility:"hidden"}} />
         </noscript>
         {/* End Google Tag Manager (noscript)*/}
+        </>
+        }
 
         <Global styles={stylesGlobal} />
         {children}
