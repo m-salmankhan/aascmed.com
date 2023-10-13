@@ -45,7 +45,7 @@ export const Head = (props: HeadProps<Queries.ServiceUpdatesQuery>) => {
   const heading = props.data.sectionCopy?.childPagesYaml?.heading || "";
 
   return (
-    <SEO description={description} slug={props.location.pathname} title={heading}>
+    <SEO description={description} slug={props.location.pathname} title={heading} useTracking={true}>
       <meta name={"og:type"} content={"website"} />
     </SEO>
   )

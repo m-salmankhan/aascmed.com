@@ -71,7 +71,7 @@ export const Head = (props: HeadProps<Queries.ServiceUpdatePageQuery>) => {
     const description = props.data.mdx?.frontmatter?.description || "";
 
     return (
-        <SEO description={description} slug={props.location.pathname} title={title}>
+        <SEO description={description} slug={props.location.pathname} title={title} useTracking={true}>
             <meta name={"og:type"} content={"article"} />
             <meta name={"article:section"} content={"service-updates"} />
         </SEO>

@@ -93,7 +93,7 @@ export const Head = (props: HeadProps<Queries.ProviderQuery>) => {
   const image = props.data.mdx?.frontmatter?.image?.publicURL || undefined;
 
   return (
-    <SEO description={description} slug={props.location.pathname} title={pageTitle} image={image}>
+    <SEO description={description} slug={props.location.pathname} title={pageTitle} image={image} useTracking={true}>
       <meta name={"og:type"} content={"profile"} />
     </SEO>
   )

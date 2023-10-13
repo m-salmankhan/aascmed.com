@@ -40,7 +40,7 @@ export const Head = (props: HeadProps<Queries.PrivacyPageQuery>) => {
     const heading = props.data.copy?.childPagesYaml?.heading || "";
 
     return (
-        <SEO description={description} slug={props.location.pathname} title={heading}>
+        <SEO description={description} slug={props.location.pathname} title={heading} useTracking={true}>
             <meta name={"og:type"} content={"article"} />
         </SEO>
     )

@@ -192,7 +192,7 @@ export const Head = (props: HeadProps<Queries.ClinicQuery>) => {
     const description = props.data.mdx?.frontmatter?.description || "";
 
     return (
-        <SEO description={description} slug={props.location.pathname} title={`${pageTitle}`} appendBusinessNameToTitle={false}>
+        <SEO description={description} slug={props.location.pathname} title={`${pageTitle}`} useTracking={true} appendBusinessNameToTitle={false}>
             <meta name={"og:type"} content={"website"} />
         </SEO>
     )

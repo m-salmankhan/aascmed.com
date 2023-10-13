@@ -129,7 +129,7 @@ export const Head = (props: HeadProps<Queries.IndexPageQuery>) => {
   const description = props.data.sectionCopy?.childPagesYaml?.meta_description || "";
 
   return (
-    <SEO description={description} slug={props.location.pathname} title={"Allergy, Asthma and Sinus Centers in Illinois"} appendBusinessNameToTitle={false}>
+    <SEO description={description} slug={props.location.pathname} title={"Allergy, Asthma and Sinus Centers in Illinois"} appendBusinessNameToTitle={false} useTracking={true}>
       <meta name={"og:type"} content={"website"} />
     </SEO>
   )
