@@ -21,7 +21,7 @@
     "@mdx-js/react": "^2.3.0",
     "@staticcms/app": "^3.3.10",
     "color": "^4.2.3",
-    "gatsby": "^5.11.0",
+    "gatsby": "^5.12.6",
     "gatsby-omni-font-loader": "^2.0.2",
     "gatsby-plugin-emotion": "^8.11.0",
     "gatsby-plugin-image": "^3.11.0",
