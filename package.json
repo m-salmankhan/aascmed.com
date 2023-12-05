@@ -19,7 +19,7 @@
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@mdx-js/react": "^2.3.0",
-    "@staticcms/app": "^3.3.10",
+    "@staticcms/app": "^3.4.6",
     "color": "^4.2.3",
     "gatsby": "^5.12.7",
     "gatsby-omni-font-loader": "^2.0.2",
