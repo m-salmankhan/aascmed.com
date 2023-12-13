@@ -26,7 +26,7 @@
     "gatsby-plugin-emotion": "^8.11.0",
     "gatsby-plugin-image": "^3.11.0",
     "gatsby-plugin-mdx": "^5.12.3",
-    "gatsby-plugin-sharp": "^5.11.0",
+    "gatsby-plugin-sharp": "^5.12.3",
     "gatsby-plugin-sitemap": "^6.12.1",
     "gatsby-plugin-static-cms": "^3.0.1",
     "gatsby-remark-autolink-headers": "^6.11.0",
