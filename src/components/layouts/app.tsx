@@ -74,9 +74,7 @@ export const App: React.FC<AppProps> = ({ children, className, useTracking }) =>
         { !!useTracking &&
         <>
         {/* Google Tag Manager (noscript)*/}
-        <noscript>
-            <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MCKJQ4GK" height="0" width="0" style={{display:"none", visibility:"hidden"}} />
-        </noscript>
+            <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NB7HM293" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         {/* End Google Tag Manager (noscript)*/}
         </>
         }
