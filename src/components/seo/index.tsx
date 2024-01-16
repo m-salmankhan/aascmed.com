@@ -44,17 +44,15 @@ export const SEO = (props: SEOProps) => {
                 <>
                 {/* Google Tag */}
                 <Script async src="https://www.googletagmanager.com/gtag/js?id=G-6HTX7KPRKC" />
+                {/* Google Tag Manager */}
                 <Script id={"gtag"} dangerouslySetInnerHTML={{ __html: `
-                    <!-- Google Tag Manager -->
-                    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+                    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
                     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
                     j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-                    })(window,document,'script','dataLayer','GTM-NB7HM293');</script>
-                    <!-- End Google Tag Manager -->
+                    })(window,document,'script','dataLayer','GTM-NB7HM293');
                 `}}/>
 
-                
                 {/* Facebook Pixel Code */}
                 <Script dangerouslySetInnerHTML={{
                     __html: `!function(f,b,e,v,n,t,s)
