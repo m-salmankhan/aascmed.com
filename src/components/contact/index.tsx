@@ -79,7 +79,10 @@ export const ContactForm: React.FC<ContactFormProps> = (props) => {
             if (res === undefined) {
                 setFormState(FormState.SUCCESS);
                 setFormData(undefined);
-                gtag("event", "generate_lead", {});
+                gtag("event", "generate_lead", {
+                    new_customer: !!(formData.get("new_patient")?.valueOf()),
+                    clinic: (formData.get("clinic")?.toString() || "unselected")
+                });
                 return;
             }
 
