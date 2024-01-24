@@ -8,6 +8,7 @@ import { ContactFormFieldErrors } from "../../api/types";
 import { ErrorNotice, SuccessNotice } from "../forms/notices";
 import { Loading } from "../loading";
 import { stylesH4 } from "../headings";
+import {useGTag} from "../../hooks/useGTag";
 
 
 enum FormState {
@@ -27,6 +28,8 @@ export const ContactForm: React.FC<ContactFormProps> = (props) => {
     const [fieldErrors, setFieldErrors] = useState<ContactFormFieldErrors | undefined>();
     const [errorMsg, setErrorMsg] = useState("An unexpected error occurred. Please try again or email us at info@aascmed.com if the problem persists.");
     const formRef = useRef<HTMLFormElement>(null);
+
+    const gtag = useGTag();
 
     const data: Queries.ClinicNamesQuery = useStaticQuery(graphql`
     query ClinicNames {
@@ -53,6 +56,8 @@ export const ContactForm: React.FC<ContactFormProps> = (props) => {
 
     // submit form here.
     useEffect(() => {
+        console.log(gtag())
+
         if (formData === undefined) return;
         if (formState !== FormState.SUBMITTING) return;
 
@@ -74,6 +79,10 @@ export const ContactForm: React.FC<ContactFormProps> = (props) => {
             if (res === undefined) {
                 setFormState(FormState.SUCCESS);
                 setFormData(undefined);
+                gtag("event", "generate_lead", {
+                    new_customer: !!(formData.get("new_patient")?.valueOf()),
+                    clinic: (formData.get("clinic")?.toString() || "unselected")
+                });
                 return;
             }
 
