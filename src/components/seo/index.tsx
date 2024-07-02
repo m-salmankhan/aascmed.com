@@ -3,6 +3,7 @@ import { useSiteMetadata } from "../../hooks/useSiteMetadata";
 import { ReactNode } from "react";
 import { colours } from "../../styles/theme";
 import { Script } from "gatsby";
+import {useAnalyticsIDs} from "../../hooks/useAnalyticsIDs";
 
 interface SEOProps {
     description: string
@@ -32,6 +33,8 @@ export const SEO = (props: SEOProps) => {
     const siteURL = siteMetadata.url;
     const twitterHandle = siteMetadata.twitter;
 
+    const analyticsIDs = useAnalyticsIDs()
+
     const pageTitle = props.title ?
         (props.title + (appendBusinessNameToTitle ? ` | ${siteTitle}` : "")) :
         siteTitle;
@@ -43,14 +46,14 @@ export const SEO = (props: SEOProps) => {
             { useTracking &&
                 <>
                 {/* Google Tag */}
-                <Script async src="https://www.googletagmanager.com/gtag/js?id=G-6HTX7KPRKC" />
+                <Script async src={`https://www.googletagmanager.com/gtag/js?id=${analyticsIDs.googleAnalyticsID}`} />
                 {/* Google Tag Manager */}
                 <Script id={"gtag"} dangerouslySetInnerHTML={{ __html: `
                     (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
                     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
                     j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-                    })(window,document,'script','dataLayer','GTM-NB7HM293');
+                    })(window,document,'script','dataLayer','${analyticsIDs.googleTagManagerID}');
                     window.gtag = () => { dataLayer.push(arguments); }
                 `}}/>
 
@@ -64,11 +67,11 @@ export const SEO = (props: SEOProps) => {
                     t.src=v;s=b.getElementsByTagName(e)[0];
                     s.parentNode.insertBefore(t,s)}(window,document,'script',
                     'https://connect.facebook.net/en_US/fbevents.js');
-                    fbq('init', '1912684729133073'); 
+                    fbq('init', '${analyticsIDs.pixelID}'); 
                     fbq('track', 'PageView');`}}
                 />
                 <noscript>
-                    <img height="1" width="1" src="https://www.facebook.com/tr?id=1912684729133073&ev=PageView&noscript=1"/>
+                    <img height="1" width="1" src={`https://www.facebook.com/tr?id=${analyticsIDs.pixelID}&ev=PageView&noscript=1`}/>
                 </noscript>
                 </>
             }

@@ -18,6 +18,20 @@ collections:
     editor:
       preview: false
     files:
+      - label: "Tracking"
+        name: tracking
+        file: /content/pages/tracking.yml
+        fields:
+          - name: pixel_id
+            label: "Facebook Tracking ID (pixel)"
+            widget: text
+          - name: google_tag_manager_id
+            label: "Google Tag Manager ID"
+            widget: text
+          - name: google_analytics_id
+            label: "Google Analytics ID"
+            widget: markdown
+
       - label: "Home Page"
         name: home
         file: /content/pages/home.yml
