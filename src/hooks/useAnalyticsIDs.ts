@@ -24,6 +24,6 @@ export const useAnalyticsIDs = () => {
     return {
         googleAnalyticsID: data.ids?.childrenPagesYaml[0]?.google_analytics_id,
         googleTagManagerID: data.ids?.childrenPagesYaml[0]?.google_tag_manager_id,
-        pixelID: data.ids?.childrenPagesYaml[0]?.google_analytics_id
+        pixelID: data.ids?.childrenPagesYaml[0]?.pixel_id
     };
 }
