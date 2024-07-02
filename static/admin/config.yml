@@ -30,7 +30,7 @@ collections:
             widget: text
           - name: google_analytics_id
             label: "Google Analytics ID"
-            widget: markdown
+            widget: text
 
       - label: "Home Page"
         name: home
