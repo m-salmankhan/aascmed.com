@@ -32,7 +32,7 @@
     "gatsby-remark-autolink-headers": "^6.11.0",
     "gatsby-remark-images": "^7.13.2",
     "gatsby-source-filesystem": "^5.11.0",
-    "gatsby-transformer-sharp": "^5.11.0",
+    "gatsby-transformer-sharp": "^5.13.1",
     "gatsby-transformer-yaml": "^5.11.0",
     "mapbox-gl": "^2.15.0",
     "pure-react-carousel": "^1.30.1",
