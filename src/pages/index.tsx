@@ -185,7 +185,11 @@ export const query = graphql`
         title
       }
     }
-    conditions: allMdx(filter: {fields: {post_type: {eq: "conditions"}}}, limit: 5) {
+    conditions: allMdx(
+      filter: {fields: {post_type: {eq: "conditions"}}},
+      sort: {frontmatter: {order: ASC}}
+      limit: 8
+     ) {
       edges {
         node {
           fields {

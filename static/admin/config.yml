@@ -195,6 +195,7 @@ collections:
           - { name: question_heading_level, label: Question Heading Level, widget: number , min: 1, max: 6, step: 1}
           - { name: question, label: Question, widget: string }
           - { name: answer, label: Answer, widget: markdown }
+      - { name: order, label: Order (Lower = Earlier), widget: number, value_type: int, required: false, default: 0 }
 
 
   - name: service-updates
