@@ -282,8 +282,8 @@ export const ZocDoc = () => {
 
     return (
         <aside css={stylesZocDoc}>
-            <Bubble href={ZocDocURL} target={"_BLANK"} rel={"noopener"} collapse={collapse} onClick={triggerZocDoc}/>
-            <BookButton href={ZocDocURL} target={"_BLANK"} rel={"noopener"} collapse={collapse}
+            <Bubble href={ZocDocURL} collapse={collapse} onClick={triggerZocDoc}/>
+            <BookButton href={ZocDocURL} collapse={collapse}
                         onClick={triggerZocDoc}/>
 
             <div ref={zocDocRef} css={css`display: none`}>
