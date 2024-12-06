@@ -21,6 +21,14 @@ function addType(type, node, actions, getNode, basePath) {
     });
 }
 
+// if the slug starts
+function buildCustomSlug(slug, prefix) {
+    if (slug.charAt(0) === '/') {
+        return prefix + slug.substring(1);
+    }
+    return prefix + slug;
+}
+
 exports.onCreateNode = ({node, actions, getNode}) => {
     if(node.internal.type === `Mdx`) {
         const fileDir = path.dirname(path.relative(contentDir, node.internal.contentFilePath));
@@ -36,7 +44,15 @@ exports.onCreateNode = ({node, actions, getNode}) => {
             addSlug(...params)
             addType(`providers`, ...params);
         } else if(isCondition) {
-            addSlug(...params)
+            if(!node.frontmatter.slug) {
+                addSlug(...params)
+            } else {
+                actions.createNodeField({
+                    node,
+                    name: `slug`,
+                    value: buildCustomSlug(node.frontmatter.slug, "/conditions/"),
+                });
+            }
             addType(`conditions`, ...params);
         } else if(isReview) {
             addType(`review`, ...params);

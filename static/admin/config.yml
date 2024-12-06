@@ -184,6 +184,7 @@ collections:
     identifier_field: heading
     fields:
       - { name: title, label: Title  (for <title>)}
+      - { name: slug, label: Slug override (optional), required: false }
       - { name: heading, label: Heading (<h1> and archive display) }
       - { name: order, label: Order (Lower = Earlier), widget: number, value_type: int, required: true, default: 0 }
       - { name: description, label: Description, widget: text }
