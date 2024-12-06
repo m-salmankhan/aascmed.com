@@ -62,7 +62,10 @@ export const query = graphql`
       }
     }
 
-    conditions: allMdx(filter: {fields: {post_type: {eq: "conditions"}}}) {
+    conditions: allMdx(
+      filter: {fields: {post_type: {eq: "conditions"}}},
+      sort: {frontmatter: {order: ASC}}
+     ) {
       edges {
         node {
           fields {
