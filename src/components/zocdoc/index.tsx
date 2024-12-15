@@ -119,6 +119,7 @@ const Bubble: React.FC<BubbleProps> = ({children, collapse, ...props}) => {
     // after this, bubble is still visible to screen readers
     const hideBubble: MouseEventHandler = (e) => {
         e.preventDefault();
+        e.stopPropagation()
         if (visibilityState === BubbleStates.VISIBLE) {
             setVisibilityState(BubbleStates.INVISIBLE);
         }
