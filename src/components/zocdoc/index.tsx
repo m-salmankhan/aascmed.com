@@ -45,8 +45,7 @@ const stylesBookNowBubble = (state: BubbleStates) => {
         z-index: 10;
         margin-bottom: 1em;
         margin-right: 1em;
-        border-radius: 1em;
-        border-bottom-right-radius: 0em;
+        border-radius: 1em 1em 0 1em;
 
 
         transition: transform .5s ease-in-out 0s;
