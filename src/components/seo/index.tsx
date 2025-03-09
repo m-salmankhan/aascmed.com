@@ -55,6 +55,21 @@ export const SEO = (props: SEOProps) => {
                     'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
                     })(window,document,'script','dataLayer','${analyticsIDs.googleTagManagerID}');
                     window.gtag = () => { dataLayer.push(arguments); }
+
+                    // grant full permisison in US (excluding CA) and none in Rest of World.
+                    window.gtag('consent', 'default', {
+                        'ad_storage': 'granted',
+                        'ad_user_data': 'granted',
+                        'ad_personalization': 'granted',
+                        'analytics_storage': 'granted',
+                        'region': ['US']
+                    });
+                    window.gtag('consent', 'default', {
+                        'ad_storage': 'denied',
+                        'ad_user_data': 'denied',
+                        'ad_personalization': 'denied',
+                        'analytics_storage': 'denied',
+                    });
                 `}}/>
 
                 {/* Facebook Pixel Code */}
