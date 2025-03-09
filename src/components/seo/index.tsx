@@ -46,9 +46,9 @@ export const SEO = (props: SEOProps) => {
             { useTracking &&
                 <>
                 {/* Google Tag */}
-                <Script async src={`https://www.googletagmanager.com/gtag/js?id=${analyticsIDs.googleAnalyticsID}`} />
+                <script async src={`https://www.googletagmanager.com/gtag/js?id=${analyticsIDs.googleAnalyticsID}`} />
                 {/* Google Tag Manager */}
-                <Script id={"gtag"} dangerouslySetInnerHTML={{ __html: `
+                <script id={"gtag"} dangerouslySetInnerHTML={{ __html: `
                     (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
                     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
                     j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
@@ -58,7 +58,7 @@ export const SEO = (props: SEOProps) => {
                 `}}/>
 
                 {/* Facebook Pixel Code */}
-                <Script dangerouslySetInnerHTML={{
+                <script dangerouslySetInnerHTML={{
                     __html: `!function(f,b,e,v,n,t,s)
                     {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
                     n.callMethod.apply(n,arguments):n.queue.push(arguments)};
