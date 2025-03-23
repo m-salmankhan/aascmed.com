@@ -62,7 +62,10 @@ export const query = graphql`
         text
       }
     }
-    serviceUpdates: allMdx(filter: {fields: {post_type: {eq: "service-update"}}}) {
+    serviceUpdates: allMdx(
+      filter: {fields: {post_type: {eq: "service-update"}}}
+      sort: {frontmatter: {date: DESC}}
+    ) {
       edges {
         node {
           fields {

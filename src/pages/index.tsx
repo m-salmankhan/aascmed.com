@@ -208,6 +208,7 @@ export const query = graphql`
     }
     serviceUpdates: allMdx(
       filter: {fields: {post_type: {eq: "service-update"}}}
+      sort: {frontmatter: {date: DESC}}
       limit: 3
     ) {
       edges {
