@@ -242,7 +242,7 @@ collections:
         widget: "object"
         fields:
           - { name: retired, label: Is this provider retired?, widget: boolean, required: false, default: false }
-          - { name: retired-notice-text, label: Retirement Notice Text, widget: markdown }
+          - { name: retired-notice-text, label: Retirement Notice Text, widget: markdown, required: false, default: "" }
       - { name: order, label: Order (Lowest = First), widget: number, value_type: int, required: false, default: 0 }
 
   - name: reviews
