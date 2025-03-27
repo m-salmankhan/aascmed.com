@@ -84,6 +84,7 @@ const stylesProviderExcerpt = css(
 
 const Provider: React.FC<ProviderProps> = ({ className, provider }) => {
     const nameWithTitle = (!!provider.name.title ? `${provider.name.title}. ` : "") + provider.name.fullName;
+    const retiredText = provider.retired ? "(Retired)" : "";
     return (
         <li className={className} css={stylesProvider}>
             <article css={stylesProviderArticle}>
@@ -100,7 +101,7 @@ const Provider: React.FC<ProviderProps> = ({ className, provider }) => {
                                 shape={"elipse"}
                             />
                         }
-                        <H2>{nameWithTitle}</H2>
+                        <H2>{nameWithTitle} {retiredText}</H2>
                         {!!provider.name.degree && <span className={"degree"}>{provider.name.degree}</span>}
                     </Link>
                 </header>

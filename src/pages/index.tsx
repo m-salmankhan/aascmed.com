@@ -53,6 +53,7 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
       title: edge.node.frontmatter?.name?.title || "",
       degreeAbbr: edge.node.frontmatter?.name?.degree_abbr || "",
     },
+    retired: edge.node.frontmatter?.retirement?.retired || false,
     image: edge.node.frontmatter?.image?.childImageSharp?.gatsbyImageData,
   }));
 
@@ -241,6 +242,9 @@ export const query = graphql`
               fullname
               degree_abbr
               title
+            }
+            retirement {
+              retired
             }
           }
           fields {

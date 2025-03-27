@@ -11,6 +11,7 @@ export interface ProviderSummary {
         degreeAbbr?: string
         degree?: string
     }
+    retired: boolean
 }
 export {
     ProvidersArchiveHomePageLayout,

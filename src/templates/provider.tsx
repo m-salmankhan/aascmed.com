@@ -6,7 +6,7 @@ import { Article } from "../components/posts/article";
 import { H1, H4 } from "../components/headings";
 import { ShareButtons } from "../components/social-media/share";
 import { MDXProvider } from "@mdx-js/react";
-import { ButtonList, ContactBanner } from "../components/posts/shortcode-components";
+import { ButtonList, ContactBanner, InfoNotice } from "../components/posts/shortcode-components";
 import { GatsbyImage } from "gatsby-plugin-image";
 import ReactMarkdown from "react-markdown";
 import { SEO } from "../components/seo";
@@ -31,6 +31,9 @@ const Provider = ({ data, location, children }: PageProps<Queries.ProviderQuery>
   const honorific = data.mdx.frontmatter.name?.title + "." || "";
   const degreeAbbr = data.mdx.frontmatter.name?.degree_abbr || "";
 
+  const retired = data.mdx.frontmatter.retirement?.retired || false;
+  const retirement_notice = data.mdx.frontmatter.retirement?.retired_notice_text || "";
+
   const image = data.mdx.frontmatter.image?.childImageSharp?.gatsbyImageData;
   const review = data.mdx.frontmatter.review?.trim() || "";
 
@@ -50,6 +53,12 @@ const Provider = ({ data, location, children }: PageProps<Queries.ProviderQuery>
             <MainCol>
               <H1><>{pageHeading}</></H1>
               <ShareButtons pageTitle={pageTitle} path={location.pathname} />
+              
+              <InfoNotice css={css`margin-bottom: 1em;`}>
+                <ReactMarkdown>
+                        {retirement_notice}
+                </ReactMarkdown>
+              </InfoNotice>
 
               <MDXProvider components={shortcodes as any}>
                 {children}
@@ -123,6 +132,10 @@ export const query = graphql`
           title
           degree
           degree_abbr
+        }
+        retirement {
+          retired
+          retired_notice_text
         }
       }
       fields {

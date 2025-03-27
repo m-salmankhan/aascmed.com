@@ -26,6 +26,7 @@ const ProvidersPage = ({ data }: PageProps<Queries.ProvidersPageQuery>) => {
     },
     image: edge.node.frontmatter?.image?.childImageSharp?.gatsbyImageData,
     excerpt: edge.node.excerpt || "",
+    retired: edge.node.frontmatter?.retirement?.retired || false,
   }));
 
   return (
@@ -83,6 +84,10 @@ export const query = graphql`
               title
               degree
               degree_abbr
+            }
+            retirement {
+              retired
+              retired_notice_text
             }
           }
           fields {

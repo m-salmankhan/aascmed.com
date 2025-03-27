@@ -10,6 +10,7 @@ import { css } from "@emotion/react";
 import { H2, stylesH2 } from "../headings";
 import { CSSInterpolation } from "@emotion/serialize";
 import { ZocDocURL } from "../zocdoc";
+import { FaIcons, IconStyles } from "../font-awesome";
 
 interface ShortCodeProps {
     children?: ReactNode,
@@ -61,6 +62,39 @@ export const ContactBanner: React.FC<ShortCodeProps> = ({ className, children })
         <Link css={[stylesButton, stylesBtnSecondary, { marginRight: `${gridSpacing / 2}em` }]} to={"/contact"}>Contact Us</Link>
         <SecondaryAnchor href={ZocDocURL} target="_BLANK" rel="noopener">Book online with ZocDoc</SecondaryAnchor>
     </aside>
+
+const stylesInfoNotice: CSSInterpolation = {
+    margin: `${gridSpacing / 2}em 0`,
+    background: colours.infoYellow,
+    padding: `${gridSpacing/2}em`,
+    color: colours.infoBlue,
+    borderRadius:  `${gridSpacing/4}em`,
+
+    a: {
+        color: colours.infoBlue,
+    },
+
+    "p:first-child": {
+        marginTop: 0,
+    },
+    "p:last-child": {
+        marginBottom: 0,
+    },
+    
+    ".icon": {
+        display: "inline-block",
+        width: `1em`,
+        height: `1em`,
+        fill: colours.infoBlue,
+        verticalAlign: "middle",
+        marginRight: `${gridSpacing/4}em`,
+    } 
+}
+export const InfoNotice: React.FC<ShortCodeProps> = ({className, children}) =>
+    <div className={className} css={stylesInfoNotice}>
+        <FaIcons iconStyle={IconStyles.SOLID} icon={"circle-info"} className={"icon"} /> <strong>Info:</strong>
+        {children}
+    </div>
 
 interface FAQProps {
     children: ReactNode

@@ -67,7 +67,7 @@ const Providers: React.FC<ProvidersProps> = ({ className, providers }) => {
                                 imageAlt={`An image of ${provider.name.title} ${provider.name.fullName}`}
                                 shape={"elipse"}
                             />}
-                            <h3 className={"heading"} css={stylesH2}>{`${provider.name.fullName}, ${provider.name.degreeAbbr}`}</h3>
+                            <h3 className={"heading"} css={stylesH2}>{`${provider.name.fullName}, ${provider.name.degreeAbbr}`} {provider.retired && "(Retired)"}</h3>
                             <div className="read-more">Read more...</div>
                         </Link>
                     </li>
