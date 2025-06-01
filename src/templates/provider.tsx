@@ -53,12 +53,8 @@ const Provider = ({ data, location, children }: PageProps<Queries.ProviderQuery>
             <MainCol>
               <H1><>{pageHeading}</></H1>
               <ShareButtons pageTitle={pageTitle} path={location.pathname} />
-              
-              <InfoNotice css={css`margin-bottom: 1em;`}>
-                <ReactMarkdown>
-                        {retirement_notice}
-                </ReactMarkdown>
-              </InfoNotice>
+
+              <RetirementNotice retired={retired} notice_text={retirement_notice} />              
 
               <MDXProvider components={shortcodes as any}>
                 {children}
@@ -89,6 +85,17 @@ const Provider = ({ data, location, children }: PageProps<Queries.ProviderQuery>
       </main>
     </PrimarySecondaryColumnsLayout>
   );
+}
+
+const RetirementNotice = ({retired, notice_text}: {retired: boolean, notice_text: string}) => {
+  if(!retired) return <></>
+  return(
+    <InfoNotice css={css`margin-bottom: 1em;`}>
+      <ReactMarkdown>
+        {notice_text}
+      </ReactMarkdown>
+    </InfoNotice>
+  )
 }
 
 
