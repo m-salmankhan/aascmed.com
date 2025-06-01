@@ -54,7 +54,7 @@ export const SEO = (props: SEOProps) => {
                     j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
                     })(window,document,'script','dataLayer','${analyticsIDs.googleTagManagerID}');
-                    window.gtag = () => { dataLayer.push(arguments); }
+                    window.gtag = function() { dataLayer.push(arguments); }
 
                     // grant full permisison in US (excluding CA) and none in Rest of World.
                     window.gtag('consent', 'default', {
