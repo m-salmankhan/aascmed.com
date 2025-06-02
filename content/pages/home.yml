@@ -23,6 +23,9 @@ conditions:
 service-updates:
   heading: Clinic service updates
   text: ""
+blog_posts:
+  heading: Latest from our blog
+  text: ""
 providers:
   heading: Meet the team
   text: ""
