@@ -9,7 +9,7 @@ function addSlug(node, actions, getNode, basePath) {
     actions.createNodeField({
         node,
         name: `slug`,
-        value: createFilePath({node, getNode, basePath}),
+        value: createFilePath({ node, getNode, basePath }),
     });
 }
 
@@ -29,22 +29,23 @@ function buildCustomSlug(slug, prefix) {
     return prefix + slug;
 }
 
-exports.onCreateNode = ({node, actions, getNode}) => {
-    if(node.internal.type === `Mdx`) {
+exports.onCreateNode = ({ node, actions, getNode }) => {
+    if (node.internal.type === `Mdx`) {
         const fileDir = path.dirname(path.relative(contentDir, node.internal.contentFilePath));
         const isProvider = (fileDir === `providers`);
         const isCondition = (fileDir === `conditions`);
         const isServiceUpdate = (fileDir === `service-updates`);
         const isReview = (fileDir === `reviews`);
         const isClinic = (fileDir === `clinics`);
+        const isBlogPost = (fileDir === `blog`);
 
         const params = [node, actions, getNode];
 
-        if(isProvider) {
+        if (isProvider) {
             addSlug(...params)
             addType(`providers`, ...params);
-        } else if(isCondition) {
-            if(!node.frontmatter.slug) {
+        } else if (isCondition) {
+            if (!node.frontmatter.slug) {
                 addSlug(...params)
             } else {
                 actions.createNodeField({
@@ -54,14 +55,14 @@ exports.onCreateNode = ({node, actions, getNode}) => {
                 });
             }
             addType(`conditions`, ...params);
-        } else if(isReview) {
+        } else if (isReview) {
             addType(`review`, ...params);
-        } else if(isClinic) {
+        } else if (isClinic) {
             addSlug(...params)
             addType(`clinics`, ...params);
-        } else if(isServiceUpdate) {
+        } else if (isServiceUpdate) {
             const date = moment(node.frontmatter.date);
-            const filePath = createFilePath({node, getNode, basePath}).split('/');
+            const filePath = createFilePath({ node, getNode, basePath }).split('/');
 
             filePath.splice(2, 0, date.format('YYYY'), date.format('MM'));
             const slug = filePath.join('/');
@@ -73,12 +74,33 @@ exports.onCreateNode = ({node, actions, getNode}) => {
             });
 
             addType(`service-update`, ...params);
+        } else if (isBlogPost) {
+            const date = moment(node.frontmatter.date);
+            // if a slug isn't explicitly specified, use the date + filename
+            if (!node.frontmatter.slug) {
+                const filePath = createFilePath({ node, getNode, basePath }).split('/');
+                filePath.splice(2, 0, date.format('YYYY'), date.format('MM'));
+                const slug = filePath.join('/');
+
+                actions.createNodeField({
+                    node,
+                    name: `slug`,
+                    value: slug,
+                });
+            } else {
+                actions.createNodeField({
+                    node,
+                    name: `slug`,
+                    value: buildCustomSlug(node.frontmatter.slug, "/blog/"),
+                });
+            }
+            addType(`blog-post`, ...params);
         }
     }
 }
 
-exports.createPages = async ({graphql, actions, reporter}) => {
-    const {createPage} = actions;
+exports.createPages = async ({ graphql, actions, reporter }) => {
+    const { createPage } = actions;
 
     const result = await graphql(`
       query {
@@ -94,6 +116,17 @@ exports.createPages = async ({graphql, actions, reporter}) => {
           }
         }
         serviceUpdates: allMdx(filter: {fields: {post_type: {eq: "service-update"}}}) {
+          nodes {
+            id
+            fields {
+              slug
+            }
+            internal {
+               contentFilePath
+            }
+          }
+        }
+        blogPosts: allMdx(filter: {fields: {post_type: {eq: "blog-post"}}}) {
           nodes {
             id
             fields {
@@ -129,13 +162,14 @@ exports.createPages = async ({graphql, actions, reporter}) => {
       }
     `);
 
-    if(result.errors) {
+    if (result.errors) {
         reporter.panicOnBuild('🚨  ERROR: Loading "createPages" query')
     }
     const conditions = result.data.conditions.nodes;
     const serviceUpdates = result.data.serviceUpdates.nodes;
     const providers = result.data.providers.nodes;
     const clinics = result.data.clinics.nodes;
+    const blogPosts = result.data.blogPosts.nodes;
 
     conditions.forEach((node) => {
         createPage({
@@ -181,5 +215,15 @@ exports.createPages = async ({graphql, actions, reporter}) => {
         });
     });
 
+    blogPosts.forEach((node) => {
+        createPage({
+            path: node.fields.slug,
+            component: `${path.resolve(`./src/templates/blog-post.tsx`)}?__contentFilePath=${node.internal.contentFilePath}`,
+            context: {
+                id: node.id,
+                template: 'blog-post',
+            }
+        });
+    });
 }
 
