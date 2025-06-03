@@ -24,7 +24,7 @@ const BlogPost = ({ data, children, location }: PageProps<Queries.BlogPostQuery>
     const heading = data.mdx.frontmatter.heading || "Untitled"
     const tocItems = data.mdx.tableOfContents?.items as ContentsPageItem[];
     const date = data.mdx.frontmatter.date || ""
-    const heroImage = data.mdx.frontmatter.heroImage?.childImageSharp?.gatsbyImageData
+    const heroImage = data.mdx.frontmatter.thumbnail?.childImageSharp?.gatsbyImageData
 
     return (
         <PrimarySecondaryColumnsLayout>
@@ -84,7 +84,7 @@ export const query = graphql`
           title
           heading
           description
-          heroImage {
+          thumbnail {
             childImageSharp {
               gatsbyImageData(width: 900)
             }

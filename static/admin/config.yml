@@ -227,7 +227,7 @@ collections:
       - { name: slug, label: Slug }
       - { name: description, label: Description, widget: text }
       - { name: date, label: Date, widget: datetime }
-      - { name: heroImage, label: "Hero Image", widget: image }
+      - { name: thumbnail, label: "Hero Image", widget: image }
       - { name: body, label: Body, widget: markdown }
 
   - name: providers

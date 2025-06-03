@@ -113,9 +113,9 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
       <main id={"main"}>
         <Container>
           <ConditionsArchive showViewAll={true} heading={conditionsTitle} text={conditionsText} frontPage={true} conditionsList={conditions} css={css({ marginTop: "5em", })} />
-          <ServiceUpdateArchive serviceUpdates={serviceUpdates} frontPage={true} heading={serviceUpdatesTitle} text={serviceUpdatesText} css={css({ marginTop: "4em", })} />
           <BlogArchive blogPosts={blogs} frontPage={true} heading={blogsTitle} text={blogsText} css={css({ marginTop: "4em", })} />
           <ProvidersArchiveHomePageLayout providers={providers} heading={providersTitle} text={providersText} css={css({ marginTop: "4em", })} />
+          <ServiceUpdateArchive serviceUpdates={serviceUpdates} frontPage={true} heading={serviceUpdatesTitle} text={serviceUpdatesText} css={css({ marginTop: "4em", })} />
         </Container>
         <PatientFeedback css={css({ marginTop: "5em", })} averageRating={avgRating} reviews={reviews} />
         <Container>
