@@ -196,6 +196,10 @@ export const Contents: React.FC<ContentsProps> = ({ className, items }) => {
             observeHeadings(headings);
         }
     }, [headingElements, observerRef]);
+
+    if(!headingElements || headingElements.length == 0) {
+        return <></>
+    }
     return (
         <section className={className} css={stylesContents}>
             <H2 css={stylesH1}>Contents</H2>

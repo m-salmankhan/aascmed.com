@@ -213,6 +213,25 @@ collections:
       - { name: description, label: Description, widget: text }
       - { name: body, label: Body, widget: markdown }
 
+  - name: blog
+    label: Blog Posts
+    folder: /content/blog
+    media_folder: ''
+    public_folder: './../../'
+    format: frontmatter
+    extension: mdx
+    create: true
+    editor:
+      preview: false
+    fields:
+      - { name: title, label: Title, required: true }
+      - { name: heading, label: Heading, required: true }
+      - { name: slug, label: Slug, required: true }
+      - { name: description, label: Description, widget: text, required: true }
+      - { name: date, label: Date, widget: datetime, required: true }
+      - { name: thumbnail, label: "Hero Image", widget: image, required: false, media_folder: '', public_folder: './../../'}
+      - { name: body, label: Body, widget: markdown, required: true }
+
   - name: providers
     label: Providers
     folder: /content/providers

@@ -15,6 +15,7 @@ import { PracticeArchive, PracticeSummary } from "../components/practices/practi
 import { ContactSection } from "../components/contact/full-form";
 import { SEO } from "../components/seo";
 import { Footer } from "../components/footer";
+import { BlogArchive } from "../components/blog-posts";
 
 const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
   const heroImage = data.heroImage?.childImageSharp?.gatsbyImageData;
@@ -42,6 +43,19 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
     date: edge.node.frontmatter?.date || "",
     description: edge.node.frontmatter?.description || "",
   }));
+
+
+  const blogsCopy = data.sectionCopy?.childPagesYaml?.blog_posts;
+  const blogsTitle = blogsCopy?.heading || "Blog"
+  const blogsText = blogsCopy?.text || "";
+  const blogs: ServiceUpdateSummary[] = data.blogs.edges.map(edge => ({
+    slug: edge.node.fields?.slug || "",
+    title: edge.node.frontmatter?.title || "",
+    date: edge.node.frontmatter?.date || "",
+    description: edge.node.excerpt || "",
+  }));
+
+
 
   const providersCopy = data.sectionCopy?.childPagesYaml?.providers;
   const providersTitle = providersCopy?.heading || "Meet the team"
@@ -99,8 +113,9 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
       <main id={"main"}>
         <Container>
           <ConditionsArchive showViewAll={true} heading={conditionsTitle} text={conditionsText} frontPage={true} conditionsList={conditions} css={css({ marginTop: "5em", })} />
-          <ServiceUpdateArchive serviceUpdates={serviceUpdates} frontPage={true} heading={serviceUpdatesTitle} text={serviceUpdatesText} css={css({ marginTop: "4em", })} />
+          <BlogArchive blogPosts={blogs} frontPage={true} heading={blogsTitle} text={blogsText} css={css({ marginTop: "4em", })} />
           <ProvidersArchiveHomePageLayout providers={providers} heading={providersTitle} text={providersText} css={css({ marginTop: "4em", })} />
+          <ServiceUpdateArchive serviceUpdates={serviceUpdates} frontPage={true} heading={serviceUpdatesTitle} text={serviceUpdatesText} css={css({ marginTop: "4em", })} />
         </Container>
         <PatientFeedback css={css({ marginTop: "5em", })} averageRating={avgRating} reviews={reviews} />
         <Container>
@@ -152,6 +167,10 @@ export const query = graphql`
           text
         }
         service_updates {
+          heading
+          text
+        }
+        blog_posts {
           heading
           text
         }
@@ -225,6 +244,26 @@ export const query = graphql`
         }
       }
     }
+
+    blogs: allMdx(
+      filter: {fields: {post_type: {eq: "blog-post"}}}
+      sort: {frontmatter: {date: DESC}}
+    ) {
+      edges {
+        node {
+          fields {
+            slug
+          }
+          frontmatter {
+            date(formatString: "Do MMMM YYYY")
+            title
+            description
+          }
+          excerpt(pruneLength: 300)
+        }
+      }
+    }
+      
     providers: allMdx(
       filter: {fields: {post_type: {eq: "providers"}}}
       sort: {frontmatter: {order: ASC}}
