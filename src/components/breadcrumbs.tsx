@@ -8,10 +8,15 @@ import {colours, gridSpacing} from "../styles/theme";
 const stylesBreadcrumbs = css({
     color: Color(colours.brandPrimary).desaturate(1).toString(),
 
+
+    ".breadcrumb-text": {
+        paddingRight: "1rem",
+    },
+
     ol: {
         display: "inline-block",
         listStyle: "none",
-        margin: `${gridSpacing}em 0 0 1rem`,
+        margin: `${gridSpacing}em 0 0 0`,
         padding: 0,
 
         li: {
@@ -46,7 +51,7 @@ const stylesBreadcrumbs = css({
 
 export const Breadcrumbs = ({path, className=''}) =>
     <div className={className} css={stylesBreadcrumbs}>
-        You are here:
+        <span className={"breadcrumb-text"}>You are here:</span>
         <ol>
             {path.map(
                 (item, key) =>
