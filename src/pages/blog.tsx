@@ -24,7 +24,7 @@ const BlogPage: React.FC<PageProps<Queries.BlogsQuery>> = ({ data }) => {
       <Container>
         <Breadcrumbs path={[
           ["/", "Home"],
-          ["/service-updates/", "Service Updates"]
+          ["/blog/", "Blog"]
         ]} css={css({ marginTop: "3em" })} />
         <BlogArchive
           heading={blogsTitle}
