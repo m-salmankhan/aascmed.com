@@ -166,10 +166,26 @@ collections:
           - name: heading
             label: Heading
             widget: text
+
           - name: text
             label: Text
             widget: markdown
 
+      - label: "Blog Index Page"
+        name: blog
+        file: /content/pages/blog.yml
+        fields:
+          - name: meta_description
+            label: "Meta Description"
+            widget: text
+
+          - name: heading
+            label: Heading
+            widget: text
+  
+          - name: text
+            label: Text
+            widget: markdown
 
   - name: conditions
     label: Conditions
