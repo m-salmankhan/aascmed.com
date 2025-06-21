@@ -167,7 +167,7 @@ export const Contents: React.FC<ContentsProps> = ({ className, items }) => {
                     return [];
 
                 const headingsList = xs.map((item) => ({
-                    element: document.querySelector(item.url),
+                    element: document.getElementById(item.url.slice(1)),
                     url: item.url,
                     title: item.title,
                     subHeadings: itemsLoop(item.items),
