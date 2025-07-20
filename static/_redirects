@@ -39,11 +39,8 @@
 /clinics/western-springs.php /clinics/western-springs/ 301
 /clinics/joliet.php /clinics/crest-hill/ 301
 
-/clinics/bolingbrookhp /clinics/bolingbrook/ 301
-/clinics/crest-hill /clinics/crest-hill/ 301
-/clinics/aurora /clinics/aurora/ 301
-/clinics/western-springs /clinics/western-springs/ 301
 /clinics/joliet /clinics/crest-hill/ 301
+/clinics/western-springs/ /clinics/countryside/ 301
 
 # 301 redirect Patient Information
 # ===============================================================================
@@ -59,12 +56,3 @@
 # 301 redirect Privacy Policy
 # ===============================================================================
 /privacy-policy.php /privacy/ 301
-
-# ===============================================================================
-# ===============================================================================
-# ===============================================================================
-# ===============================================================================
-
-# Moved Pages
-# ===============================================================================
-/clinics/western-springs/ /clinics/countryside/ 301
