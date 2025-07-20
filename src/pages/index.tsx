@@ -248,6 +248,7 @@ export const query = graphql`
     blogs: allMdx(
       filter: {fields: {post_type: {eq: "blog-post"}}}
       sort: {frontmatter: {date: DESC}}
+      limit: 6
     ) {
       edges {
         node {
