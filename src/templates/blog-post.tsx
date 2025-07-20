@@ -45,12 +45,16 @@ const BlogPost = ({ data, children, location }: PageProps<Queries.BlogPostQuery>
                             <MDXProvider components={shortcodes as any}>
                                 {children}
                             </MDXProvider>
+
                             <ContactBanner />
+                            
+                            <footer>
+                                <ShareButtons pageTitle={title} path={location.pathname} />
+                            </footer>
                         </MainCol>
                         <SideCol>
                             <Contents items={tocItems} />
                         </SideCol>
-
                     </Columns>
                 </Article>
             </main>

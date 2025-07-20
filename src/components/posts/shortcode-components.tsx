@@ -50,7 +50,7 @@ const stylesContactBanner: CSSInterpolation = {
 
     "h1, h2": [stylesH2, {
         marginTop: 0,
-        color: colours.bodyBackground,
+        color: `${colours.bodyBackground}!important`, // TODO: using !important here is ugly. Refactor this later.
     }]
 }
 
