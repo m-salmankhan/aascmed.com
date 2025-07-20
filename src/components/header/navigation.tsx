@@ -379,6 +379,7 @@ export const Navigation: React.FC<NavigationProps> = ({ frontPage, className }) 
             <NavItem link="/conditions/">Patient Education</NavItem>
             <NavItem link="/providers/">Our Team</NavItem>
             <NavItem link="/clinics/">Locations</NavItem>
+            <NavItem link="/blog/">Blog</NavItem>
             <NavItem link="https://login.patientfusion.com">Patient Portal</NavItem>
             <NavItem link={ZocDocURL}>Bookings</NavItem>
             <NavItem link="/contact/">Contact</NavItem>

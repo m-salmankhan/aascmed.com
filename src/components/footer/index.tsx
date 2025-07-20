@@ -58,6 +58,7 @@ export const Footer = () => {
                             <li><Link to={"/"}>Home</Link></li>
                             <li><Link to={"/conditions/"}>Conditions</Link></li>
                             <li><Link to={"/service-updates/"}>Service Updates</Link></li>
+                            <li><Link to={"/blog/"}>Blog Posts</Link></li>
                             <li><Link to={"/providers/"}>Meet the team</Link></li>
                             <li><Link to={"/clinics/"}>Practice Locations</Link></li>
                             <li><Link to={"/privacy/"}>Privacy Policy</Link></li>
