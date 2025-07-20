@@ -1,3 +1,11 @@
+// Add resolver for frontmatter.thumbnail to File node for MDX
+exports.createSchemaCustomization = ({ actions }) => {
+  actions.createTypes(`
+    type MdxFrontmatter {
+      thumbnail: File @fileByRelativePath
+    }
+  `);
+};
 const path = require(`node:path`);
 const { createFilePath } = require(`gatsby-source-filesystem`);
 const moment = require(`moment`);
