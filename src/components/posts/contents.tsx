@@ -163,18 +163,29 @@ export const Contents: React.FC<ContentsProps> = ({ className, items }) => {
     useEffect(() => {
         if (headingElements === null) {
             function itemsLoop(xs: ContentsPageItem[] | undefined): Heading[] {
-                if (typeof xs === "undefined")
-                    return [];
+                if (!Array.isArray(xs)) return [];
 
-                const headingsList = xs.map((item) => ({
-                    element: document.getElementById(item.url.slice(1)),
-                    url: item.url,
-                    title: item.title,
-                    subHeadings: itemsLoop(item.items),
-                    active: false,
-                }));
-                console.error("Heading levels skipped:" + headingsList.filter(x => x.element === null).toString())
-                return headingsList.filter((x) => x.element !== null);
+                return xs.flatMap(item => {
+                    if (!item) return [];
+                    if (typeof item.url === "string" && typeof item.title === "string") {
+                        const element = document.getElementById(item.url.slice(1));
+                        if (element === null) return [];
+                        return [{
+                            element,
+                            url: item.url,
+                            title: item.title,
+                            subHeadings: itemsLoop(item.items),
+                            active: false,
+                        }];
+                    } else if (Array.isArray(item.items) && item.items.length > 0) {
+                        // Flatten children into this level
+                        return itemsLoop(item.items);
+                    } else {
+                        // Log skipped item
+                        console.error("Heading level skipped (no url/title, no children):", item);
+                        return [];
+                    }
+                });
             }
 
             setHeadingElements(itemsLoop(items));
