@@ -46,7 +46,8 @@ collections:
             required: true
           - name: message
             label: "Message"
-            widget: text
+            widget: markdown
+            required: true
 
       - label: "Home Page"
         name: home

@@ -4,6 +4,7 @@ import { ErrorNotice } from './forms/notices';
 import { SuccessNotice } from './forms/notices';
 import { InfoNotice } from './forms/notices';
 import { css } from '@emotion/react';
+import ReactMarkdown from 'react-markdown';
 
 type NoticeType = 'error' | 'info' | 'success';
 
@@ -61,6 +62,7 @@ function wasDismissed(): boolean {
 const announcementStyles = css`
     animation: none;
     border: none;
+    border-radius: 0;
 `;
 
 interface AnnnouncementProps {
@@ -95,7 +97,9 @@ const AnnouncementBanner = ({className}: AnnnouncementProps) => {
     return (
         <aside className={className}>
             <Component css={announcementStyles} onDismiss={onDismiss} transitionType='shrinkUp'>
-                {announcement.message}
+                <ReactMarkdown>
+                    {announcement.message}
+                </ReactMarkdown>
             </Component>
         </aside>
     );

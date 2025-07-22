@@ -206,6 +206,10 @@ const stylesInfo = css`
     fill: ${colours.infoYellow};
   }
   
+  .heading {
+    display: block;
+  }
+
   button.collapse:focus {
     background: ${colours.infoYellow};
     
