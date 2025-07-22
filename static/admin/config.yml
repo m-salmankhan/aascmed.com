@@ -32,6 +32,21 @@ collections:
             label: "Google Analytics ID"
             widget: text
 
+      - label: "Announcement Banner"
+        name: announcement
+        file: /content/pages/announcement.yml
+        fields:
+          - name: enabled
+            label: "Enabled"
+            widget: boolean
+          - label: "Announcement Type"
+            name: "type"
+            widget: "select"
+            options: ["error", "info", "success"]
+          - name: message
+            label: "Message"
+            widget: text
+
       - label: "Home Page"
         name: home
         file: /content/pages/home.yml

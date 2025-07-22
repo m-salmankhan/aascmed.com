@@ -4,6 +4,7 @@ import React, { ReactNode, useEffect } from "react";
 import { CSSInterpolation } from "@emotion/serialize";
 import { ZocDoc } from "../zocdoc";
 import { Script } from "gatsby";
+import AnnouncementBanner from "../AnnouncementBanner";
 
 const stylesGlobal: CSSInterpolation = {
     "html, body": {
@@ -74,12 +75,13 @@ export const App: React.FC<AppProps> = ({ children, className, useTracking }) =>
         { !!useTracking &&
         <>
         {/* Google Tag Manager (noscript)*/}
-            <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NB7HM293" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+            <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NB7HM293" height="0" width="0" css={{display: 'none', visibility: 'hidden'}}></iframe></noscript>
         {/* End Google Tag Manager (noscript)*/}
         </>
         }
 
         <Global styles={stylesGlobal} />
+        <AnnouncementBanner />
         {children}
         <ZocDoc />
     </div>
