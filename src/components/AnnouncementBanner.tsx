@@ -60,7 +60,7 @@ function wasDismissed(): boolean {
 
 const announcementStyles = css`
     animation: none;
-    border-radius: 0;
+    border: none;
 `;
 
 interface AnnnouncementProps {

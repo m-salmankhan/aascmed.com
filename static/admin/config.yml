@@ -43,6 +43,7 @@ collections:
             name: "type"
             widget: "select"
             options: ["error", "info", "success"]
+            required: true
           - name: message
             label: "Message"
             widget: text
