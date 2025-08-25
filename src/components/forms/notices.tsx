@@ -90,6 +90,10 @@ const stylesNotice = (state: NoticeStates, transitionType?: TransitionType) => {
           vertical-align: middle;
         }
       }
+
+      a {
+        color: inherit;
+      }
     `;
 }
 
