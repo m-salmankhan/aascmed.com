@@ -56,7 +56,8 @@ const onDismiss = () => {
 }
 
 function wasDismissed(): boolean {
-    return window.sessionStorage.getItem(dismissKey) === "true"
+    if(typeof window == "undefined") return false;
+    return window.sessionStorage.getItem(dismissKey) === "true";
 } 
 
 const announcementStyles = css`
