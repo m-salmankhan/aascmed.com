@@ -9,14 +9,14 @@ import { Article } from "../components/posts/article";
 import { ShareButtons } from "../components/social-media/share";
 import { PrimaryAnchor, PrimaryButton, stylesBtnSecondary, stylesButton } from "../components/buttons";
 import { gridSpacing } from "../styles/theme";
-import { useEffect, useState } from "react";
+// use React.useEffect / React.useState so compiled MDX wrappers have a `React` symbol in scope
 import { ButtonList, ContactBanner } from "../components/posts/shortcode-components";
 import { SEO } from "../components/seo";
 
 const shortcodes = { Link, ButtonList, ContactBanner };
 const ServiceUpdate = ({ data, children, location }: PageProps<Queries.ServiceUpdatePageQuery>) => {
-    const [jsEnabled, setJsEnabled] = useState(false);
-    useEffect(() => setJsEnabled(true), [setJsEnabled]);
+    const [jsEnabled, setJsEnabled] = React.useState(false);
+    React.useEffect(() => setJsEnabled(true), [setJsEnabled]);
 
     if ((data.mdx === null) || (data.mdx === undefined))
         throw Error("mdx is undefined");
