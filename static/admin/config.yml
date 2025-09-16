@@ -157,6 +157,23 @@ collections:
             label: Text
             widget: markdown
 
+      - label: "Service Updates Index Page"
+        name: service-updates
+        file: /content/pages/service-updates.yml
+        fields:
+          - name: meta_description
+            label: "Meta Description"
+            widget: text
+
+          - name: heading
+            label: Heading
+            widget: text
+            
+          - name: text
+            label: Text
+            widget: markdown
+
+
       - label: "Providers Index Page"
         name: providers
         file: /content/pages/providers.yml
