@@ -145,6 +145,12 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
             }
           }
         }
+        strapiBlogPosts: allStrapiBlog {
+          nodes {
+            id
+            slug
+          }
+        }
         providers: allMdx(filter: {fields: {post_type: {eq: "providers"}}}) {
           nodes {
             id
@@ -156,14 +162,34 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
             }
           }
         }
-        clinics: allMdx(filter: {fields: {post_type: {eq: "clinics"}}}) {
+        clinics: allStrapiClinic {
           nodes {
             id
-            fields {
-              slug
+            title
+            clinic_name
+            description
+            hours {
+              day
+              open
+              opening_hours {
+                start_time
+                end_time
+              }
+              shot_hours {
+                start_time
+                end_time
+              }
             }
-            internal {
-               contentFilePath
+            contact {
+              phone
+              fax
+            }
+            location {
+              address
+              lat
+              long
+              placeId
+              label_name
             }
           }
         }
@@ -177,7 +203,7 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
     const serviceUpdates = result.data.serviceUpdates.nodes;
     const providers = result.data.providers.nodes;
     const clinics = result.data.clinics.nodes;
-    const blogPosts = result.data.blogPosts.nodes;
+    const strapiBlogPosts = result.data.strapiBlogPosts.nodes;
 
     conditions.forEach((node) => {
         createPage({
@@ -213,9 +239,11 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
 
 
     clinics.forEach((node) => {
+        // Generate slug from clinic_name (e.g., "Aurora" -> "/clinics/aurora/")
+        const slug = `/clinics/${node.clinic_name.toLowerCase().replace(/\s+/g, '-')}/`;
         createPage({
-            path: node.fields.slug,
-            component: `${path.resolve(`./src/templates/clinic.tsx`)}?__contentFilePath=${node.internal.contentFilePath}`,
+            path: slug,
+            component: path.resolve(`./src/templates/clinic.tsx`),
             context: {
                 id: node.id,
                 template: 'clinic',
@@ -223,10 +251,10 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
         });
     });
 
-    blogPosts.forEach((node) => {
+    strapiBlogPosts.forEach((node) => {
         createPage({
-            path: node.fields.slug,
-            component: `${path.resolve(`./src/templates/blog-post.tsx`)}?__contentFilePath=${node.internal.contentFilePath}`,
+            path: `/blog/${node.slug}/`,
+            component: path.resolve(`./src/templates/blog-post.tsx`),
             context: {
                 id: node.id,
                 template: 'blog-post',

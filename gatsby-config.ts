@@ -1,5 +1,9 @@
 import type { GatsbyConfig } from "gatsby";
 
+require("dotenv").config({
+  path: `.env.${process.env.NODE_ENV}`,
+});
+
 const config: GatsbyConfig = {
     siteMetadata: {
         title: `Allergy, Asthma and Sinus Centers`,
@@ -76,6 +80,36 @@ const config: GatsbyConfig = {
                         },
                     }
                 ],
+            },
+        },
+        {
+            resolve: `gatsby-source-strapi`,
+            options: {
+                apiURL: process.env.GATSBY_STRAPI_API_URL || 'http://localhost:1337',
+                accessToken: process.env.STRAPI_TOKEN,
+                collectionTypes: [
+                    {
+                        singularName: 'blog',
+                        queryParams: {
+                            populate: "*"
+                        }
+                    },
+                    {
+                        singularName: 'clinic',
+                        queryParams: {
+                            populate: {
+                                hours: {
+                                    populate: ['opening_hours', 'shot_hours']
+                                },
+                                location: "*",
+                                contact: "*",
+                            }
+                        }
+                    }
+                ],
+                singleTypes: [],
+                queryLimit: 1000,
+                skipContentTypeCheck: true,
             },
         },
     ]

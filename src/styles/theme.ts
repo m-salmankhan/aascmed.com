@@ -21,6 +21,7 @@ export const defaultTotalColumnCount = 12;
 
 export const fontFamily = "Poppins, sans-serif";
 export const fontWeightBase = 300;
+export const fontWeightBold = 800;
 export const fontWeightHeadings = 800;
 export const fontBaseSize = "16px";
 

@@ -48,11 +48,11 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
   const blogsCopy = data.sectionCopy?.childPagesYaml?.blog_posts;
   const blogsTitle = blogsCopy?.heading || "Blog"
   const blogsText = blogsCopy?.text || "";
-  const blogs: ServiceUpdateSummary[] = data.blogs.edges.map(edge => ({
-    slug: edge.node.fields?.slug || "",
-    title: edge.node.frontmatter?.title || "",
-    date: edge.node.frontmatter?.date || "",
-    description: edge.node.excerpt || "",
+  const blogs: ServiceUpdateSummary[] = data.blogs.nodes.map(node => ({
+    slug: `/blog/${node.slug}/`,
+    title: node.title || "",
+    date: node.date || "",
+    description: node.description || "",
   }));
 
 
@@ -93,14 +93,14 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
   const practicesCopy = data.sectionCopy?.childPagesYaml?.practices;
   const practicesTitle = practicesCopy?.heading || "Practices"
   const practicesText = practicesCopy?.text || "";
-  const practices: PracticeSummary[] = data.practices.edges.map(edge => ({
-    slug: edge.node.fields?.slug || "",
-    clinic_name: edge.node.frontmatter?.clinic_name || "Untitled Clinic",
-    longitude: edge.node.frontmatter?.lon || 0,
-    latitude: edge.node.frontmatter?.lat || 0,
-    address: edge.node.frontmatter?.address || "",
-    phone: edge.node.frontmatter?.phone || "",
-    fax: edge.node.frontmatter?.fax || "",
+  const practices: PracticeSummary[] = data.practices.nodes.map(clinic => ({
+    slug: `/clinics/${(clinic.clinic_name || "").toLowerCase().replace(/\s+/g, '-')}/`,
+    clinic_name: clinic.clinic_name || "Untitled Clinic",
+    longitude: clinic.location?.long || 0,
+    latitude: clinic.location?.lat || 0,
+    address: clinic.location?.address || "",
+    phone: clinic.contact?.phone || "",
+    fax: clinic.contact?.fax || "",
   }));
 
   const contactCopy = data.sectionCopy?.childPagesYaml?.contact;
@@ -245,23 +245,12 @@ export const query = graphql`
       }
     }
 
-    blogs: allMdx(
-      filter: {fields: {post_type: {eq: "blog-post"}}}
-      sort: {frontmatter: {date: DESC}}
-      limit: 6
-    ) {
-      edges {
-        node {
-          fields {
-            slug
-          }
-          frontmatter {
-            date(formatString: "Do MMMM YYYY")
-            title
-            description
-          }
-          excerpt(pruneLength: 300)
-        }
+    blogs: allStrapiBlog(sort: {date: DESC}, limit: 6) {
+      nodes {
+        slug
+        title
+        description
+        date(formatString: "Do MMMM YYYY")
       }
     }
       
@@ -308,20 +297,17 @@ export const query = graphql`
         }
       }
     }
-    practices: allMdx(filter: {fields: {post_type: {eq: "clinics"}}}) {
-      edges {
-        node {
-          fields {
-            slug
-          }
-          frontmatter {
-            clinic_name
-            lat
-            lon
-            address
-            phone
-            fax
-          }
+    practices: allStrapiClinic {
+      nodes {
+        clinic_name
+        location {
+          address
+          lat
+          long
+        }
+        contact {
+          phone
+          fax
         }
       }
     }

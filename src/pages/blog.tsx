@@ -7,17 +7,19 @@ import { Container } from "../components/containers";
 import { gridSpacing } from "../styles/theme";
 import { SEO } from "../components/seo";
 import { BlogArchive, BlogSummary } from "../components/blog-posts";
+import { getImage } from "gatsby-plugin-image";
 
 const BlogPage: React.FC<PageProps<Queries.BlogsQuery>> = ({ data }) => {
   const pageCopy = data.sectionCopy?.childPagesYaml;
   const blogsTitle = pageCopy?.heading || "Blog"
   const blogsText = pageCopy?.text || "";
 
-  const blogs: BlogSummary[] = data.blogs.edges.map(edge => ({
-    slug: edge.node.fields?.slug || "",
-    title: edge.node.frontmatter?.title || "Untitled",
-    date: edge.node.frontmatter?.date || "",
-    description: edge.node.excerpt || "",
+  const blogs: BlogSummary[] = data.blogs.nodes.map(node => ({
+    slug: `/blog/${node.slug}/`,
+    title: node.title || "Untitled",
+    date: node.date || "",
+    description: node.description || "",
+    thumbnail: getImage(node.thumbnail?.localFile?.childImageSharp?.gatsbyImageData ?? null) ?? undefined,
   }));
   return (
     <Layout>
@@ -62,21 +64,18 @@ export const query = graphql`
         text
       }
     }
-    blogs: allMdx(
-      filter: {fields: {post_type: {eq: "blog-post"}}}
-      sort: {frontmatter: {date: DESC}}
-    ) {
-      edges {
-        node {
-          fields {
-            slug
+    blogs: allStrapiBlog(sort: {date: DESC}) {
+      nodes {
+        slug
+        title
+        description
+        date(formatString: "Do MMMM YYYY")
+        thumbnail {
+          localFile {
+            childImageSharp {
+              gatsbyImageData(width: 400, height: 250, transformOptions: { cropFocus: CENTER })
+            }
           }
-          frontmatter {
-            date(formatString: "Do MMMM YYYY")
-            title
-            description
-          }
-          excerpt(pruneLength: 300)
         }
       }
     }

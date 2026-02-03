@@ -8,18 +8,18 @@ import { PracticeArchive, PracticeSummary } from "../components/practices/practi
 import { ContactSection } from "../components/contact/full-form";
 import { SEO } from "../components/seo";
 
-const ContactPage = ({ data }: PageProps<Queries.PracticesArchiveQuery>) => {
+const ContactPage = ({ data }: PageProps<Queries.ContactPageQuery>) => {
   const heading = data.copy?.childPagesYaml?.heading || "Contact Us";
   const text = data.copy?.childPagesYaml?.text || "";
 
-  const practices: PracticeSummary[] = data.practices.edges.map(edge => ({
-    slug: edge.node.fields?.slug || "",
-    clinic_name: edge.node.frontmatter?.clinic_name || "Untitled Clinic",
-    longitude: edge.node.frontmatter?.lon || 0,
-    latitude: edge.node.frontmatter?.lat || 0,
-    address: edge.node.frontmatter?.address || "",
-    phone: edge.node.frontmatter?.phone || "",
-    fax: edge.node.frontmatter?.fax || "",
+  const practices: PracticeSummary[] = data.practices.nodes.map(clinic => ({
+    slug: `/clinics/${(clinic.clinic_name || "").toLowerCase().replace(/\s+/g, '-')}/`,
+    clinic_name: clinic.clinic_name || "Untitled Clinic",
+    longitude: clinic.location?.long || 0,
+    latitude: clinic.location?.lat || 0,
+    address: clinic.location?.address || "",
+    phone: clinic.contact?.phone || "",
+    fax: clinic.contact?.fax || "",
   }));
 
   return (
@@ -68,20 +68,17 @@ export const query = graphql`
       }
     }
 
-    practices: allMdx(filter: {fields: {post_type: {eq: "clinics"}}}) {
-      edges {
-        node {
-          fields {
-            slug
-          }
-          frontmatter {
-            clinic_name
-            lat
-            lon
-            address
-            phone
-            fax
-          }
+    practices: allStrapiClinic {
+      nodes {
+        clinic_name
+        location {
+          address
+          lat
+          long
+        }
+        contact {
+          phone
+          fax
         }
       }
     }

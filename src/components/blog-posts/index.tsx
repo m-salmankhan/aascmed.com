@@ -4,14 +4,16 @@ import React from "react";
 import { cols, gridContainer } from "../../styles/grid";
 import { mediaBreakpoints } from "../../styles/breakpoints";
 import { Link } from "gatsby";
-import { colours, gridSpacing } from "../../styles/theme";
+import { bounceTransition, colours, gridSpacing } from "../../styles/theme";
 import Color from "color";
+import { GatsbyImage, IGatsbyImageData } from "gatsby-plugin-image";
 
 export interface BlogSummary {
     slug: string,
     date: string,
     title: string,
     description: string,
+    thumbnail?: IGatsbyImageData,
 }
 
 interface BlogListProps {
@@ -34,6 +36,47 @@ const stylesLi = css(
     cols(4, mediaBreakpoints.lg),
     {
         margin: "1em 0 1em",
+
+        ".thumbnail": {
+            display: "block",
+            width: "100%",
+            height: "15em",
+            borderRadius: "8px",
+            boxShadow: "-0.5em 0.5em 1em rgba(0,0,0,0.1)",
+            overflow: "hidden",
+            position: "relative",
+            marginBottom: `${gridSpacing/2}em`,
+            transform: `scale(1)`,
+            transition: `transform 1s ${bounceTransition} 0s`,
+
+
+            ".gatsby-image-wrapper": {
+                width: "100%",
+                height: "100%",
+            },
+        },
+
+        ".thumbnail::after": {
+            display: "block",
+            content: "''",
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            background: `linear-gradient(to top right, ${Color(colours.brandPrimary).darken(0.3).fade(0.1).toString()}, ${Color(colours.brandSecondary).darken(0.3).fade(0.1).toString()})`,
+            opacity: 0,
+            transition: `opacity 0.5s ease 0s`,
+        },
+        "&:focus-within": {
+            ".thumbnail": {
+                transform: `scale(0.9)`,
+            },
+            ".thumbnail::after": {
+                opacity: 1,
+            }
+        },
+
 
         header: {
             a: {
@@ -71,6 +114,11 @@ export const BlogList: React.FC<BlogListProps> = ({ className, Blogs, frontPage 
                 Blogs.map((post, idx) =>
                     <li key={idx} css={stylesLi}>
                         <article>
+                            {post.thumbnail && (
+                                <Link to={post.slug} className="thumbnail">
+                                    <GatsbyImage alt={post.title} image={post.thumbnail} />
+                                </Link>
+                            )}
                             <header>
                                 <Link to={post.slug}>
                                     <div className={"date"}>{post.date}</div>

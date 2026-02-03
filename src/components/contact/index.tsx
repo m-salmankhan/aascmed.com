@@ -33,13 +33,9 @@ export const ContactForm: React.FC<ContactFormProps> = (props) => {
 
     const data: Queries.ClinicNamesQuery = useStaticQuery(graphql`
     query ClinicNames {
-      allMdx(filter: {fields: {post_type: {eq: "clinics"}}}) {
-        clinics: edges {
-          node {
-            frontmatter {
-              clinic_name
-            }
-          }
+      allStrapiClinic {
+        clinics: nodes {
+          clinic_name
         }
       }
     }`);
@@ -167,8 +163,8 @@ export const ContactForm: React.FC<ContactFormProps> = (props) => {
                     props.clinic === undefined ?
                         <DropdownInput label={"Preferred Location"} name="clinic" defaultValue={"none"} error={fieldErrors?.clinic?.join(". ")}>
                             <option value={"none"} disabled={true}>Select a clinic</option>
-                            {data.allMdx.clinics.map((clinic, idx) =>
-                                <option key={idx} value={clinic.node?.frontmatter?.clinic_name || idx}>{clinic.node?.frontmatter?.clinic_name}</option>
+                            {data.allStrapiClinic.clinics.map((clinic, idx) =>
+                                <option key={idx} value={clinic.clinic_name || idx}>{clinic.clinic_name}</option>
                             )}
                         </DropdownInput> :
                         <input type="hidden" name="clinic" value={props.clinic} />
