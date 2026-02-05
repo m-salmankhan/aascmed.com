@@ -60,7 +60,7 @@ export const StrapiFAQ: React.FC<StrapiFAQProps> = ({ className, questions }) =>
     }
 
     return (
-        <>
+        <section id="faq">
         <H2>Frequently Asked Questions</H2>
 
         <FAQWrapper className={className}>
@@ -75,7 +75,7 @@ export const StrapiFAQ: React.FC<StrapiFAQProps> = ({ className, questions }) =>
                 )
             }
         </FAQWrapper>
-        </>
+        </section>
 
     )
 }

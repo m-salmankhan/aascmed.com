@@ -8,6 +8,8 @@ import { ShareButtons } from "../components/social-media/share";
 import { Article } from "../components/posts/article";
 import { SEO } from "../components/seo";
 import { StrapiDynamicZoneRenderer } from "../components/strapi/blocks-renderer";
+import { Contents } from "../components/posts/contents";
+import { extractTableOfContents } from "../utils/strapi-toc";
 
 const Condition = ({ data, location }: PageProps<Queries.ConditionPageQuery>) => {
     const condition = data.strapiCondition;
@@ -24,7 +26,10 @@ const Condition = ({ data, location }: PageProps<Queries.ConditionPageQuery>) =>
     const rawContent = condition.internal?.content;
     const parsedData = rawContent ? JSON.parse(rawContent) : null;
     const content = parsedData?.content as any[] | undefined;
-    console.log(content)
+    
+    // Extract table of contents from content
+    const tocItems = content ? extractTableOfContents(content) : [];
+
     return (
         <PrimarySecondaryColumnsLayout>
             <main>
@@ -46,7 +51,7 @@ const Condition = ({ data, location }: PageProps<Queries.ConditionPageQuery>) =>
                             </footer>
                         </MainCol>
                         <SideCol>
-                            <></>
+                            <Contents items={tocItems} />
                         </SideCol>
                     </Columns>
                 </Article>
