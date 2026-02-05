@@ -60,15 +60,15 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
   const providersCopy = data.sectionCopy?.childPagesYaml?.providers;
   const providersTitle = providersCopy?.heading || "Meet the team"
   const providersText = providersCopy?.text || "";
-  const providers: ProviderSummary[] = data.providers.edges.map(edge => ({
-    slug: edge.node.fields?.slug || "",
+  const providers: ProviderSummary[] = data.providers.nodes.map(node => ({
+    slug: `/providers/${node.slug}/`,
     name: {
-      fullName: edge.node.frontmatter?.name?.fullname || "",
-      title: edge.node.frontmatter?.name?.title || "",
-      degreeAbbr: edge.node.frontmatter?.name?.degree_abbr || "",
+      fullName: node.name?.fullName || "",
+      title: node.name?.honorific && node.name.honorific !== "None" ? node.name.honorific : "",
+      degreeAbbr: node.name?.qualificationAbbr || "",
     },
-    retired: edge.node.frontmatter?.retirement?.retired || false,
-    image: edge.node.frontmatter?.image?.childImageSharp?.gatsbyImageData,
+    retired: node.retirementNotice?.retired || false,
+    image: node.image?.localFile?.childImageSharp?.gatsbyImageData,
   }));
 
   const avgRating = {
@@ -247,30 +247,23 @@ export const query = graphql`
       }
     }
       
-    providers: allMdx(
-      filter: {fields: {post_type: {eq: "providers"}}}
-      sort: {frontmatter: {order: ASC}}
-    ) {
-      edges {
-        node {
-          id
-          frontmatter {
-            image {
-              childImageSharp {
-                gatsbyImageData(aspectRatio: 1, layout: FULL_WIDTH)
-              }
+    providers: allStrapiProvider(sort: {order: ASC}) {
+      nodes {
+        id
+        slug
+        name {
+          fullName
+          honorific
+          qualificationAbbr
+        }
+        retirementNotice {
+          retired
+        }
+        image {
+          localFile {
+            childImageSharp {
+              gatsbyImageData(aspectRatio: 1, layout: FULL_WIDTH)
             }
-            name {
-              fullname
-              degree_abbr
-              title
-            }
-            retirement {
-              retired
-            }
-          }
-          fields {
-            slug
           }
         }
       }

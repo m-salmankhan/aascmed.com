@@ -7,6 +7,7 @@ import { SectionHeader, stylesBigH1 } from "../components/headings";
 import { ProviderArchive, ProviderSummary } from "../components/providers";
 import { gridSpacing } from "../styles/theme";
 import { SEO } from "../components/seo";
+import { createExcerpt } from "../utils/strapi-excerpt";
 
 const stylesExpandGridPadding = css`
     margin: 0 ${-gridSpacing / 2}em;
@@ -16,18 +17,25 @@ const ProvidersPage = ({ data }: PageProps<Queries.ProvidersPageQuery>) => {
   const pageHeading = data.copy?.childPagesYaml?.heading || "Meet the team";
   const pageText = data.copy?.childPagesYaml?.text || "";
 
-  const providers: ProviderSummary[] = data.providers.edges.map((edge) => ({
-    slug: edge.node.fields?.slug || "",
-    name: {
-      fullName: edge.node.frontmatter?.name?.fullname || "",
-      title: edge.node.frontmatter?.name?.title || "",
-      degree: edge.node.frontmatter?.name?.degree || "",
-      degreeAbbr: edge.node.frontmatter?.name?.degree_abbr || "",
-    },
-    image: edge.node.frontmatter?.image?.childImageSharp?.gatsbyImageData,
-    excerpt: edge.node.excerpt || "",
-    retired: edge.node.frontmatter?.retirement?.retired || false,
-  }));
+  const providers: ProviderSummary[] = data.providers.nodes.map((node) => {
+    // Parse body content from internal.content to create excerpt
+    const rawContent = node.internal?.content;
+    const parsedData = rawContent ? JSON.parse(rawContent) : null;
+    const body = parsedData?.body as any[] | undefined;
+    const excerpt = body ? createExcerpt(body, 600) : "";
+
+    return {
+      slug: `/providers/${node.slug}/`,
+      name: {
+        fullName: node.name?.fullName || "",
+        title: node.name?.honorific && node.name.honorific !== "None" ? node.name.honorific : "",
+        degreeAbbr: node.name?.qualificationAbbr || "",
+      },
+      image: node.image?.localFile?.childImageSharp?.gatsbyImageData,
+      excerpt,
+      retired: node.retirementNotice?.retired || false,
+    };
+  });
 
   return (
     <Layout>
@@ -66,34 +74,27 @@ export const query = graphql`
         text
       }
     }
-    providers: allMdx(
-      filter: {fields: {post_type: {eq: "providers"}}}
-      sort: {frontmatter: {order: ASC}}
-    ) {
-      edges {
-        node {
-          id
-          frontmatter {
-            image {
-              childImageSharp {
-                gatsbyImageData(aspectRatio: 1, layout: FULL_WIDTH)
-              }
-            }
-            name {
-              fullname
-              title
-              degree
-              degree_abbr
-            }
-            retirement {
-              retired
-              retired_notice_text
+    providers: allStrapiProvider(sort: {order: ASC}) {
+      nodes {
+        id
+        slug
+        internal {
+          content
+        }
+        name {
+          fullName
+          honorific
+          qualificationAbbr
+        }
+        retirementNotice {
+          retired
+        }
+        image {
+          localFile {
+            childImageSharp {
+              gatsbyImageData(aspectRatio: 1, layout: FULL_WIDTH)
             }
           }
-          fields {
-            slug
-          }
-          excerpt(pruneLength: 500)
         }
       }
     }
