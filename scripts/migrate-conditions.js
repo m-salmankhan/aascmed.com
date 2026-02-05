@@ -162,11 +162,49 @@ function markdownToBlocks(markdown) {
       continue;
     }
     
-    // Skip import statements and JSX components
-    if (line.startsWith('import ') || line.startsWith('<') || line.startsWith('export ')) {
+    // Skip import statements and export statements
+    if (line.startsWith('import ') || line.startsWith('export ')) {
       continue;
     }
     
+    // Handle JSX shortcode components - return them as special markers
+    if (line.trim().startsWith('<ButtonList')) {
+      // Flush current paragraph first
+      if (currentParagraph.length > 0) {
+        const paragraphText = currentParagraph.join(' ').trim();
+        if (paragraphText) {
+          blocks.push({
+            type: 'paragraph',
+            children: parseInlineText(paragraphText)
+          });
+        }
+        currentParagraph = [];
+      }
+      blocks.push({ type: '__shortcode__', name: 'ButtonList' });
+      continue;
+    }
+    
+    if (line.trim().startsWith('<ContactBanner')) {
+      // Flush current paragraph first
+      if (currentParagraph.length > 0) {
+        const paragraphText = currentParagraph.join(' ').trim();
+        if (paragraphText) {
+          blocks.push({
+            type: 'paragraph',
+            children: parseInlineText(paragraphText)
+          });
+        }
+        currentParagraph = [];
+      }
+      blocks.push({ type: '__shortcode__', name: 'ContactBanner' });
+      continue;
+    }
+    
+    // Skip other JSX components
+    if (line.trim().startsWith('<') && !line.trim().startsWith('</')) {
+      continue;
+    }
+
     // Headings (h1-h6)
     const headingMatch = line.match(/^(#{1,6})\s+(.+)$/);
     if (headingMatch) {
@@ -347,28 +385,53 @@ function answerToBlocks(answerText) {
 function convertConditionToStrapi(frontmatter, content, filename) {
   const blocks = markdownToBlocks(content);
   
-  // Build content array with rich text first, then FAQ
-  const contentArray = [];
+  // Filter out "Frequently Asked Questions" heading since the FAQ component includes it
+  const filteredBlocks = blocks.filter(block => {
+    if (block.type === 'heading') {
+      const headingText = block.children?.[0]?.text?.toLowerCase() || '';
+      if (headingText.includes('frequently asked questions') || headingText === 'faq') {
+        return false;
+      }
+    }
+    return true;
+  });
   
-  // Add rich text content first
-  if (blocks.length > 0) {
+  // Build content array by processing blocks and inserting components at shortcode positions
+  const contentArray = [];
+  let currentRichTextBlocks = [];
+  
+  for (const block of filteredBlocks) {
+    if (block.type === '__shortcode__') {
+      // Flush current rich text blocks before adding component
+      if (currentRichTextBlocks.length > 0) {
+        contentArray.push({
+          __component: 'generic.rich-text',
+          text: currentRichTextBlocks
+        });
+        currentRichTextBlocks = [];
+      }
+      
+      // Add the appropriate component
+      if (block.name === 'ButtonList') {
+        contentArray.push({
+          __component: 'generic.faq-contact-book-buttons'
+        });
+      } else if (block.name === 'ContactBanner') {
+        contentArray.push({
+          __component: 'generic.contact-booking-cta'
+        });
+      }
+    } else {
+      // Regular block - add to current rich text section
+      currentRichTextBlocks.push(block);
+    }
+  }
+  
+  // Flush remaining rich text blocks
+  if (currentRichTextBlocks.length > 0) {
     contentArray.push({
       __component: 'generic.rich-text',
-      text: blocks
-    });
-  }
-  
-  // Add FAQ/Contact/Book Buttons if ButtonList was used in original content
-  if (content.includes('<ButtonList')) {
-    contentArray.push({
-      __component: 'generic.faq-contact-book-buttons'
-    });
-  }
-  
-  // Add Contact/Booking CTA if ContactBanner was used in original content
-  if (content.includes('<ContactBanner')) {
-    contentArray.push({
-      __component: 'generic.contact-booking-cta'
+      text: currentRichTextBlocks
     });
   }
   
