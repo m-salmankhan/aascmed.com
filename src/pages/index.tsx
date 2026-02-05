@@ -28,10 +28,10 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
   const conditionsCopy = data.sectionCopy?.childPagesYaml?.conditions;
   const conditionsTitle = conditionsCopy?.heading || "Learn more about the conditions we treat."
   const conditionsText = conditionsCopy?.text || "";
-  const conditions: ConditionSummary[] = data.conditions.edges.map(edge => ({
-    slug: edge.node.fields?.slug || "",
-    title: edge.node.frontmatter?.heading || "",
-    thumbnail: edge.node.frontmatter?.thumbnail?.childImageSharp?.gatsbyImageData,
+  const conditions: ConditionSummary[] = data.conditions.nodes.map(node => ({
+    slug: `/conditions/${node.slug}/`,
+    title: node.heading || node.title || "",
+    thumbnail: node.thumbnail?.localFile?.childImageSharp?.gatsbyImageData,
   }));
 
   const serviceUpdatesCopy = data.sectionCopy?.childPagesYaml?.service_updates;
@@ -205,23 +205,16 @@ export const query = graphql`
         title
       }
     }
-    conditions: allMdx(
-      filter: {fields: {post_type: {eq: "conditions"}}},
-      sort: {frontmatter: {order: ASC}}
-      limit: 8
-     ) {
-      edges {
-        node {
-          fields {
-            slug
-          }
-          frontmatter {
-            thumbnail {
-              childImageSharp {
-                gatsbyImageData(width: 800)
-              }
+    conditions: allStrapiCondition(sort: {order: ASC}, limit: 8) {
+      nodes {
+        slug
+        title
+        heading
+        thumbnail {
+          localFile {
+            childImageSharp {
+              gatsbyImageData(width: 800)
             }
-            heading
           }
         }
       }

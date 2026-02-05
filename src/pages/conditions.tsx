@@ -12,10 +12,10 @@ const ConditionsPage = ({ data }: PageProps<Queries.ConditionsArchiveQuery>) => 
   const heading = data.copy?.childPagesYaml?.heading || "Conditions";
   const text = data.copy?.childPagesYaml?.text || "";
 
-  const conditions: ConditionSummary[] = data.conditions.edges.map(edge => ({
-    slug: edge.node.fields?.slug || "",
-    title: edge.node.frontmatter?.heading || "untitled",
-    thumbnail: edge.node.frontmatter?.thumbnail?.childImageSharp?.gatsbyImageData,
+  const conditions: ConditionSummary[] = data.conditions.nodes.map(node => ({
+    slug: `/conditions/${node.slug}/`,
+    title: node.heading || node.title || "untitled",
+    thumbnail: node.thumbnail?.localFile?.childImageSharp?.gatsbyImageData,
   }));
 
   return (
@@ -62,22 +62,16 @@ export const query = graphql`
       }
     }
 
-    conditions: allMdx(
-      filter: {fields: {post_type: {eq: "conditions"}}},
-      sort: {frontmatter: {order: ASC}}
-     ) {
-      edges {
-        node {
-          fields {
-            slug
-          }
-          frontmatter {
-            thumbnail {
-              childImageSharp {
-                gatsbyImageData(width: 800)
-              }
+    conditions: allStrapiCondition(sort: {order: ASC}) {
+      nodes {
+        slug
+        title
+        heading
+        thumbnail {
+          localFile {
+            childImageSharp {
+              gatsbyImageData(width: 800)
             }
-            heading
           }
         }
       }
