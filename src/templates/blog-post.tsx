@@ -117,7 +117,6 @@ const BlogPost = ({ data, location }: PageProps<Queries.BlogPostQuery>) => {
     // Parse raw JSON content to get full rich text data with all formatting
     const rawContent = blog.internal?.content;
     const parsedData = rawContent ? JSON.parse(rawContent) : null;
-    console.log(parsedData)
     const content = parsedData?.content as any[] | undefined;
     
     // Extract table of contents from content
