@@ -344,14 +344,36 @@ function answerToBlocks(answerText) {
 }
 
 // Convert MDX condition data to Strapi format
-function convertConditionToStrapi(frontmatter, content) {
+function convertConditionToStrapi(frontmatter, content, filename) {
   const blocks = markdownToBlocks(content);
   
-  // Build content array with FAQ and rich text
+  // Build content array with rich text first, then FAQ
   const contentArray = [];
   
-  // Add FAQ component if it exists
-  if (frontmatter.faq && Array.isArray(frontmatter.faq) && frontmatter.faq.length > 0) {
+  // Add rich text content first
+  if (blocks.length > 0) {
+    contentArray.push({
+      __component: 'generic.rich-text',
+      text: blocks
+    });
+  }
+  
+  // Add FAQ/Contact/Book Buttons if ButtonList was used in original content
+  if (content.includes('<ButtonList')) {
+    contentArray.push({
+      __component: 'generic.faq-contact-book-buttons'
+    });
+  }
+  
+  // Add Contact/Booking CTA if ContactBanner was used in original content
+  if (content.includes('<ContactBanner')) {
+    contentArray.push({
+      __component: 'generic.contact-booking-cta'
+    });
+  }
+  
+  // Add FAQ component at the end if it exists (skip if SKIP_FAQ env var is set)
+  if (!process.env.SKIP_FAQ && frontmatter.faq && Array.isArray(frontmatter.faq) && frontmatter.faq.length > 0) {
     contentArray.push({
       __component: 'generic.faq',
       questions: frontmatter.faq.map(item => ({
@@ -361,17 +383,13 @@ function convertConditionToStrapi(frontmatter, content) {
     });
   }
   
-  // Add rich text content
-  if (blocks.length > 0) {
-    contentArray.push({
-      __component: 'generic.rich-text',
-      text: blocks
-    });
-  }
+  // Use filename (without extension) as the slug
+  const slug = filename.replace(/\.mdx$/, '');
   
   return {
     title: frontmatter.title,
     heading: frontmatter.heading || frontmatter.title,
+    slug: slug,
     order: frontmatter.order || 0,
     description: frontmatter.description,
     content: contentArray
@@ -388,6 +406,12 @@ function getThumbnailPath(thumbnail) {
 }
 
 async function createCondition(conditionData) {
+  // Debug: write full data to file for inspection
+  if (process.env.DEBUG) {
+    fs.writeFileSync('debug-condition-data.json', JSON.stringify({ data: conditionData }, null, 2));
+    console.log('  - Debug data written to debug-condition-data.json');
+  }
+  
   const response = await fetch(`${STRAPI_URL}/api/conditions`, {
     method: 'POST',
     headers: {
@@ -465,8 +489,8 @@ async function main() {
     console.log(`Processing: ${frontmatter.title}`);
     
     try {
-      const strapiData = convertConditionToStrapi(frontmatter, content);
-      console.log(`  - Converted to Strapi format`);
+      const strapiData = convertConditionToStrapi(frontmatter, content, file);
+      console.log(`  - Converted to Strapi format (slug: ${strapiData.slug})`);
       
       // Create the condition entry
       const result = await createCondition(strapiData);
