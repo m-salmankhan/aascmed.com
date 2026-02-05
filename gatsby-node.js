@@ -112,39 +112,6 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
 
     const result = await graphql(`
       query {
-        conditions: allMdx(filter: {fields: {post_type: {eq: "conditions"}}}) {
-          nodes {
-            id
-            fields {
-              slug
-            }
-            internal {
-               contentFilePath
-            }
-          }
-        }
-        serviceUpdates: allMdx(filter: {fields: {post_type: {eq: "service-update"}}}) {
-          nodes {
-            id
-            fields {
-              slug
-            }
-            internal {
-               contentFilePath
-            }
-          }
-        }
-        blogPosts: allMdx(filter: {fields: {post_type: {eq: "blog-post"}}}) {
-          nodes {
-            id
-            fields {
-              slug
-            }
-            internal {
-               contentFilePath
-            }
-          }
-        }
         strapiBlogPosts: allStrapiBlog {
           nodes {
             id
@@ -161,6 +128,13 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
           nodes {
             id
             slug
+          }
+        }
+        strapiServiceUpdates: allStrapiServiceUpdate {
+          nodes {
+            id
+            slug
+            date
           }
         }
         clinics: allStrapiClinic {
@@ -200,8 +174,8 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
     if (result.errors) {
         reporter.panicOnBuild('🚨  ERROR: Loading "createPages" query')
     }
-    const serviceUpdates = result.data.serviceUpdates.nodes;
     const strapiProviders = result.data.strapiProviders.nodes;
+    const strapiServiceUpdates = result.data.strapiServiceUpdates.nodes;
     const clinics = result.data.clinics.nodes;
     const strapiBlogPosts = result.data.strapiBlogPosts.nodes;
     const strapiConditions = result.data.strapiConditions.nodes;
@@ -230,10 +204,13 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
         });
     });
 
-    serviceUpdates.forEach((node) => {
+    // Create pages from Strapi service updates
+    strapiServiceUpdates.forEach((node) => {
+        const date = moment(node.date);
+        const slug = `/service-updates/${date.format('YYYY')}/${date.format('MM')}/${node.slug}/`;
         createPage({
-            path: node.fields.slug,
-            component: `${path.resolve(`./src/templates/service-update.tsx`)}?__contentFilePath=${node.internal.contentFilePath}`,
+            path: slug,
+            component: path.resolve(`./src/templates/service-update.tsx`),
             context: {
                 id: node.id,
                 template: 'service-update',

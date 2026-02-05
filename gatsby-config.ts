@@ -117,6 +117,12 @@ const config: GatsbyConfig = {
                         queryParams: {
                             populate: ['image', 'name', 'body', 'body.text', 'review', 'retirementNotice']
                         }
+                    },
+                    {
+                        singularName: 'service-update',
+                        queryParams: {
+                            populate: '*'
+                        }
                     }
                 ],
                 singleTypes: [],

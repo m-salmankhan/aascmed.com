@@ -37,12 +37,21 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
   const serviceUpdatesCopy = data.sectionCopy?.childPagesYaml?.service_updates;
   const serviceUpdatesTitle = serviceUpdatesCopy?.heading || "Service Updates"
   const serviceUpdatesText = serviceUpdatesCopy?.text || "";
-  const serviceUpdates: ServiceUpdateSummary[] = data.serviceUpdates.edges.map(edge => ({
-    slug: edge.node.fields?.slug || "",
-    title: edge.node.frontmatter?.title || "",
-    date: edge.node.frontmatter?.date || "",
-    description: edge.node.frontmatter?.description || "",
-  }));
+  const serviceUpdates: ServiceUpdateSummary[] = data.serviceUpdates.nodes.map(node => {
+    const date = node.date ? new Date(node.date) : null;
+    const year = date ? date.getFullYear() : '';
+    const month = date ? String(date.getMonth() + 1).padStart(2, '0') : '';
+    const slug = date 
+      ? `/service-updates/${year}/${month}/${node.slug}/`
+      : `/service-updates/${node.slug}/`;
+    
+    return {
+      slug,
+      title: node.title || "",
+      date: node.formattedDate || "",
+      description: node.description || "",
+    };
+  });
 
 
   const blogsCopy = data.sectionCopy?.childPagesYaml?.blog_posts;
@@ -219,22 +228,13 @@ export const query = graphql`
         }
       }
     }
-    serviceUpdates: allMdx(
-      filter: {fields: {post_type: {eq: "service-update"}}}
-      sort: {frontmatter: {date: DESC}}
-      limit: 3
-    ) {
-      edges {
-        node {
-          fields {
-            slug
-          }
-          frontmatter {
-            date(formatString: "Do MMMM YYYY")
-            title
-            description
-          }
-        }
+    serviceUpdates: allStrapiServiceUpdate(sort: {date: DESC}, limit: 3) {
+      nodes {
+        slug
+        title
+        description
+        date
+        formattedDate: date(formatString: "Do MMMM YYYY")
       }
     }
 
