@@ -29,6 +29,10 @@ const stylesSideNotice = css(
       > div {
         padding: 1em;
       }
+      
+      strong {
+        color: #fff;
+      }
     `
 );
 
