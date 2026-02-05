@@ -1,7 +1,7 @@
 import React from "react";
 import { BlocksRenderer, type BlocksContent } from "@strapi/blocks-react-renderer";
 import { DynamicHeading } from "../headings";
-import { ContactBanner } from "../posts/shortcode-components";
+import { ContactBanner, ButtonList } from "../posts/shortcode-components";
 import { StrapiFAQ } from "./faq";
 
 // Helper to convert text to URL-friendly slug
@@ -131,20 +131,28 @@ export const StrapiDynamicZoneRenderer: React.FC<StrapiDynamicZoneRendererProps>
     return (
         <div className={className}>
             {content.map((component, index) => {
+                // Get component type - handle both raw Strapi data (__component) and Gatsby transformed data (strapi_component)
+                const componentType = component.__component || component.strapi_component;
+                
                 // Handle rich text component
-                if (component.strapi_component === 'generic.rich-text' && component.text) {
+                if (componentType === 'generic.rich-text' && component.text) {
                     return (
                         <StrapiBlocksRenderer key={index} content={component.text} />
                     );
                 }
                 
                 // Handle contact booking CTA component
-                if (component.strapi_component === 'generic.contact-booking-cta') {
+                if (componentType === 'generic.contact-booking-cta') {
                     return <ContactBanner key={index} />;
                 }
                 
+                // Handle FAQ/Contact/Book Buttons component
+                if (componentType === 'generic.faq-contact-book-buttons') {
+                    return <ButtonList key={index} />;
+                }
+                
                 // Handle FAQ component
-                if (component.strapi_component === 'generic.faq' && component.questions) {
+                if (componentType === 'generic.faq' && component.questions) {
                     return <StrapiFAQ key={index} questions={component.questions} />;
                 }
 
