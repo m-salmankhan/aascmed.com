@@ -111,6 +111,12 @@ const config: GatsbyConfig = {
                         queryParams: {
                             populate: ['thumbnail', 'content', 'content.questions', 'content.text']
                         }
+                    },
+                    {
+                        singularName: 'provider',
+                        queryParams: {
+                            populate: ['image', 'name', 'body', 'body.text', 'review', 'retirementNotice']
+                        }
                     }
                 ],
                 singleTypes: [],

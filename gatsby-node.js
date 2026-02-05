@@ -157,15 +157,10 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
             slug
           }
         }
-        providers: allMdx(filter: {fields: {post_type: {eq: "providers"}}}) {
+        strapiProviders: allStrapiProvider {
           nodes {
             id
-            fields {
-              slug
-            }
-            internal {
-               contentFilePath
-            }
+            slug
           }
         }
         clinics: allStrapiClinic {
@@ -206,7 +201,7 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
         reporter.panicOnBuild('🚨  ERROR: Loading "createPages" query')
     }
     const serviceUpdates = result.data.serviceUpdates.nodes;
-    const providers = result.data.providers.nodes;
+    const strapiProviders = result.data.strapiProviders.nodes;
     const clinics = result.data.clinics.nodes;
     const strapiBlogPosts = result.data.strapiBlogPosts.nodes;
     const strapiConditions = result.data.strapiConditions.nodes;
@@ -223,6 +218,18 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
         });
     });
 
+    // Create pages from Strapi providers
+    strapiProviders.forEach((node) => {
+        createPage({
+            path: `/providers/${node.slug}/`,
+            component: path.resolve(`./src/templates/provider.tsx`),
+            context: {
+                id: node.id,
+                template: 'provider',
+            }
+        });
+    });
+
     serviceUpdates.forEach((node) => {
         createPage({
             path: node.fields.slug,
@@ -230,17 +237,6 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
             context: {
                 id: node.id,
                 template: 'service-update',
-            }
-        });
-    });
-
-    providers.forEach((node) => {
-        createPage({
-            path: node.fields.slug,
-            component: `${path.resolve(`./src/templates/provider.tsx`)}?__contentFilePath=${node.internal.contentFilePath}`,
-            context: {
-                id: node.id,
-                template: 'provider',
             }
         });
     });
