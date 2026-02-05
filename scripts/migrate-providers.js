@@ -13,13 +13,33 @@ if (!STRAPI_TOKEN) {
   process.exit(1);
 }
 
-const conditionsDir = path.join(__dirname, '../content/conditions');
+const providersDir = path.join(__dirname, '../content/providers');
 
 // Track uploaded images to avoid duplicates
 const uploadedImages = new Map(); // filename -> strapi media id
 
+// Map MDX title to Strapi honorific enum
+function mapHonorific(title) {
+  if (!title) return 'None';
+  const normalized = title.toLowerCase().replace(/\./g, '');
+  switch (normalized) {
+    case 'dr':
+      return 'Dr.';
+    case 'prof':
+      return 'Prof.';
+    case 'mr':
+      return 'Mr.';
+    case 'mrs':
+      return 'Mrs.';
+    case 'mx':
+      return 'Mx.';
+    default:
+      return 'None';
+  }
+}
+
 // Upload an image to Strapi with folder organization
-async function uploadImage(imagePath, folderName = 'conditions') {
+async function uploadImage(imagePath, folderName = 'providers') {
   const filename = path.basename(imagePath);
   
   // Check if already uploaded
@@ -71,17 +91,22 @@ function parseInlineText(text) {
     const linkMatch = remaining.match(/\[([^\]]+)\]\(([^)]+)\)/);
     // Check for bold: **text**
     const boldMatch = remaining.match(/\*\*([^*]+)\*\*/);
+    // Check for italic: *text* or _text_
+    const italicMatch = remaining.match(/(?<!\*)\*([^*]+)\*(?!\*)|_([^_]+)_/);
     
     // Find which comes first
     let firstMatch = null;
     let matchType = null;
     
-    if (linkMatch && (!boldMatch || linkMatch.index < boldMatch.index)) {
+    if (linkMatch && (!boldMatch || linkMatch.index < boldMatch.index) && (!italicMatch || linkMatch.index < italicMatch.index)) {
       firstMatch = linkMatch;
       matchType = 'link';
-    } else if (boldMatch) {
+    } else if (boldMatch && (!italicMatch || boldMatch.index < italicMatch.index)) {
       firstMatch = boldMatch;
       matchType = 'bold';
+    } else if (italicMatch) {
+      firstMatch = italicMatch;
+      matchType = 'italic';
     }
     
     if (!firstMatch) {
@@ -109,6 +134,9 @@ function parseInlineText(text) {
       });
     } else if (matchType === 'bold') {
       children.push({ type: 'text', text: firstMatch[1], bold: true });
+    } else if (matchType === 'italic') {
+      const italicText = firstMatch[1] || firstMatch[2];
+      children.push({ type: 'text', text: italicText, italic: true });
     }
     
     // Continue with remaining text
@@ -357,56 +385,109 @@ function markdownToBlocks(markdown) {
   return blocks;
 }
 
-// Convert answer text to Strapi blocks format
-function answerToBlocks(answerText) {
+// Parse review text to extract structured data
+function parseReview(reviewText) {
+  if (!reviewText || !reviewText.trim() || reviewText.trim() === '') {
+    return null;
+  }
+  
+  // The review format is typically:
+  // Review text...
+  // 
+  // Reviewer Name — Date
+  // 
+  // (Read more reviews on [zocdoc.com](url))
+  
+  const lines = reviewText.trim().split('\n').filter(l => l.trim());
+  
+  if (lines.length === 0) {
+    return null;
+  }
+  
+  // Find the attribution line (contains — or -)
+  let reviewLines = [];
+  let attribution = '';
+  let moreReviewsText = '';
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    
+    // Check for "Read more reviews" line
+    if (line.startsWith('(Read more')) {
+      moreReviewsText = line;
+      continue;
+    }
+    
+    // Check for attribution line (Name — Date or Name - Date)
+    if (line.includes('—') || (line.includes(' - ') && !line.startsWith('['))) {
+      attribution = line;
+      continue;
+    }
+    
+    // Regular review text
+    if (line) {
+      reviewLines.push(line);
+    }
+  }
+  
+  const reviewBody = reviewLines.join(' ').trim();
+  
+  if (!reviewBody) {
+    return null;
+  }
+  
+  // Build the full review text with attribution
+  let fullText = reviewBody;
+  if (attribution) {
+    fullText += '\n\n' + attribution;
+  }
+  if (moreReviewsText) {
+    fullText += '\n\n' + moreReviewsText;
+  }
+  
+  // Convert to Strapi blocks format
   const blocks = [];
   
-  if (!answerText || typeof answerText !== 'string') {
-    return [{ type: 'paragraph', children: [{ type: 'text', text: '' }] }];
-  }
-  
-  // Split by double newlines for paragraphs
-  const paragraphs = answerText.split(/\n\n+/).filter(p => p.trim());
-  
-  for (const paragraph of paragraphs) {
-    const lines = paragraph.trim().split('\n');
-    const joinedText = lines.join(' ').trim();
-    
-    if (joinedText) {
-      blocks.push({
-        type: 'paragraph',
-        children: parseInlineText(joinedText)
-      });
-    }
-  }
-  
-  return blocks.length > 0 ? blocks : [{ type: 'paragraph', children: [{ type: 'text', text: '' }] }];
-}
-
-// Convert MDX condition data to Strapi format
-function convertConditionToStrapi(frontmatter, content, filename) {
-  const blocks = markdownToBlocks(content);
-  
-  // Filter out "Frequently Asked Questions" heading since the FAQ component includes it
-  const filteredBlocks = blocks.filter(block => {
-    if (block.type === 'heading') {
-      const headingText = block.children?.[0]?.text?.toLowerCase() || '';
-      if (headingText.includes('frequently asked questions') || headingText === 'faq') {
-        return false;
-      }
-    }
-    return true;
+  // Add the review body as a paragraph
+  blocks.push({
+    type: 'paragraph',
+    children: parseInlineText(reviewBody)
   });
   
-  // Build content array by processing blocks and inserting components at shortcode positions
-  const contentArray = [];
+  // Add attribution if exists
+  if (attribution) {
+    blocks.push({
+      type: 'paragraph',
+      children: [{ type: 'text', text: attribution, italic: true }]
+    });
+  }
+  
+  // Add "Read more" link if exists
+  if (moreReviewsText) {
+    blocks.push({
+      type: 'paragraph',
+      children: parseInlineText(moreReviewsText)
+    });
+  }
+  
+  return {
+    text: blocks
+  };
+}
+
+// Convert MDX provider data to Strapi format
+function convertProviderToStrapi(frontmatter, content, filename) {
+  const blocks = markdownToBlocks(content);
+  
+  // Build body array by processing blocks and inserting components at shortcode positions
+  const bodyArray = [];
   let currentRichTextBlocks = [];
   
-  for (const block of filteredBlocks) {
+  for (const block of blocks) {
     if (block.type === '__shortcode__') {
       // Flush current rich text blocks before adding component
       if (currentRichTextBlocks.length > 0) {
-        contentArray.push({
+        bodyArray.push({
           __component: 'generic.rich-text',
           text: currentRichTextBlocks
         });
@@ -415,11 +496,11 @@ function convertConditionToStrapi(frontmatter, content, filename) {
       
       // Add the appropriate component
       if (block.name === 'ButtonList') {
-        contentArray.push({
+        bodyArray.push({
           __component: 'generic.faq-contact-book-buttons'
         });
       } else if (block.name === 'ContactBanner') {
-        contentArray.push({
+        bodyArray.push({
           __component: 'generic.contact-booking-cta'
         });
       }
@@ -431,71 +512,85 @@ function convertConditionToStrapi(frontmatter, content, filename) {
   
   // Flush remaining rich text blocks
   if (currentRichTextBlocks.length > 0) {
-    contentArray.push({
+    bodyArray.push({
       __component: 'generic.rich-text',
       text: currentRichTextBlocks
-    });
-  }
-  
-  // Add FAQ component at the end if it exists (skip if SKIP_FAQ env var is set)
-  if (!process.env.SKIP_FAQ && frontmatter.faq && Array.isArray(frontmatter.faq) && frontmatter.faq.length > 0) {
-    contentArray.push({
-      __component: 'generic.faq',
-      questions: frontmatter.faq.map(item => ({
-        question: item.question,
-        answer: answerToBlocks(item.answer)
-      }))
     });
   }
   
   // Use filename (without extension) as the slug
   const slug = filename.replace(/\.mdx$/, '');
   
-  return {
-    title: frontmatter.title,
-    heading: frontmatter.heading || frontmatter.title,
+  // Build the provider data
+  const providerData = {
     slug: slug,
-    order: frontmatter.order || 0,
-    description: frontmatter.description,
-    content: contentArray
+    description: frontmatter.description || '',
+    order: frontmatter.order ?? 5,
+    name: {
+      fullName: frontmatter.name?.fullname || frontmatter.title || '',
+      qualificationLong: frontmatter.name?.degree || '',
+      qualificationAbbr: frontmatter.name?.['degree-abbr'] || frontmatter.name?.degree_abbr || '',
+      honorific: mapHonorific(frontmatter.name?.title)
+    },
+    body: bodyArray
   };
-}
-
-// Extract thumbnail path from frontmatter
-function getThumbnailPath(thumbnail) {
-  if (!thumbnail) return null;
   
-  // Handle different path formats
-  // e.g., "food-chemical-insects.jpg"
-  return path.join(conditionsDir, thumbnail);
-}
-
-async function createCondition(conditionData) {
-  // Debug: write full data to file for inspection
-  if (process.env.DEBUG) {
-    fs.writeFileSync('debug-condition-data.json', JSON.stringify({ data: conditionData }, null, 2));
-    console.log('  - Debug data written to debug-condition-data.json');
+  // Add review if exists and has content
+  const review = parseReview(frontmatter.review);
+  if (review) {
+    // Skip reviews for now - they're out of date
+    // providerData.review = review;
   }
   
-  const response = await fetch(`${STRAPI_URL}/api/conditions`, {
+  // Add retirement notice if exists
+  if (frontmatter.retirement) {
+    // Parse the retired-notice-text which may contain markdown links
+    let noticeText = frontmatter.retirement['retired-notice-text'] || frontmatter.retirement.retired_notice_text || '';
+    
+    providerData.retirementNotice = {
+      retired: frontmatter.retirement.retired || false,
+      text: noticeText ? [{
+        type: 'paragraph',
+        children: parseInlineText(noticeText)
+      }] : []
+    };
+  }
+  
+  return providerData;
+}
+
+// Get image path from frontmatter
+function getImagePath(image) {
+  if (!image) return null;
+  return path.join(providersDir, image);
+}
+
+async function createProvider(providerData) {
+  // Debug: write full data to file for inspection
+  if (process.env.DEBUG) {
+    fs.writeFileSync('debug-provider-data.json', JSON.stringify({ data: providerData }, null, 2));
+    console.log('  - Debug data written to debug-provider-data.json');
+  }
+  
+  const response = await fetch(`${STRAPI_URL}/api/providers`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${STRAPI_TOKEN}`
     },
-    body: JSON.stringify({ data: conditionData })
+    body: JSON.stringify({ data: providerData })
   });
   
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`Failed to create condition: ${response.status} - ${error}`);
+    throw new Error(`Failed to create provider: ${response.status} - ${error}`);
   }
   
   return response.json();
 }
 
-async function updateConditionThumbnail(documentId, mediaId) {
-  const response = await fetch(`${STRAPI_URL}/api/conditions/${documentId}`, {
+async function updateProviderImage(documentId, mediaId) {
+  const response = await fetch(`${STRAPI_URL}/api/providers/${documentId}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -503,21 +598,21 @@ async function updateConditionThumbnail(documentId, mediaId) {
     },
     body: JSON.stringify({ 
       data: { 
-        thumbnail: mediaId
+        image: mediaId
       } 
     })
   });
   
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`Failed to update thumbnail: ${response.status} - ${error}`);
+    throw new Error(`Failed to update image: ${response.status} - ${error}`);
   }
   
   return response.json();
 }
 
-async function publishCondition(documentId) {
-  const response = await fetch(`${STRAPI_URL}/api/conditions/${documentId}`, {
+async function publishProvider(documentId) {
+  const response = await fetch(`${STRAPI_URL}/api/providers/${documentId}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -532,53 +627,53 @@ async function publishCondition(documentId) {
   
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`Failed to publish condition: ${response.status} - ${error}`);
+    throw new Error(`Failed to publish provider: ${response.status} - ${error}`);
   }
   
   return response.json();
 }
 
 async function main() {
-  const files = fs.readdirSync(conditionsDir).filter(f => f.endsWith('.mdx'));
+  const files = fs.readdirSync(providersDir).filter(f => f.endsWith('.mdx'));
   
-  console.log(`Found ${files.length} condition files to migrate\n`);
+  console.log(`Found ${files.length} provider files to migrate\n`);
   
   let successCount = 0;
   let errorCount = 0;
   
   for (const file of files) {
-    const filePath = path.join(conditionsDir, file);
+    const filePath = path.join(providersDir, file);
     const fileContent = fs.readFileSync(filePath, 'utf-8');
     const { data: frontmatter, content } = matter(fileContent);
     
-    console.log(`Processing: ${frontmatter.title}`);
+    console.log(`Processing: ${frontmatter.title || frontmatter.name?.fullname}`);
     
     try {
-      const strapiData = convertConditionToStrapi(frontmatter, content, file);
+      const strapiData = convertProviderToStrapi(frontmatter, content, file);
       console.log(`  - Converted to Strapi format (slug: ${strapiData.slug})`);
       
-      // Create the condition entry
-      const result = await createCondition(strapiData);
+      // Create the provider entry
+      const result = await createProvider(strapiData);
       const documentId = result.data.documentId;
       console.log(`  - Created in Strapi (ID: ${result.data.id})`);
       
-      // Upload and attach thumbnail if it exists
-      if (frontmatter.thumbnail) {
-        const thumbnailPath = getThumbnailPath(frontmatter.thumbnail);
-        if (thumbnailPath && fs.existsSync(thumbnailPath)) {
-          console.log(`  - Uploading thumbnail: ${path.basename(thumbnailPath)}`);
-          const mediaId = await uploadImage(thumbnailPath, 'conditions');
+      // Upload and attach image if it exists
+      if (frontmatter.image) {
+        const imagePath = getImagePath(frontmatter.image);
+        if (imagePath && fs.existsSync(imagePath)) {
+          console.log(`  - Uploading image: ${path.basename(imagePath)}`);
+          const mediaId = await uploadImage(imagePath, 'providers');
           if (mediaId) {
-            await updateConditionThumbnail(documentId, mediaId);
-            console.log(`  - Thumbnail attached`);
+            await updateProviderImage(documentId, mediaId);
+            console.log(`  - Image attached`);
           }
         } else {
-          console.log(`  - Thumbnail not found: ${frontmatter.thumbnail}`);
+          console.log(`  - Image not found: ${frontmatter.image}`);
         }
       }
       
-      // Publish the condition
-      await publishCondition(documentId);
+      // Publish the provider
+      await publishProvider(documentId);
       console.log(`  - Published`);
       
       console.log(`  ✓ Done\n`);
