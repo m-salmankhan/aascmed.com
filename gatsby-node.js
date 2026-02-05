@@ -151,6 +151,12 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
             slug
           }
         }
+        strapiConditions: allStrapiCondition {
+          nodes {
+            id
+            slug
+          }
+        }
         providers: allMdx(filter: {fields: {post_type: {eq: "providers"}}}) {
           nodes {
             id
@@ -199,18 +205,20 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
     if (result.errors) {
         reporter.panicOnBuild('🚨  ERROR: Loading "createPages" query')
     }
-    const conditions = result.data.conditions.nodes;
     const serviceUpdates = result.data.serviceUpdates.nodes;
     const providers = result.data.providers.nodes;
     const clinics = result.data.clinics.nodes;
     const strapiBlogPosts = result.data.strapiBlogPosts.nodes;
+    const strapiConditions = result.data.strapiConditions.nodes;
 
-    conditions.forEach((node) => {
+    // Create pages from Strapi conditions
+    strapiConditions.forEach((node) => {
         createPage({
-            path: node.fields.slug,
-            component: `${path.resolve(`./src/templates/condition.tsx`)}?__contentFilePath=${node.internal.contentFilePath}`,
+            path: `/conditions/${node.slug}/`,
+            component: path.resolve(`./src/templates/condition.tsx`),
             context: {
                 id: node.id,
+                template: 'condition',
             }
         });
     });

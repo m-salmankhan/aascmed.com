@@ -105,6 +105,12 @@ const config: GatsbyConfig = {
                                 contact: "*",
                             }
                         }
+                    },
+                    {
+                        singularName: 'condition',
+                        queryParams: {
+                            populate: ['thumbnail', 'content', 'content.questions', 'content.text']
+                        }
                     }
                 ],
                 singleTypes: [],

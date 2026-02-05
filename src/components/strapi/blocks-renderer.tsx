@@ -1,6 +1,8 @@
 import React from "react";
 import { BlocksRenderer, type BlocksContent } from "@strapi/blocks-react-renderer";
 import { DynamicHeading } from "../headings";
+import { ContactBanner } from "../posts/shortcode-components";
+import { StrapiFAQ } from "./faq";
 
 // Helper to convert text to URL-friendly slug
 function slugify(text: string): string {
@@ -111,6 +113,43 @@ export const StrapiBlocksRenderer: React.FC<StrapiBlocksRendererProps> = ({ cont
     return (
         <div className={className}>
             <BlocksRenderer content={sanitizedContent} blocks={blocks} />
+        </div>
+    );
+}
+
+interface StrapiDynamicZoneRendererProps {
+    content: any[] | undefined | null;
+    className?: string;
+}
+
+/**
+ * Renders Strapi dynamic zone content including rich text, FAQ, and contact CTA components.
+ */
+export const StrapiDynamicZoneRenderer: React.FC<StrapiDynamicZoneRendererProps> = ({ content, className }) => {
+    if (!content || !Array.isArray(content)) return null;
+
+    return (
+        <div className={className}>
+            {content.map((component, index) => {
+                // Handle rich text component
+                if (component.strapi_component === 'generic.rich-text' && component.text) {
+                    return (
+                        <StrapiBlocksRenderer key={index} content={component.text} />
+                    );
+                }
+                
+                // Handle contact booking CTA component
+                if (component.strapi_component === 'generic.contact-booking-cta') {
+                    return <ContactBanner key={index} />;
+                }
+                
+                // Handle FAQ component
+                if (component.strapi_component === 'generic.faq' && component.questions) {
+                    return <StrapiFAQ key={index} questions={component.questions} />;
+                }
+
+                return null;
+            })}
         </div>
     );
 }
