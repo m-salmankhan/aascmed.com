@@ -13,7 +13,6 @@ import Color from "color";
 interface ProvidersArchiveProps {
     className?: string,
     heading: string,
-    text?: string,
     textContent?: React.ReactNode,
     providers: ProviderSummary[]
 }
@@ -80,7 +79,7 @@ const Providers: React.FC<ProvidersProps> = ({ className, providers }) => {
 
 
 export const ProvidersArchiveHomePageLayout: React.FC<ProvidersArchiveProps> =
-    ({ className, heading, text, textContent, providers }) => {
+    ({ className, heading, textContent, providers }) => {
         if (providers.length == 0)
             return <></>;
 
@@ -90,7 +89,6 @@ export const ProvidersArchiveHomePageLayout: React.FC<ProvidersArchiveProps> =
                     heading={
                         <h2 css={stylesBigH1}>{heading}</h2>
                     }
-                    bodyText={text}
                     bodyContent={textContent}
                 />
                 <Providers providers={providers as [ProviderSummary]} />

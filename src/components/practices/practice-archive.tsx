@@ -133,12 +133,11 @@ interface PracticeArchiveProps {
     className?: string,
     practices: PracticeSummary[],
     heading: string,
-    text?: string,
     textContent?: React.ReactNode,
     lazyLoad?: boolean,
     isHomePage: boolean
 }
-export const PracticeArchive: React.FC<PracticeArchiveProps> = ({ className, practices, heading, text, textContent, isHomePage, lazyLoad }) => {
+export const PracticeArchive: React.FC<PracticeArchiveProps> = ({ className, practices, heading, textContent, isHomePage, lazyLoad }) => {
     if (practices.length === 0) return <></>;
 
     return (
@@ -149,7 +148,6 @@ export const PracticeArchive: React.FC<PracticeArchiveProps> = ({ className, pra
                         <h2 css={stylesBigH1}>{heading}</h2> :
                         <h1 css={stylesBigH1}>{heading}</h1>
                 }
-                bodyText={text}
                 bodyContent={textContent}
             />
             <PracticeArchiveList practices={practices as [PracticeSummary]} lazyLoad={lazyLoad} />

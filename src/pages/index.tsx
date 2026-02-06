@@ -100,18 +100,14 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
   };
 
   const reviews: Review[] = data.reviews.nodes.map(node => {
-    // Parse the content blocks from internal.content and extract text
+    // Parse the content blocks from internal.content
     const rawContent = node.internal?.content;
     const parsedContent = rawContent ? JSON.parse(rawContent) : null;
     const contentBlocks = parsedContent?.content as any[] | null;
-    const bodyText = contentBlocks
-      ?.map((block: any) => block.children?.map((c: any) => c.text || '').join(''))
-      .filter(Boolean)
-      .join('\n\n') || "";
     
     return {
       stars: node.stars || 0,
-      body: bodyText,
+      body: contentBlocks,
       source: {
         url: node.sourceUrl || "",
         name: node.sourceName || "",

@@ -145,13 +145,12 @@ interface BlogArchiveProps {
     blogPosts: BlogSummary[],
     frontPage: boolean,
     heading: string,
-    text?: string,
     textContent?: React.ReactNode,
 }
 
 
 export const BlogArchive: React.FC<BlogArchiveProps> =
-    ({ className, heading, text, textContent, blogPosts, frontPage }) => {
+    ({ className, heading, textContent, blogPosts, frontPage }) => {
         if (blogPosts.length == 0) {
             return <></>;
         }
@@ -163,7 +162,6 @@ export const BlogArchive: React.FC<BlogArchiveProps> =
                             <h2 css={stylesBigH1}>{heading}</h2> :
                             <h1 css={stylesBigH1}>{heading}</h1>
                     }
-                    bodyText={text}
                     bodyContent={textContent}
                 />
                 <BlogList Blogs={blogPosts as [BlogSummary]} frontPage={frontPage} />

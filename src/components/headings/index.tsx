@@ -3,7 +3,6 @@ import { colours, fontWeightHeadings } from "../../styles/theme";
 import React, { ReactNode } from "react";
 import { mediaBreakpoints } from "../../styles/breakpoints";
 import { cols } from "../../styles/grid";
-import { ReactMarkdown } from "react-markdown/lib/react-markdown";
 
 const stylesHeadings = css({
     fontWeight: fontWeightHeadings,
@@ -108,18 +107,11 @@ const stylesSectionHeading = css(
 interface SectionHeadingProps {
     className?: string
     heading: ReactNode
-    bodyText?: string
     bodyContent?: ReactNode
 }
 
 export const SectionHeader = (props: SectionHeadingProps) =>
     <div className={props.className} css={stylesSectionHeading}>
         {props.heading}
-        {
-            props.bodyContent ? props.bodyContent :
-            props.bodyText &&
-            <ReactMarkdown>
-                {props.bodyText}
-            </ReactMarkdown>
-        }
+        {props.bodyContent}
     </div>
