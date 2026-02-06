@@ -10,6 +10,37 @@ exports.createSchemaCustomization = ({ actions, schema }) => {
         pixelId: 'String',
       },
     }),
+    schema.buildObjectType({
+      name: 'STRAPI_ANNOUNCEMENT',
+      interfaces: ['Node'],
+      fields: {
+        enabled: 'Boolean',
+        type: 'String',
+        internal: 'Internal',
+      },
+    }),
+    // Optional review component on provider
+    schema.buildObjectType({
+      name: 'STRAPI_PROVIDER_REVIEW',
+      fields: {
+        text: 'String',
+        reviewer: 'String',
+        date: {
+          type: 'Date',
+          extensions: {
+            dateformat: {},
+          },
+        },
+        link: 'String',
+      },
+    }),
+    schema.buildObjectType({
+      name: 'STRAPI_PROVIDER',
+      interfaces: ['Node'],
+      fields: {
+        review: 'STRAPI_PROVIDER_REVIEW',
+      },
+    }),
   ]);
 };
 
