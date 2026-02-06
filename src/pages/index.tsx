@@ -78,16 +78,18 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
   // Providers section
   const providersTitle = homePage?.providers?.heading || "Meet the team";
   const providersTextBlocks = parseTextBlocks(parsedData, 'providers');
-  const providers: ProviderSummary[] = data.providers.nodes.map(node => ({
-    slug: `/providers/${node.slug}/`,
-    name: {
-      fullName: node.name?.fullName || "",
-      title: node.name?.honorific && node.name.honorific !== "None" ? node.name.honorific : "",
-      degreeAbbr: node.name?.qualificationAbbr || "",
-    },
-    retired: node.retirementNotice?.retired || false,
-    image: node.image?.localFile?.childImageSharp?.gatsbyImageData,
-  }));
+  const providers: ProviderSummary[] = data.providers.nodes
+    .filter(node => !node.retirementNotice?.retired) // Exclude retired providers
+    .map(node => ({
+      slug: `/providers/${node.slug}/`,
+      name: {
+        fullName: node.name?.fullName || "",
+        title: node.name?.honorific && node.name.honorific !== "None" ? node.name.honorific : "",
+        degreeAbbr: node.name?.qualificationAbbr || "",
+      },
+      retired: false,
+      image: node.image?.localFile?.childImageSharp?.gatsbyImageData,
+    }));
 
   // Feedback section
   const avgRating = {
