@@ -21,7 +21,6 @@ const config: GatsbyConfig = {
         "gatsby-plugin-sharp",
         "gatsby-transformer-sharp",
         "gatsby-plugin-image",
-        `gatsby-transformer-yaml`,
         "gatsby-plugin-webpack-bundle-analyser-v2",
         {
             resolve: 'gatsby-source-filesystem',
@@ -30,20 +29,6 @@ const config: GatsbyConfig = {
                 "path": "./static/assets/"
             },
             __key: "assets"
-        }, {
-            resolve: 'gatsby-source-filesystem',
-            options: {
-                "name": "pages",
-                "path": "./src/pages/"
-            },
-            __key: "pages"
-        }, {
-            resolve: 'gatsby-source-filesystem',
-            options: {
-                "name": "content",
-                "path": "./content/"
-            },
-            __key: "content"
         },
         {
             resolve: `gatsby-plugin-emotion`,
@@ -58,27 +43,6 @@ const config: GatsbyConfig = {
                         name: `Poppins`,
                         file: `https://fonts.googleapis.com/css2?family=Poppins:wght@300;700&display=swap`,
                     },
-                ],
-            },
-        },
-        {
-            resolve: `gatsby-plugin-mdx`,
-            options: {
-                gatsbyRemarkPlugins: [
-                    {
-                        resolve: `gatsby-remark-images`,
-                        options: {
-                            maxWidth: 1500,
-                        },
-                    },
-                    {
-                        resolve: `gatsby-remark-autolink-headers`,
-                        options: {
-                            elements: [`h1`, `h2`, `h3`],
-                            isIconAfterHeader: false,
-                            className: `link-icon`
-                        },
-                    }
                 ],
             },
         },
