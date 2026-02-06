@@ -1,3 +1,4 @@
+import React from "react";
 import { graphql, HeadProps, Link, PageProps } from "gatsby"
 import { Column, Columns, HalfColumnsLayout } from "../components/layouts/half-columns";
 import { H1, H2, H3, stylesH1, stylesH5 } from "../components/headings";
@@ -8,55 +9,66 @@ import { PrimaryAnchor } from "../components/buttons";
 import { Table } from "../components/tables";
 import { ContactForm } from "../components/contact";
 import { SEO } from "../components/seo";
-import { MDXProvider } from "@mdx-js/react";
-import { ButtonList, ContactBanner } from "../components/posts/shortcode-components";
 import { Article } from "../components/posts/article";
 import { useSiteMetadata } from "../hooks/useSiteMetadata";
+import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 
-const shortcodes = { Link, ButtonList, ContactBanner };
-
-const to12Hr = (time: str) => {
+const to12Hr = (time: string) => {
+    if (!time) return "";
     const [hrs, mins] = time.split(":");
-    return (hrs <= 12) ? `${parseFloat(hrs)}:${mins} a.m.` : `${parseFloat(hrs)-12}:${mins} p.m.`;
+    const hour = parseFloat(hrs);
+    return (hour <= 12) ? `${hour}:${mins} a.m.` : `${hour - 12}:${mins} p.m.`;
 }
 
+const formatHours = (startTime: string | null, endTime: string | null): string => {
+    if (!startTime || !endTime) return "Closed";
+    return `${to12Hr(startTime)} - ${to12Hr(endTime)}`;
+}
 
-const Clinic: React.FC<PageProps<Queries.ClinicQuery>> = ({ data, children }) => {
+const Clinic: React.FC<PageProps<Queries.ClinicQuery>> = ({ data }) => {
     const siteMetadata = useSiteMetadata();
-    const clinicName = data.mdx?.frontmatter?.clinic_name || "Untitled";
-    const pageTitle = data.mdx?.frontmatter?.page_title || "Untitled";
+    const clinic = data.strapiClinic;
+    
+    const clinicName = clinic?.clinic_name || "Untitled";
+    const pageTitle = clinic?.title || "Untitled";
+    
+    // Parse raw JSON content to get full rich text data with all formatting
+    const rawContent = clinic?.internal?.content;
+    const parsedData = rawContent ? JSON.parse(rawContent) : null;
+    const body = parsedData?.body as any[] | undefined;
 
-    const clinicAddress = data.mdx?.frontmatter?.address || "";
-    const clinicPhone = data.mdx?.frontmatter?.phone || "";
-    const clinicFax = data.mdx?.frontmatter?.fax || "";
+    const clinicAddress = clinic?.location?.address || "";
+    const clinicPhone = clinic?.contact?.phone || "";
+    const clinicFax = clinic?.contact?.fax || "";
 
-    const googlePlaceID = data.mdx?.frontmatter?.placeId;
-    const longitude = data.mdx?.frontmatter?.lon || 0;
-    const latitude = data.mdx?.frontmatter?.lat || 0;
+    const googlePlaceID = clinic?.location?.placeId;
+    const longitude = clinic?.location?.long || 0;
+    const latitude = clinic?.location?.lat || 0;
+    const pinLabelName = clinic?.location?.label_name || clinicName;
 
-    const clinicOpeningTimes = data.mdx?.frontmatter?.opening?.map(day => {
-        const closed = day?.hours.toLowerCase().trim() === "closed";
-        const hours = day?.hours.split("-").map(x => x.trim());
+    // Transform Strapi hours data to the format used in the template
+    const clinicOpeningTimes = clinic?.hours?.map(day => {
+        const isOpen = day?.open;
+        const openingHours = day?.opening_hours;
         
         return {
             day: day?.day || "",
-            hours: closed ? "Closed" : `${to12Hr(hours[0])} - ${to12Hr(hours[1])}` || "",
-            hours24: day?.hours || "",
-            notes: day?.notes || "",
+            hours: isOpen && openingHours ? formatHours(openingHours.start_time, openingHours.end_time) : "Closed",
+            hours24: isOpen && openingHours ? `${openingHours.start_time} - ${openingHours.end_time}` : "Closed",
         }
     }) || [];
     
-    const clinicShotTimes = data.mdx?.frontmatter?.shot?.map(day => {
-        const closed = day?.hours.toLowerCase().trim() === "closed";
-        const hours = day?.hours.split("-").map(x => x.trim());
-
+    const clinicShotTimes = clinic?.hours?.filter(day => day?.open && day?.shot_hours).map(day => {
+        const shotHours = day?.shot_hours;
+        
         return {
             day: day?.day || "",
-            hours: closed ? "Closed" : `${to12Hr(hours[0])} - ${to12Hr(hours[1])}` || "",
-            hours24: day?.hours || "",
-            notes: day?.notes || "",
+            hours: shotHours ? formatHours(shotHours.start_time, shotHours.end_time) : "Closed",
+            hours24: shotHours ? `${shotHours.start_time} - ${shotHours.end_time}` : "Closed",
         }
     }) || [];
+
+    const slug = `/clinics/${clinicName.toLowerCase().replace(/\s+/g, '-')}/`;
 
     const stylesPageTitle = css`
         font-size: 2.5em;
@@ -75,7 +87,7 @@ const Clinic: React.FC<PageProps<Queries.ClinicQuery>> = ({ data, children }) =>
             latitude: latitude,
             longitude: longitude
         },
-        url: `${siteMetadata.url}${data.mdx?.fields?.slug}`,
+        url: `${siteMetadata.url}${slug}`,
         telephone: clinicPhone,
         faxNumber: clinicFax,
         email: "info@aascmed.com",
@@ -100,17 +112,17 @@ const Clinic: React.FC<PageProps<Queries.ClinicQuery>> = ({ data, children }) =>
                 <Breadcrumbs path={[
                     ["/", "Home"],
                     ["/clinics/", "Clinics"],
-                    [data.mdx?.fields?.slug, clinicName]
+                    [slug, clinicName]
                 ]} css={css({ marginTop: "3em" })} />
 
-                <H1 css={stylesPageTitle}>{pageTitle}</H1>
+                <H1 css={stylesPageTitle}>{clinicName} Clinic</H1>
                 <Columns>
                     <Column>
                         <MapBox
                             css={css`height: 25em`}
                             longitude={longitude} latitude={latitude}
                             zoom={15}
-                            label={`${clinicName} | Allergy Asthma and Sinus Centers`}
+                            label={pinLabelName}
                         />
                         {
                             googlePlaceID &&
@@ -123,13 +135,11 @@ const Clinic: React.FC<PageProps<Queries.ClinicQuery>> = ({ data, children }) =>
                             </PrimaryAnchor>
                         }
                         <H2 css={stylesH1}>Contact</H2>
-                        <ContactForm clinic={data.mdx?.frontmatter?.clinic_name || undefined} />
+                        <ContactForm clinic={clinicName} />
 
                         <Article>
                             <h2>About the Clinic</h2>
-                            <MDXProvider components={shortcodes as any}>
-                                {children}
-                            </MDXProvider>
+                            <StrapiBlocksRenderer content={body} />
                         </Article>
                     </Column>
                     <Column>
@@ -155,29 +165,29 @@ const Clinic: React.FC<PageProps<Queries.ClinicQuery>> = ({ data, children }) =>
                                 {
                                     clinicOpeningTimes.map(
                                         (day, idx) =>
-                                            <tr>
+                                            <tr key={idx}>
                                                 <td>{day.day}</td>
-                                                <td>
-                                                    {day.hours} {day.notes && <>({day.notes})</>}
-                                                </td>
+                                                <td>{day.hours}</td>
                                             </tr>
                                     )
                                 }
                             </tbody>
-                            <tr className={"faux-head"}>
-                                <td colSpan={2}>Shot Hours</td>
-                            </tr>
-                            {
-                                clinicShotTimes.map(
-                                    (day, idx) =>
-                                        <tr>
-                                            <td>{day.day}</td>
-                                            <td>
-                                                {day.hours} {day.notes && <>({day.notes})</>}
-                                            </td>
-                                        </tr>
-                                )
-                            }
+                            {clinicShotTimes.length > 0 && (
+                                <>
+                                    <tr className={"faux-head"}>
+                                        <td colSpan={2}>Shot Hours</td>
+                                    </tr>
+                                    {
+                                        clinicShotTimes.map(
+                                            (day, idx) =>
+                                                <tr key={`shot-${idx}`}>
+                                                    <td>{day.day}</td>
+                                                    <td>{day.hours}</td>
+                                                </tr>
+                                        )
+                                    }
+                                </>
+                            )}
                         </Table>
                     </Column>
                 </Columns>
@@ -188,8 +198,8 @@ const Clinic: React.FC<PageProps<Queries.ClinicQuery>> = ({ data, children }) =>
 }
 
 export const Head = (props: HeadProps<Queries.ClinicQuery>) => {
-    const pageTitle = props.data.mdx?.frontmatter?.page_title || "Untitled";
-    const description = props.data.mdx?.frontmatter?.description || "";
+    const pageTitle = props.data.strapiClinic?.title || "Untitled";
+    const description = props.data.strapiClinic?.description || "";
 
     return (
         <SEO description={description} slug={props.location.pathname} title={`${pageTitle}`} useTracking={true} appendBusinessNameToTitle={false}>
@@ -200,31 +210,36 @@ export const Head = (props: HeadProps<Queries.ClinicQuery>) => {
 
 export const query = graphql`
   query Clinic($id: String) {
-    mdx(id: {eq: $id}) {
+    strapiClinic(id: {eq: $id}) {
       id
-      frontmatter {
-        page_title
-        clinic_name
-        description
-        address
-        opening {
-          day
-          hours
-          notes
-        }
-        shot {
-          day
-          hours
-          notes
-        }
-        placeId
-        lon
-        lat
-        fax
-        phone
+      title
+      clinic_name
+      description
+      internal {
+        content
       }
-      fields {
-        slug
+      hours {
+        day
+        open
+        opening_hours {
+          start_time
+          end_time
+        }
+        shot_hours {
+          start_time
+          end_time
+        }
+      }
+      contact {
+        phone
+        fax
+      }
+      location {
+        address
+        lat
+        long
+        placeId
+        label_name
       }
     }
   }

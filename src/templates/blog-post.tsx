@@ -1,38 +1,70 @@
-import { graphql, HeadProps, Link, PageProps } from "gatsby"
-import { MDXProvider } from "@mdx-js/react";
+import React from "react";
+import { graphql, HeadProps, PageProps } from "gatsby"
 import { H1 } from "../components/headings";
 import { Columns, MainCol, PrimarySecondaryColumnsLayout, SideCol } from "../components/layouts/main-side-column";
 import { Breadcrumbs } from "../components/breadcrumbs";
 import { css } from "@emotion/react";
 import { Article } from "../components/posts/article";
 import { ShareButtons } from "../components/social-media/share";
-import { ButtonList, ContactBanner } from "../components/posts/shortcode-components";
+import { ContactBanner } from "../components/posts/shortcode-components";
 import { SEO } from "../components/seo";
-import { Contents, ContentsPageItem } from "../components/posts/contents";
 import { GatsbyImage, IGatsbyImageData } from "gatsby-plugin-image";
+import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
+import { Contents } from "../components/posts/contents";
+import { extractTableOfContents } from "../utils/strapi-toc";
 
-const shortcodes = { Link, ButtonList, ContactBanner };
-const BlogPost = ({ data, children, location }: PageProps<Queries.BlogPostQuery>) => {
-    if ((data.mdx === null) || (data.mdx === undefined))
-        throw Error("mdx is undefined");
+// Component to render Strapi dynamic zone content
+const StrapiContent = ({ content }: { content: any[] }) => {
+    if (!content || !Array.isArray(content)) return null;
 
-    if ((data.mdx.frontmatter === null) || (data.mdx.frontmatter === undefined))
-        throw Error("Frontmatter is undefined");
+    return (
+        <>
+            {content.map((component, index) => {
+                // Handle rich text component
+                if (component.strapi_component === 'generic.rich-text' && component.text) {
+                    return (
+                        <StrapiBlocksRenderer key={index} content={component.text} />
+                    );
+                }
+                
+                // Handle contact booking CTA component
+                if (component.strapi_component === 'generic.contact-booking-cta') {
+                    return <ContactBanner key={index} />;
+                }
 
+                return null;
+            })}
+        </>
+    );
+}
 
-    const title = data.mdx.frontmatter.title || "Untitled"
-    const heading = data.mdx.frontmatter.heading || "Untitled"
-    const tocItems = data.mdx.tableOfContents?.items as ContentsPageItem[];
-    const date = data.mdx.frontmatter.date || ""
-    const heroImage = data.mdx.frontmatter.thumbnail?.childImageSharp?.gatsbyImageData
+const BlogPost = ({ data, location }: PageProps<Queries.BlogPostQuery>) => {
+    const blog = data.strapiBlog;
+    
+    if (!blog) {
+        throw Error("Blog post is undefined");
+    }
 
+    const title = blog.title || "Untitled"
+    const heading = blog.heading || title
+    const date = blog.date || ""
+    const slug = `/blog/${blog.slug}/`
+    const heroImage = blog.thumbnail?.localFile?.childImageSharp?.gatsbyImageData;
+    
+    // Parse raw JSON content to get full rich text data with all formatting
+    const rawContent = blog.internal?.content;
+    const parsedData = rawContent ? JSON.parse(rawContent) : null;
+    const content = parsedData?.content as any[] | undefined;
+    
+    // Extract table of contents from content
+    const tocItems = content ? extractTableOfContents(content) : [];
     return (
         <PrimarySecondaryColumnsLayout>
             <main css={css`margin-bottom: 5rem;`}>
                 <Breadcrumbs path={[
                     ["/", "Home"],
                     ["/blog/", "Blog"],
-                    [data.mdx.fields?.slug, title]
+                    [slug, title]
                 ]} css={css({ marginTop: "3em" })} />
 
                 <Article css={css({ h3: { fontSize: "1rem" } })}>
@@ -42,11 +74,8 @@ const BlogPost = ({ data, children, location }: PageProps<Queries.BlogPostQuery>
                     <Columns>
                         <MainCol>
                             <HeroImage img={heroImage} />
-                            <MDXProvider components={shortcodes as any}>
-                                {children}
-                            </MDXProvider>
-
-                            <ContactBanner />
+                            
+                            {content && <StrapiContent content={content} />}
                             
                             <footer>
                                 <ShareButtons pageTitle={title} path={location.pathname} />
@@ -64,8 +93,8 @@ const BlogPost = ({ data, children, location }: PageProps<Queries.BlogPostQuery>
 
 
 export const Head = (props: HeadProps<Queries.BlogPostQuery>) => {
-    const title = props.data.mdx?.frontmatter?.title || props.data.mdx?.frontmatter?.heading || "Untitled";
-    const description = props.data.mdx?.frontmatter?.description || "";
+    const title = props.data.strapiBlog?.title || props.data.strapiBlog?.heading || "Untitled";
+    const description = props.data.strapiBlog?.description || "";
 
     return (
         <SEO description={description} slug={props.location.pathname} title={title} useTracking={true}>
@@ -77,21 +106,21 @@ export const Head = (props: HeadProps<Queries.BlogPostQuery>) => {
 
 export const query = graphql`
   query BlogPost ($id: String) {
-    mdx(id: {eq: $id}) {
+    strapiBlog(id: {eq: $id}) {
       id
-      tableOfContents(maxDepth: 3)
-      fields {
-        slug
+      slug
+      title
+      heading
+      description
+      date(formatString: "Do MMMM YYYY")
+      internal {
+        content
       }
-      frontmatter {
-        date(formatString: "Do MMMM YYYY")
-          title
-          heading
-          description
-          thumbnail {
-            childImageSharp {
-              gatsbyImageData(width: 900)
-            }
+      thumbnail {
+        localFile {
+          childImageSharp {
+            gatsbyImageData(layout: FULL_WIDTH)
+          }
         }
       }
     }
@@ -103,7 +132,7 @@ const HeroImage = ({ img, className }: {img: IGatsbyImageData | undefined, class
 
     const styles = css`
         width: 100%;
-        margin-bottom: 1.5em auto;
+        margin: 1.5em auto;
         
         .gatsby-image-wrapper {
             height: 20em;
@@ -112,7 +141,7 @@ const HeroImage = ({ img, className }: {img: IGatsbyImageData | undefined, class
 
     return(
         <div className={className} css={css(styles)}>
-        <GatsbyImage alt={""} image={img} />
+            <GatsbyImage alt={""} image={img} />
         </div>
     );
 }

@@ -8,17 +8,32 @@ import { ServiceUpdateArchive } from "../components/service-updates";
 import { ServiceUpdateSummary } from "../components/service-updates/service-update-archive";
 import { gridSpacing } from "../styles/theme";
 import { SEO } from "../components/seo";
+import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 
 const ServiceUpdatePage: React.FC<PageProps<Queries.ServiceUpdatesQuery>> = ({ data }) => {
-  const serviceUpdatesCopy = data.sectionCopy?.childPagesYaml;
-  const serviceUpdatesTitle = serviceUpdatesCopy?.heading || "Service Updates"
-  const serviceUpdatesText = serviceUpdatesCopy?.text || "";
-  const serviceUpdates: ServiceUpdateSummary[] = data.serviceUpdates.edges.map(edge => ({
-    slug: edge.node.fields?.slug || "",
-    title: edge.node.frontmatter?.title || "Untitled",
-    date: edge.node.frontmatter?.date || "",
-    description: edge.node.frontmatter?.description || "",
-  }));
+  const archiveCopy = data.strapiServiceUpdatePage;
+  const serviceUpdatesTitle = archiveCopy?.heading || "Service Updates";
+  
+  // Parse text blocks from internal.content
+  const rawContent = archiveCopy?.internal?.content;
+  const parsedData = rawContent ? JSON.parse(rawContent) : null;
+  const textBlocks = parsedData?.text as any[] | null;
+
+  const serviceUpdates: ServiceUpdateSummary[] = data.serviceUpdates.nodes.map(node => {
+    const date = node.date ? new Date(node.date) : null;
+    const year = date ? date.getFullYear() : '';
+    const month = date ? String(date.getMonth() + 1).padStart(2, '0') : '';
+    const slug = date 
+      ? `/service-updates/${year}/${month}/${node.slug}/`
+      : `/service-updates/${node.slug}/`;
+    
+    return {
+      slug,
+      title: node.title || "Untitled",
+      date: node.formattedDate || "",
+      description: node.description || "",
+    };
+  });
   return (
     <Layout>
       <Container>
@@ -28,7 +43,7 @@ const ServiceUpdatePage: React.FC<PageProps<Queries.ServiceUpdatesQuery>> = ({ d
         ]} css={css({ marginTop: "3em" })} />
         <ServiceUpdateArchive
           heading={serviceUpdatesTitle}
-          text={serviceUpdatesText}
+          textContent={textBlocks ? <StrapiBlocksRenderer content={textBlocks} /> : undefined}
           serviceUpdates={serviceUpdates}
           frontPage={false}
           css={css({
@@ -41,8 +56,8 @@ const ServiceUpdatePage: React.FC<PageProps<Queries.ServiceUpdatesQuery>> = ({ d
 }
 
 export const Head = (props: HeadProps<Queries.ServiceUpdatesQuery>) => {
-  const description = props.data.sectionCopy?.childPagesYaml?.meta_description || "";
-  const heading = props.data.sectionCopy?.childPagesYaml?.heading || "";
+  const description = props.data.strapiServiceUpdatePage?.metaDescription || "";
+  const heading = props.data.strapiServiceUpdatePage?.heading || "";
 
   return (
     <SEO description={description} slug={props.location.pathname} title={heading} useTracking={true}>
@@ -55,28 +70,20 @@ export default ServiceUpdatePage;
 
 export const query = graphql`
   query ServiceUpdates {
-    sectionCopy: file(relativePath: {eq: "pages/service-updates.yml"}) {
-      childPagesYaml {
-        meta_description
-        heading
-        text
+    strapiServiceUpdatePage {
+      heading
+      metaDescription
+      internal {
+        content
       }
     }
-    serviceUpdates: allMdx(
-      filter: {fields: {post_type: {eq: "service-update"}}}
-      sort: {frontmatter: {date: DESC}}
-    ) {
-      edges {
-        node {
-          fields {
-            slug
-          }
-          frontmatter {
-            date(formatString: "Do MMMM YYYY")
-            title
-            description
-          }
-        }
+    serviceUpdates: allStrapiServiceUpdate(sort: {date: DESC}) {
+      nodes {
+        slug
+        title
+        description
+        date
+        formattedDate: date(formatString: "Do MMMM YYYY")
       }
     }
   }

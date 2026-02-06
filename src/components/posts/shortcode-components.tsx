@@ -111,6 +111,6 @@ h6 {
 }
 `;
 export const FAQ: React.FC<FAQProps> = (props) =>
-    <div id="faq" css={stylesFAQ}>
+    <div css={stylesFAQ}>
         {props.children}
     </div>

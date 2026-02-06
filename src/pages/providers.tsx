@@ -7,27 +7,41 @@ import { SectionHeader, stylesBigH1 } from "../components/headings";
 import { ProviderArchive, ProviderSummary } from "../components/providers";
 import { gridSpacing } from "../styles/theme";
 import { SEO } from "../components/seo";
+import { createExcerpt } from "../utils/strapi-excerpt";
+import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 
 const stylesExpandGridPadding = css`
     margin: 0 ${-gridSpacing / 2}em;
 `;
 
 const ProvidersPage = ({ data }: PageProps<Queries.ProvidersPageQuery>) => {
-  const pageHeading = data.copy?.childPagesYaml?.heading || "Meet the team";
-  const pageText = data.copy?.childPagesYaml?.text || "";
+  const archiveCopy = data.strapiProvidersPage;
+  const pageHeading = archiveCopy?.heading || "Meet the team";
+  
+  // Parse text blocks from internal.content
+  const rawContent = archiveCopy?.internal?.content;
+  const parsedData = rawContent ? JSON.parse(rawContent) : null;
+  const textBlocks = parsedData?.text as any[] | null;
 
-  const providers: ProviderSummary[] = data.providers.edges.map((edge) => ({
-    slug: edge.node.fields?.slug || "",
-    name: {
-      fullName: edge.node.frontmatter?.name?.fullname || "",
-      title: edge.node.frontmatter?.name?.title || "",
-      degree: edge.node.frontmatter?.name?.degree || "",
-      degreeAbbr: edge.node.frontmatter?.name?.degree_abbr || "",
-    },
-    image: edge.node.frontmatter?.image?.childImageSharp?.gatsbyImageData,
-    excerpt: edge.node.excerpt || "",
-    retired: edge.node.frontmatter?.retirement?.retired || false,
-  }));
+  const providers: ProviderSummary[] = data.providers.nodes.map((node) => {
+    // Parse body content from internal.content to create excerpt
+    const providerRawContent = node.internal?.content;
+    const providerParsedData = providerRawContent ? JSON.parse(providerRawContent) : null;
+    const body = providerParsedData?.body as any[] | undefined;
+    const excerpt = body ? createExcerpt(body, 600) : "";
+
+    return {
+      slug: `/providers/${node.slug}/`,
+      name: {
+        fullName: node.name?.fullName || "",
+        title: node.name?.honorific && node.name.honorific !== "None" ? node.name.honorific : "",
+        degreeAbbr: node.name?.qualificationAbbr || "",
+      },
+      image: node.image?.localFile?.childImageSharp?.gatsbyImageData,
+      excerpt,
+      retired: node.retirementNotice?.retired || false,
+    };
+  });
 
   return (
     <Layout>
@@ -38,7 +52,10 @@ const ProvidersPage = ({ data }: PageProps<Queries.ProvidersPageQuery>) => {
         ]} css={css({ marginTop: "3em" })} />
 
         <div css={stylesExpandGridPadding}>
-          <SectionHeader heading={<h1 css={stylesBigH1}>{pageHeading}</h1>} bodyText={pageText} />
+          <SectionHeader 
+            heading={<h1 css={stylesBigH1}>{pageHeading}</h1>} 
+            bodyContent={textBlocks ? <StrapiBlocksRenderer content={textBlocks} /> : undefined}
+          />
           <ProviderArchive providers={providers} />
         </div>
       </Container>
@@ -47,8 +64,8 @@ const ProvidersPage = ({ data }: PageProps<Queries.ProvidersPageQuery>) => {
 }
 
 export const Head = (props: HeadProps<Queries.ProvidersPageQuery>) => {
-  const description = props.data.copy?.childPagesYaml?.meta_description || "";
-  const heading = props.data.copy?.childPagesYaml?.heading || "";
+  const description = props.data.strapiProvidersPage?.metaDescription || "";
+  const heading = props.data.strapiProvidersPage?.heading || "";
 
   return (
     <SEO description={description} slug={props.location.pathname} title={heading} useTracking={true}>
@@ -59,41 +76,34 @@ export const Head = (props: HeadProps<Queries.ProvidersPageQuery>) => {
 
 export const query = graphql`
   query ProvidersPage {
-    copy: file(relativePath: {eq: "pages/providers.yml"}) {
-      childPagesYaml {
-        meta_description
-        heading
-        text
+    strapiProvidersPage {
+      heading
+      metaDescription
+      internal {
+        content
       }
     }
-    providers: allMdx(
-      filter: {fields: {post_type: {eq: "providers"}}}
-      sort: {frontmatter: {order: ASC}}
-    ) {
-      edges {
-        node {
-          id
-          frontmatter {
-            image {
-              childImageSharp {
-                gatsbyImageData(aspectRatio: 1, layout: FULL_WIDTH)
-              }
-            }
-            name {
-              fullname
-              title
-              degree
-              degree_abbr
-            }
-            retirement {
-              retired
-              retired_notice_text
+    providers: allStrapiProvider(sort: {order: ASC}) {
+      nodes {
+        id
+        slug
+        internal {
+          content
+        }
+        name {
+          fullName
+          honorific
+          qualificationAbbr
+        }
+        retirementNotice {
+          retired
+        }
+        image {
+          localFile {
+            childImageSharp {
+              gatsbyImageData(aspectRatio: 1, layout: FULL_WIDTH)
             }
           }
-          fields {
-            slug
-          }
-          excerpt(pruneLength: 500)
         }
       }
     }

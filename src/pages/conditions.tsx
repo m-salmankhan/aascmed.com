@@ -7,15 +7,21 @@ import { Breadcrumbs } from "../components/breadcrumbs";
 import { Container } from "../components/containers";
 import { gridSpacing } from "../styles/theme";
 import { SEO } from "../components/seo";
+import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 
 const ConditionsPage = ({ data }: PageProps<Queries.ConditionsArchiveQuery>) => {
-  const heading = data.copy?.childPagesYaml?.heading || "Conditions";
-  const text = data.copy?.childPagesYaml?.text || "";
+  const archiveCopy = data.strapiConditionsArchive;
+  const heading = archiveCopy?.heading || "Conditions";
+  
+  // Parse text blocks from internal.content
+  const rawContent = archiveCopy?.internal?.content;
+  const parsedData = rawContent ? JSON.parse(rawContent) : null;
+  const textBlocks = parsedData?.text as any[] | null;
 
-  const conditions: ConditionSummary[] = data.conditions.edges.map(edge => ({
-    slug: edge.node.fields?.slug || "",
-    title: edge.node.frontmatter?.heading || "untitled",
-    thumbnail: edge.node.frontmatter?.thumbnail?.childImageSharp?.gatsbyImageData,
+  const conditions: ConditionSummary[] = data.conditions.nodes.map(node => ({
+    slug: `/conditions/${node.slug}/`,
+    title: node.heading || node.title || "untitled",
+    thumbnail: node.thumbnail?.localFile?.childImageSharp?.gatsbyImageData,
   }));
 
   return (
@@ -28,7 +34,7 @@ const ConditionsPage = ({ data }: PageProps<Queries.ConditionsArchiveQuery>) => 
           ]} css={css({ marginTop: "3em" })} />
           <ConditionsArchive
             heading={heading}
-            text={text}
+            textContent={textBlocks ? <StrapiBlocksRenderer content={textBlocks} /> : undefined}
             frontPage={false}
             showViewAll={false}
             conditionsList={conditions}
@@ -42,8 +48,8 @@ const ConditionsPage = ({ data }: PageProps<Queries.ConditionsArchiveQuery>) => 
 }
 
 export const Head = (props: HeadProps<Queries.ConditionsArchiveQuery>) => {
-  const description = props.data.copy?.childPagesYaml?.meta_description || "";
-  const heading = props.data.copy?.childPagesYaml?.heading || "";
+  const description = props.data.strapiConditionsArchive?.metaDescription || "";
+  const heading = props.data.strapiConditionsArchive?.heading || "";
 
   return (
     <SEO description={description} slug={props.location.pathname} title={heading}>
@@ -54,30 +60,24 @@ export const Head = (props: HeadProps<Queries.ConditionsArchiveQuery>) => {
 
 export const query = graphql`
   query ConditionsArchive {
-    copy: file(relativePath: {eq: "pages/conditions.yml"}) {
-      childPagesYaml {
-        meta_description
-        heading
-        text
+    strapiConditionsArchive {
+      heading
+      metaDescription
+      internal {
+        content
       }
     }
 
-    conditions: allMdx(
-      filter: {fields: {post_type: {eq: "conditions"}}},
-      sort: {frontmatter: {order: ASC}}
-     ) {
-      edges {
-        node {
-          fields {
-            slug
-          }
-          frontmatter {
-            thumbnail {
-              childImageSharp {
-                gatsbyImageData(width: 800)
-              }
+    conditions: allStrapiCondition(sort: {order: ASC}) {
+      nodes {
+        slug
+        title
+        heading
+        thumbnail {
+          localFile {
+            childImageSharp {
+              gatsbyImageData(width: 800)
             }
-            heading
           }
         }
       }

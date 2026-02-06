@@ -5,12 +5,11 @@ import { stylesBigH1 } from "../headings";
 import { cols, gridContainer } from "../../styles/grid";
 import { breakpointStrings, mediaBreakpoints } from "../../styles/breakpoints";
 import { colours, gridSpacing } from "../../styles/theme";
-import ReactMarkdown from "react-markdown";
 
 interface ContactSectionProps {
   className?: string
   title: string
-  text: string
+  textContent?: React.ReactNode
 }
 
 const stylesSideNotice = css(
@@ -28,6 +27,10 @@ const stylesSideNotice = css(
       
       > div {
         padding: 1em;
+      }
+      
+      strong {
+        color: #fff;
       }
     `
 );
@@ -54,9 +57,7 @@ export const ContactSection: React.FC<ContactSectionProps> = (props) => {
       <div css={[gridContainer(), css`margin: 0 -${gridSpacing / 2}rem`]}>
         <div css={stylesSideNotice}>
           <div>
-            <ReactMarkdown>
-              {props.text}
-            </ReactMarkdown>
+            {props.textContent}
           </div>
         </div>
         <div css={stylesForm}>

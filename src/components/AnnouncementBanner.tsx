@@ -4,14 +4,14 @@ import { ErrorNotice } from './forms/notices';
 import { SuccessNotice } from './forms/notices';
 import { InfoNotice } from './forms/notices';
 import { css } from '@emotion/react';
-import ReactMarkdown from 'react-markdown';
+import { StrapiBlocksRenderer } from './strapi/blocks-renderer';
 
 type NoticeType = 'error' | 'info' | 'success';
 
 interface Notice {
     enabled: boolean;
     type: NoticeType;
-    message: string;
+    message: any[] | null;
 }
 
 
@@ -23,23 +23,23 @@ function validateNoticeType(noticeTypeStr: string | null): NoticeType {
 }
 
 function parseAnnouncementQueryResponse(response: Queries.AnnouncementQuery): Notice {
-    if (
-        response.file?.announcement === null ||
-        typeof(response.file?.announcement[0]) == "undefined" ||
-        response.file.announcement[0] === null
-    ) {
+    const announcement = response.strapiAnnouncement;
+    
+    if (!announcement) {
         return {
             enabled: false,
             type: "info",
-            message: "",
+            message: null,
         }
     }
 
-    const sanitizedResponse = response.file.announcement[0];
-
-    const enabled = !!sanitizedResponse.enabled;
-    const type = validateNoticeType(sanitizedResponse.type) 
-    const message = sanitizedResponse.message || "";
+    const enabled = !!announcement.enabled;
+    const type = validateNoticeType(announcement.type);
+    
+    // Parse the message from internal.content
+    const rawContent = announcement.internal?.content;
+    const parsedData = rawContent ? JSON.parse(rawContent) : null;
+    const message = parsedData?.message as any[] | null;
 
     return {
         enabled,
@@ -73,11 +73,11 @@ interface AnnnouncementProps {
 const AnnouncementBanner = ({className}: AnnnouncementProps) => {
     const data: Queries.AnnouncementQuery = useStaticQuery(graphql`
         query Announcement {
-            file(relativePath: {eq: "pages/announcement.yml"}) {
-                announcement: childrenPagesYaml {
-                    enabled
-                    type
-                    message
+            strapiAnnouncement {
+                enabled
+                type
+                internal {
+                    content
                 }
             }
         }
@@ -98,9 +98,7 @@ const AnnouncementBanner = ({className}: AnnnouncementProps) => {
     return (
         <aside className={className}>
             <Component css={announcementStyles} onDismiss={onDismiss} transitionType='shrinkUp'>
-                <ReactMarkdown>
-                    {announcement.message}
-                </ReactMarkdown>
+                {announcement.message && <StrapiBlocksRenderer content={announcement.message} />}
             </Component>
         </aside>
     );

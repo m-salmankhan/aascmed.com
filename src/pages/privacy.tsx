@@ -4,12 +4,22 @@ import { Breadcrumbs } from "../components/breadcrumbs";
 import { Columns, MainCol, PrimarySecondaryColumnsLayout, SideCol } from "../components/layouts/main-side-column";
 import { Article } from "../components/posts/article";
 import { H1 } from "../components/headings";
-import ReactMarkdown from "react-markdown";
 import { SEO } from "../components/seo";
+import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 
 const PrivacyPage = ({ data, location, children }: PageProps<Queries.PrivacyPageQuery>) => {
-    const heading = data.copy?.childPagesYaml?.heading || "Privacy Policy";
-    const text = data.copy?.childPagesYaml?.text || "";
+    const privacyData = data.strapiPrivacyPolicy;
+    const heading = privacyData?.title || "Privacy Policy";
+    
+    // Parse text blocks from internal.content
+    const rawContent = privacyData?.internal?.content;
+    const parsedData = rawContent ? JSON.parse(rawContent) : null;
+    const textBlocks = parsedData?.text as any[] | null;
+    
+    // Use Strapi's updatedAt metadata for last updated date
+    const lastUpdated = privacyData?.updatedAt 
+        ? new Date(privacyData.updatedAt).toISOString().split('T')[0].replace(/-/g, '.')
+        : null;
 
     return (
         <PrimarySecondaryColumnsLayout>
@@ -22,10 +32,8 @@ const PrivacyPage = ({ data, location, children }: PageProps<Queries.PrivacyPage
                     <Columns>
                         <MainCol>
                             <H1>{heading}</H1>
-                            <ReactMarkdown>
-                                {text}
-                            </ReactMarkdown>
-                            <p>Last Updated: {data.copy?.childPagesYaml?.lastUpdated}</p>
+                            {textBlocks && <StrapiBlocksRenderer content={textBlocks} />}
+                            {lastUpdated && <p>Last Updated: {lastUpdated}</p>}
                             <p>We may change this privacy policy. If we change this policy, the above date will be amended to reflect the update.</p>
                         </MainCol>
                     </Columns>
@@ -36,8 +44,8 @@ const PrivacyPage = ({ data, location, children }: PageProps<Queries.PrivacyPage
 }
 
 export const Head = (props: HeadProps<Queries.PrivacyPageQuery>) => {
-    const description = props.data.copy?.childPagesYaml?.meta_description || "";
-    const heading = props.data.copy?.childPagesYaml?.heading || "";
+    const description = props.data.strapiPrivacyPolicy?.description || "";
+    const heading = props.data.strapiPrivacyPolicy?.title || "";
 
     return (
         <SEO description={description} slug={props.location.pathname} title={heading} useTracking={true}>
@@ -47,12 +55,12 @@ export const Head = (props: HeadProps<Queries.PrivacyPageQuery>) => {
 }
 export const query = graphql`
   query PrivacyPage {
-    copy: file(relativePath: {eq: "pages/privacy.yml"}) {
-      childPagesYaml {
-        heading
-        text
-        meta_description
-        lastUpdated(formatString: "YYYY.MM.DD")
+    strapiPrivacyPolicy {
+      title
+      description
+      updatedAt
+      internal {
+        content
       }
     }
   }

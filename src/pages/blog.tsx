@@ -7,17 +7,24 @@ import { Container } from "../components/containers";
 import { gridSpacing } from "../styles/theme";
 import { SEO } from "../components/seo";
 import { BlogArchive, BlogSummary } from "../components/blog-posts";
+import { getImage } from "gatsby-plugin-image";
+import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 
 const BlogPage: React.FC<PageProps<Queries.BlogsQuery>> = ({ data }) => {
-  const pageCopy = data.sectionCopy?.childPagesYaml;
-  const blogsTitle = pageCopy?.heading || "Blog"
-  const blogsText = pageCopy?.text || "";
+  const archiveCopy = data.strapiBlogArchive;
+  const blogsTitle = archiveCopy?.heading || "Blog";
+  
+  // Parse text blocks from internal.content
+  const rawContent = archiveCopy?.internal?.content;
+  const parsedData = rawContent ? JSON.parse(rawContent) : null;
+  const textBlocks = parsedData?.text as any[] | null;
 
-  const blogs: BlogSummary[] = data.blogs.edges.map(edge => ({
-    slug: edge.node.fields?.slug || "",
-    title: edge.node.frontmatter?.title || "Untitled",
-    date: edge.node.frontmatter?.date || "",
-    description: edge.node.excerpt || "",
+  const blogs: BlogSummary[] = data.blogs.nodes.map(node => ({
+    slug: `/blog/${node.slug}/`,
+    title: node.title || "Untitled",
+    date: node.date || "",
+    description: node.description || "",
+    thumbnail: getImage(node.thumbnail?.localFile?.childImageSharp?.gatsbyImageData ?? null) ?? undefined,
   }));
   return (
     <Layout>
@@ -28,7 +35,7 @@ const BlogPage: React.FC<PageProps<Queries.BlogsQuery>> = ({ data }) => {
         ]} css={css({ marginTop: "3em" })} />
         <BlogArchive
           heading={blogsTitle}
-          text={blogsText}
+          textContent={textBlocks ? <StrapiBlocksRenderer content={textBlocks} /> : undefined}
           blogPosts={blogs}
           frontPage={false}
           css={css({
@@ -41,8 +48,8 @@ const BlogPage: React.FC<PageProps<Queries.BlogsQuery>> = ({ data }) => {
 }
 
 export const Head = (props: HeadProps<Queries.BlogsQuery>) => {
-  const description = props.data.sectionCopy?.childPagesYaml?.meta_description || "";
-  const heading = props.data.sectionCopy?.childPagesYaml?.heading || "";
+  const description = props.data.strapiBlogArchive?.metaDescription || "";
+  const heading = props.data.strapiBlogArchive?.heading || "";
 
   return (
     <SEO description={description} slug={props.location.pathname} title={heading} useTracking={true}>
@@ -55,28 +62,25 @@ export default BlogPage;
 
 export const query = graphql`
   query Blogs {
-    sectionCopy: file(relativePath: {eq: "pages/blog.yml"}) {
-      childPagesYaml {
-        meta_description
-        heading
-        text
+    strapiBlogArchive {
+      heading
+      metaDescription
+      internal {
+        content
       }
     }
-    blogs: allMdx(
-      filter: {fields: {post_type: {eq: "blog-post"}}}
-      sort: {frontmatter: {date: DESC}}
-    ) {
-      edges {
-        node {
-          fields {
-            slug
+    blogs: allStrapiBlog(sort: {date: DESC}) {
+      nodes {
+        slug
+        title
+        description
+        date(formatString: "Do MMMM YYYY")
+        thumbnail {
+          localFile {
+            childImageSharp {
+              gatsbyImageData(width: 400, height: 250, transformOptions: { cropFocus: CENTER })
+            }
           }
-          frontmatter {
-            date(formatString: "Do MMMM YYYY")
-            title
-            description
-          }
-          excerpt(pruneLength: 300)
         }
       }
     }

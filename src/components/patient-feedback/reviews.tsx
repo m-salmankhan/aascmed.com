@@ -11,11 +11,11 @@ import {cols, gridContainer} from "../../styles/grid";
 import {breakpointStrings, mediaBreakpoints} from "../../styles/breakpoints";
 import {CSSInterpolation} from "@emotion/serialize";
 import {StarIcon, StarStyles} from "./star-rating";
-import ReactMarkdown from "react-markdown";
+import { StrapiBlocksRenderer } from "../strapi/blocks-renderer";
 
 export interface Review {
     reviewerName: string,
-    body: string | null,
+    body: any[] | null,  // Strapi blocks content
     stars: number,
     source: {
         url: string,
@@ -131,9 +131,7 @@ const SliderReview: React.FC<SliderReviewProps> = ({className, review, number}) 
                 </div>
             </header>
             <div css={stylesReviewBody}>
-                <ReactMarkdown>
-                    {review.body || ""}
-                </ReactMarkdown>
+                {review.body && <StrapiBlocksRenderer content={review.body} />}
             </div>
         </article>
     )

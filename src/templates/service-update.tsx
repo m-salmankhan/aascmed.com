@@ -1,6 +1,5 @@
 import * as React from "react"
 import { graphql, HeadProps, Link, PageProps } from "gatsby"
-import { MDXProvider } from "@mdx-js/react";
 import { H1 } from "../components/headings";
 import { Columns, MainCol, PrimarySecondaryColumnsLayout } from "../components/layouts/main-side-column";
 import { Breadcrumbs } from "../components/breadcrumbs";
@@ -9,23 +8,34 @@ import { Article } from "../components/posts/article";
 import { ShareButtons } from "../components/social-media/share";
 import { PrimaryAnchor, PrimaryButton, stylesBtnSecondary, stylesButton } from "../components/buttons";
 import { gridSpacing } from "../styles/theme";
-// use React.useEffect / React.useState so compiled MDX wrappers have a `React` symbol in scope
-import { ButtonList, ContactBanner } from "../components/posts/shortcode-components";
 import { SEO } from "../components/seo";
+import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
+import moment from "moment";
 
-const shortcodes = { Link, ButtonList, ContactBanner };
-const ServiceUpdate = ({ data, children, location }: PageProps<Queries.ServiceUpdatePageQuery>) => {
+const ServiceUpdate = ({ data, location }: PageProps<Queries.ServiceUpdatePageQuery>) => {
     const [jsEnabled, setJsEnabled] = React.useState(false);
     React.useEffect(() => setJsEnabled(true), [setJsEnabled]);
 
-    if ((data.mdx === null) || (data.mdx === undefined))
-        throw Error("mdx is undefined");
+    const serviceUpdate = data.strapiServiceUpdate;
+    
+    if (!serviceUpdate) {
+        throw Error("Service update is undefined");
+    }
 
-    if ((data.mdx.frontmatter === null) || (data.mdx.frontmatter === undefined))
-        throw Error("Frontmatter is undefined");
-
-    const title = data.mdx.frontmatter.title || "Untitled"
-    const date = data.mdx.frontmatter.date || ""
+    const title = serviceUpdate.title || "Untitled";
+    const rawDate = serviceUpdate.date;
+    const formattedDate = rawDate ? moment(rawDate).format("Do MMMM YYYY") : "";
+    
+    // Parse raw JSON content to get full rich text data
+    const rawContent = serviceUpdate.internal?.content;
+    const parsedData = rawContent ? JSON.parse(rawContent) : null;
+    const body = parsedData?.body as any[] | undefined;
+    
+    // Build slug for breadcrumbs
+    const date = rawDate ? moment(rawDate) : null;
+    const slug = date 
+        ? `/service-updates/${date.format('YYYY')}/${date.format('MM')}/${serviceUpdate.slug}/`
+        : `/service-updates/${serviceUpdate.slug}/`;
 
     return (
         <PrimarySecondaryColumnsLayout>
@@ -33,18 +43,16 @@ const ServiceUpdate = ({ data, children, location }: PageProps<Queries.ServiceUp
                 <Breadcrumbs path={[
                     ["/", "Home"],
                     ["/service-updates/", "Service Updates"],
-                    [data.mdx.fields?.slug, title]
+                    [slug, title]
                 ]} css={css({ marginTop: "3em" })} />
 
                 <Article css={css({ h3: { fontSize: "1rem" } })}>
                     <H1>{title}</H1>
                     <ShareButtons pageTitle={title} path={location.pathname} />
-                    <p>{date}</p>
+                    <p>{formattedDate}</p>
                     <Columns>
                         <MainCol>
-                            <MDXProvider components={shortcodes as any}>
-                                {children}
-                            </MDXProvider>
+                            {body && <StrapiBlocksRenderer content={body} />}
                             <footer>
                                 {jsEnabled ?
                                     <PrimaryButton
@@ -67,8 +75,8 @@ const ServiceUpdate = ({ data, children, location }: PageProps<Queries.ServiceUp
 
 
 export const Head = (props: HeadProps<Queries.ServiceUpdatePageQuery>) => {
-    const title = props.data.mdx?.frontmatter?.title || "Untitled";
-    const description = props.data.mdx?.frontmatter?.description || "";
+    const title = props.data.strapiServiceUpdate?.title || "Untitled";
+    const description = props.data.strapiServiceUpdate?.description || "";
 
     return (
         <SEO description={description} slug={props.location.pathname} title={title} useTracking={true}>
@@ -80,14 +88,13 @@ export const Head = (props: HeadProps<Queries.ServiceUpdatePageQuery>) => {
 
 export const query = graphql`
   query ServiceUpdatePage ($id: String) {
-    mdx(id: {eq: $id}) {
-      fields {
-        slug
-      }
-      frontmatter {
-        date(formatString: "Do MMMM YYYY")
-        title
-        description
+    strapiServiceUpdate(id: {eq: $id}) {
+      slug
+      title
+      description
+      date
+      internal {
+        content
       }
     }
   }

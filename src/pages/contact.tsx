@@ -7,19 +7,25 @@ import { gridSpacing } from "../styles/theme";
 import { PracticeArchive, PracticeSummary } from "../components/practices/practice-archive";
 import { ContactSection } from "../components/contact/full-form";
 import { SEO } from "../components/seo";
+import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 
-const ContactPage = ({ data }: PageProps<Queries.PracticesArchiveQuery>) => {
-  const heading = data.copy?.childPagesYaml?.heading || "Contact Us";
-  const text = data.copy?.childPagesYaml?.text || "";
+const ContactPage = ({ data }: PageProps<Queries.ContactPageQuery>) => {
+  const archiveCopy = data.strapiContact;
+  const heading = archiveCopy?.heading || "Contact Us";
+  
+  // Parse text blocks from internal.content
+  const rawContent = archiveCopy?.internal?.content;
+  const parsedData = rawContent ? JSON.parse(rawContent) : null;
+  const textBlocks = parsedData?.text as any[] | null;
 
-  const practices: PracticeSummary[] = data.practices.edges.map(edge => ({
-    slug: edge.node.fields?.slug || "",
-    clinic_name: edge.node.frontmatter?.clinic_name || "Untitled Clinic",
-    longitude: edge.node.frontmatter?.lon || 0,
-    latitude: edge.node.frontmatter?.lat || 0,
-    address: edge.node.frontmatter?.address || "",
-    phone: edge.node.frontmatter?.phone || "",
-    fax: edge.node.frontmatter?.fax || "",
+  const practices: PracticeSummary[] = data.practices.nodes.map(clinic => ({
+    slug: `/clinics/${(clinic.clinic_name || "").toLowerCase().replace(/\s+/g, '-')}/`,
+    clinic_name: clinic.clinic_name || "Untitled Clinic",
+    longitude: clinic.location?.long || 0,
+    latitude: clinic.location?.lat || 0,
+    address: clinic.location?.address || "",
+    phone: clinic.contact?.phone || "",
+    fax: clinic.contact?.fax || "",
   }));
 
   return (
@@ -32,12 +38,11 @@ const ContactPage = ({ data }: PageProps<Queries.PracticesArchiveQuery>) => {
           ]} css={css({ marginTop: "3em" })} />
           <ContactSection
             title={heading}
-            text={text}
+            textContent={textBlocks ? <StrapiBlocksRenderer content={textBlocks} /> : undefined}
             css={css`margin: 0 -${gridSpacing / 2}rem`}
           />
           <PracticeArchive
             practices={practices} heading={"Practice Locations"}
-            text={""}
             isHomePage={true}
             css={css({ margin: `0 -${gridSpacing / 2}em` })}
           />
@@ -48,8 +53,8 @@ const ContactPage = ({ data }: PageProps<Queries.PracticesArchiveQuery>) => {
 }
 
 export const Head = (props: HeadProps<Queries.ContactPageQuery>) => {
-  const description = props.data.copy?.childPagesYaml?.meta_description || "";
-  const heading = props.data.copy?.childPagesYaml?.heading || "";
+  const description = props.data.strapiContact?.metaDescription || "";
+  const heading = props.data.strapiContact?.heading || "";
 
   return (
     <SEO description={description} slug={props.location.pathname} title={heading} useTracking={true}>
@@ -60,28 +65,25 @@ export const Head = (props: HeadProps<Queries.ContactPageQuery>) => {
 
 export const query = graphql`
   query ContactPage {
-    copy: file(relativePath: {eq: "pages/contact.yml"}) {
-      childPagesYaml {
-        heading
-        meta_description
-        text
+    strapiContact {
+      heading
+      metaDescription
+      internal {
+        content
       }
     }
 
-    practices: allMdx(filter: {fields: {post_type: {eq: "clinics"}}}) {
-      edges {
-        node {
-          fields {
-            slug
-          }
-          frontmatter {
-            clinic_name
-            lat
-            lon
-            address
-            phone
-            fax
-          }
+    practices: allStrapiClinic {
+      nodes {
+        clinic_name
+        location {
+          address
+          lat
+          long
+        }
+        contact {
+          phone
+          fax
         }
       }
     }

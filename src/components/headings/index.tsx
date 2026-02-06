@@ -3,7 +3,6 @@ import { colours, fontWeightHeadings } from "../../styles/theme";
 import React, { ReactNode } from "react";
 import { mediaBreakpoints } from "../../styles/breakpoints";
 import { cols } from "../../styles/grid";
-import { ReactMarkdown } from "react-markdown/lib/react-markdown";
 
 const stylesHeadings = css({
     fontWeight: fontWeightHeadings,
@@ -69,21 +68,22 @@ interface DynamicHeadingProps {
     className?: string
     children: ReactNode
     level: 1 | 2 | 3 | 4 | 5 | 6
+    id?: string
 }
 export const DynamicHeading = (props: DynamicHeadingProps) => {
     switch (props.level) {
         case 1:
-            return <h1 className={props.className} css={stylesH1}>{props.children}</h1>
+            return <h1 id={props.id} className={props.className} css={stylesH1}>{props.children}</h1>
         case 2:
-            return <h2 className={props.className} css={stylesH2}>{props.children}</h2>
+            return <h2 id={props.id} className={props.className} css={stylesH2}>{props.children}</h2>
         case 3:
-            return <h3 className={props.className} css={stylesH3}>{props.children}</h3>
+            return <h3 id={props.id} className={props.className} css={stylesH3}>{props.children}</h3>
         case 4:
-            return <h4 className={props.className} css={stylesH4}>{props.children}</h4>
+            return <h4 id={props.id} className={props.className} css={stylesH4}>{props.children}</h4>
         case 5:
-            return <h5 className={props.className} css={stylesH5}>{props.children}</h5>
+            return <h5 id={props.id} className={props.className} css={stylesH5}>{props.children}</h5>
         case 6:
-            return <h6 className={props.className} css={stylesH6}>{props.children}</h6>
+            return <h6 id={props.id} className={props.className} css={stylesH6}>{props.children}</h6>
     }
 }
 
@@ -107,16 +107,11 @@ const stylesSectionHeading = css(
 interface SectionHeadingProps {
     className?: string
     heading: ReactNode
-    bodyText?: string
+    bodyContent?: ReactNode
 }
 
 export const SectionHeader = (props: SectionHeadingProps) =>
     <div className={props.className} css={stylesSectionHeading}>
         {props.heading}
-        {
-            props.bodyText &&
-            <ReactMarkdown>
-                {props.bodyText}
-            </ReactMarkdown>
-        }
+        {props.bodyContent}
     </div>

@@ -16,111 +16,177 @@ import { ContactSection } from "../components/contact/full-form";
 import { SEO } from "../components/seo";
 import { Footer } from "../components/footer";
 import { BlogArchive } from "../components/blog-posts";
+import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
+
+// Helper to parse text blocks from a section in internal.content
+const parseTextBlocks = (parsedData: any, sectionName: string): any[] | null => {
+  if (!parsedData || !parsedData[sectionName]?.text) return null;
+  return parsedData[sectionName].text;
+};
 
 const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
   const heroImage = data.heroImage?.childImageSharp?.gatsbyImageData;
   const siteTitle = data.siteTitle?.siteMetadata?.title || "Allergy Asthma and Sinus Centres";
+  const homePage = data.strapiHomePage;
 
-  const heroCopy = data?.sectionCopy?.childPagesYaml?.hero;
-  const heroTitle = heroCopy?.heading || siteTitle;
-  const heroText = heroCopy?.text || "";
+  // Parse the full internal.content JSON once
+  const rawContent = homePage?.internal?.content;
+  const parsedData = rawContent ? JSON.parse(rawContent) : null;
 
-  const conditionsCopy = data.sectionCopy?.childPagesYaml?.conditions;
-  const conditionsTitle = conditionsCopy?.heading || "Learn more about the conditions we treat."
-  const conditionsText = conditionsCopy?.text || "";
-  const conditions: ConditionSummary[] = data.conditions.edges.map(edge => ({
-    slug: edge.node.fields?.slug || "",
-    title: edge.node.frontmatter?.heading || "",
-    thumbnail: edge.node.frontmatter?.thumbnail?.childImageSharp?.gatsbyImageData,
+  // Hero section
+  const heroTitle = homePage?.hero?.heading || siteTitle;
+  const heroTextBlocks = parseTextBlocks(parsedData, 'hero');
+
+  // Conditions section
+  const conditionsTitle = homePage?.conditions?.heading || "Learn more about the conditions we treat.";
+  const conditionsTextBlocks = parseTextBlocks(parsedData, 'conditions');
+  const conditions: ConditionSummary[] = data.conditions.nodes.map(node => ({
+    slug: `/conditions/${node.slug}/`,
+    title: node.heading || node.title || "",
+    thumbnail: node.thumbnail?.localFile?.childImageSharp?.gatsbyImageData,
   }));
 
-  const serviceUpdatesCopy = data.sectionCopy?.childPagesYaml?.service_updates;
-  const serviceUpdatesTitle = serviceUpdatesCopy?.heading || "Service Updates"
-  const serviceUpdatesText = serviceUpdatesCopy?.text || "";
-  const serviceUpdates: ServiceUpdateSummary[] = data.serviceUpdates.edges.map(edge => ({
-    slug: edge.node.fields?.slug || "",
-    title: edge.node.frontmatter?.title || "",
-    date: edge.node.frontmatter?.date || "",
-    description: edge.node.frontmatter?.description || "",
+  // Service updates section
+  const serviceUpdatesTitle = homePage?.serviceUpdates?.heading || "Service Updates";
+  const serviceUpdatesTextBlocks = parseTextBlocks(parsedData, 'serviceUpdates');
+  const serviceUpdates: ServiceUpdateSummary[] = data.serviceUpdates.nodes.map(node => {
+    const date = node.date ? new Date(node.date) : null;
+    const year = date ? date.getFullYear() : '';
+    const month = date ? String(date.getMonth() + 1).padStart(2, '0') : '';
+    const slug = date 
+      ? `/service-updates/${year}/${month}/${node.slug}/`
+      : `/service-updates/${node.slug}/`;
+    
+    return {
+      slug,
+      title: node.title || "",
+      date: node.formattedDate || "",
+      description: node.description || "",
+    };
+  });
+
+  // Blog section
+  const blogsTitle = homePage?.blog?.heading || "Blog";
+  const blogsTextBlocks = parseTextBlocks(parsedData, 'blog');
+  const blogs: ServiceUpdateSummary[] = data.blogs.nodes.map(node => ({
+    slug: `/blog/${node.slug}/`,
+    title: node.title || "",
+    date: node.date || "",
+    description: node.description || "",
   }));
 
+  // Providers section
+  const providersTitle = homePage?.providers?.heading || "Meet the team";
+  const providersTextBlocks = parseTextBlocks(parsedData, 'providers');
+  const providers: ProviderSummary[] = data.providers.nodes
+    .filter(node => !node.retirementNotice?.retired) // Exclude retired providers
+    .map(node => ({
+      slug: `/providers/${node.slug}/`,
+      name: {
+        fullName: node.name?.fullName || "",
+        title: node.name?.honorific && node.name.honorific !== "None" ? node.name.honorific : "",
+        degreeAbbr: node.name?.qualificationAbbr || "",
+      },
+      retired: false,
+      image: node.image?.localFile?.childImageSharp?.gatsbyImageData,
+    }));
 
-  const blogsCopy = data.sectionCopy?.childPagesYaml?.blog_posts;
-  const blogsTitle = blogsCopy?.heading || "Blog"
-  const blogsText = blogsCopy?.text || "";
-  const blogs: ServiceUpdateSummary[] = data.blogs.edges.map(edge => ({
-    slug: edge.node.fields?.slug || "",
-    title: edge.node.frontmatter?.title || "",
-    date: edge.node.frontmatter?.date || "",
-    description: edge.node.excerpt || "",
-  }));
-
-
-
-  const providersCopy = data.sectionCopy?.childPagesYaml?.providers;
-  const providersTitle = providersCopy?.heading || "Meet the team"
-  const providersText = providersCopy?.text || "";
-  const providers: ProviderSummary[] = data.providers.edges.map(edge => ({
-    slug: edge.node.fields?.slug || "",
-    name: {
-      fullName: edge.node.frontmatter?.name?.fullname || "",
-      title: edge.node.frontmatter?.name?.title || "",
-      degreeAbbr: edge.node.frontmatter?.name?.degree_abbr || "",
-    },
-    retired: edge.node.frontmatter?.retirement?.retired || false,
-    image: edge.node.frontmatter?.image?.childImageSharp?.gatsbyImageData,
-  }));
-
+  // Feedback section
   const avgRating = {
-    rating: data.sectionCopy?.childPagesYaml?.patient_feedback?.rating || 0,
+    rating: homePage?.feedback?.rating || 0,
     source: {
-      name: data.sectionCopy?.childPagesYaml?.patient_feedback?.source_name || "",
-      url: data.sectionCopy?.childPagesYaml?.patient_feedback?.source_url || "",
+      name: homePage?.feedback?.sourceName || "",
+      url: homePage?.feedback?.sourceUrl || "",
     },
-    date: data.sectionCopy?.childPagesYaml?.patient_feedback?.access_date || "",
+    date: homePage?.feedback?.accessDate || "",
   };
 
-  const reviews: Review[] = data.reviews.edges.map(edge => ({
-    stars: edge.node.frontmatter?.stars || 0,
-    body: edge.node.body,
-    source: {
-      url: edge.node.frontmatter?.source?.url || "",
-      name: edge.node.frontmatter?.source?.name || "",
-    },
-    reviewerName: edge.node.frontmatter?.reviewerName || "",
+  const reviews: Review[] = data.reviews.nodes.map(node => {
+    // Parse the content blocks from internal.content
+    const rawContent = node.internal?.content;
+    const parsedContent = rawContent ? JSON.parse(rawContent) : null;
+    const contentBlocks = parsedContent?.content as any[] | null;
+    
+    return {
+      stars: node.stars || 0,
+      body: contentBlocks,
+      source: {
+        url: node.sourceUrl || "",
+        name: node.sourceName || "",
+      },
+      reviewerName: node.name || "",
+    };
+  });
+
+  // Locations/Practices section
+  const practicesTitle = homePage?.locations?.heading || "Practices";
+  const practicesTextBlocks = parseTextBlocks(parsedData, 'locations');
+  const practices: PracticeSummary[] = data.practices.nodes.map(clinic => ({
+    slug: `/clinics/${(clinic.clinic_name || "").toLowerCase().replace(/\s+/g, '-')}/`,
+    clinic_name: clinic.clinic_name || "Untitled Clinic",
+    longitude: clinic.location?.long || 0,
+    latitude: clinic.location?.lat || 0,
+    address: clinic.location?.address || "",
+    phone: clinic.contact?.phone || "",
+    fax: clinic.contact?.fax || "",
   }));
 
-  const practicesCopy = data.sectionCopy?.childPagesYaml?.practices;
-  const practicesTitle = practicesCopy?.heading || "Practices"
-  const practicesText = practicesCopy?.text || "";
-  const practices: PracticeSummary[] = data.practices.edges.map(edge => ({
-    slug: edge.node.fields?.slug || "",
-    clinic_name: edge.node.frontmatter?.clinic_name || "Untitled Clinic",
-    longitude: edge.node.frontmatter?.lon || 0,
-    latitude: edge.node.frontmatter?.lat || 0,
-    address: edge.node.frontmatter?.address || "",
-    phone: edge.node.frontmatter?.phone || "",
-    fax: edge.node.frontmatter?.fax || "",
-  }));
-
-  const contactCopy = data.sectionCopy?.childPagesYaml?.contact;
-  const contactTitle = contactCopy?.heading || "Contact Us"
-  const contactText = contactCopy?.text || "";
+  // Contact section
+  const contactTitle = homePage?.contact?.heading || "Contact Us";
+  const contactTextBlocks = parseTextBlocks(parsedData, 'contact');
 
   return (
     <App>
-      <Hero image={heroImage} heading={heroTitle} text={heroText} />
+      <Hero 
+        image={heroImage} 
+        heading={heroTitle} 
+        textContent={heroTextBlocks ? <StrapiBlocksRenderer content={heroTextBlocks} /> : undefined}
+      />
       <main id={"main"}>
         <Container>
-          <ConditionsArchive showViewAll={true} heading={conditionsTitle} text={conditionsText} frontPage={true} conditionsList={conditions} css={css({ marginTop: "5em", })} />
-          <BlogArchive blogPosts={blogs} frontPage={true} heading={blogsTitle} text={blogsText} css={css({ marginTop: "4em", })} />
-          <ProvidersArchiveHomePageLayout providers={providers} heading={providersTitle} text={providersText} css={css({ marginTop: "4em", })} />
-          <ServiceUpdateArchive serviceUpdates={serviceUpdates} frontPage={true} heading={serviceUpdatesTitle} text={serviceUpdatesText} css={css({ marginTop: "4em", })} />
+          <ConditionsArchive 
+            showViewAll={true} 
+            heading={conditionsTitle} 
+            textContent={conditionsTextBlocks ? <StrapiBlocksRenderer content={conditionsTextBlocks} /> : undefined}
+            frontPage={true} 
+            conditionsList={conditions} 
+            css={css({ marginTop: "5em", })} 
+          />
+          <BlogArchive 
+            blogPosts={blogs} 
+            frontPage={true} 
+            heading={blogsTitle} 
+            textContent={blogsTextBlocks ? <StrapiBlocksRenderer content={blogsTextBlocks} /> : undefined}
+            css={css({ marginTop: "4em", })} 
+          />
+          <ProvidersArchiveHomePageLayout 
+            providers={providers} 
+            heading={providersTitle} 
+            textContent={providersTextBlocks ? <StrapiBlocksRenderer content={providersTextBlocks} /> : undefined}
+            css={css({ marginTop: "4em", })} 
+          />
+          <ServiceUpdateArchive 
+            serviceUpdates={serviceUpdates} 
+            frontPage={true} 
+            heading={serviceUpdatesTitle} 
+            textContent={serviceUpdatesTextBlocks ? <StrapiBlocksRenderer content={serviceUpdatesTextBlocks} /> : undefined}
+            css={css({ marginTop: "4em", })} 
+          />
         </Container>
         <PatientFeedback css={css({ marginTop: "5em", })} averageRating={avgRating} reviews={reviews} />
         <Container>
-          <ContactSection css={css({ marginTop: "5em", })} title={contactTitle} text={contactText} />
-          <PracticeArchive css={css({ marginTop: "5em", })} practices={practices} heading={practicesTitle} text={practicesText} isHomePage={true} />
+          <ContactSection 
+            css={css({ marginTop: "5em", })} 
+            title={contactTitle} 
+            textContent={contactTextBlocks ? <StrapiBlocksRenderer content={contactTextBlocks} /> : undefined}
+          />
+          <PracticeArchive 
+            css={css({ marginTop: "5em", })} 
+            practices={practices} 
+            heading={practicesTitle} 
+            textContent={practicesTextBlocks ? <StrapiBlocksRenderer content={practicesTextBlocks} /> : undefined}
+            isHomePage={true} 
+          />
         </Container>
       </main>
       <Footer />
@@ -142,7 +208,7 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
 }
 
 export const Head = (props: HeadProps<Queries.IndexPageQuery>) => {
-  const description = props.data.sectionCopy?.childPagesYaml?.meta_description || "";
+  const description = props.data.strapiHomePage?.metaDescription || "";
 
   return (
     <SEO description={description} slug={props.location.pathname} title={"Allergy, Asthma and Sinus Centers in Illinois"} appendBusinessNameToTitle={false} useTracking={true}>
@@ -155,43 +221,37 @@ export default IndexPage
 
 export const query = graphql`
   query IndexPage {
-    sectionCopy: file(relativePath: {eq: "pages/home.yml"}) {
-      childPagesYaml {
-        meta_description
-        conditions {
-          heading
-          text
-        }
-        hero {
-          heading
-          text
-        }
-        service_updates {
-          heading
-          text
-        }
-        blog_posts {
-          heading
-          text
-        }
-        providers {
-          heading
-          text
-        }
-        patient_feedback {
-          rating
-          source_url
-          source_name
-          access_date
-        }
-        practices {
-          heading
-          text
-        }
-        contact {
-          heading
-          text
-        }
+    strapiHomePage {
+      metaDescription
+      internal {
+        content
+      }
+      hero {
+        heading
+      }
+      conditions {
+        heading
+      }
+      serviceUpdates {
+        heading
+      }
+      blog {
+        heading
+      }
+      providers {
+        heading
+      }
+      feedback {
+        rating
+        sourceName
+        sourceUrl
+        accessDate
+      }
+      locations {
+        heading
+      }
+      contact {
+        heading
       }
     }
     heroImage: file(relativePath: {eq: "hero-bg.png"}) {
@@ -205,123 +265,82 @@ export const query = graphql`
         title
       }
     }
-    conditions: allMdx(
-      filter: {fields: {post_type: {eq: "conditions"}}},
-      sort: {frontmatter: {order: ASC}}
-      limit: 8
-     ) {
-      edges {
-        node {
-          fields {
-            slug
-          }
-          frontmatter {
-            thumbnail {
-              childImageSharp {
-                gatsbyImageData(width: 800)
-              }
+    conditions: allStrapiCondition(sort: {order: ASC}, limit: 8) {
+      nodes {
+        slug
+        title
+        heading
+        thumbnail {
+          localFile {
+            childImageSharp {
+              gatsbyImageData(width: 800)
             }
-            heading
           }
         }
       }
     }
-    serviceUpdates: allMdx(
-      filter: {fields: {post_type: {eq: "service-update"}}}
-      sort: {frontmatter: {date: DESC}}
-      limit: 3
-    ) {
-      edges {
-        node {
-          fields {
-            slug
-          }
-          frontmatter {
-            date(formatString: "Do MMMM YYYY")
-            title
-            description
-          }
-        }
+    serviceUpdates: allStrapiServiceUpdate(sort: {date: DESC}, limit: 3) {
+      nodes {
+        slug
+        title
+        description
+        date
+        formattedDate: date(formatString: "Do MMMM YYYY")
       }
     }
 
-    blogs: allMdx(
-      filter: {fields: {post_type: {eq: "blog-post"}}}
-      sort: {frontmatter: {date: DESC}}
-      limit: 6
-    ) {
-      edges {
-        node {
-          fields {
-            slug
-          }
-          frontmatter {
-            date(formatString: "Do MMMM YYYY")
-            title
-            description
-          }
-          excerpt(pruneLength: 300)
-        }
+    blogs: allStrapiBlog(sort: {date: DESC}, limit: 6) {
+      nodes {
+        slug
+        title
+        description
+        date(formatString: "Do MMMM YYYY")
       }
     }
       
-    providers: allMdx(
-      filter: {fields: {post_type: {eq: "providers"}}}
-      sort: {frontmatter: {order: ASC}}
-    ) {
-      edges {
-        node {
-          id
-          frontmatter {
-            image {
-              childImageSharp {
-                gatsbyImageData(aspectRatio: 1, layout: FULL_WIDTH)
-              }
+    providers: allStrapiProvider(sort: {order: ASC}) {
+      nodes {
+        id
+        slug
+        name {
+          fullName
+          honorific
+          qualificationAbbr
+        }
+        retirementNotice {
+          retired
+        }
+        image {
+          localFile {
+            childImageSharp {
+              gatsbyImageData(aspectRatio: 1, layout: FULL_WIDTH)
             }
-            name {
-              fullname
-              degree_abbr
-              title
-            }
-            retirement {
-              retired
-            }
-          }
-          fields {
-            slug
           }
         }
       }
     }
-    reviews: allMdx(filter: {fields: {post_type: {eq: "review"}}}) {
-      edges {
-        node {
-          frontmatter {
-            reviewerName: title
-            stars
-            source {
-              name
-              url
-            }
-          }
-          body
+    reviews: allStrapiReview {
+      nodes {
+        name
+        stars
+        sourceName
+        sourceUrl
+        internal {
+          content
         }
       }
     }
-    practices: allMdx(filter: {fields: {post_type: {eq: "clinics"}}}) {
-      edges {
-        node {
-          fields {
-            slug
-          }
-          frontmatter {
-            clinic_name
-            lat
-            lon
-            address
-            phone
-            fax
-          }
+    practices: allStrapiClinic {
+      nodes {
+        clinic_name
+        location {
+          address
+          lat
+          long
+        }
+        contact {
+          phone
+          fax
         }
       }
     }
