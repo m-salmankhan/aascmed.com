@@ -123,6 +123,12 @@ const config: GatsbyConfig = {
                         queryParams: {
                             populate: '*'
                         }
+                    },
+                    {
+                        singularName: 'review',
+                        queryParams: {
+                            populate: '*'
+                        }
                     }
                 ],
                 singleTypes: [
@@ -187,6 +193,12 @@ const config: GatsbyConfig = {
                                 locations: { populate: '*' },
                                 contact: { populate: '*' }
                             }
+                        }
+                    },
+                    {
+                        singularName: 'tracking-info',
+                        queryParams: {
+                            populate: '*'
                         }
                     }
                 ],

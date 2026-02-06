@@ -99,15 +99,26 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
     date: homePage?.feedback?.accessDate || "",
   };
 
-  const reviews: Review[] = data.reviews.edges.map(edge => ({
-    stars: edge.node.frontmatter?.stars || 0,
-    body: edge.node.body,
-    source: {
-      url: edge.node.frontmatter?.source?.url || "",
-      name: edge.node.frontmatter?.source?.name || "",
-    },
-    reviewerName: edge.node.frontmatter?.reviewerName || "",
-  }));
+  const reviews: Review[] = data.reviews.nodes.map(node => {
+    // Parse the content blocks from internal.content and extract text
+    const rawContent = node.internal?.content;
+    const parsedContent = rawContent ? JSON.parse(rawContent) : null;
+    const contentBlocks = parsedContent?.content as any[] | null;
+    const bodyText = contentBlocks
+      ?.map((block: any) => block.children?.map((c: any) => c.text || '').join(''))
+      .filter(Boolean)
+      .join('\n\n') || "";
+    
+    return {
+      stars: node.stars || 0,
+      body: bodyText,
+      source: {
+        url: node.sourceUrl || "",
+        name: node.sourceName || "",
+      },
+      reviewerName: node.name || "",
+    };
+  });
 
   // Locations/Practices section
   const practicesTitle = homePage?.locations?.heading || "Practices";
@@ -310,18 +321,14 @@ export const query = graphql`
         }
       }
     }
-    reviews: allMdx(filter: {fields: {post_type: {eq: "review"}}}) {
-      edges {
-        node {
-          frontmatter {
-            reviewerName: title
-            stars
-            source {
-              name
-              url
-            }
-          }
-          body
+    reviews: allStrapiReview {
+      nodes {
+        name
+        stars
+        sourceName
+        sourceUrl
+        internal {
+          content
         }
       }
     }
