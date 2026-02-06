@@ -15,7 +15,6 @@ const config: GatsbyConfig = {
     // Learn more at: https://gatsby.dev/graphql-typegen
     graphqlTypegen: true,
     plugins: [
-        "gatsby-plugin-static-cms",
         "gatsby-plugin-emotion",
         "gatsby-plugin-sitemap",
         "gatsby-plugin-sharp",
