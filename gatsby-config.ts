@@ -161,6 +161,18 @@ const config: GatsbyConfig = {
                         queryParams: {
                             populate: '*'
                         }
+                    },
+                    {
+                        singularName: 'service-update-page',
+                        queryParams: {
+                            populate: '*'
+                        }
+                    },
+                    {
+                        singularName: 'privacy-policy',
+                        queryParams: {
+                            populate: '*'
+                        }
                     }
                 ],
                 queryLimit: 1000,
