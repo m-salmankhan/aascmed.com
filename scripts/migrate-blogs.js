@@ -11,7 +11,7 @@ if (!STRAPI_TOKEN) {
   process.exit(1);
 }
 
-const blogsDir = path.join(__dirname, '../content/blog');
+const blogsDir = path.join(__dirname, '../content/blog-archive');
 
 // Track uploaded images to avoid duplicates
 const uploadedImages = new Map(); // filename -> strapi media id
@@ -340,9 +340,13 @@ function getThumbnailPath(thumbnail) {
   if (!thumbnail) return null;
   
   // Handle different path formats
-  // e.g., "content/blog/steptodown.com748119.jpg"
-  if (thumbnail.startsWith('content/blog/')) {
+  // e.g., "content/blog-archive/steptodown.com748119.jpg"
+  if (thumbnail.startsWith('content/blog-archive/')) {
     return path.join(__dirname, '..', thumbnail);
+  }
+  // Legacy path format
+  if (thumbnail.startsWith('content/blog/')) {
+    return path.join(__dirname, '..', thumbnail.replace('content/blog/', 'content/blog-archive/'));
   }
   
   // If it's just a filename, look in the blog directory

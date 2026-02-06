@@ -13,7 +13,7 @@ if (!STRAPI_TOKEN) {
   process.exit(1);
 }
 
-const serviceUpdatesDir = path.join(__dirname, '../content/service-updates');
+const serviceUpdatesDir = path.join(__dirname, '../content/service-updates-archive');
 
 // Parse inline text for bold, links, etc and return Strapi text children
 function parseInlineText(text) {

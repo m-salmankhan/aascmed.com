@@ -11,7 +11,7 @@ if (!STRAPI_TOKEN) {
   process.exit(1);
 }
 
-const clinicsDir = path.join(__dirname, '../content/clinics');
+const clinicsDir = path.join(__dirname, '../content/clinics-archive');
 
 // Parse time string like "09:00 - 17:00" or "09:00-17:00" into start and end times
 function parseTimeRange(hoursStr) {

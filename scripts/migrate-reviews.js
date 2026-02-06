@@ -11,7 +11,7 @@ if (!STRAPI_TOKEN) {
   process.exit(1);
 }
 
-const reviewsDir = path.join(__dirname, '../content/reviews');
+const reviewsDir = path.join(__dirname, '../content/reviews-archive');
 
 // Convert plain text body to Strapi blocks format
 function textToBlocks(text) {

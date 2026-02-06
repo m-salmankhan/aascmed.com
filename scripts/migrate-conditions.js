@@ -13,7 +13,7 @@ if (!STRAPI_TOKEN) {
   process.exit(1);
 }
 
-const conditionsDir = path.join(__dirname, '../content/conditions');
+const conditionsDir = path.join(__dirname, '../content/conditions-archive');
 
 // Track uploaded images to avoid duplicates
 const uploadedImages = new Map(); // filename -> strapi media id

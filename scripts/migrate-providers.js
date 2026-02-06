@@ -13,7 +13,7 @@ if (!STRAPI_TOKEN) {
   process.exit(1);
 }
 
-const providersDir = path.join(__dirname, '../content/providers');
+const providersDir = path.join(__dirname, '../content/providers-archive');
 
 // Track uploaded images to avoid duplicates
 const uploadedImages = new Map(); // filename -> strapi media id
