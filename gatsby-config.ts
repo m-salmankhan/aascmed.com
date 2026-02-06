@@ -125,7 +125,14 @@ const config: GatsbyConfig = {
                         }
                     }
                 ],
-                singleTypes: [],
+                singleTypes: [
+                    {
+                        singularName: 'announcement',
+                        queryParams: {
+                            populate: '*'
+                        }
+                    }
+                ],
                 queryLimit: 1000,
                 skipContentTypeCheck: true,
             },
