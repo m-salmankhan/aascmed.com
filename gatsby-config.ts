@@ -131,6 +131,36 @@ const config: GatsbyConfig = {
                         queryParams: {
                             populate: '*'
                         }
+                    },
+                    {
+                        singularName: 'blog-archive',
+                        queryParams: {
+                            populate: '*'
+                        }
+                    },
+                    {
+                        singularName: 'conditions-archive',
+                        queryParams: {
+                            populate: '*'
+                        }
+                    },
+                    {
+                        singularName: 'clinics-archive',
+                        queryParams: {
+                            populate: '*'
+                        }
+                    },
+                    {
+                        singularName: 'contact',
+                        queryParams: {
+                            populate: '*'
+                        }
+                    },
+                    {
+                        singularName: 'providers-page',
+                        queryParams: {
+                            populate: '*'
+                        }
                     }
                 ],
                 queryLimit: 1000,

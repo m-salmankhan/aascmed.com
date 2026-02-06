@@ -109,12 +109,14 @@ interface SectionHeadingProps {
     className?: string
     heading: ReactNode
     bodyText?: string
+    bodyContent?: ReactNode
 }
 
 export const SectionHeader = (props: SectionHeadingProps) =>
     <div className={props.className} css={stylesSectionHeading}>
         {props.heading}
         {
+            props.bodyContent ? props.bodyContent :
             props.bodyText &&
             <ReactMarkdown>
                 {props.bodyText}

@@ -8,11 +8,16 @@ import { gridSpacing } from "../styles/theme";
 import { SEO } from "../components/seo";
 import { BlogArchive, BlogSummary } from "../components/blog-posts";
 import { getImage } from "gatsby-plugin-image";
+import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 
 const BlogPage: React.FC<PageProps<Queries.BlogsQuery>> = ({ data }) => {
-  const pageCopy = data.sectionCopy?.childPagesYaml;
-  const blogsTitle = pageCopy?.heading || "Blog"
-  const blogsText = pageCopy?.text || "";
+  const archiveCopy = data.strapiBlogArchive;
+  const blogsTitle = archiveCopy?.heading || "Blog";
+  
+  // Parse text blocks from internal.content
+  const rawContent = archiveCopy?.internal?.content;
+  const parsedData = rawContent ? JSON.parse(rawContent) : null;
+  const textBlocks = parsedData?.text as any[] | null;
 
   const blogs: BlogSummary[] = data.blogs.nodes.map(node => ({
     slug: `/blog/${node.slug}/`,
@@ -30,7 +35,7 @@ const BlogPage: React.FC<PageProps<Queries.BlogsQuery>> = ({ data }) => {
         ]} css={css({ marginTop: "3em" })} />
         <BlogArchive
           heading={blogsTitle}
-          text={blogsText}
+          textContent={textBlocks ? <StrapiBlocksRenderer content={textBlocks} /> : undefined}
           blogPosts={blogs}
           frontPage={false}
           css={css({
@@ -43,8 +48,8 @@ const BlogPage: React.FC<PageProps<Queries.BlogsQuery>> = ({ data }) => {
 }
 
 export const Head = (props: HeadProps<Queries.BlogsQuery>) => {
-  const description = props.data.sectionCopy?.childPagesYaml?.meta_description || "";
-  const heading = props.data.sectionCopy?.childPagesYaml?.heading || "";
+  const description = props.data.strapiBlogArchive?.metaDescription || "";
+  const heading = props.data.strapiBlogArchive?.heading || "";
 
   return (
     <SEO description={description} slug={props.location.pathname} title={heading} useTracking={true}>
@@ -57,11 +62,11 @@ export default BlogPage;
 
 export const query = graphql`
   query Blogs {
-    sectionCopy: file(relativePath: {eq: "pages/blog.yml"}) {
-      childPagesYaml {
-        meta_description
-        heading
-        text
+    strapiBlogArchive {
+      heading
+      metaDescription
+      internal {
+        content
       }
     }
     blogs: allStrapiBlog(sort: {date: DESC}) {

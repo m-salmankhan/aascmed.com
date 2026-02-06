@@ -10,7 +10,8 @@ import ReactMarkdown from "react-markdown";
 interface ContactSectionProps {
   className?: string
   title: string
-  text: string
+  text?: string
+  textContent?: React.ReactNode
 }
 
 const stylesSideNotice = css(
@@ -58,9 +59,11 @@ export const ContactSection: React.FC<ContactSectionProps> = (props) => {
       <div css={[gridContainer(), css`margin: 0 -${gridSpacing / 2}rem`]}>
         <div css={stylesSideNotice}>
           <div>
-            <ReactMarkdown>
-              {props.text}
-            </ReactMarkdown>
+            {props.textContent ? props.textContent : props.text && (
+              <ReactMarkdown>
+                {props.text}
+              </ReactMarkdown>
+            )}
           </div>
         </div>
         <div css={stylesForm}>
