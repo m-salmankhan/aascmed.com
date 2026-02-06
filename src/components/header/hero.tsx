@@ -10,7 +10,8 @@ import ReactMarkdown from "react-markdown";
 
 interface HeroProps extends HTMLProps<HTMLDivElement> {
     heading: string,
-    text: string,
+    text?: string,
+    textContent?: React.ReactNode,
     image?: IGatsbyImageData,
 }
 
@@ -100,7 +101,7 @@ const getParallaxValues = (height: number): ParallaxParameters => {
     }
 }
 
-export const Hero: React.FC<HeroProps> = ({ heading, text, image, children }) => {
+export const Hero: React.FC<HeroProps> = ({ heading, text, textContent, image, children }) => {
     const headerRef = useRef<HTMLElement | null>(null);
     const [parallax, setParallax] = useState<ParallaxParameters>({ textTranslation: 0, backgroundOpacity: 0 });
 
@@ -133,9 +134,11 @@ export const Hero: React.FC<HeroProps> = ({ heading, text, image, children }) =>
                     <div>
                         {children}
                         <h2>{heading}</h2>
-                        <ReactMarkdown>
-                            {text}
-                        </ReactMarkdown>
+                        {textContent ? textContent : text && (
+                            <ReactMarkdown>
+                                {text}
+                            </ReactMarkdown>
+                        )}
                     </div>
                 </div>
                 <div />

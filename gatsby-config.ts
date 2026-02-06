@@ -173,6 +173,21 @@ const config: GatsbyConfig = {
                         queryParams: {
                             populate: '*'
                         }
+                    },
+                    {
+                        singularName: 'home-page',
+                        queryParams: {
+                            populate: {
+                                hero: { populate: '*' },
+                                conditions: { populate: '*' },
+                                serviceUpdates: { populate: '*' },
+                                blog: { populate: '*' },
+                                providers: { populate: '*' },
+                                feedback: { populate: '*' },
+                                locations: { populate: '*' },
+                                contact: { populate: '*' }
+                            }
+                        }
                     }
                 ],
                 queryLimit: 1000,
