@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useSiteMetadata } from "../../hooks/useSiteMetadata";
 import { ReactNode } from "react";
 import { colours } from "../../styles/theme";
@@ -39,6 +39,14 @@ export const SEO = (props: SEOProps) => {
         (props.title + (appendBusinessNameToTitle ? ` | ${siteTitle}` : "")) :
         siteTitle;
     const socialImage = props.image ? siteURL + props.image : `${siteURL}/assets/favicon/favicon-300x300.png`;
+
+    // Workaround for Gatsby 5 Head API bug where document.title is not synced with <title> element
+    useEffect(() => {
+        if (pageTitle) {
+            document.title = pageTitle;
+        }
+    }, [pageTitle]);
+
 
     return (
         <>
