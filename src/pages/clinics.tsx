@@ -5,12 +5,13 @@ import { Breadcrumbs } from "../components/breadcrumbs";
 import { Container } from "../components/containers";
 import { gridSpacing } from "../styles/theme";
 import { PracticeArchive, PracticeSummary } from "../components/practices/practice-archive";
-import { SEO } from "../components/seo";
+import { SEO, usePageTitle } from "../components/seo";
 import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 
 const PracticesPage = ({ data }: PageProps<Queries.PracticesArchiveQuery>) => {
   const archiveCopy = data.strapiClinicsArchive;
   const heading = archiveCopy?.heading || "Clinics";
+  const pageTitle = usePageTitle(heading);
   
   // Parse text blocks from internal.content
   const rawContent = archiveCopy?.internal?.content;
@@ -28,7 +29,7 @@ const PracticesPage = ({ data }: PageProps<Queries.PracticesArchiveQuery>) => {
   }));
 
   return (
-    <Layout>
+    <Layout pageTitle={pageTitle}>
       <main>
         <Container>
           <Breadcrumbs path={[

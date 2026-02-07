@@ -2,14 +2,15 @@ import { HeadProps, Link, PageProps } from "gatsby"
 import { Layout } from "../components/layouts/default";
 import { css } from "@emotion/react";
 import { Container } from "../components/containers";
-import { SEO } from "../components/seo";
+import { SEO, usePageTitle } from "../components/seo";
 import { stylesBigH1 } from "../components/headings";
 import { Logo } from "../components/logo";
 import { colours } from "../styles/theme";
 
 const NotFoundPage = ({ data }: PageProps<Queries.PracticesArchiveQuery>) => {
+    const pageTitle = usePageTitle("404 Not Found");
     return (
-        <Layout>
+        <Layout pageTitle={pageTitle}>
             <main>
                 <Container css={css({ minHeight: "50vh", textAlign: "center", marginTop: "5em" })}>
                     <Logo css={{ fill: colours.brandPrimary }} />

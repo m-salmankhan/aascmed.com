@@ -11,14 +11,15 @@ import { Footer } from "../footer";
 interface HalfColumnProps {
     children: ReactNode,
     className?: string
+    pageTitle?: string
 }
 interface ColumnProps {
     children: ReactNode,
     className?: string
 }
-export const HalfColumnsLayout: React.FC<HalfColumnProps> = ({ children, className }) => {
+export const HalfColumnsLayout: React.FC<HalfColumnProps> = ({ children, className, pageTitle }) => {
     return (
-        <App className={className} >
+        <App className={className} pageTitle={pageTitle}>
             <NavBar />
             <Container id={"main"}>
                 {children}

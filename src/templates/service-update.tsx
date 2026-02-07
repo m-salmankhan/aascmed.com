@@ -8,7 +8,7 @@ import { Article } from "../components/posts/article";
 import { ShareButtons } from "../components/social-media/share";
 import { PrimaryAnchor, PrimaryButton, stylesBtnSecondary, stylesButton } from "../components/buttons";
 import { gridSpacing } from "../styles/theme";
-import { SEO } from "../components/seo";
+import { SEO, usePageTitle } from "../components/seo";
 import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 import moment from "moment";
 
@@ -25,6 +25,7 @@ const ServiceUpdate = ({ data, location }: PageProps<Queries.ServiceUpdatePageQu
     const title = serviceUpdate.title || "Untitled";
     const rawDate = serviceUpdate.date;
     const formattedDate = rawDate ? moment(rawDate).format("Do MMMM YYYY") : "";
+    const pageTitle = usePageTitle(title);
     
     // Parse raw JSON content to get full rich text data
     const rawContent = serviceUpdate.internal?.content;
@@ -38,7 +39,7 @@ const ServiceUpdate = ({ data, location }: PageProps<Queries.ServiceUpdatePageQu
         : `/service-updates/${serviceUpdate.slug}/`;
 
     return (
-        <PrimarySecondaryColumnsLayout>
+        <PrimarySecondaryColumnsLayout pageTitle={pageTitle}>
             <main css={css`margin-bottom: 5rem;`}>
                 <Breadcrumbs path={[
                     ["/", "Home"],

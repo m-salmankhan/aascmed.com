@@ -6,7 +6,7 @@ import { css } from "@emotion/react";
 import { SectionHeader, stylesBigH1 } from "../components/headings";
 import { ProviderArchive, ProviderSummary } from "../components/providers";
 import { gridSpacing } from "../styles/theme";
-import { SEO } from "../components/seo";
+import { SEO, usePageTitle } from "../components/seo";
 import { createExcerpt } from "../utils/strapi-excerpt";
 import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 
@@ -17,6 +17,7 @@ const stylesExpandGridPadding = css`
 const ProvidersPage = ({ data }: PageProps<Queries.ProvidersPageQuery>) => {
   const archiveCopy = data.strapiProvidersPage;
   const pageHeading = archiveCopy?.heading || "Meet the team";
+  const pageTitle = usePageTitle(pageHeading);
   
   // Parse text blocks from internal.content
   const rawContent = archiveCopy?.internal?.content;
@@ -44,7 +45,7 @@ const ProvidersPage = ({ data }: PageProps<Queries.ProvidersPageQuery>) => {
   });
 
   return (
-    <Layout>
+    <Layout pageTitle={pageTitle}>
       <Container>
         <Breadcrumbs path={[
           ["/", "Home"],

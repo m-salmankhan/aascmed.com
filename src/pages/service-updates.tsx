@@ -7,12 +7,13 @@ import { Container } from "../components/containers";
 import { ServiceUpdateArchive } from "../components/service-updates";
 import { ServiceUpdateSummary } from "../components/service-updates/service-update-archive";
 import { gridSpacing } from "../styles/theme";
-import { SEO } from "../components/seo";
+import { SEO, usePageTitle } from "../components/seo";
 import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 
 const ServiceUpdatePage: React.FC<PageProps<Queries.ServiceUpdatesQuery>> = ({ data }) => {
   const archiveCopy = data.strapiServiceUpdatePage;
   const serviceUpdatesTitle = archiveCopy?.heading || "Service Updates";
+  const pageTitle = usePageTitle(serviceUpdatesTitle);
   
   // Parse text blocks from internal.content
   const rawContent = archiveCopy?.internal?.content;
@@ -35,7 +36,7 @@ const ServiceUpdatePage: React.FC<PageProps<Queries.ServiceUpdatesQuery>> = ({ d
     };
   });
   return (
-    <Layout>
+    <Layout pageTitle={pageTitle}>
       <Container>
         <Breadcrumbs path={[
           ["/", "Home"],

@@ -12,14 +12,15 @@ import { Footer } from "../footer";
 interface PrimarySecondaryColumnsLayoutProps {
     children: ReactNode,
     className?: string
+    pageTitle?: string
 }
 interface ColumnProps {
     children: ReactNode,
     className?: string
 }
-export const PrimarySecondaryColumnsLayout: React.FC<PrimarySecondaryColumnsLayoutProps> = ({ children, className }) => {
+export const PrimarySecondaryColumnsLayout: React.FC<PrimarySecondaryColumnsLayoutProps> = ({ children, className, pageTitle }) => {
     return (
-        <App className={className} >
+        <App className={className} pageTitle={pageTitle}>
             <NavBar />
             <Container id={"main"}>
                 {children}
