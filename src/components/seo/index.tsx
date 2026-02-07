@@ -15,6 +15,18 @@ interface SEOProps {
     children?: ReactNode
 }
 
+/**
+ * Hook to compute the page title consistently.
+ * Use this to pass pageTitle to App component as a workaround for Gatsby 5 Head API bug.
+ */
+export const usePageTitle = (title: string, appendBusinessNameToTitle: boolean = true): string => {
+    const siteMetadata = useSiteMetadata();
+    const siteTitle = siteMetadata.title;
+    return title
+        ? (title + (appendBusinessNameToTitle ? ` | ${siteTitle}` : ""))
+        : siteTitle;
+}
+
 const Favicons = () =>
     <>
         <link rel="icon" type="image/svg" href="/assets/favicon/favicon.svg" />

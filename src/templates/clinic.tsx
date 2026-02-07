@@ -8,7 +8,7 @@ import { MapBox } from "../components/mapbox/dynamic";
 import { PrimaryAnchor } from "../components/buttons";
 import { Table } from "../components/tables";
 import { ContactForm } from "../components/contact";
-import { SEO } from "../components/seo";
+import { SEO, usePageTitle } from "../components/seo";
 import { Article } from "../components/posts/article";
 import { useSiteMetadata } from "../hooks/useSiteMetadata";
 import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
@@ -30,7 +30,8 @@ const Clinic: React.FC<PageProps<Queries.ClinicQuery>> = ({ data }) => {
     const clinic = data.strapiClinic;
     
     const clinicName = clinic?.clinic_name || "Untitled";
-    const pageTitle = clinic?.title || "Untitled";
+    const pageTitleRaw = clinic?.title || "Untitled";
+    const pageTitle = usePageTitle(pageTitleRaw);
     
     // Parse raw JSON content to get full rich text data with all formatting
     const rawContent = clinic?.internal?.content;
@@ -107,7 +108,7 @@ const Clinic: React.FC<PageProps<Queries.ClinicQuery>> = ({ data }) => {
     }
 
     return (
-        <HalfColumnsLayout>
+        <HalfColumnsLayout pageTitle={pageTitle}>
             <main>
                 <Breadcrumbs path={[
                     ["/", "Home"],

@@ -7,7 +7,7 @@ import { css } from "@emotion/react";
 import { Article } from "../components/posts/article";
 import { ShareButtons } from "../components/social-media/share";
 import { ContactBanner } from "../components/posts/shortcode-components";
-import { SEO } from "../components/seo";
+import { SEO, usePageTitle } from "../components/seo";
 import { GatsbyImage, IGatsbyImageData } from "gatsby-plugin-image";
 import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 import { Contents } from "../components/posts/contents";
@@ -50,6 +50,7 @@ const BlogPost = ({ data, location }: PageProps<Queries.BlogPostQuery>) => {
     const date = blog.date || ""
     const slug = `/blog/${blog.slug}/`
     const heroImage = blog.thumbnail?.localFile?.childImageSharp?.gatsbyImageData;
+    const pageTitle = usePageTitle(title);
     
     // Parse raw JSON content to get full rich text data with all formatting
     const rawContent = blog.internal?.content;
@@ -59,7 +60,7 @@ const BlogPost = ({ data, location }: PageProps<Queries.BlogPostQuery>) => {
     // Extract table of contents from content
     const tocItems = content ? extractTableOfContents(content) : [];
     return (
-        <PrimarySecondaryColumnsLayout>
+        <PrimarySecondaryColumnsLayout pageTitle={pageTitle}>
             <main css={css`margin-bottom: 5rem;`}>
                 <Breadcrumbs path={[
                     ["/", "Home"],

@@ -5,7 +5,7 @@ import { Breadcrumbs } from "../components/breadcrumbs";
 import { css } from "@emotion/react";
 import { Container } from "../components/containers";
 import { gridSpacing } from "../styles/theme";
-import { SEO } from "../components/seo";
+import { SEO, usePageTitle } from "../components/seo";
 import { BlogArchive, BlogSummary } from "../components/blog-posts";
 import { getImage } from "gatsby-plugin-image";
 import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
@@ -13,6 +13,7 @@ import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 const BlogPage: React.FC<PageProps<Queries.BlogsQuery>> = ({ data }) => {
   const archiveCopy = data.strapiBlogArchive;
   const blogsTitle = archiveCopy?.heading || "Blog";
+  const pageTitle = usePageTitle(blogsTitle);
   
   // Parse text blocks from internal.content
   const rawContent = archiveCopy?.internal?.content;
@@ -27,7 +28,7 @@ const BlogPage: React.FC<PageProps<Queries.BlogsQuery>> = ({ data }) => {
     thumbnail: getImage(node.thumbnail?.localFile?.childImageSharp?.gatsbyImageData ?? null) ?? undefined,
   }));
   return (
-    <Layout>
+    <Layout pageTitle={pageTitle}>
       <Container>
         <Breadcrumbs path={[
           ["/", "Home"],

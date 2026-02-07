@@ -3,9 +3,14 @@ import { NavBar } from "../header";
 import React, { ReactNode } from "react";
 import { Footer } from "../footer";
 
-export const Layout: React.FC<{ children: ReactNode }> = ({ children }) => {
+interface LayoutProps {
+    children: ReactNode
+    pageTitle?: string
+}
+
+export const Layout: React.FC<LayoutProps> = ({ children, pageTitle }) => {
     return (
-        <App>
+        <App pageTitle={pageTitle}>
             <NavBar />
             <div id={"main"}>
                 {children}
