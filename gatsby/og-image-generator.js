@@ -26,9 +26,9 @@ const BRAND_SECONDARY = '#4DA249';
 
 // Layout constants
 const PADDING = 60;
-const ICON_SIZE = 140; // Larger icon at top
-const ICON_TOP_MARGIN = 40;
-const TITLE_TOP_MARGIN = 200; // Below icon
+const LOGO_HEIGHT = 70; // Height for horizontal logo
+const LOGO_TOP_MARGIN = 40;
+const TITLE_TOP_MARGIN = 160; // Below logo (logo + margin)
 const TITLE_BOTTOM_MARGIN = 60;
 const MAX_TITLE_WIDTH = OG_WIDTH - PADDING * 2;
 
@@ -213,25 +213,23 @@ function calculateTitleLayout(ctx, title, maxWidth, maxHeight, fontFamily) {
 }
 
 /**
- * Create the gradient overlay with icon and title
+ * Create the gradient overlay with logo and title
  * @param {string} title - Title text
- * @param {string} iconPath - Path to icon PNG (pre-rendered from SVG)
  * @param {string} fontFamily - Font family to use
  * @returns {Promise<Buffer>} PNG buffer of the overlay
  */
-async function createOverlay(title, iconPath, fontFamily) {
+async function createOverlay(title, fontFamily) {
   const canvas = createCanvas(OG_WIDTH, OG_HEIGHT);
   const ctx = canvas.getContext('2d');
 
-  // Create gradient overlay (horizontal, matching website hero)
+  // Create gradient overlay (diagonal, top-left to bottom-right)
   // Use slightly lower opacity to reduce banding visibility
-  const gradient = ctx.createLinearGradient(0, 0, OG_WIDTH, 0);
-  gradient.addColorStop(0, hexToRgba(BRAND_PRIMARY, 0.88));
-  gradient.addColorStop(0.5, hexToRgba('#2A7040', 0.86)); // Add midpoint to smooth transition
+  const gradient = ctx.createLinearGradient(0, OG_HEIGHT, OG_WIDTH, 0);
+  gradient.addColorStop(0.25, hexToRgba(BRAND_PRIMARY, 0.88));
   gradient.addColorStop(1, hexToRgba(BRAND_SECONDARY, 0.84));
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, OG_WIDTH, OG_HEIGHT);
-  
+
   // Add subtle noise to break up gradient banding
   const imageData = ctx.getImageData(0, 0, OG_WIDTH, OG_HEIGHT);
   const data = imageData.data;
@@ -245,19 +243,30 @@ async function createOverlay(title, iconPath, fontFamily) {
   }
   ctx.putImageData(imageData, 0, 0);
 
-  // Load and draw icon at top (centered)
-  if (iconPath && fs.existsSync(iconPath)) {
+  // Load and draw horizontal logo at top left
+  // Use sharp to render SVG at correct size for crisp output
+  if (fs.existsSync(HORIZONTAL_LOGO_SVG_PATH)) {
     try {
-      const icon = await loadImage(iconPath);
-      const aspectRatio = icon.width / icon.height;
-      const iconHeight = ICON_SIZE;
-      const iconWidth = iconHeight * aspectRatio;
-
-      // Center icon horizontally
-      const iconX = (OG_WIDTH - iconWidth) / 2;
-      ctx.drawImage(icon, iconX, ICON_TOP_MARGIN, iconWidth, iconHeight);
+      // Get SVG metadata to calculate aspect ratio
+      const svgBuffer = fs.readFileSync(HORIZONTAL_LOGO_SVG_PATH);
+      const metadata = await sharp(svgBuffer).metadata();
+      const aspectRatio = metadata.width / metadata.height;
+      
+      // Calculate dimensions
+      const logoHeight = LOGO_HEIGHT;
+      const logoWidth = Math.round(logoHeight * aspectRatio);
+      
+      // Render SVG to PNG at exact target size using sharp (crisp rendering)
+      const logoPng = await sharp(svgBuffer)
+        .resize(logoWidth, logoHeight, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+        .png()
+        .toBuffer();
+      
+      // Load the rendered PNG into canvas
+      const logo = await loadImage(logoPng);
+      ctx.drawImage(logo, PADDING, LOGO_TOP_MARGIN);
     } catch (error) {
-      console.warn('Failed to load icon:', error.message);
+      console.warn('Failed to load logo:', error.message);
     }
   }
 
@@ -279,7 +288,7 @@ async function createOverlay(title, iconPath, fontFamily) {
 
   // Set up text styling
   ctx.font = `bold ${fontSize}px ${fontFamily}`;
-  ctx.textAlign = 'center';
+  ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
 
   const lineHeight = fontSize * 1.35;
@@ -292,7 +301,7 @@ async function createOverlay(title, iconPath, fontFamily) {
   lines.forEach((line, index) => {
     const y = textStartY + index * lineHeight;
     ctx.fillStyle = '#FFFFFF';
-    ctx.fillText(line, OG_WIDTH / 2, y);
+    ctx.fillText(line, PADDING, y);
   });
 
   return canvas.toBuffer('image/png');
@@ -311,41 +320,8 @@ function hexToRgba(hex, alpha) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-/**
- * Render the icon from SVG to PNG
- * @param {number} size - Desired size (width and height)
- * @returns {Promise<string>} Path to the rendered PNG
- */
-async function renderIconFromSvg(size = ICON_SIZE) {
-  const iconPngPath = path.join(FONTS_DIR, `icon-${size}.png`);
-
-  // Return cached version if exists
-  if (fs.existsSync(iconPngPath)) {
-    return iconPngPath;
-  }
-
-  // Ensure directory exists
-  if (!fs.existsSync(FONTS_DIR)) {
-    fs.mkdirSync(FONTS_DIR, { recursive: true });
-  }
-
-  // The icon SVG data (extracted from logo-sprites.svg, viewBox="15 0 375 410")
-  const iconSvg = `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="15 0 375 410" width="${size}" height="${size}">
-  <g fill="#FFFFFF">
-    <path d="M0 204.7C-0.2 92.5 91 0.7 203.5 0c113.1-0.7 205.3 91.2 205.5 204.6 0.2 113.8-93.5 204.2-204.2 204.5C92.2 409.4 0.2 317.7 0 204.7zM18.5 155.9c-0.3 0.6-0.6 1.3-0.9 1.9 -0.5 2.3-0.9 4.7-1.4 7 -0.9 4.7-1.8 9.4-2.6 14.2 -0.4 5.1-0.7 10.2-1.1 15.2 -1.9 19.9 7.5 36.6 15.4 53.7 2.4 8.7 7.5 16 12.3 23.4 16.2 24.7 36.7 44.7 65 55.3 23.2 8.7 47.5 3.3 58.1-14 12.9-21 13.4-43.8 5.5-66.7 -6.8-19.6-39.4-30.3-55.3-10.7 -6.1 7.6-13.8 13.9-20.7 20.9 -2.7 2.8-5.9 4.4-9.2 1.8 -3.5-2.7-2.4-6 0.1-9.1 1.3-1.5 3.7-2.8 2.1-6.1 -1.6 0.1-3.4 0.2-5.2 0.3 -3.9 0.3-7.2-0.7-7.6-5.1 -0.4-4.5 2.7-6 6.6-6.3 3.1-0.2 6.3-0.6 9.4-0.3 8.6 0.7 22.2-5.8 26.1-12.7 0.6-1.2 0.8-2-0.2-3.3 -4.7-5.6-21.1-5.6-25.3 0.4 -4.7 6.8-11.2 11.1-18.7 14.1 -2.9 1.2-5.7 0.7-7.3-2.5 -1.6-3.1-0.5-5.6 2.2-7.4 2.6-1.7 5.5-3.1 8.1-4.9 2.2-1.6 5.9-2.9 4.8-6.2 -0.8-2.5-4.4-1.9-6.7-2.1 -6.9-0.7-11.4-2.7-7.4-10.7 1.6-0.6 4.4 0.2 4.4-2.1 0.1-2.3-2.7-3-4.3-4.2 -0.1-1.7-0.2-3.3-0.3-5 6.2-4.5 10.7-0.8 14.8 3.4 8.3 8.4 16.8 15.5 30 14 6.3-0.7 12.5 2.2 17 7 3.6 3.8 7.7 4.6 12.7 4.8 20.2 0.7 35.4 12.3 42 31.4 5.3 15.4 5.2 31.3 2.3 47 -6.7 36.3-31.3 54.3-67.8 48.5 -29.5-4.7-51.9-22.3-70.7-44.7 -6.9-8.3-13.2-17.1-19.8-25.7 8 26.4 23 48.1 40.8 68.5 15 17.2 33.1 23.8 55.3 23.7 34.9-0.1 57.2-16.1 65.4-50.2 7.1-29.6 4.9-59.2-5.2-87.9 -5.5-15.7-13.1-30.3-25.9-41.5 -4-3.5-8.4-8.4-14-6.7 -10.2 3.1-24.2-2.2-29.5 12.9 -0.9 2.5-4.4 3.6-7.4 1.6 -2.5-1.6-3-3.8-2.3-6.6 2.4-9.1-0.5-12.8-10.3-12.2 -8 0.4-15.8 0.1-23.7-0.8 -5.3-8.2-4.4-9.9 5.7-11.4 4.5 1 10.1 3.6 12.8-0.8 1.9-3.1-2.9-6.9-5.3-10 -1.3-1.7-2.4-3.6-3.5-5.5l0.3-0.5c9.9-13.1 14.3 7.9 23 3.8 1.9-0.9 3.1 1.6 3.3 3.7 0.1 0.9 0.1 2-0.2 2.8 -3.9 8.7 1.3 11.3 8.3 12.9 6.9 1.6 13.8 1.4 20.7 0.1 3.5-0.7 4.9-1.9 3.8-5.7 -2.5-9.3-6.2-18-13.5-24.6 -3-2.7-6.3-5.8-10.9-3.9 -12.1 4.8-23.6 1.5-35.1-2.5 -0.7-1.3-1.3-2.6-2-3.9 0.2-1.2 0.4-2.3 0.7-3.5 1.1-0.9 2.2-1.8 3.3-2.7 5.2 1 10.4 2.1 15.7 3.1 2.8 0.5 6.1 1.6 8-0.8 1.9-2.4-1.4-4.3-2.4-6.4 -1.5-3.1-2.5-6.2 0.7-8.5 3.4-2.4 6.4-1.2 8.9 2.1 3.1 3.9 4.9 9.3 9.7 11.3 16.5 7 23.2 21.2 28.1 37 1.1 3.6 0.2 8.6 5.6 9.9 0.3 0.4 0.8 0.6 1.3 0.6 17.9 13.2 28.8 31.3 36.5 51.7 9.9 26.3 10.7 53.6 9.2 81.1l-0.1 0.6 0.6 0.2c-0.4 1-0.8 2-1.2 2.9 -0.1 1.3-0.3 2.6-0.4 3.9 -3.6 14.2-8.4 28-17.2 40 -1 1.1-2 2.3-3 3.4 -7.6 7.4-16.5 12.7-25.9 17.4 -3.9 1-7.8 2-11.6 3.1 -8.8 0.6-17.6 1.3-29.2 2.1 15.3 7.7 28.2 13.8 42.5 16.2l-0.1-0.2c0.7 0.4 1.4 0.7 2.1 1.1 1.3 0.2 2.7 0.4 4 0.7 2.9 1.7 6.2 2.2 9.5 2l0.5 0.3 0.5-0.2c0.9 0.3 1.7 0.6 2.6 0.8 4.7 1.1 9.5 1.7 14.4 1.1 1.4 1.2 3 1.3 4.7 1 1.4 0 2.7 0 4.1 0.1l0.9 0.2 0.9-0.1c3.9 0 7.7 0 11.6-0.1 12.9-0.1 25.6-1.3 38-5.2 1.3-0.2 2.6-0.4 3.9-0.7 0.8-0.3 1.5-0.6 2.3-1 1.8-0.5 3.6-1 5.5-1.5 11.4-2.6 21.8-7.3 32-14 -24.5-0.7-46.3-7.2-63.1-25.6l-0.4-0.6c-2.8-4.2-5.6-8.4-8.3-12.6 -1-2.3-2-4.6-2.9-6.9 -0.4-0.7-0.8-1.4-1.2-2.2 -1.3-4.3-2.6-8.7-3.9-13 -2.3-16-3.8-32-2.3-48.2 3.6-39.5 13.6-75.8 49.1-99.6 1.2-0.8 2.2-2.5 2.3-3.9 2.7-28.5 28.9-38.8 44.3-57.5 1.8 0.8 3.5 1.6 5.3 2.3 2.4 6-3.2 9.7-4.8 14.9 6 2 11 1.7 16.3-1.5 3.3-2 7.8-2.1 9.5 2.7 1.5 4.2-1.5 6.6-5.1 7.7 -7.6 2.4-15.7 5.5-23.2 2.8 -11.8-4.4-18 1.5-23 10.2 -3.7 6.4-10.3 14.8-5.9 20.5 4.6 5.9 14.7 3 22.5 1.3 7.2-1.6 10.8-4.8 6.8-12.6 -2.3-4.5-0.5-9.7 4.6-8.3 5.8 1.5 7.9-1.4 11.1-4.2 2.6-2.3 5.7-3 8.5-0.4 3.1 2.8 1.8 5.6-0.4 8.3 -1 1.2-2.2 2.4-3 3.7 -1.5 2.3-4.4 4.9-2.7 7.4 0.9 1.4 4.7 1 7.1 1.2 1.6 0.1 3.2-0.2 4.7-0.5 4.3-0.7 8.9-1 9.4 4.8 0.5 5.6-4.4 6-8.5 6.7 -6.3 1.1-12.6 0.3-18.9-0.1 -7.8-0.4-13.3 4.5-11 9.3 1.8 3.7 3.8 7.3-0.7 9.7 -5.5 2.9-7.8-1.7-10.4-5.3 -1.6-2.2-1.2-5.3-4.7-6.6 -19.3-6.7-30.7-2.8-43.1 15 -1.2 1.8-2.4 3.6-3.6 5.4 -24.1 38.7-28.6 80.5-14.6 123 13.5 41.3 71.9 54.8 104.9 26.3 15.4-13.3 27.7-29.2 37.8-46.7 2.1-3.7 5.5-6.9 5-13.1 -3.8 4.5-6.8 8.1-9.8 11.6 -20.7 23.9-45.5 40.1-78.3 41.2 -20.3 0.6-37.6-4.1-50.3-22.1 -11.8-16.7-13.9-34.9-13-54.1 1.1-22.9 10.3-40.9 32.8-50 6.1-0.8 12.2-1.5 18.3-2.3 6.7-0.8 9.6-8.1 15.8-9.5 16.5-3.6 33-6.8 44.1-21.6 1.9-2.5 5.9-2.5 8.3 0.6 2.1 2.6 1.4 5.3-0.8 7.7 -1.2 1.3-4.2 1.8-1.5 5 6.6 7.8 5.9 9.3-3.8 11.3 -2.6 0.5-5.7-0.2-7.8 2.5 2.3 6.1 8.2 7.6 12.8 10.6 3.2 2.1 4.3 4.9 2.5 8 -1.6 2.8-4.5 3.2-7.5 1.9 -6.2-2.6-11.9-6-16.2-11.3 -6.7-8.2-17.5-9.7-26.1-3.8 -2.3 1.5-3.6 2.7-0.7 4.8 8.4 6.2 14.3 17.1 28.3 12.2 4.9-1.7 13.5-1.7 13.4 8.4 -0.7 0.8-1.3 1.6-2 2.4 -4 2.3-8.9-1.5-13.4 1.4 3.4 4.9 9.2 8.4 4.9 14.9 -2.3 0.1-4.6 0.2-6.9 0.4 -8.2-8.3-16.5-16.5-24.7-24.9 -6.4-6.5-14-9.3-23.1-8.4 -0.5-0.3-1-0.2-1.5 0.2 -21.5 1.5-33.6 16.7-34 42.7 0.1 4.5 0.2 9 0.3 13.4 0.3 1.6 0.7 3.1 1 4.7 0.1 1.6 0.3 3.1 0.4 4.7 3.7 22.5 15.6 35.6 36.9 38.4 23.4 3.1 44.6-3 63.2-18 28.9-23.2 45.5-54.5 58.3-88.2 1.5-3.9 1.4-8.1 0.8-12.2 0.9-7 0.6-13.9-0.3-20.9 -3.3-43.6-18.7-82-48.8-114.1l-0.2-0.2c-9.9-12.5-22-22.6-35.5-31.1l0.1 0.1c-20.2-14.4-42.4-24.3-67-28.6 -23.5-5.8-47.2-6.5-71-2.2 -0.8 0.2-1.6 0.5-2.4 0.7 -3.1 0-6.2-0.1-9 1.7 -12.7 1.8-24.8 5.7-36.2 11.7 -1.2 0.6-2.5 1.2-3.7 1.8 -9.1 2.9-17 7.9-24.5 13.6 -3.1 1.2-5.8 3-7.9 5.5 -10.4 6.8-19.6 14.8-27.4 24.6 -2.7 2.3-5.3 4.6-6.9 7.9 -12.3 13.5-21.9 28.7-28.4 45.8 -0.7 1.7-1.4 3.5-2.2 5.2 -0.4 0.7-0.8 1.5-1.2 2.2 -0.4 1.2-0.9 2.4-1.3 3.7 -2.5 5.5-4.9 11.1-5.2 17.3L18.5 155.9z"/>
-    <path d="M306 97c-8.8 11.2-21.2 10.2-33.1 9 -6.9-0.7-11 1.9-16 5.7 -30.5 23.1-39.9 56.5-46.1 91.8 -1.7 9.6-4.1 19.1-7.5 28.7 -3.1-17.4-6.5-34.7-9.1-52.2 -2.9-19.1-9.5-36-25-48.5 -2.2-1.8-4.2-3.9-5.9-6.1 -10.3-12.9-21.3-23.7-40.4-19.3 -5.3 1.2-11.4-1.3-15.9-5.1 -2.8-2.4-4.6-5.8-2.3-9.3 2.5-3.8 5.6-2.3 9-0.3 9.8 5.7 11.4 5 11.6-4 0.4-0.2 0.4-0.5 0.2-0.8 3-2.3 6.1-3.3 9.7-1.3 0.8 0.8 2.3 2.3 2.4 2.3 1.7-1.5 0.8-3.1 0-4.8 -0.5-3.5-1-7.1-1.5-10.6 0.4-0.4 0.6-0.9 0.7-1.4 5.8-3.2 9.7-1.9 11.3 4.8 0.5 2.2 1.5 4.3 1.5 6.5 0.3 16.2 12 25.7 21.4 36.6 1.8 2.1 6 4.7 5.8-0.2 -0.5-11.4 7.8-24.3-5.4-34.2 -5.4-4-7.1-11.1-8.3-17.7 0-1.3 0-2.5 0-3.8 0.2-1.3 0.4-2.5 0.7-3.8 0 0 0.2-0.5 0.2-0.5 7.1-4.6 10.7-2.6 10.8 5.8 0 3.3 0.7 6.3 2.5 9.1 1.7 2.7 3.5 6.4 6.5 6.4 3.7 0 4.1-4.4 5-7.2 1.2-3.9 2.2-8 2.4-12 0.3-3.9 0.9-7.2 5.5-7.2 4.7 0 5.4 3.8 5.6 7.4 0.5 7.5-2.1 14.3-4.9 21.1 -2.7 6.4-6 12.3-7.6 19.3 -6 25.9 9 46.7 16.1 69.6 4.2-15.4 12.6-29.2 14.2-45.1 0.9-6.4 1-12.7-0.1-19.1 -0.1-6.8-2.2-13-5.3-19 -4.3-8.1-8.2-16.5-7.7-26.1 0.2-3.9 0.6-8.1 5.9-8 4.4 0.2 5.6 3.6 5.5 7.4 -0.2 5.6 1.4 10.6 3.6 15.6 1.9 4.3 3.9 4.1 6.9 1.1 4-4.1 5.6-9 5.5-14.7 -0.1-3.5 1.4-6.5 5.3-6.6 4.5-0.2 5.7 3.1 6 7 0.5 8-1.5 15.6-7.4 20.8 -7 6.2-9.7 12.7-6.6 21.6 0.8 2.3 0.2 5 0.5 7.6 0.2 1.7-1 4.1 1.5 4.9 1.9 0.6 3.6-0.5 5-1.9 4.5-4.4 7.1-10.5 12.5-14.1 5.2-3.5 7.4-8.3 7.7-14.4 0.2-3.7 1.3-7.5 2.3-11.1 2.4-8.5 5.2-9.2 12.5-3.6 0 1.1 0 2.2 0 3.3 -1 3-2 6-3.1 9.3 4.3-0.4 7.4-0.8 10.4-1.1l-0.1-0.1c1.2 1.8 2.7 3.4 2.6 5.8 -0.4 7.9 3 7.3 8.4 4 3.5-2.2 6.6-6.3 11.7-4.3C305.1 91.9 306 94.3 306 97z"/>
-  </g>
-</svg>`;
-
-  // Render SVG to PNG using sharp
-  await sharp(Buffer.from(iconSvg))
-    .resize(size, size, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
-    .png()
-    .toFile(iconPngPath);
-
-  return iconPngPath;
-}
+// Path to the horizontal logo SVG file
+const HORIZONTAL_LOGO_SVG_PATH = path.join(__dirname, 'horizontal-logo.svg');
 
 /**
  * Generate an OG image with title overlaid on a background
@@ -366,14 +342,6 @@ async function generateOGImage({ title, backgroundImagePath, outputPath }) {
   // Try to load Poppins font
   const hasPoppins = await ensurePoppinsFont();
   const fontFamily = hasPoppins ? FONT_FAMILY : FALLBACK_FONT_FAMILY;
-
-  // Render icon from SVG
-  let iconPath;
-  try {
-    iconPath = await renderIconFromSvg(ICON_SIZE);
-  } catch (error) {
-    console.warn('Failed to render icon:', error.message);
-  }
 
   let baseImage;
 
@@ -399,8 +367,8 @@ async function generateOGImage({ title, backgroundImagePath, outputPath }) {
       .toBuffer();
   }
 
-  // Create overlay with gradient, icon, and title
-  const overlay = await createOverlay(title, iconPath, fontFamily);
+  // Create overlay with gradient, logo, and title
+  const overlay = await createOverlay(title, fontFamily);
 
   // Composite the overlay on top of the base image
   // Use high-quality PNG settings to avoid banding/posterization
@@ -426,11 +394,6 @@ async function generateOGImage({ title, backgroundImagePath, outputPath }) {
  */
 async function initOGImageGenerator() {
   await ensurePoppinsFont();
-  try {
-    await renderIconFromSvg(ICON_SIZE);
-  } catch (error) {
-    console.warn('Could not pre-render icon:', error.message);
-  }
 }
 
 module.exports = {
