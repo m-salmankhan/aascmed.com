@@ -6,6 +6,8 @@
  */
 
 const path = require('node:path');
+const fs = require('node:fs');
+const crypto = require('node:crypto');
 const moment = require('moment');
 const { generateOGImage, initOGImageGenerator } = require('./og-image-generator');
 
@@ -57,7 +59,7 @@ const PAGE_QUERY = `
 /**
  * Main createPages function
  */
-async function createPages({ graphql, actions, reporter }) {
+async function createPages({ graphql, actions, reporter, cache }) {
   const { createPage } = actions;
 
   const result = await graphql(PAGE_QUERY);
@@ -73,7 +75,7 @@ async function createPages({ graphql, actions, reporter }) {
   await initOGImageGenerator();
 
   // Create pages for each content type
-  await createBlogPages(createPage, data.strapiBlogPosts.nodes, reporter);
+  await createBlogPages(createPage, data.strapiBlogPosts.nodes, reporter, cache);
   createConditionPages(createPage, data.strapiConditions.nodes);
   createProviderPages(createPage, data.strapiProviders.nodes);
   createServiceUpdatePages(createPage, data.strapiServiceUpdates.nodes);
@@ -83,40 +85,102 @@ async function createPages({ graphql, actions, reporter }) {
 }
 
 /**
- * Create blog post pages and generate OG images
+ * Generate a hash for cache invalidation based on title and thumbnail
  */
-async function createBlogPages(createPage, posts, reporter) {
-  const ogOutputDir = path.resolve('./public/og-images/blog');
+function generateOGImageHash(title, thumbnailPath) {
+  const hash = crypto.createHash('md5');
+  hash.update(title || '');
   
-  reporter.info(`Generating OG images for ${posts.length} blog posts...`);
-  
-  for (const node of posts) {
-    const ogImagePath = `/og-images/blog/${node.slug}.png`;
-    const ogOutputPath = path.join(ogOutputDir, `${node.slug}.png`);
-    
-    // Generate OG image for this blog post
-    try {
-      await generateOGImage({
-        title: node.title || 'Blog Post',
-        backgroundImagePath: node.thumbnail?.localFile?.absolutePath,
-        outputPath: ogOutputPath,
-      });
-    } catch (error) {
-      reporter.warn(`Failed to generate OG image for blog post "${node.slug}": ${error.message}`);
-    }
-    
-    createPage({
-      path: `/blog/${node.slug}/`,
-      component: path.resolve('./src/templates/blog-post.tsx'),
-      context: {
-        id: node.id,
-        template: 'blog-post',
-        ogImagePath, // Pass the OG image path to the page context
-      },
-    });
+  if (thumbnailPath && fs.existsSync(thumbnailPath)) {
+    const stat = fs.statSync(thumbnailPath);
+    hash.update(stat.mtimeMs.toString());
   }
   
-  reporter.info(`Generated OG images for blog posts`);
+  return hash.digest('hex');
+}
+
+/**
+ * Get or generate an OG image with caching
+ * 
+ * @param {Object} options
+ * @param {string} options.slug - Unique identifier for the image
+ * @param {string} options.title - Title text for the image
+ * @param {string} options.thumbnailPath - Path to background image (optional)
+ * @param {string} options.outputDir - Directory to save the image
+ * @param {Object} options.cache - Gatsby cache instance
+ * @returns {Promise<{ imagePath: string, wasCached: boolean }>}
+ */
+async function getOGImage({ slug, title, thumbnailPath, outputDir, cache }) {
+  const imagePath = `/og-images/${outputDir}/${slug}.png`;
+  const outputPath = path.resolve(`./public/og-images/${outputDir}/${slug}.png`);
+  const cacheKey = `og-image-${outputDir}-${slug}`;
+  const contentHash = generateOGImageHash(title, thumbnailPath);
+  
+  // Check cache
+  const cachedHash = await cache.get(cacheKey);
+  const outputExists = fs.existsSync(outputPath);
+  
+  if (cachedHash === contentHash && outputExists) {
+    return { imagePath, wasCached: true };
+  }
+  
+  // Generate new image
+  await generateOGImage({
+    title: title || 'Untitled',
+    backgroundImagePath: thumbnailPath,
+    outputPath,
+  });
+  
+  await cache.set(cacheKey, contentHash);
+  return { imagePath, wasCached: false };
+}
+
+/**
+ * Create blog post pages and generate OG images (with caching)
+ */
+async function createBlogPages(createPage, posts, reporter, cache) {
+  const blogTemplate = path.resolve('./src/templates/blog-post.tsx');
+  
+  let generated = 0;
+  let cached = 0;
+  
+  for (const node of posts) {
+    try {
+      const { imagePath, wasCached } = await getOGImage({
+        slug: node.slug,
+        title: node.title,
+        thumbnailPath: node.thumbnail?.localFile?.absolutePath,
+        outputDir: 'blog',
+        cache,
+      });
+      
+      wasCached ? cached++ : generated++;
+      
+      createPage({
+        path: `/blog/${node.slug}/`,
+        component: blogTemplate,
+        context: {
+          id: node.id,
+          template: 'blog-post',
+          ogImagePath: imagePath,
+        },
+      });
+    } catch (error) {
+      reporter.warn(`Failed to generate OG image for "${node.slug}": ${error.message}`);
+      
+      // Still create the page, just without the OG image
+      createPage({
+        path: `/blog/${node.slug}/`,
+        component: blogTemplate,
+        context: {
+          id: node.id,
+          template: 'blog-post',
+        },
+      });
+    }
+  }
+  
+  reporter.info(`OG images: ${generated} generated, ${cached} cached (${posts.length} total)`);
 }
 
 /**
