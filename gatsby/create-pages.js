@@ -9,13 +9,18 @@ const path = require('node:path');
 const fs = require('node:fs');
 const crypto = require('node:crypto');
 const moment = require('moment');
-const { generateOGImage, initOGImageGenerator } = require('./og-image-generator');
+const { generateOGImage, initOGImageGenerator, downloadMapboxImage } = require('./og-image-generator');
 
 /**
  * GraphQL query to fetch all content for page creation
  */
 const PAGE_QUERY = `
   query {
+    site {
+      siteMetadata {
+        title
+      }
+    }
     strapiBlogPosts: allStrapiBlog {
       nodes {
         id
@@ -57,6 +62,10 @@ const PAGE_QUERY = `
       nodes {
         id
         clinic_name
+        location {
+          lat
+          long
+        }
       }
     }
   }
@@ -76,6 +85,7 @@ async function createPages({ graphql, actions, reporter, cache }) {
   }
 
   const { data } = result;
+  const siteTitle = data.site.siteMetadata.title;
 
   // Initialize OG image generator (downloads fonts, etc.)
   await initOGImageGenerator();
@@ -85,7 +95,7 @@ async function createPages({ graphql, actions, reporter, cache }) {
   await createConditionPages(createPage, data.strapiConditions.nodes, reporter, cache);
   createProviderPages(createPage, data.strapiProviders.nodes);
   createServiceUpdatePages(createPage, data.strapiServiceUpdates.nodes);
-  createClinicPages(createPage, data.clinics.nodes);
+  await createClinicPages(createPage, data.clinics.nodes, reporter, cache, siteTitle);
 
   reporter.info(`Created pages: ${data.strapiBlogPosts.nodes.length} blogs, ${data.strapiConditions.nodes.length} conditions, ${data.strapiProviders.nodes.length} providers, ${data.strapiServiceUpdates.nodes.length} service updates, ${data.clinics.nodes.length} clinics`);
 }
@@ -272,22 +282,68 @@ function createServiceUpdatePages(createPage, updates) {
 }
 
 /**
- * Create clinic pages
+ * Create clinic pages with OG images using Mapbox static maps
  */
-function createClinicPages(createPage, clinics) {
-  clinics.forEach((node) => {
+async function createClinicPages(createPage, clinics, reporter, cache, siteTitle) {
+  const clinicTemplate = path.resolve('./src/templates/clinic.tsx');
+  const mapCacheDir = path.resolve('./.cache/mapbox');
+  
+  // Ensure map cache directory exists
+  if (!fs.existsSync(mapCacheDir)) {
+    fs.mkdirSync(mapCacheDir, { recursive: true });
+  }
+  
+  let generated = 0;
+  let cached = 0;
+  
+  for (const node of clinics) {
     // Generate slug from clinic_name (e.g., "Aurora" -> "/clinics/aurora/")
-    const slug = `/clinics/${node.clinic_name.toLowerCase().replace(/\s+/g, '-')}/`;
+    const slug = node.clinic_name.toLowerCase().replace(/\s+/g, '-');
+    const pagePath = `/clinics/${slug}/`;
+    
+    // Check if clinic has location data
+    const lat = node.location?.lat;
+    const lng = node.location?.long;
+    
+    let ogImagePath = undefined;
+    
+    if (lat && lng) {
+      try {
+        // Download Mapbox static image as background (cached on disk)
+        const mapImagePath = path.join(mapCacheDir, `${slug}-map.png`);
+        
+        if (!fs.existsSync(mapImagePath)) {
+          await downloadMapboxImage(lat, lng, mapImagePath);
+        }
+        
+        // Generate OG image with map as background
+        const { imagePath, wasCached } = await getOGImage({
+          slug,
+          title: `${siteTitle} ${node.clinic_name}`,
+          thumbnailPath: mapImagePath,
+          outputDir: 'clinics',
+          cache,
+        });
+        
+        ogImagePath = imagePath;
+        wasCached ? cached++ : generated++;
+      } catch (error) {
+        reporter.warn(`Failed to generate OG image for clinic "${node.clinic_name}": ${error.message}`);
+      }
+    }
     
     createPage({
-      path: slug,
-      component: path.resolve('./src/templates/clinic.tsx'),
+      path: pagePath,
+      component: clinicTemplate,
       context: {
         id: node.id,
         template: 'clinic',
+        ogImagePath,
       },
     });
-  });
+  }
+  
+  reporter.info(`Clinic OG images: ${generated} generated, ${cached} cached (${clinics.length} total)`);
 }
 
 module.exports = {

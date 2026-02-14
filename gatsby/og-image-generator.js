@@ -116,6 +116,81 @@ function downloadFile(url, dest) {
 }
 
 /**
+ * Download a file from URL to buffer (for Mapbox static images)
+ */
+function downloadToBuffer(url) {
+  return new Promise((resolve, reject) => {
+    const request = (followUrl) => {
+      https.get(followUrl, (response) => {
+        // Handle redirects
+        if (response.statusCode === 301 || response.statusCode === 302) {
+          request(response.headers.location);
+          return;
+        }
+
+        if (response.statusCode !== 200) {
+          reject(new Error(`Failed to download: ${response.statusCode}`));
+          return;
+        }
+
+        const chunks = [];
+        response.on('data', (chunk) => chunks.push(chunk));
+        response.on('end', () => resolve(Buffer.concat(chunks)));
+      }).on('error', reject);
+    };
+    request(url);
+  });
+}
+
+/**
+ * Get Mapbox static image URL for a location
+ * @param {number} lat - Latitude
+ * @param {number} lng - Longitude
+ * @param {string} accessToken - Mapbox access token
+ * @returns {string} Mapbox static image URL
+ */
+function getMapboxStaticUrl(lat, lng, accessToken) {
+  const zoom = 18;
+  const width = OG_WIDTH;
+  const height = OG_HEIGHT;
+  const style = 'mapbox/satellite-streets-v12';
+  const marker = `pin-l+1C5E38(${lng},${lat})`; // Large pin in brand color
+  
+  return `https://api.mapbox.com/styles/v1/${style}/static/${marker}/${lng},${lat},${zoom}/${width}x${height}@2x?access_token=${accessToken}`;
+}
+
+/**
+ * Download Mapbox static image for a location
+ * @param {number} lat - Latitude
+ * @param {number} lng - Longitude
+ * @param {string} outputPath - Where to save the image
+ * @returns {Promise<string>} Path to the downloaded image
+ */
+async function downloadMapboxImage(lat, lng, outputPath) {
+  const accessToken = process.env.GATSBY_MAPBOX_API_KEY;
+  
+  if (!accessToken) {
+    throw new Error('GATSBY_MAPBOX_API_KEY environment variable is not set');
+  }
+  
+  const url = getMapboxStaticUrl(lat, lng, accessToken);
+  const buffer = await downloadToBuffer(url);
+  
+  // Ensure output directory exists
+  const outputDir = path.dirname(outputPath);
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
+  }
+  
+  // Save the image (Mapbox returns @2x so resize to exact dimensions)
+  await sharp(buffer)
+    .resize(OG_WIDTH, OG_HEIGHT)
+    .toFile(outputPath);
+  
+  return outputPath;
+}
+
+/**
  * Truncate title if too long (hard limit)
  * @param {string} title - Original title
  * @returns {string} Truncated title
@@ -399,6 +474,7 @@ async function initOGImageGenerator() {
 module.exports = {
   generateOGImage,
   initOGImageGenerator,
+  downloadMapboxImage,
   // Export constants for testing/configuration
   OG_WIDTH,
   OG_HEIGHT,

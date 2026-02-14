@@ -3,8 +3,9 @@
  * Run with: node gatsby/test-og-generator.js
  */
 
+require('dotenv').config({ path: '.env.development' });
 const path = require('path');
-const { generateOGImage } = require('./og-image-generator');
+const { generateOGImage, downloadMapboxImage } = require('./og-image-generator');
 
 async function test() {
   const outputPath = path.join(__dirname, '..', 'test-og-image.png');
@@ -45,6 +46,29 @@ async function test() {
       outputPath: outputPath3,
     });
     console.log('✓ Test 3 passed: Generated OG image with truncated title');
+
+    // Test 4: Mapbox static image as background (clinic example)
+    if (process.env.GATSBY_MAPBOX_API_KEY) {
+      const mapImagePath = path.join(__dirname, '..', 'test-mapbox-bg.png');
+      const outputPath4 = path.join(__dirname, '..', 'test-og-image-mapbox.png');
+      
+      // Aurora clinic coordinates
+      const lat = 41.7606;
+      const lng = -88.32;
+      
+      console.log('Downloading Mapbox static image...');
+      await downloadMapboxImage(lat, lng, mapImagePath);
+      console.log('✓ Downloaded Mapbox image to:', mapImagePath);
+      
+      await generateOGImage({
+        title: 'Aurora Clinic',
+        backgroundImagePath: mapImagePath,
+        outputPath: outputPath4,
+      });
+      console.log('✓ Test 4 passed: Generated OG image with Mapbox background');
+    } else {
+      console.log('⚠ Skipping Mapbox test (GATSBY_MAPBOX_API_KEY not set)');
+    }
 
     console.log('\n✅ All tests passed! Check the generated images in the project root.');
   } catch (error) {
