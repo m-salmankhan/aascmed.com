@@ -223,10 +223,10 @@ async function createOverlay(title, iconPath, fontFamily) {
   const canvas = createCanvas(OG_WIDTH, OG_HEIGHT);
   const ctx = canvas.getContext('2d');
 
-  // Create gradient overlay (horizontal, matching website hero)
+  // Create gradient overlay (horizontal, matching website hero) - darker for text readability
   const gradient = ctx.createLinearGradient(0, 0, OG_WIDTH, 0);
-  gradient.addColorStop(0, hexToRgba(BRAND_PRIMARY, 0.9));
-  gradient.addColorStop(1, hexToRgba(BRAND_SECONDARY, 0.85));
+  gradient.addColorStop(0, hexToRgba(BRAND_PRIMARY, 0.95));
+  gradient.addColorStop(1, hexToRgba(BRAND_SECONDARY, 0.92));
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, OG_WIDTH, OG_HEIGHT);
 
@@ -273,17 +273,9 @@ async function createOverlay(title, iconPath, fontFamily) {
   // Center text vertically in available space
   const textStartY = titleStartY + (availableHeight - totalTextHeight) / 2;
 
-  // Draw each line with shadow for depth
+  // Draw each line
   lines.forEach((line, index) => {
     const y = textStartY + index * lineHeight;
-
-    // Text shadow (multiple layers for better depth)
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-    ctx.fillText(line, OG_WIDTH / 2 + 3, y + 3);
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-    ctx.fillText(line, OG_WIDTH / 2 + 1, y + 1);
-
-    // Main text
     ctx.fillStyle = '#FFFFFF';
     ctx.fillText(line, OG_WIDTH / 2, y);
   });
