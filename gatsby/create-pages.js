@@ -32,6 +32,12 @@ const PAGE_QUERY = `
       nodes {
         id
         slug
+        heading
+        thumbnail {
+          localFile {
+            absolutePath
+          }
+        }
       }
     }
     strapiProviders: allStrapiProvider {
@@ -76,7 +82,7 @@ async function createPages({ graphql, actions, reporter, cache }) {
 
   // Create pages for each content type
   await createBlogPages(createPage, data.strapiBlogPosts.nodes, reporter, cache);
-  createConditionPages(createPage, data.strapiConditions.nodes);
+  await createConditionPages(createPage, data.strapiConditions.nodes, reporter, cache);
   createProviderPages(createPage, data.strapiProviders.nodes);
   createServiceUpdatePages(createPage, data.strapiServiceUpdates.nodes);
   createClinicPages(createPage, data.clinics.nodes);
@@ -184,19 +190,50 @@ async function createBlogPages(createPage, posts, reporter, cache) {
 }
 
 /**
- * Create condition pages
+ * Create condition pages and generate OG images (with caching)
  */
-function createConditionPages(createPage, conditions) {
-  conditions.forEach((node) => {
-    createPage({
-      path: `/conditions/${node.slug}/`,
-      component: path.resolve('./src/templates/condition.tsx'),
-      context: {
-        id: node.id,
-        template: 'condition',
-      },
-    });
-  });
+async function createConditionPages(createPage, conditions, reporter, cache) {
+  const conditionTemplate = path.resolve('./src/templates/condition.tsx');
+  
+  let generated = 0;
+  let cached = 0;
+  
+  for (const node of conditions) {
+    try {
+      const { imagePath, wasCached } = await getOGImage({
+        slug: node.slug,
+        title: node.heading,
+        thumbnailPath: node.thumbnail?.localFile?.absolutePath,
+        outputDir: 'conditions',
+        cache,
+      });
+      
+      wasCached ? cached++ : generated++;
+      
+      createPage({
+        path: `/conditions/${node.slug}/`,
+        component: conditionTemplate,
+        context: {
+          id: node.id,
+          template: 'condition',
+          ogImagePath: imagePath,
+        },
+      });
+    } catch (error) {
+      reporter.warn(`Failed to generate OG image for condition "${node.slug}": ${error.message}`);
+      
+      createPage({
+        path: `/conditions/${node.slug}/`,
+        component: conditionTemplate,
+        context: {
+          id: node.id,
+          template: 'condition',
+        },
+      });
+    }
+  }
+  
+  reporter.info(`Condition OG images: ${generated} generated, ${cached} cached (${conditions.length} total)`);
 }
 
 /**
