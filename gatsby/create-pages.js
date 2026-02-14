@@ -7,6 +7,7 @@
 
 const path = require('node:path');
 const moment = require('moment');
+const { generateOGImage, initOGImageGenerator } = require('./og-image-generator');
 
 /**
  * GraphQL query to fetch all content for page creation
@@ -17,6 +18,12 @@ const PAGE_QUERY = `
       nodes {
         id
         slug
+        title
+        thumbnail {
+          localFile {
+            absolutePath
+          }
+        }
       }
     }
     strapiConditions: allStrapiCondition {
@@ -62,8 +69,11 @@ async function createPages({ graphql, actions, reporter }) {
 
   const { data } = result;
 
+  // Initialize OG image generator (downloads fonts, etc.)
+  await initOGImageGenerator();
+
   // Create pages for each content type
-  createBlogPages(createPage, data.strapiBlogPosts.nodes);
+  await createBlogPages(createPage, data.strapiBlogPosts.nodes, reporter);
   createConditionPages(createPage, data.strapiConditions.nodes);
   createProviderPages(createPage, data.strapiProviders.nodes);
   createServiceUpdatePages(createPage, data.strapiServiceUpdates.nodes);
@@ -73,19 +83,40 @@ async function createPages({ graphql, actions, reporter }) {
 }
 
 /**
- * Create blog post pages
+ * Create blog post pages and generate OG images
  */
-function createBlogPages(createPage, posts) {
-  posts.forEach((node) => {
+async function createBlogPages(createPage, posts, reporter) {
+  const ogOutputDir = path.resolve('./public/og-images/blog');
+  
+  reporter.info(`Generating OG images for ${posts.length} blog posts...`);
+  
+  for (const node of posts) {
+    const ogImagePath = `/og-images/blog/${node.slug}.png`;
+    const ogOutputPath = path.join(ogOutputDir, `${node.slug}.png`);
+    
+    // Generate OG image for this blog post
+    try {
+      await generateOGImage({
+        title: node.title || 'Blog Post',
+        backgroundImagePath: node.thumbnail?.localFile?.absolutePath,
+        outputPath: ogOutputPath,
+      });
+    } catch (error) {
+      reporter.warn(`Failed to generate OG image for blog post "${node.slug}": ${error.message}`);
+    }
+    
     createPage({
       path: `/blog/${node.slug}/`,
       component: path.resolve('./src/templates/blog-post.tsx'),
       context: {
         id: node.id,
         template: 'blog-post',
+        ogImagePath, // Pass the OG image path to the page context
       },
     });
-  });
+  }
+  
+  reporter.info(`Generated OG images for blog posts`);
 }
 
 /**

@@ -93,12 +93,19 @@ const BlogPost = ({ data, location }: PageProps<Queries.BlogPostQuery>) => {
 }
 
 
-export const Head = (props: HeadProps<Queries.BlogPostQuery>) => {
+export const Head = (props: HeadProps<Queries.BlogPostQuery, { ogImagePath?: string }>) => {
     const title = props.data.strapiBlog?.title || props.data.strapiBlog?.heading || "Untitled";
     const description = props.data.strapiBlog?.description || "";
+    const ogImagePath = props.pageContext.ogImagePath;
 
     return (
-        <SEO description={description} slug={props.location.pathname} title={title} useTracking={true}>
+        <SEO 
+            description={description} 
+            slug={props.location.pathname} 
+            title={title} 
+            useTracking={true}
+            image={ogImagePath}
+        >
             <meta name={"og:type"} content={"article"} />
             <meta name={"article:section"} content={"blog"} />
         </SEO>

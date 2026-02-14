@@ -223,12 +223,27 @@ async function createOverlay(title, iconPath, fontFamily) {
   const canvas = createCanvas(OG_WIDTH, OG_HEIGHT);
   const ctx = canvas.getContext('2d');
 
-  // Create gradient overlay (horizontal, matching website hero) - darker for text readability
+  // Create gradient overlay (horizontal, matching website hero)
+  // Use slightly lower opacity to reduce banding visibility
   const gradient = ctx.createLinearGradient(0, 0, OG_WIDTH, 0);
-  gradient.addColorStop(0, hexToRgba(BRAND_PRIMARY, 0.95));
-  gradient.addColorStop(1, hexToRgba(BRAND_SECONDARY, 0.92));
+  gradient.addColorStop(0, hexToRgba(BRAND_PRIMARY, 0.88));
+  gradient.addColorStop(0.5, hexToRgba('#2A7040', 0.86)); // Add midpoint to smooth transition
+  gradient.addColorStop(1, hexToRgba(BRAND_SECONDARY, 0.84));
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, OG_WIDTH, OG_HEIGHT);
+  
+  // Add subtle noise to break up gradient banding
+  const imageData = ctx.getImageData(0, 0, OG_WIDTH, OG_HEIGHT);
+  const data = imageData.data;
+  for (let i = 0; i < data.length; i += 4) {
+    // Add small random noise to RGB channels (±2)
+    const noise = Math.floor(Math.random() * 5) - 2;
+    data[i] = Math.max(0, Math.min(255, data[i] + noise));     // R
+    data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + noise)); // G
+    data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + noise)); // B
+    // Alpha stays unchanged
+  }
+  ctx.putImageData(imageData, 0, 0);
 
   // Load and draw icon at top (centered)
   if (iconPath && fs.existsSync(iconPath)) {
@@ -367,7 +382,7 @@ async function generateOGImage({ title, backgroundImagePath, outputPath }) {
     baseImage = await sharp(backgroundImagePath)
       .resize(OG_WIDTH, OG_HEIGHT, {
         fit: 'cover',
-        position: 'center',
+        position: 'attention', // Use smart cropping to focus on interesting parts
       })
       .toBuffer();
   } else {
@@ -388,6 +403,7 @@ async function generateOGImage({ title, backgroundImagePath, outputPath }) {
   const overlay = await createOverlay(title, iconPath, fontFamily);
 
   // Composite the overlay on top of the base image
+  // Use high-quality PNG settings to avoid banding/posterization
   await sharp(baseImage)
     .composite([
       {
@@ -395,7 +411,10 @@ async function generateOGImage({ title, backgroundImagePath, outputPath }) {
         blend: 'over',
       },
     ])
-    .png({ quality: 90 })
+    .png({ 
+      compressionLevel: 6,
+      palette: false, // Disable palette mode to preserve full color depth
+    })
     .toFile(outputPath);
 
   return outputPath;

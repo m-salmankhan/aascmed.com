@@ -132,8 +132,8 @@ export const SEO = (props: SEOProps) => {
             <meta name={"theme-color"} content={colours.brandPrimary} />
             <meta name={"og:image"} content={socialImage} />
 
-            {/* Twitter Cards */}
-            <meta name={"twitter:card"} content={"summary"} />
+            {/* Twitter Cards - use summary_large_image when custom image provided */}
+            <meta name={"twitter:card"} content={props.image ? "summary_large_image" : "summary"} />
             <meta name={"twitter:image"} content={socialImage} />
             <meta name={"twitter:description"} content={props.description} />
             {
