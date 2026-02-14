@@ -61,10 +61,13 @@ const Condition = ({ data, location }: PageProps<Queries.ConditionPageQuery>) =>
     );
 }
 
-export const Head = (props: HeadProps<Queries.ConditionPageQuery>) => {
+export const Head = (props: HeadProps<Queries.ConditionPageQuery, { ogImagePath?: string }>) => {
     const title = props.data.strapiCondition?.title || props.data.strapiCondition?.heading || "Untitled";
     const description = props.data.strapiCondition?.description || "";
-    const image = props.data.strapiCondition?.thumbnail?.localFile?.publicURL || undefined;
+    
+    // Use generated OG image if available, otherwise fall back to thumbnail
+    const ogImagePath = props.pageContext.ogImagePath;
+    const image = ogImagePath || props.data.strapiCondition?.thumbnail?.localFile?.publicURL || undefined;
 
     return (
         <SEO description={description} slug={props.location.pathname} title={title} image={image}>

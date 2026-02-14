@@ -198,12 +198,15 @@ const Clinic: React.FC<PageProps<Queries.ClinicQuery>> = ({ data }) => {
     )
 }
 
-export const Head = (props: HeadProps<Queries.ClinicQuery>) => {
+export const Head = (props: HeadProps<Queries.ClinicQuery, { ogImagePath?: string }>) => {
     const pageTitle = props.data.strapiClinic?.title || "Untitled";
     const description = props.data.strapiClinic?.description || "";
+    
+    // Use generated OG image if available
+    const image = props.pageContext.ogImagePath || undefined;
 
     return (
-        <SEO description={description} slug={props.location.pathname} title={`${pageTitle}`} useTracking={true} appendBusinessNameToTitle={false}>
+        <SEO description={description} slug={props.location.pathname} title={`${pageTitle}`} image={image} useTracking={true} appendBusinessNameToTitle={false}>
             <meta name={"og:type"} content={"website"} />
         </SEO>
     )
