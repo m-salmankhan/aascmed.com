@@ -128,8 +128,11 @@ function generateOGImageHash(title, thumbnailPath) {
  * @returns {Promise<{ imagePath: string, wasCached: boolean }>}
  */
 async function getOGImage({ slug, title, thumbnailPath, outputDir, cache }) {
+  const thumbnailExt = path.extname(thumbnailPath);
+  const thumbnailName = path.basename(thumbnailPath, thumbnailExt);
+
   const imagePath = `/og-images/${outputDir}/${slug}.jpg`;
-  const outputPath = path.resolve(`./public/og-images/${outputDir}/${slug}.jpg`);
+  const outputPath = path.resolve(`./public/og-images/${outputDir}/${slug}-${thumbnailName}.jpg`);
   const cacheKey = `og-image-${outputDir}-${slug}`;
   const contentHash = generateOGImageHash(title, thumbnailPath);
   
@@ -311,7 +314,7 @@ async function createClinicPages(createPage, clinics, reporter, cache, siteTitle
     if (lat && lng) {
       try {
         // Download Mapbox static image as background (cached on disk)
-        const mapImagePath = path.join(mapCacheDir, `${slug}-map.png`);
+        const mapImagePath = path.join(mapCacheDir, `${slug}-${lat}-${lng}-map.png`);
         
         if (!fs.existsSync(mapImagePath)) {
           await downloadMapboxImage(lat, lng, mapImagePath);
