@@ -20,7 +20,7 @@ const ContactPage = ({ data }: PageProps<Queries.ContactPageQuery>) => {
   const textBlocks = parsedData?.text as any[] | null;
 
   const practices: PracticeSummary[] = data.practices.nodes.map(clinic => ({
-    slug: `/clinics/${(clinic.clinic_name || "").toLowerCase().replace(/\s+/g, '-')}/`,
+    slug: '/clinics/' + (clinic.slug || `${(clinic.clinic_name || "").toLowerCase().replace(/\s+/g, '-')}/`),
     clinic_name: clinic.clinic_name || "Untitled Clinic",
     longitude: clinic.location?.long || 0,
     latitude: clinic.location?.lat || 0,
@@ -77,6 +77,7 @@ export const query = graphql`
     practices: allStrapiClinic {
       nodes {
         clinic_name
+        slug
         location {
           address
           lat

@@ -62,6 +62,7 @@ const PAGE_QUERY = `
       nodes {
         id
         clinic_name
+        slug
         location {
           lat
           long
@@ -298,7 +299,7 @@ async function createClinicPages(createPage, clinics, reporter, cache, siteTitle
   
   for (const node of clinics) {
     // Generate slug from clinic_name (e.g., "Aurora" -> "/clinics/aurora/")
-    const slug = node.clinic_name.toLowerCase().replace(/\s+/g, '-');
+    const slug = node.slug || node.clinic_name.toLowerCase().replace(/\s+/g, '-');
     const pagePath = `/clinics/${slug}/`;
     
     // Check if clinic has location data
