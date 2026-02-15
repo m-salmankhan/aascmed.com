@@ -131,7 +131,7 @@ async function getOGImage({ slug, title, thumbnailPath, outputDir, cache }) {
   const thumbnailName = path.basename(thumbnailPath, path.extname(thumbnailPath));
   const outputName = `${slug}-${thumbnailName}.jpg`;
 
-  const imagePath = `/og-images/${outputDir}/${outputName}.jpg`;
+  const imagePath = `/og-images/${outputDir}/${outputName}`;
   const outputPath = path.resolve(`./public/og-images/${outputDir}/${outputName}`);
   const cacheKey = `og-image-${outputDir}-${slug}`;
   const contentHash = generateOGImageHash(title, thumbnailPath);
