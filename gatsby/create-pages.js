@@ -128,11 +128,11 @@ function generateOGImageHash(title, thumbnailPath) {
  * @returns {Promise<{ imagePath: string, wasCached: boolean }>}
  */
 async function getOGImage({ slug, title, thumbnailPath, outputDir, cache }) {
-  const thumbnailExt = path.extname(thumbnailPath);
-  const thumbnailName = path.basename(thumbnailPath, thumbnailExt);
+  const thumbnailName = path.basename(thumbnailPath, path.extname(thumbnailPath));
+  const outputName = `${slug}-${thumbnailName}.jpg`;
 
-  const imagePath = `/og-images/${outputDir}/${slug}.jpg`;
-  const outputPath = path.resolve(`./public/og-images/${outputDir}/${slug}-${thumbnailName}.jpg`);
+  const imagePath = `/og-images/${outputDir}/${outputName}.jpg`;
+  const outputPath = path.resolve(`./public/og-images/${outputDir}/${outputName}`);
   const cacheKey = `og-image-${outputDir}-${slug}`;
   const contentHash = generateOGImageHash(title, thumbnailPath);
   
