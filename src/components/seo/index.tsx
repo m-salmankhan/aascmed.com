@@ -125,12 +125,15 @@ export const SEO = (props: SEOProps) => {
             <link rel={"canonical"} href={siteURL + props.slug} />
             <Favicons />
 
-            {/* OpenGraph */}
-            <meta name={"og:url"} content={siteURL + props.slug} />
-            <meta name={"og:title"} content={pageTitle} />
-            <meta name={"og:description"} content={props.description} />
-            <meta name={"theme-color"} content={colours.brandPrimary} />
-            <meta name={"og:image"} content={socialImage} />
+            {/* OpenGraph - use property attribute (required for WhatsApp) */}
+            <meta property="og:type" content="website" />
+            <meta property="og:url" content={siteURL + props.slug} />
+            <meta property="og:title" content={pageTitle} />
+            <meta property="og:description" content={props.description} />
+            <meta property="og:image" content={socialImage} />
+            <meta property="og:image:width" content="1200" />
+            <meta property="og:image:height" content="630" />
+            <meta name="theme-color" content={colours.brandPrimary} />
 
             {/* Twitter Cards - use summary_large_image when custom image provided */}
             <meta name={"twitter:card"} content={props.image ? "summary_large_image" : "summary"} />

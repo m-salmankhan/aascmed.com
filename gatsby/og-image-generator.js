@@ -446,7 +446,7 @@ async function generateOGImage({ title, backgroundImagePath, outputPath }) {
   const overlay = await createOverlay(title, fontFamily);
 
   // Composite the overlay on top of the base image
-  // Use high-quality PNG settings to avoid banding/posterization
+  // Output as JPEG for smaller file size (WhatsApp has 300KB limit)
   await sharp(baseImage)
     .composite([
       {
@@ -454,9 +454,9 @@ async function generateOGImage({ title, backgroundImagePath, outputPath }) {
         blend: 'over',
       },
     ])
-    .png({ 
-      compressionLevel: 6,
-      palette: false, // Disable palette mode to preserve full color depth
+    .jpeg({ 
+      quality: 85, // Good balance of quality vs file size
+      mozjpeg: true, // Use mozjpeg for better compression
     })
     .toFile(outputPath);
 
