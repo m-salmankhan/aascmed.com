@@ -56,3 +56,7 @@
 # 301 redirect Privacy Policy
 # ===============================================================================
 /privacy-policy.php /privacy/ 301
+
+# Admin
+# ===============================================================================
+/admin https://wise-positivity-21c2bd6b3f.strapiapp.com/admin/ 301
