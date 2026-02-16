@@ -4,13 +4,12 @@ import { Breadcrumbs } from "../components/breadcrumbs";
 import { Columns, MainCol, PrimarySecondaryColumnsLayout, SideCol } from "../components/layouts/main-side-column";
 import { Article } from "../components/posts/article";
 import { H1 } from "../components/headings";
-import { SEO, usePageTitle } from "../components/seo";
+import { SEO } from "../components/seo";
 import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 
 const PrivacyPage = ({ data, location, children }: PageProps<Queries.PrivacyPageQuery>) => {
     const privacyData = data.strapiPrivacyPolicy;
     const heading = privacyData?.title || "Privacy Policy";
-    const pageTitle = usePageTitle(heading);
     
     // Parse text blocks from internal.content
     const rawContent = privacyData?.internal?.content;
@@ -23,7 +22,7 @@ const PrivacyPage = ({ data, location, children }: PageProps<Queries.PrivacyPage
         : null;
 
     return (
-        <PrimarySecondaryColumnsLayout pageTitle={pageTitle}>
+        <PrimarySecondaryColumnsLayout>
             <main>
                 <Breadcrumbs path={[
                     ["/", "Home"],

@@ -6,13 +6,12 @@ import { Container } from "../components/containers";
 import { gridSpacing } from "../styles/theme";
 import { PracticeArchive, PracticeSummary } from "../components/practices/practice-archive";
 import { ContactSection } from "../components/contact/full-form";
-import { SEO, usePageTitle } from "../components/seo";
+import { SEO } from "../components/seo";
 import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 
 const ContactPage = ({ data }: PageProps<Queries.ContactPageQuery>) => {
   const archiveCopy = data.strapiContact;
   const heading = archiveCopy?.heading || "Contact Us";
-  const pageTitle = usePageTitle(heading);
   
   // Parse text blocks from internal.content
   const rawContent = archiveCopy?.internal?.content;
@@ -30,7 +29,7 @@ const ContactPage = ({ data }: PageProps<Queries.ContactPageQuery>) => {
   }));
 
   return (
-    <Layout pageTitle={pageTitle}>
+    <Layout>
       <main>
         <Container>
           <Breadcrumbs path={[
