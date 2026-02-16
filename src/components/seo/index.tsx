@@ -27,7 +27,7 @@ export const usePageTitle = (title: string, appendBusinessNameToTitle: boolean =
         : siteTitle;
 }
 
-const Favicons = () =>
+export const Favicons = () =>
     <>
         <link rel="icon" type="image/svg" href="/assets/favicon/favicon.svg" />
         <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32x32.png" />
@@ -123,7 +123,6 @@ export const SEO = (props: SEOProps) => {
             <title>{pageTitle}</title>
             <meta name={"description"} content={props.description} />
             <link rel={"canonical"} href={siteURL + props.slug} />
-            <Favicons />
 
             {/* OpenGraph - use property attribute (required for WhatsApp) */}
             <meta property="og:type" content="website" />

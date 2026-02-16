@@ -5,6 +5,7 @@ import { CSSInterpolation } from "@emotion/serialize";
 import { ZocDoc } from "../zocdoc";
 import { Script } from "gatsby";
 import AnnouncementBanner from "../AnnouncementBanner";
+import { Favicons } from "../seo";
 
 
 const stylesGlobal: CSSInterpolation = {
@@ -152,6 +153,8 @@ export const App: React.FC<AppProps> = ({ children, className, useTracking, page
     return <div className={className}>
         {/* Workaround for Gatsby 5 Head API bug where document.title is not synced with <title> element */}
         {pageTitle && <title>{pageTitle}</title>}
+        <Favicons />
+
         { !!useTracking &&
         <>
         {/* Google Tag Manager (noscript)*/}
