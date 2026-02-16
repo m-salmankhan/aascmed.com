@@ -5,7 +5,6 @@ import { CSSInterpolation } from "@emotion/serialize";
 import { ZocDoc } from "../zocdoc";
 import { Script } from "gatsby";
 import AnnouncementBanner from "../AnnouncementBanner";
-import { Favicons } from "../seo";
 
 
 const stylesGlobal: CSSInterpolation = {
@@ -131,10 +130,9 @@ interface AppProps {
     children?: ReactNode
     useTracking?: boolean
     className?: string
-    pageTitle?: string
 }
 
-export const App: React.FC<AppProps> = ({ children, className, useTracking, pageTitle }) => {
+export const App: React.FC<AppProps> = ({ children, className, useTracking }) => {
     useEffect(() => {
         // @ts-ignore
         if (typeof window.netlifyIdentity !== 'undefined') {
@@ -151,10 +149,6 @@ export const App: React.FC<AppProps> = ({ children, className, useTracking, page
     });
 
     return <div className={className}>
-        {/* Workaround for Gatsby 5 Head API bug where document.title is not synced with <title> element */}
-        {pageTitle && <title>{pageTitle}</title>}
-        <Favicons />
-
         { !!useTracking &&
         <>
         {/* Google Tag Manager (noscript)*/}

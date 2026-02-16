@@ -15,19 +15,7 @@ interface SEOProps {
     children?: ReactNode
 }
 
-/**
- * Hook to compute the page title consistently.
- * Use this to pass pageTitle to App component as a workaround for Gatsby 5 Head API bug.
- */
-export const usePageTitle = (title: string, appendBusinessNameToTitle: boolean = true): string => {
-    const siteMetadata = useSiteMetadata();
-    const siteTitle = siteMetadata.title;
-    return title
-        ? (title + (appendBusinessNameToTitle ? ` | ${siteTitle}` : ""))
-        : siteTitle;
-}
-
-export const Favicons = () =>
+const Favicons = () =>
     <>
         <link rel="icon" type="image/svg" href="/assets/favicon/favicon.svg" />
         <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32x32.png" />
@@ -123,6 +111,7 @@ export const SEO = (props: SEOProps) => {
             <title>{pageTitle}</title>
             <meta name={"description"} content={props.description} />
             <link rel={"canonical"} href={siteURL + props.slug} />
+            <Favicons />
 
             {/* OpenGraph - use property attribute (required for WhatsApp) */}
             <meta property="og:type" content="website" />

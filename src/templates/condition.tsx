@@ -6,7 +6,7 @@ import { Breadcrumbs } from "../components/breadcrumbs";
 import { css } from "@emotion/react";
 import { ShareButtons } from "../components/social-media/share";
 import { Article } from "../components/posts/article";
-import { SEO, usePageTitle } from "../components/seo";
+import { SEO } from "../components/seo";
 import { StrapiDynamicZoneRenderer } from "../components/strapi/blocks-renderer";
 import { Contents } from "../components/posts/contents";
 import { extractTableOfContents } from "../utils/strapi-toc";
@@ -21,7 +21,6 @@ const Condition = ({ data, location }: PageProps<Queries.ConditionPageQuery>) =>
     const title = condition.title || "Untitled"
     const heading = condition.heading || title
     const slug = `/conditions/${condition.slug}/`
-    const pageTitle = usePageTitle(title);
     
     // Parse raw JSON content to get full rich text data with all formatting
     const rawContent = condition.internal?.content;
@@ -32,7 +31,7 @@ const Condition = ({ data, location }: PageProps<Queries.ConditionPageQuery>) =>
     const tocItems = content ? extractTableOfContents(content) : [];
 
     return (
-        <PrimarySecondaryColumnsLayout pageTitle={pageTitle}>
+        <PrimarySecondaryColumnsLayout>
             <main>
                 <Breadcrumbs path={[
                     ["/", "Home"],

@@ -13,7 +13,7 @@ import { Review } from "../components/patient-feedback/reviews";
 import { Container } from "../components/containers";
 import { PracticeArchive, PracticeSummary } from "../components/practices/practice-archive";
 import { ContactSection } from "../components/contact/full-form";
-import { SEO, usePageTitle } from "../components/seo";
+import { SEO } from "../components/seo";
 import { Footer } from "../components/footer";
 import { BlogArchive } from "../components/blog-posts";
 import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
@@ -28,7 +28,6 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
   const heroImage = data.heroImage?.childImageSharp?.gatsbyImageData;
   const siteTitle = data.siteTitle?.siteMetadata?.title || "Allergy Asthma and Sinus Centres";
   const homePage = data.strapiHomePage;
-  const pageTitle = usePageTitle("Allergy, Asthma and Sinus Centers in Illinois", false);
 
   // Parse the full internal.content JSON once
   const rawContent = homePage?.internal?.content;
@@ -137,7 +136,7 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
   const contactTextBlocks = parseTextBlocks(parsedData, 'contact');
 
   return (
-    <App pageTitle={pageTitle}>
+    <App>
       <Hero 
         image={heroImage} 
         heading={heroTitle} 

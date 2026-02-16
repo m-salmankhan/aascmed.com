@@ -6,13 +6,12 @@ import { ConditionSummary } from "../components/conditions/conditions-archive";
 import { Breadcrumbs } from "../components/breadcrumbs";
 import { Container } from "../components/containers";
 import { gridSpacing } from "../styles/theme";
-import { SEO, usePageTitle } from "../components/seo";
+import { SEO } from "../components/seo";
 import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 
 const ConditionsPage = ({ data }: PageProps<Queries.ConditionsArchiveQuery>) => {
   const archiveCopy = data.strapiConditionsArchive;
   const heading = archiveCopy?.heading || "Conditions";
-  const pageTitle = usePageTitle(heading);
   
   // Parse text blocks from internal.content
   const rawContent = archiveCopy?.internal?.content;
@@ -26,7 +25,7 @@ const ConditionsPage = ({ data }: PageProps<Queries.ConditionsArchiveQuery>) => 
   }));
 
   return (
-    <Layout pageTitle={pageTitle}>
+    <Layout>
       <main>
         <Container>
           <Breadcrumbs path={[

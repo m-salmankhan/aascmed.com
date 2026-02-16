@@ -8,7 +8,7 @@ import { H1, H4 } from "../components/headings";
 import { ShareButtons } from "../components/social-media/share";
 import { InfoNotice } from "../components/posts/shortcode-components";
 import { GatsbyImage } from "gatsby-plugin-image";
-import { SEO, usePageTitle } from "../components/seo";
+import { SEO } from "../components/seo";
 import { StrapiDynamicZoneRenderer, StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 
 const stylesImage = css({
@@ -47,10 +47,9 @@ const Provider = ({ data, location }: PageProps<Queries.ProviderPageQuery>) => {
 
   const pageTitle = `${honorific} ${name}`.trim();
   const pageHeading = degreeAbbr ? `${name}, ${degreeAbbr}` : name;
-  const computedPageTitle = usePageTitle(pageTitle);
 
   return (
-    <PrimarySecondaryColumnsLayout pageTitle={computedPageTitle}>
+    <PrimarySecondaryColumnsLayout>
       <main>
         <Breadcrumbs path={[
           ["/", "Home"],
