@@ -115,7 +115,7 @@ jobs:
 
             # ── Tear down existing containers ───────────────────────────
             podman stop preview-caddy preview-forward-auth aascmed-preview || true
-            podman rm   preview-caddy preview-forward-auth aascmed-preview || true
+            podman rm -f preview-caddy preview-forward-auth aascmed-preview || true
 
             # ── Create shared network (if not exists) ───────────────────
             podman network exists preview-net || podman network create preview-net
@@ -123,11 +123,13 @@ jobs:
             # ── 1. Preview site container ───────────────────────────────
             podman run -d \
               --name aascmed-preview \
+              --replace \
               --network preview-net \
               --restart unless-stopped \
               -e NODE_OPTIONS="--max-old-space-size=700" \
               -e GATSBY_STRAPI_API_URL=${{ vars.GATSBY_STRAPI_API_URL }} \
               -e STRAPI_TOKEN=${{ secrets.STRAPI_TOKEN }} \
+              -e GATSBY_REFRESH_TOKEN=${{ secrets.GATSBY_REFRESH_TOKEN }} \
               -e GATSBY_MAPBOX_API_KEY=${{ secrets.GATSBY_MAPBOX_API_KEY }} \
               -e GATSBY_API_BASE_URL=${{ vars.GATSBY_API_BASE_URL }} \
               -e GATSBY_IS_PREVIEW=true \
@@ -137,6 +139,7 @@ jobs:
             # ── 2. Forward-auth container ───────────────────────────────
             podman run -d \
               --name preview-forward-auth \
+              --replace \
               --network preview-net \
               --restart unless-stopped \
               -e STRAPI_URL=${{ vars.GATSBY_STRAPI_API_URL }} \
@@ -147,6 +150,7 @@ jobs:
             # Cloudflare origin certs must be on the host at PREVIEW_CERTS_PATH.
             podman run -d \
               --name preview-caddy \
+              --replace \
               --network preview-net \
               --restart unless-stopped \
               -p 443:443 \
