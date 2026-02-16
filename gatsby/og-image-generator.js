@@ -42,9 +42,9 @@ const MAX_LINES = 3; // Max lines before truncation
 const MAX_CHARS = 100; // Hard limit for character count
 
 // Poppins font URL (Google Fonts)
-const POPPINS_BOLD_URL = 'https://github.com/google/fonts/raw/main/ofl/poppins/Poppins-Bold.ttf';
+const POPPINS_BOLD_URL = 'https://github.com/google/fonts/raw/main/ofl/poppins/Poppins-ExtraBold.ttf';
 const FONTS_DIR = path.join(__dirname, '../.cache/fonts');
-const POPPINS_BOLD_PATH = path.join(FONTS_DIR, 'Poppins-Bold.ttf');
+const POPPINS_EXTRA_BOLD_PATH = path.join(FONTS_DIR, 'Poppins-ExtraBold.ttf');
 
 let fontLoaded = false;
 
@@ -60,11 +60,11 @@ async function ensurePoppinsFont() {
   }
 
   // Download if not exists
-  if (!fs.existsSync(POPPINS_BOLD_PATH)) {
-    console.log('Downloading Poppins Bold font...');
+  if (!fs.existsSync(POPPINS_EXTRA_BOLD_PATH)) {
+    console.log('Downloading Poppins ExtraBold font...');
     try {
-      await downloadFile(POPPINS_BOLD_URL, POPPINS_BOLD_PATH);
-      console.log('Poppins Bold font downloaded successfully');
+      await downloadFile(POPPINS_BOLD_URL, POPPINS_EXTRA_BOLD_PATH);
+      console.log('Poppins ExtraBold font downloaded successfully');
     } catch (error) {
       console.warn('Failed to download Poppins font, using fallback:', error.message);
       return false;
@@ -73,7 +73,7 @@ async function ensurePoppinsFont() {
 
   // Register the font
   try {
-    GlobalFonts.registerFromPath(POPPINS_BOLD_PATH, 'Poppins');
+    GlobalFonts.registerFromPath(POPPINS_EXTRA_BOLD_PATH, 'Poppins');
     fontLoaded = true;
     return true;
   } catch (error) {
