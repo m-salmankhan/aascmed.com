@@ -1,5 +1,9 @@
 # GitHub Actions Workflow: Deploy Preview Server
-# Builds and pushes Docker image to remote server when website source code changes
+# Builds preview site + forward-auth images, pushes to GHCR,
+# then deploys three containers on the remote host:
+#   1. aascmed-preview        — Gatsby develop (draft content)
+#   2. preview-forward-auth   — Strapi-based login / JWT verification
+#   3. preview-caddy          — TLS reverse proxy with forward_auth
 
 name: Deploy Preview Server
 
@@ -7,22 +11,23 @@ on:
   push:
     branches:
       - main
-  
+
   # Allow manual trigger
   workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}-preview
+  AUTH_IMAGE_NAME: ${{ github.repository }}-preview-auth
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    
+
     permissions:
       contents: read
       packages: write
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -37,7 +42,8 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata for Docker
+      # ── Preview site image ────────────────────────────────────────────
+      - name: Extract metadata (preview)
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -47,7 +53,7 @@ jobs:
             type=sha,prefix=
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Build and push Docker image
+      - name: Build and push preview image
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -58,6 +64,39 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      # ── Forward-auth image ────────────────────────────────────────────
+      - name: Extract metadata (forward-auth)
+        id: meta-auth
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.AUTH_IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix=
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push forward-auth image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./preview-server/forward-auth
+          file: ./preview-server/forward-auth/Dockerfile
+          push: true
+          tags: ${{ steps.meta-auth.outputs.tags }}
+          labels: ${{ steps.meta-auth.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # ── Deploy to remote server ───────────────────────────────────────
+      - name: Copy Caddyfile to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.PREVIEW_SERVER_HOST }}
+          username: ${{ secrets.PREVIEW_SERVER_USER }}
+          key: ${{ secrets.PREVIEW_SERVER_SSH_KEY }}
+          source: "preview-server/Caddyfile"
+          target: "/home/${{ secrets.PREVIEW_SERVER_USER }}/"
+          strip_components: 1
+
       - name: Deploy to remote server
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -65,21 +104,27 @@ jobs:
           username: ${{ secrets.PREVIEW_SERVER_USER }}
           key: ${{ secrets.PREVIEW_SERVER_SSH_KEY }}
           script: |
-            # Login to GitHub Container Registry (works with Podman)
+            set -e
+
+            # ── Registry login ──────────────────────────────────────────
             echo ${{ secrets.GITHUB_TOKEN }} | podman login ghcr.io -u ${{ github.actor }} --password-stdin
-            
-            # Pull the latest image
+
+            # ── Pull latest images ──────────────────────────────────────
             podman pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
-            
-            # Stop and remove existing container
-            podman stop aascmed-preview || true
-            podman rm aascmed-preview || true
-            
-            # Run new container with environment variables
+            podman pull ${{ env.REGISTRY }}/${{ env.AUTH_IMAGE_NAME }}:${{ github.ref_name }}
+
+            # ── Tear down existing containers ───────────────────────────
+            podman stop preview-caddy preview-forward-auth aascmed-preview || true
+            podman rm   preview-caddy preview-forward-auth aascmed-preview || true
+
+            # ── Create shared network (if not exists) ───────────────────
+            podman network exists preview-net || podman network create preview-net
+
+            # ── 1. Preview site container ───────────────────────────────
             podman run -d \
               --name aascmed-preview \
+              --network preview-net \
               --restart unless-stopped \
-              -p 8000:8000 \
               -e NODE_OPTIONS="--max-old-space-size=700" \
               -e GATSBY_STRAPI_API_URL=${{ vars.GATSBY_STRAPI_API_URL }} \
               -e STRAPI_TOKEN=${{ secrets.STRAPI_TOKEN }} \
@@ -88,6 +133,28 @@ jobs:
               -e GATSBY_IS_PREVIEW=true \
               -e ENABLE_GATSBY_REFRESH_ENDPOINT=true \
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
-            
-            # Clean up old images
+
+            # ── 2. Forward-auth container ───────────────────────────────
+            podman run -d \
+              --name preview-forward-auth \
+              --network preview-net \
+              --restart unless-stopped \
+              -e STRAPI_URL=${{ vars.GATSBY_STRAPI_API_URL }} \
+              ${{ env.REGISTRY }}/${{ env.AUTH_IMAGE_NAME }}:${{ github.ref_name }}
+
+            # ── 3. Caddy reverse proxy ──────────────────────────────────
+            # Caddyfile is copied from the repo by the previous step.
+            # Cloudflare origin certs must be on the host at PREVIEW_CERTS_PATH.
+            podman run -d \
+              --name preview-caddy \
+              --network preview-net \
+              --restart unless-stopped \
+              -p 443:443 \
+              -p 80:80 \
+              -v ~/Caddyfile:/etc/caddy/Caddyfile:ro,Z \
+              -v ${{ vars.PREVIEW_CERTS_PATH }}:/etc/caddy/certs:ro,Z \
+              -e PREVIEW_DOMAIN=${{ vars.PREVIEW_DOMAIN }} \
+              docker.io/library/caddy:2-alpine
+
+            # ── Cleanup ─────────────────────────────────────────────────
             podman image prune -f

@@ -1,0 +1,52 @@
+# Caddyfile for the preview site reverse proxy
+#
+# TLS is terminated here using a Cloudflare Origin Certificate.
+# Authentication is handled via forward_auth to the forward-auth service.
+#
+# The PREVIEW_DOMAIN env var is set by the container (-e PREVIEW_DOMAIN=...).
+# Cert paths must match where you placed the Cloudflare Origin Certificate
+# on the host (mounted into the Caddy container).
+
+{$PREVIEW_DOMAIN:localhost} {
+	# Use Cloudflare Origin Certificate for TLS
+	tls /etc/caddy/certs/cert.pem /etc/caddy/certs/key.pem
+
+	# Auth endpoints and static assets are served by the forward-auth service
+	handle /login* {
+		reverse_proxy preview-forward-auth:3001
+	}
+
+	handle /logout {
+		reverse_proxy preview-forward-auth:3001
+	}
+
+	handle /auth/* {
+		reverse_proxy preview-forward-auth:3001
+	}
+
+	# Everything else: verify auth first, then proxy to preview
+	handle {
+		forward_auth preview-forward-auth:3001 {
+			uri /verify
+			copy_headers {
+				X-Auth-User
+			}
+		}
+		reverse_proxy aascmed-preview:8000
+	}
+
+	# If forward_auth returns 401, redirect to login
+	handle_errors {
+		@unauthorized expression {err.status_code} == 401
+		handle @unauthorized {
+			redir /login?redirect={uri} 302
+		}
+	}
+
+	encode zstd gzip
+
+	log {
+		output stdout
+		format console
+	}
+}
