@@ -1,0 +1,92 @@
+# GitHub Actions Workflow: Deploy Preview Server
+# Builds and pushes Docker image to remote server when website source code changes
+
+name: Deploy Preview Server
+
+on:
+  push:
+    branches:
+      - main
+  
+  # Allow manual trigger
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}-preview
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix=
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./preview-server/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy to remote server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PREVIEW_SERVER_HOST }}
+          username: ${{ secrets.PREVIEW_SERVER_USER }}
+          key: ${{ secrets.PREVIEW_SERVER_SSH_KEY }}
+          script: |
+            # Login to GitHub Container Registry (works with Podman)
+            echo ${{ secrets.GITHUB_TOKEN }} | podman login ghcr.io -u ${{ github.actor }} --password-stdin
+            
+            # Pull the latest image
+            podman pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+            
+            # Stop and remove existing container
+            podman stop aascmed-preview || true
+            podman rm aascmed-preview || true
+            
+            # Run new container with environment variables
+            podman run -d \
+              --name aascmed-preview \
+              --restart unless-stopped \
+              -p 8000:8000 \
+              -e GATSBY_STRAPI_API_URL=${{ secrets.GATSBY_STRAPI_API_URL }} \
+              -e STRAPI_TOKEN=${{ secrets.STRAPI_TOKEN }} \
+              -e GATSBY_MAPBOX_API_KEY=${{ secrets.GATSBY_MAPBOX_API_KEY }} \
+              -e GATSBY_API_BASE_URL=${{ secrets.GATSBY_API_BASE_URL }} \
+              -e GATSBY_IS_PREVIEW=true \
+              -e ENABLE_GATSBY_REFRESH_ENDPOINT=true \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+            
+            # Clean up old images
+            podman image prune -f

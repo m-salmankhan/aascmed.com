@@ -50,16 +50,19 @@ const config: GatsbyConfig = {
             options: {
                 apiURL: process.env.GATSBY_STRAPI_API_URL || 'http://localhost:1337',
                 accessToken: process.env.STRAPI_TOKEN,
+                publicationState: process.env.GATSBY_IS_PREVIEW === "true" ? "preview" : "live",
                 collectionTypes: [
                     {
                         singularName: 'blog',
                         queryParams: {
+                            publicationState: process.env.GATSBY_IS_PREVIEW === "true" ? "preview" : "live",
                             populate: "*"
                         }
                     },
                     {
                         singularName: 'clinic',
                         queryParams: {
+                            publicationState: process.env.GATSBY_IS_PREVIEW === "true" ? "preview" : "live",
                             populate: {
                                 hours: {
                                     populate: ['opening_hours', 'shot_hours']
@@ -72,24 +75,28 @@ const config: GatsbyConfig = {
                     {
                         singularName: 'condition',
                         queryParams: {
+                            publicationState: process.env.GATSBY_IS_PREVIEW === "true" ? "preview" : "live",
                             populate: ['thumbnail', 'content', 'content.questions', 'content.text']
                         }
                     },
                     {
                         singularName: 'provider',
                         queryParams: {
+                            publicationState: process.env.GATSBY_IS_PREVIEW === "true" ? "preview" : "live",
                             populate: ['image', 'name', 'body', 'body.text', 'review', 'retirementNotice']
                         }
                     },
                     {
                         singularName: 'service-update',
                         queryParams: {
+                            publicationState: process.env.GATSBY_IS_PREVIEW === "true" ? "preview" : "live",
                             populate: '*'
                         }
                     },
                     {
                         singularName: 'review',
                         queryParams: {
+                            publicationState: process.env.GATSBY_IS_PREVIEW === "true" ? "preview" : "live",
                             populate: '*'
                         }
                     }
@@ -98,54 +105,63 @@ const config: GatsbyConfig = {
                     {
                         singularName: 'announcement',
                         queryParams: {
+                            publicationState: process.env.GATSBY_IS_PREVIEW === "true" ? "preview" : "live",
                             populate: '*'
                         }
                     },
                     {
                         singularName: 'blog-archive',
                         queryParams: {
+                            publicationState: process.env.GATSBY_IS_PREVIEW === "true" ? "preview" : "live",
                             populate: '*'
                         }
                     },
                     {
                         singularName: 'conditions-archive',
                         queryParams: {
+                            publicationState: process.env.GATSBY_IS_PREVIEW === "true" ? "preview" : "live",
                             populate: '*'
                         }
                     },
                     {
                         singularName: 'clinics-archive',
                         queryParams: {
+                            publicationState: process.env.GATSBY_IS_PREVIEW === "true" ? "preview" : "live",
                             populate: '*'
                         }
                     },
                     {
                         singularName: 'contact',
                         queryParams: {
+                            publicationState: process.env.GATSBY_IS_PREVIEW === "true" ? "preview" : "live",
                             populate: '*'
                         }
                     },
                     {
                         singularName: 'providers-page',
                         queryParams: {
+                            publicationState: process.env.GATSBY_IS_PREVIEW === "true" ? "preview" : "live",
                             populate: '*'
                         }
                     },
                     {
                         singularName: 'service-update-page',
                         queryParams: {
+                            publicationState: process.env.GATSBY_IS_PREVIEW === "true" ? "preview" : "live",
                             populate: '*'
                         }
                     },
                     {
                         singularName: 'privacy-policy',
                         queryParams: {
+                            publicationState: process.env.GATSBY_IS_PREVIEW === "true" ? "preview" : "live",
                             populate: '*'
                         }
                     },
                     {
                         singularName: 'home-page',
                         queryParams: {
+                            publicationState: process.env.GATSBY_IS_PREVIEW === "true" ? "preview" : "live",
                             populate: {
                                 hero: { populate: '*' },
                                 conditions: { populate: '*' },
@@ -161,6 +177,7 @@ const config: GatsbyConfig = {
                     {
                         singularName: 'tracking-info',
                         queryParams: {
+                            publicationState: process.env.GATSBY_IS_PREVIEW === "true" ? "preview" : "live",
                             populate: '*'
                         }
                     }

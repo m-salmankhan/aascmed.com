@@ -1,0 +1,44 @@
+# Docker ignore file for preview build
+# Excludes files not needed in the container
+
+# Dependencies (will be installed fresh in container)
+node_modules/
+
+# Build outputs
+.cache/
+public/
+
+# Generated types (will be regenerated)
+src/gatsby-types.d.ts
+
+# Environment files (passed via Docker/compose)
+.env
+.env.*
+
+# Git
+.git/
+.gitignore
+
+# IDE/Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation (not needed at runtime)
+*.md
+docs/
+
+# Test files
+*.test.js
+*.test.ts
+*.spec.js
+*.spec.ts
+__tests__/
+
+# Preview server folder (don't need to copy itself)
+preview-server/
