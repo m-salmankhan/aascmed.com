@@ -80,6 +80,7 @@ jobs:
               --name aascmed-preview \
               --restart unless-stopped \
               -p 8000:8000 \
+              -e NODE_OPTIONS="--max-old-space-size=700" \
               -e GATSBY_STRAPI_API_URL=${{ vars.GATSBY_STRAPI_API_URL }} \
               -e STRAPI_TOKEN=${{ secrets.STRAPI_TOKEN }} \
               -e GATSBY_MAPBOX_API_KEY=${{ secrets.GATSBY_MAPBOX_API_KEY }} \
