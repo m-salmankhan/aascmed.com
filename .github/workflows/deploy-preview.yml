@@ -153,8 +153,8 @@ jobs:
               --replace \
               --network preview-net \
               --restart unless-stopped \
-              -p 443:443 \
-              -p 80:80 \
+              -p 8443:443 \
+              -p 8080:80 \
               -v ~/Caddyfile:/etc/caddy/Caddyfile:ro,Z \
               -v ${{ vars.PREVIEW_CERTS_PATH }}:/etc/caddy/certs:ro,Z \
               -e PREVIEW_DOMAIN=${{ vars.PREVIEW_DOMAIN }} \
