@@ -93,7 +93,7 @@ app.post("/login", async (req, res) => {
     res.cookie(COOKIE_NAME, jwt, {
       httpOnly: true,
       secure: true,
-      sameSite: "lax",
+      sameSite: "none",        // Required for cross-origin iframe (Strapi preview)
       maxAge: COOKIE_MAX_AGE_MS,
       path: "/",
     });
@@ -111,7 +111,7 @@ app.post("/login", async (req, res) => {
 // GET /logout — clear cookie and redirect to login
 // ---------------------------------------------------------------------------
 app.get("/logout", (_req, res) => {
-  res.clearCookie(COOKIE_NAME, { path: "/" });
+  res.clearCookie(COOKIE_NAME, { path: "/", secure: true, sameSite: "none" });
   res.redirect("/login");
 });
 
