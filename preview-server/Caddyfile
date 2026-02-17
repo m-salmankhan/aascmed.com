@@ -39,6 +39,10 @@
 			handle_response @unauthorized {
 				redir /login?redirect={http.request.uri} 302
 			}
+			@error status 5xx
+			handle_response @error {
+				respond "Auth service unavailable — please try again shortly." 503
+			}
 		}
 		reverse_proxy aascmed-preview:8000 {
 			header_down -X-Frame-Options
