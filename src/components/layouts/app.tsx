@@ -134,19 +134,18 @@ interface AppProps {
 
 export const App: React.FC<AppProps> = ({ children, className, useTracking }) => {
     useEffect(() => {
-        // @ts-ignore
-        if (typeof window.netlifyIdentity !== 'undefined') {
-            // @ts-ignore
-            window.netlifyIdentity.on('init', user => {
-                if (!user) {
-                    // @ts-ignore
-                    window.netlifyIdentity.on('login', () => {
-                        document.location.href = '/admin/';
-                    });
-                }
-            });
-        }
-    });
+        const handleMessage = (event: MessageEvent) => {
+            if (event.data?.type === 'strapiUpdate') {
+                window.location.reload();
+            }
+        };
+
+        window.addEventListener('message', handleMessage);
+
+        return () => {
+            window.removeEventListener('message', handleMessage);
+        };
+    }, []);    
 
     return <div className={className}>
         { !!useTracking &&
