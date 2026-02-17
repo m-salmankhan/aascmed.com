@@ -28,6 +28,11 @@
 		reverse_proxy preview-forward-auth:3001
 	}
 
+	# Gatsby refresh webhook — bypasses auth (protected by GATSBY_REFRESH_TOKEN)
+	handle /__refresh {
+		reverse_proxy aascmed-preview:8000
+	}
+
 	# Everything else: verify auth first, then proxy to preview
 	handle {
 		# Expanded forward_auth: pre-check request to auth service
