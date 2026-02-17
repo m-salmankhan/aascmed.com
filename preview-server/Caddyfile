@@ -11,6 +11,10 @@
 	# Use Cloudflare Origin Certificate for TLS
 	tls /etc/caddy/certs/cert.pem /etc/caddy/certs/key.pem
 
+	# Allow framing from Strapi and *.aascmed.com
+	header Content-Security-Policy "frame-ancestors 'self' https://*.aascmed.com https://wise-positivity-21c2bd6b3f.strapiapp.com"
+	header -X-Frame-Options
+
 	# Auth endpoints and static assets are served by the forward-auth service
 	handle /login* {
 		reverse_proxy preview-forward-auth:3001
@@ -36,7 +40,10 @@
 				redir /login?redirect={http.request.uri} 302
 			}
 		}
-		reverse_proxy aascmed-preview:8000
+		reverse_proxy aascmed-preview:8000 {
+			header_down -X-Frame-Options
+			header_down -Content-Security-Policy
+		}
 	}
 
 	encode zstd gzip
