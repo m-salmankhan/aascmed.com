@@ -31,16 +31,12 @@
 			copy_headers {
 				X-Auth-User
 			}
+			@unauthorized status 401
+			handle_response @unauthorized {
+				redir /login?redirect={http.request.uri} 302
+			}
 		}
 		reverse_proxy aascmed-preview:8000
-	}
-
-	# If forward_auth returns 401, redirect to login
-	handle_errors {
-		@unauthorized expression {err.status_code} == 401
-		handle @unauthorized {
-			redir /login?redirect={uri} 302
-		}
 	}
 
 	encode zstd gzip

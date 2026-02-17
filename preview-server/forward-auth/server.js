@@ -38,7 +38,7 @@ app.get("/verify", async (req, res) => {
   if (!token) return res.status(401).send("no token");
 
   try {
-    const r = await fetch(`${STRAPI_URL}/api/users/me`, {
+    const r = await fetch(`${STRAPI_URL}/admin/users/me`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!r.ok) return res.status(401).send("invalid token");
@@ -61,21 +61,34 @@ app.get("/login", (_req, res) => {
 app.post("/login", async (req, res) => {
   const { identifier, password } = req.body;
   if (!identifier || !password) {
-    return res.redirect("/login?error=1");
+    console.warn("[login] missing identifier or password");
+    return res.status(400).json({ error: "Email and password are required." });
   }
 
   try {
-    const r = await fetch(`${STRAPI_URL}/api/auth/local`, {
+    const strapiUrl = `${STRAPI_URL}/admin/login`;
+    console.log(`[login] authenticating ${identifier} against ${strapiUrl}`);
+
+    const r = await fetch(strapiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ identifier, password }),
+      body: JSON.stringify({ email: identifier, password }),
     });
 
-    if (!r.ok) return res.redirect("/login?error=1");
+    if (!r.ok) {
+      const body = await r.text();
+      console.warn(`[login] Strapi returned ${r.status}: ${body}`);
+      return res.status(401).json({ error: "Invalid email or password." });
+    }
 
     const body = await r.json();
-    const jwt = body.jwt;
-    if (!jwt) return res.redirect("/login?error=1");
+    const jwt = body.data?.token;
+    if (!jwt) {
+      console.warn("[login] Strapi response missing jwt:", JSON.stringify(body));
+      return res.status(502).json({ error: "Unexpected response from auth server." });
+    }
+
+    console.log(`[login] success for ${identifier}`);
 
     res.cookie(COOKIE_NAME, jwt, {
       httpOnly: true,
@@ -87,9 +100,10 @@ app.post("/login", async (req, res) => {
 
     // Redirect to the page originally requested (or /)
     const dest = req.query.redirect || "/";
-    return res.redirect(dest);
-  } catch {
-    return res.redirect("/login?error=1");
+    return res.json({ redirect: dest });
+  } catch (err) {
+    console.error("[login] fetch error:", err.message || err);
+    return res.status(502).json({ error: "Cannot reach auth server." });
   }
 });
 

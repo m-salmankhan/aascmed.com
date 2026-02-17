@@ -38,18 +38,21 @@ document.addEventListener("DOMContentLoaded", () => {
         body: JSON.stringify({ identifier, password }),
       });
 
-      if (res.redirected) {
-        window.location.href = res.url;
-        return;
-      }
+      const data = await res.json().catch(() => null);
 
       if (!res.ok) {
+        errorEl.textContent = (data && data.error) || "Invalid email or password.";
         errorEl.classList.remove("d-none");
+      } else if (data && data.redirect) {
+        window.location.href = data.redirect;
+        return;
       } else {
         const redirect = params.get("redirect") || "/";
         window.location.href = redirect;
+        return;
       }
-    } catch {
+    } catch (err) {
+      errorEl.textContent = "Network error — could not reach server.";
       errorEl.classList.remove("d-none");
     } finally {
       setLoading(false);
