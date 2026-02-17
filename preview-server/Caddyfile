@@ -30,20 +30,36 @@
 
 	# Everything else: verify auth first, then proxy to preview
 	handle {
-		forward_auth preview-forward-auth:3001 {
-			uri /verify
-			copy_headers {
-				X-Auth-User
+		# Expanded forward_auth: pre-check request to auth service
+		reverse_proxy preview-forward-auth:3001 {
+			# Send as GET so original body is not consumed
+			method GET
+			rewrite /verify
+
+			# Pass original method and URI for the auth service
+			header_up X-Forwarded-Method {method}
+			header_up X-Forwarded-Uri {uri}
+
+			# On 2xx — auth passed, copy user header and proceed
+			@good status 2xx
+			handle_response @good {
+				request_header X-Auth-User {rp.header.X-Auth-User}
 			}
+
+			# On 401 — not authenticated, redirect to login
 			@unauthorized status 401
 			handle_response @unauthorized {
-				redir /login?redirect={http.request.uri} 302
+				header Location /login?redirect={http.request.uri}
+				respond "" 302
 			}
+
+			# On 5xx — auth service error, fail closed
 			@error status 5xx
 			handle_response @error {
 				respond "Auth service unavailable — please try again shortly." 503
 			}
 		}
+
 		reverse_proxy aascmed-preview:8000 {
 			header_down -X-Frame-Options
 			header_down -Content-Security-Policy
