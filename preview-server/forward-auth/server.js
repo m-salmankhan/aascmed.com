@@ -21,7 +21,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 // Serve static assets (CSS, JS) under /auth so they don't collide with site routes
-app.use("/auth", express.static(path.join(__dirname, "public")));
+app.use("/auth", express.static(path.join(__dirname, "client-login")));
+
+// Serve robots.txt at the root
+app.get("/robots.txt", (req, res) => {
+  res.sendFile(path.join(__dirname, "client-login", "robots.txt"));
+});
 
 // ---------------------------------------------------------------------------
 // GET /verify — called by Caddy forward_auth
@@ -47,7 +52,7 @@ app.get("/verify", async (req, res) => {
 // GET /login — serve the login page
 // ---------------------------------------------------------------------------
 app.get("/login", (_req, res) => {
-  res.sendFile(path.join(__dirname, "public", "login.html"));
+  res.sendFile(path.join(__dirname, "client-login", "login.html"));
 });
 
 // ---------------------------------------------------------------------------

@@ -6,7 +6,7 @@ COPY package.json ./
 RUN npm install --omit=dev
 
 COPY server.js ./
-COPY client-login/ ./public/
+COPY client-login/ ./client-login/
 
 EXPOSE 3001
 

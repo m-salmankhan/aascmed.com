@@ -1,69 +1,33 @@
-/* ============================================================
-   Brand overrides for Bootstrap 5
-   Primary:   #1C5E38
-   Secondary: #4DA249
-   Font:      Poppins
-   ============================================================ */
-
-:root {
-  --bs-body-font-family: "Poppins", sans-serif;
-  --brand-primary: #1c5e38;
-  --brand-primary-hover: #174d2e;
-  --brand-secondary: #4da249;
-  --brand-dark: #003b19;
-  --brand-light: #c8ffde;
-}
+/*  Brand overrides — applied AFTER bootstrap.min.css  */
 
 body {
   font-family: "Poppins", sans-serif;
-  background-color: #f3f4f6;
+  font-weight: 300;
 }
 
-/* Card */
-.card {
-  border-radius: 0.75rem;
-  overflow: hidden;
+h1, h2, h3, h4, h5, h6,
+.btn, label {
+  font-weight: 800;
 }
 
-/* Brand-colored header */
-.bg-brand-primary {
-  background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+.logo {
+  width: 260px;
+  height: 270px;
+  background-color: var(--bs-body-color);
+  -webkit-mask: url("/auth/logo.svg") center / contain no-repeat;
+  mask: url("/auth/logo.svg") center / contain no-repeat;
 }
 
-/* Primary button */
-.btn-brand {
-  background-color: var(--brand-primary);
-  border-color: var(--brand-primary);
-  color: #fff;
+.btn-success {
+  --bs-btn-bg: #1c5e38;
+  --bs-btn-border-color: #1c5e38;
+  --bs-btn-hover-bg: #174d2e;
+  --bs-btn-hover-border-color: #174d2e;
+  --bs-btn-active-bg: #003b19;
+  --bs-btn-active-border-color: #003b19;
 }
 
-.btn-brand:hover,
-.btn-brand:focus {
-  background-color: var(--brand-primary-hover);
-  border-color: var(--brand-primary-hover);
-  color: #fff;
-}
-
-.btn-brand:active {
-  background-color: var(--brand-dark);
-  border-color: var(--brand-dark);
-  color: #fff;
-}
-
-.btn-brand:disabled {
-  background-color: var(--brand-primary);
-  border-color: var(--brand-primary);
-  opacity: 0.65;
-}
-
-/* Focus ring brand color */
 .form-control:focus {
-  border-color: var(--brand-secondary);
-  box-shadow: 0 0 0 0.2rem rgba(77, 162, 73, 0.25);
-}
-
-/* Input group icons */
-.input-group-text {
-  color: var(--brand-primary);
-  border-color: #dee2e6;
+  border-color: #4da249;
+  box-shadow: 0 0 0 0.25rem rgba(77, 162, 73, 0.25);
 }
