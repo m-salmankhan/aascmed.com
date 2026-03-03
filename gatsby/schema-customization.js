@@ -9,6 +9,7 @@
 const createSchemaCustomization = ({ actions, schema }) => {
   const { createTypes } = actions;
 
+  // Node types (using buildObjectType for Node interface)
   createTypes([
     // Single Types
     buildTrackingInfoType(schema),
@@ -29,20 +30,30 @@ const createSchemaCustomization = ({ actions, schema }) => {
     buildProviderType(schema),
     buildServiceUpdateType(schema),
     buildReviewType(schema),
-    
-    // Components
+  ]);
+
+  // Component types must implement Node because gatsby-source-strapi creates
+  // actual Gatsby nodes for components (with id, internal, children, parent).
+  // Gatsby checks the data store and panics if a type has nodes but doesn't
+  // implement Node. These declarations ensure component fields exist even when
+  // no data has them (e.g. all reviews deleted), preventing GraphQL errors.
+  createTypes([
+    // Provider components
     buildProviderNameType(schema),
     buildProviderReviewType(schema),
     buildProviderRetirementType(schema),
+    // Clinic components
     buildClinicMapType(schema),
     buildClinicContactInfoType(schema),
     buildClinicOpeningHoursType(schema),
     buildClinicTimeRangeType(schema),
+    // Generic components
     buildGenericQuestionType(schema),
     buildGenericFaqType(schema),
     buildGenericContactBookingCtaType(schema),
     buildGenericRichTextType(schema),
     buildGenericFaqContactBookButtonsType(schema),
+    // Homepage components
     buildHomepageSectionType(schema),
     buildHomepageFeedbackType(schema),
   ]);
@@ -78,7 +89,6 @@ function buildAnnouncementType(schema) {
       enabled: 'Boolean',
       type: 'String',
       message: 'String', // blocks field simplified to string
-      internal: 'Internal',
     },
   });
 }
@@ -92,14 +102,38 @@ function buildHomePageType(schema) {
     interfaces: ['Node'],
     fields: {
       metaDescription: 'String',
-      hero: 'STRAPI__COMPONENT_HOMEPAGE_CONDITIONS_SECTION',
-      conditions: 'STRAPI__COMPONENT_HOMEPAGE_CONDITIONS_SECTION',
-      serviceUpdates: 'STRAPI__COMPONENT_HOMEPAGE_CONDITIONS_SECTION',
-      blog: 'STRAPI__COMPONENT_HOMEPAGE_CONDITIONS_SECTION',
-      providers: 'STRAPI__COMPONENT_HOMEPAGE_CONDITIONS_SECTION',
-      feedback: 'STRAPI__COMPONENT_HOMEPAGE_FEEDBACK',
-      locations: 'STRAPI__COMPONENT_HOMEPAGE_CONDITIONS_SECTION',
-      contact: 'STRAPI__COMPONENT_HOMEPAGE_CONDITIONS_SECTION',
+      hero: {
+        type: 'STRAPI__COMPONENT_HOMEPAGE_CONDITIONS_SECTION',
+        extensions: { link: { from: 'hero___NODE' } },
+      },
+      conditions: {
+        type: 'STRAPI__COMPONENT_HOMEPAGE_CONDITIONS_SECTION',
+        extensions: { link: { from: 'conditions___NODE' } },
+      },
+      serviceUpdates: {
+        type: 'STRAPI__COMPONENT_HOMEPAGE_CONDITIONS_SECTION',
+        extensions: { link: { from: 'serviceUpdates___NODE' } },
+      },
+      blog: {
+        type: 'STRAPI__COMPONENT_HOMEPAGE_CONDITIONS_SECTION',
+        extensions: { link: { from: 'blog___NODE' } },
+      },
+      providers: {
+        type: 'STRAPI__COMPONENT_HOMEPAGE_CONDITIONS_SECTION',
+        extensions: { link: { from: 'providers___NODE' } },
+      },
+      feedback: {
+        type: 'STRAPI__COMPONENT_HOMEPAGE_FEEDBACK',
+        extensions: { link: { from: 'feedback___NODE' } },
+      },
+      locations: {
+        type: 'STRAPI__COMPONENT_HOMEPAGE_CONDITIONS_SECTION',
+        extensions: { link: { from: 'locations___NODE' } },
+      },
+      contact: {
+        type: 'STRAPI__COMPONENT_HOMEPAGE_CONDITIONS_SECTION',
+        extensions: { link: { from: 'contact___NODE' } },
+      },
     },
   });
 }
@@ -158,10 +192,19 @@ function buildClinicType(schema) {
       clinic_name: 'String',
       slug: 'String',
       description: 'String',
-      location: 'STRAPI__COMPONENT_CLINICS_MAP',
-      contact: 'STRAPI__COMPONENT_CLINICS_CONTACT_INFO',
-      hours: '[STRAPI__COMPONENT_CLINICS_OPENING_HOURS]',
-      body: 'String', // blocks field simplified to string
+      location: {
+        type: 'STRAPI__COMPONENT_CLINICS_MAP',
+        extensions: { link: { from: 'location___NODE' } },
+      },
+      contact: {
+        type: 'STRAPI__COMPONENT_CLINICS_CONTACT_INFO',
+        extensions: { link: { from: 'contact___NODE' } },
+      },
+      hours: {
+        type: '[STRAPI__COMPONENT_CLINICS_OPENING_HOURS]',
+        extensions: { link: { from: 'hours___NODE' } },
+      },
+      body: 'String',
     },
   });
 }
@@ -192,13 +235,22 @@ function buildProviderType(schema) {
     name: 'STRAPI_PROVIDER',
     interfaces: ['Node'],
     fields: {
-      name: 'STRAPI__COMPONENT_PROVIDERS_NAME',
+      name: {
+        type: 'STRAPI__COMPONENT_PROVIDERS_NAME',
+        extensions: { link: { from: 'name___NODE' } },
+      },
       slug: 'String',
       description: 'String',
       order: 'Int',
-      review: 'STRAPI__COMPONENT_PROVIDERS_REVIEW',
-      retirementNotice: 'STRAPI__COMPONENT_PROVIDERS_RETIREMENT',
-      body: 'String', // dynamiczone simplified to string
+      review: {
+        type: 'STRAPI__COMPONENT_PROVIDERS_REVIEW',
+        extensions: { link: { from: 'review___NODE' } },
+      },
+      retirementNotice: {
+        type: 'STRAPI__COMPONENT_PROVIDERS_RETIREMENT',
+        extensions: { link: { from: 'retirementNotice___NODE' } },
+      },
+      body: 'String',
     },
   });
 }
@@ -238,248 +290,6 @@ function buildReviewType(schema) {
       content: 'String', // blocks field simplified to string
       sourceName: 'String',
       sourceUrl: 'String',
-    },
-  });
-}
-
-// ====================
-// COMPONENT TYPES
-// ====================
-
-/**
- * Provider name component
- */
-function buildProviderNameType(schema) {
-  return schema.buildObjectType({
-    name: 'STRAPI__COMPONENT_PROVIDERS_NAME',
-    extensions: {
-      dontInfer: {},
-    },
-    fields: {
-      fullName: 'String',
-      honorific: 'String',
-      qualificationLong: 'String',
-      qualificationAbbr: 'String',
-    },
-  });
-}
-
-/**
- * Provider review component
- */
-function buildProviderReviewType(schema) {
-  return schema.buildObjectType({
-    name: 'STRAPI__COMPONENT_PROVIDERS_REVIEW',
-    extensions: {
-      dontInfer: {},
-    },
-    fields: {
-      text: 'String',
-      reviewer: 'String',
-      date: {
-        type: 'Date',
-        extensions: {
-          dateformat: {},
-        },
-      },
-      link: 'String',
-    },
-  });
-}
-
-/**
- * Provider retirement component
- */
-function buildProviderRetirementType(schema) {
-  return schema.buildObjectType({
-    name: 'STRAPI__COMPONENT_PROVIDERS_RETIREMENT',
-    extensions: {
-      dontInfer: {},
-    },
-    fields: {
-      retired: 'Boolean',
-      text: 'String', // blocks field simplified to string
-    },
-  });
-}
-
-/**
- * Clinic map component
- */
-function buildClinicMapType(schema) {
-  return schema.buildObjectType({
-    name: 'STRAPI__COMPONENT_CLINICS_MAP',
-    extensions: {
-      dontInfer: {},
-    },
-    fields: {
-      lat: 'Float',
-      long: 'Float',
-      label_name: 'String',
-      address: 'String',
-      placeId: 'String',
-    },
-  });
-}
-
-/**
- * Clinic contact info component
- */
-function buildClinicContactInfoType(schema) {
-  return schema.buildObjectType({
-    name: 'STRAPI__COMPONENT_CLINICS_CONTACT_INFO',
-    extensions: {
-      dontInfer: {},
-    },
-    fields: {
-      phone: 'String',
-      fax: 'String',
-    },
-  });
-}
-
-/**
- * Clinic opening hours component
- */
-function buildClinicOpeningHoursType(schema) {
-  return schema.buildObjectType({
-    name: 'STRAPI__COMPONENT_CLINICS_OPENING_HOURS',
-    extensions: {
-      dontInfer: {},
-    },
-    fields: {
-      day: 'String',
-      open: 'Boolean',
-      opening_hours: 'STRAPI__COMPONENT_CLINICS_TIME_RANGE',
-      shot_hours: 'STRAPI__COMPONENT_CLINICS_TIME_RANGE',
-    },
-  });
-}
-
-/**
- * Clinic time range component
- */
-function buildClinicTimeRangeType(schema) {
-  return schema.buildObjectType({
-    name: 'STRAPI__COMPONENT_CLINICS_TIME_RANGE',
-    extensions: {
-      dontInfer: {},
-    },
-    fields: {
-      start_time: 'String',
-      end_time: 'String',
-    },
-  });
-}
-
-/**
- * Generic question component
- */
-function buildGenericQuestionType(schema) {
-  return schema.buildObjectType({
-    name: 'STRAPI__COMPONENT_GENERIC_QUESTION',
-    extensions: {
-      dontInfer: {},
-    },
-    fields: {
-      question: 'String',
-      answer: 'String', // blocks field simplified to string
-    },
-  });
-}
-
-/**
- * Generic FAQ component
- */
-function buildGenericFaqType(schema) {
-  return schema.buildObjectType({
-    name: 'STRAPI__COMPONENT_GENERIC_FAQ',
-    extensions: {
-      dontInfer: {},
-    },
-    fields: {
-      questions: '[STRAPI__COMPONENT_GENERIC_QUESTION]',
-    },
-  });
-}
-
-/**
- * Generic contact booking CTA component
- */
-function buildGenericContactBookingCtaType(schema) {
-  return schema.buildObjectType({
-    name: 'STRAPI__COMPONENT_GENERIC_CONTACT_BOOKING_CTA',
-    extensions: {
-      dontInfer: {},
-    },
-    fields: {
-      // Placeholder field since this component has no attributes in Strapi schema
-      _placeholder: 'String',
-    },
-  });
-}
-
-/**
- * Generic rich text component
- */
-function buildGenericRichTextType(schema) {
-  return schema.buildObjectType({
-    name: 'STRAPI__COMPONENT_GENERIC_RICH_TEXT',
-    extensions: {
-      dontInfer: {},
-    },
-    fields: {
-      text: 'String', // blocks field simplified to string
-    },
-  });
-}
-
-/**
- * Generic FAQ contact book buttons component
- */
-function buildGenericFaqContactBookButtonsType(schema) {
-  return schema.buildObjectType({
-    name: 'STRAPI__COMPONENT_GENERIC_FAQ_CONTACT_BOOK_BUTTONS',
-    extensions: {
-      dontInfer: {},
-    },
-    fields: {
-      // Placeholder field since this component has no attributes in Strapi schema
-      _placeholder: 'String',
-    },
-  });
-}
-
-/**
- * Homepage section component
- */
-function buildHomepageSectionType(schema) {
-  return schema.buildObjectType({
-    name: 'STRAPI__COMPONENT_HOMEPAGE_CONDITIONS_SECTION',
-    extensions: {
-      dontInfer: {},
-    },
-    fields: {
-      heading: 'String',
-      text: 'String', // blocks field simplified to string
-    },
-  });
-}
-
-/**
- * Homepage feedback component
- */
-function buildHomepageFeedbackType(schema) {
-  return schema.buildObjectType({
-    name: 'STRAPI__COMPONENT_HOMEPAGE_FEEDBACK',
-    extensions: {
-      dontInfer: {},
-    },
-    fields: {
-      rating: 'Float',
-      sourceName: 'String',
-      sourceUrl: 'String',
-      accessDate: 'String',
     },
   });
 }
@@ -573,7 +383,232 @@ function buildContactPageType(schema) {
     fields: {
       heading: 'String',
       metaDescription: 'String',
-      text: 'String', // blocks field simplified to string
+      text: 'String',
+    },
+  });
+}
+
+// ====================
+// COMPONENT TYPES
+// ====================
+// gatsby-source-strapi creates full Gatsby nodes for Strapi components
+// (with id, parent, children, internal), so they MUST implement Node.
+// Declaring them here ensures the types exist even when no data has the
+// component, making the frontend resilient to missing draft content.
+
+/**
+ * Provider name component
+ */
+function buildProviderNameType(schema) {
+  return schema.buildObjectType({
+    name: 'STRAPI__COMPONENT_PROVIDERS_NAME',
+    interfaces: ['Node'],
+    fields: {
+      fullName: 'String',
+      honorific: 'String',
+      qualificationLong: 'String',
+      qualificationAbbr: 'String',
+    },
+  });
+}
+
+/**
+ * Provider review component
+ */
+function buildProviderReviewType(schema) {
+  return schema.buildObjectType({
+    name: 'STRAPI__COMPONENT_PROVIDERS_REVIEW',
+    interfaces: ['Node'],
+    fields: {
+      text: 'String',
+      reviewer: 'String',
+      date: {
+        type: 'Date',
+        extensions: {
+          dateformat: {},
+        },
+      },
+      link: 'String',
+    },
+  });
+}
+
+/**
+ * Provider retirement component
+ */
+function buildProviderRetirementType(schema) {
+  return schema.buildObjectType({
+    name: 'STRAPI__COMPONENT_PROVIDERS_RETIREMENT',
+    interfaces: ['Node'],
+    fields: {
+      retired: 'Boolean',
+      text: 'String',
+    },
+  });
+}
+
+/**
+ * Clinic map component
+ */
+function buildClinicMapType(schema) {
+  return schema.buildObjectType({
+    name: 'STRAPI__COMPONENT_CLINICS_MAP',
+    interfaces: ['Node'],
+    fields: {
+      lat: 'Float',
+      long: 'Float',
+      label_name: 'String',
+      address: 'String',
+      placeId: 'String',
+    },
+  });
+}
+
+/**
+ * Clinic contact info component
+ */
+function buildClinicContactInfoType(schema) {
+  return schema.buildObjectType({
+    name: 'STRAPI__COMPONENT_CLINICS_CONTACT_INFO',
+    interfaces: ['Node'],
+    fields: {
+      phone: 'String',
+      fax: 'String',
+    },
+  });
+}
+
+/**
+ * Clinic opening hours component
+ */
+function buildClinicOpeningHoursType(schema) {
+  return schema.buildObjectType({
+    name: 'STRAPI__COMPONENT_CLINICS_OPENING_HOURS',
+    interfaces: ['Node'],
+    fields: {
+      day: 'String',
+      open: 'Boolean',
+      opening_hours: {
+        type: 'STRAPI__COMPONENT_CLINICS_TIME_RANGE',
+        extensions: { link: { from: 'opening_hours___NODE' } },
+      },
+      shot_hours: {
+        type: 'STRAPI__COMPONENT_CLINICS_TIME_RANGE',
+        extensions: { link: { from: 'shot_hours___NODE' } },
+      },
+    },
+  });
+}
+
+/**
+ * Clinic time range component
+ */
+function buildClinicTimeRangeType(schema) {
+  return schema.buildObjectType({
+    name: 'STRAPI__COMPONENT_CLINICS_TIME_RANGE',
+    interfaces: ['Node'],
+    fields: {
+      start_time: 'String',
+      end_time: 'String',
+    },
+  });
+}
+
+/**
+ * Generic question component
+ */
+function buildGenericQuestionType(schema) {
+  return schema.buildObjectType({
+    name: 'STRAPI__COMPONENT_GENERIC_QUESTION',
+    interfaces: ['Node'],
+    fields: {
+      question: 'String',
+      answer: 'String',
+    },
+  });
+}
+
+/**
+ * Generic FAQ component
+ */
+function buildGenericFaqType(schema) {
+  return schema.buildObjectType({
+    name: 'STRAPI__COMPONENT_GENERIC_FAQ',
+    interfaces: ['Node'],
+    fields: {
+      questions: {
+        type: '[STRAPI__COMPONENT_GENERIC_QUESTION]',
+        extensions: { link: { from: 'questions___NODE' } },
+      },
+    },
+  });
+}
+
+/**
+ * Generic contact booking CTA component (no Strapi attributes)
+ */
+function buildGenericContactBookingCtaType(schema) {
+  return schema.buildObjectType({
+    name: 'STRAPI__COMPONENT_GENERIC_CONTACT_BOOKING_CTA',
+    interfaces: ['Node'],
+    fields: {
+      strapi_id: 'Int',
+    },
+  });
+}
+
+/**
+ * Generic rich text component
+ */
+function buildGenericRichTextType(schema) {
+  return schema.buildObjectType({
+    name: 'STRAPI__COMPONENT_GENERIC_RICH_TEXT',
+    interfaces: ['Node'],
+    fields: {
+      text: 'String',
+    },
+  });
+}
+
+/**
+ * Generic FAQ contact book buttons component (no Strapi attributes)
+ */
+function buildGenericFaqContactBookButtonsType(schema) {
+  return schema.buildObjectType({
+    name: 'STRAPI__COMPONENT_GENERIC_FAQ_CONTACT_BOOK_BUTTONS',
+    interfaces: ['Node'],
+    fields: {
+      strapi_id: 'Int',
+    },
+  });
+}
+
+/**
+ * Homepage section component
+ */
+function buildHomepageSectionType(schema) {
+  return schema.buildObjectType({
+    name: 'STRAPI__COMPONENT_HOMEPAGE_CONDITIONS_SECTION',
+    interfaces: ['Node'],
+    fields: {
+      heading: 'String',
+      text: 'String',
+    },
+  });
+}
+
+/**
+ * Homepage feedback component
+ */
+function buildHomepageFeedbackType(schema) {
+  return schema.buildObjectType({
+    name: 'STRAPI__COMPONENT_HOMEPAGE_FEEDBACK',
+    interfaces: ['Node'],
+    fields: {
+      rating: 'Float',
+      sourceName: 'String',
+      sourceUrl: 'String',
+      accessDate: 'String',
     },
   });
 }
