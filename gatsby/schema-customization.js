@@ -30,9 +30,6 @@ const createSchemaCustomization = ({ actions, schema }) => {
     buildServiceUpdateType(schema),
     buildReviewType(schema),
     
-    // File Types
-    buildStrapiFileType(schema),
-    
     // Components
     buildProviderNameType(schema),
     buildProviderReviewType(schema),
@@ -144,7 +141,6 @@ function buildBlogType(schema) {
           dateformat: {},
         },
       },
-      thumbnail: 'STRAPI__FILE',
       content: 'String', // dynamiczone simplified to string
     },
   });
@@ -183,7 +179,6 @@ function buildConditionType(schema) {
       title: 'String',
       order: 'Int',
       description: 'String',
-      thumbnail: 'STRAPI__FILE',
       content: 'String', // dynamiczone simplified to string
     },
   });
@@ -200,7 +195,6 @@ function buildProviderType(schema) {
       name: 'STRAPI__COMPONENT_PROVIDERS_NAME',
       slug: 'String',
       description: 'String',
-      image: 'STRAPI__FILE',
       order: 'Int',
       review: 'STRAPI__COMPONENT_PROVIDERS_REVIEW',
       retirementNotice: 'STRAPI__COMPONENT_PROVIDERS_RETIREMENT',
@@ -244,43 +238,6 @@ function buildReviewType(schema) {
       content: 'String', // blocks field simplified to string
       sourceName: 'String',
       sourceUrl: 'String',
-    },
-  });
-}
-
-// ====================
-// FILE TYPES
-// ====================
-
-/**
- * Strapi file type with localFile field for image processing
- */
-function buildStrapiFileType(schema) {
-  return schema.buildObjectType({
-    name: 'STRAPI__FILE',
-    fields: {
-      url: 'String',
-      name: 'String',
-      alternativeText: 'String',
-      caption: 'String',
-      width: 'Int',
-      height: 'Int',
-      formats: 'JSON',
-      hash: 'String',
-      ext: 'String',
-      mime: 'String',
-      size: 'Float',
-      previewUrl: 'String',
-      provider: 'String',
-      provider_metadata: 'JSON',
-      localFile: {
-        type: 'File',
-        extensions: {
-          link: {
-            by: 'url',
-          },
-        },
-      },
     },
   });
 }
