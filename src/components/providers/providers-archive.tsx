@@ -83,7 +83,7 @@ const stylesProviderExcerpt = css(
 );
 
 const Provider: React.FC<ProviderProps> = ({ className, provider }) => {
-    const nameWithTitle = (!!provider.name.title ? `${provider.name.title}. ` : "") + provider.name.fullName;
+    const nameWithTitle = (!!provider.name.title ? `${provider.name.title} ` : "") + provider.name.fullName;
     const retiredText = provider.retired ? "(Retired)" : "";
     return (
         <li className={className} css={stylesProvider}>
