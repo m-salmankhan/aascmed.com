@@ -5,6 +5,7 @@
   
   # Allergy, Asthma and Sinus Centers Website
   [![Netlify Status](https://api.netlify.com/api/v1/badges/8aff015c-4beb-4c18-968b-e8bb93ab42b5/deploy-status)](https://app.netlify.com/sites/aascmed/deploys)
+  [![Deploy Preview Server](https://github.com/m-salmankhan/aascmed.com/actions/workflows/deploy-preview.yml/badge.svg)](https://github.com/m-salmankhan/aascmed.com/actions/workflows/deploy-preview.yml)
 </div>
 
 ## Development Instructions
