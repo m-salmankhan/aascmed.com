@@ -27,6 +27,8 @@ Internet → Cloudflare (edge TLS) → :443 on host
 | Path | Description |
 |------|-------------|
 | `Dockerfile` | Gatsby develop image (preview site) |
+| `docker-compose.yml` | Compose file for all three services |
+| `example.env` | Template for environment variables |
 | `Caddyfile` | Caddy reverse-proxy config with `forward_auth` |
 | `forward-auth/` | Forward-auth service (login + JWT verification) |
 | `forward-auth/server.js` | Express app: `/verify`, `/login`, `/logout` |
@@ -111,27 +113,25 @@ Push to `main` or trigger the workflow manually from **Actions → Deploy Previe
 The workflow will:
 1. Build and push the **preview site** image to GHCR.
 2. Build and push the **forward-auth** image to GHCR.
-3. **Copy the Caddyfile** from the repo to the server (auto-updated on every deploy).
+3. Copy `docker-compose.yml` and `Caddyfile` to the server.
 4. SSH to the server and:
-   - Pull both images.
-   - Stop/remove old containers.
-   - Create a `preview-net` Podman network (if it doesn't exist).
-   - Start three containers: `aascmed-preview`, `preview-forward-auth`, `preview-caddy`.
+   - Write a `.env` file with secrets and image tags.
+   - Run `docker compose pull && docker compose up -d`.
    - Prune unused images.
 
 ### 5. Verify
 
 ```bash
 # Check all three containers are running
-ssh preview-deploy@<host> podman ps
+ssh preview-deploy@<host> docker compose ps
 
 # Test HTTPS (should redirect to /login)
 curl -I https://preview.aascmed.com
 
 # Check container logs
-ssh preview-deploy@<host> podman logs aascmed-preview
-ssh preview-deploy@<host> podman logs preview-forward-auth
-ssh preview-deploy@<host> podman logs preview-caddy
+ssh preview-deploy@<host> docker compose logs preview
+ssh preview-deploy@<host> docker compose logs forward-auth
+ssh preview-deploy@<host> docker compose logs caddy
 ```
 
 ## Authentication
@@ -146,45 +146,34 @@ ssh preview-deploy@<host> podman logs preview-caddy
 
 ```bash
 # On the server (as preview-deploy)
-podman stop preview-caddy preview-forward-auth aascmed-preview || true
-podman rm   preview-caddy preview-forward-auth aascmed-preview || true
+cd ~
 
-podman network exists preview-net || podman network create preview-net
+# First time only: create .env from template
+cp example.env .env
+nano .env   # fill in STRAPI_TOKEN, GATSBY_MAPBOX_API_KEY, etc.
 
-podman run -d --name aascmed-preview --network preview-net \
-  --restart unless-stopped \
-  -e NODE_OPTIONS="--max-old-space-size=700" \
-  -e GATSBY_STRAPI_API_URL=<strapi-url> \
-  -e STRAPI_TOKEN=<token> \
-  -e GATSBY_MAPBOX_API_KEY=<key> \
-  -e GATSBY_API_BASE_URL=<api-url> \
-  -e GATSBY_IS_PREVIEW=true \
-  -e ENABLE_GATSBY_REFRESH_ENDPOINT=true \
-  ghcr.io/m-salmankhan/aascmed.com-preview:main
+# If using pre-built GHCR images (set PREVIEW_IMAGE / AUTH_IMAGE in .env):
+docker compose pull
+docker compose up -d
 
-podman run -d --name preview-forward-auth --network preview-net \
-  --restart unless-stopped \
-  -e STRAPI_URL=<strapi-url> \
-  ghcr.io/m-salmankhan/aascmed.com-preview-auth:main
+# Or build from source (leave PREVIEW_IMAGE / AUTH_IMAGE empty in .env):
+docker compose up -d --build
 
-podman run -d --name preview-caddy --network preview-net \
-  --restart unless-stopped \
-  -p 443:443 -p 80:80 \
-  -v ~/Caddyfile:/etc/caddy/Caddyfile:ro,Z \
-  -v /home/preview-deploy/certs:/etc/caddy/certs:ro,Z \
-  -e PREVIEW_DOMAIN=preview.aascmed.com \
-  docker.io/library/caddy:2-alpine
-
-podman image prune -f
+# Useful commands when SSH'd in:
+docker compose ps                    # check status
+docker compose logs -f preview       # tail Gatsby logs
+docker compose restart preview       # restart just Gatsby
+docker compose down && docker compose up -d  # full restart
 ```
+
+All services have `restart: unless-stopped`, so they survive reboots and crashes.
 
 ## Troubleshooting
 
 | Issue | Fix |
 |-------|-----|
-| Node OOM (heap out of memory) | Increase `--max-old-space-size` in `NODE_OPTIONS` or add swap on host |
-| Caddy can't resolve `preview` or `forward-auth` | Ensure all containers are on the `preview-net` network |
-| 502 from Caddy | Gatsby is still starting — wait for build to finish (`podman logs aascmed-preview`) |
-| Login fails | Check `STRAPI_URL` is reachable from the server (`podman logs preview-forward-auth`) |
+| Node OOM (heap out of memory) | Increase `--max-old-space-size` in `NODE_OPTIONS` (in `.env` or compose) or add swap on host |
+| Caddy can't resolve `preview` or `forward-auth` | Ensure `docker compose ps` shows all 3 services running |
+| 502 from Caddy | Gatsby is still starting — wait for build to finish (`docker compose logs preview`) |
+| Login fails | Check `STRAPI_URL` is reachable from the server (`docker compose logs forward-auth`) |
 | Certificate errors | Ensure Cloudflare SSL mode is "Full (strict)" and origin cert matches the domain |
-| Podman permission denied | SSH directly as `preview-deploy` (don't `su` from another user) |

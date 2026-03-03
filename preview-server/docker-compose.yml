@@ -1,0 +1,67 @@
+# Preview Server — Docker Compose
+#
+# Runs three services on a shared network:
+#   1. preview      — Gatsby develop (draft content)
+#   2. forward-auth — Strapi-based login / JWT verification
+#   3. caddy        — TLS reverse proxy with forward_auth
+#
+# Usage:
+#   cp example.env .env    # fill in real values
+#   docker compose up -d   # start all services
+#   docker compose logs -f # tail logs
+#   docker compose down    # stop all services
+#
+# CI sets PREVIEW_IMAGE / AUTH_IMAGE to GHCR tags.
+# For local dev, omit them and use `docker compose up -d --build`
+# to build from source instead.
+
+services:
+  preview:
+    container_name: aascmed-preview
+    image: ${PREVIEW_IMAGE:-}
+    build:
+      context: ..
+      dockerfile: preview-server/Dockerfile
+    restart: unless-stopped
+    networks:
+      - preview-net
+    environment:
+      - NODE_OPTIONS=--max-old-space-size=700
+      - GATSBY_STRAPI_API_URL=${GATSBY_STRAPI_API_URL}
+      - STRAPI_TOKEN=${STRAPI_TOKEN}
+      - GATSBY_REFRESH_TOKEN=${GATSBY_REFRESH_TOKEN}
+      - GATSBY_MAPBOX_API_KEY=${GATSBY_MAPBOX_API_KEY}
+      - GATSBY_API_BASE_URL=${GATSBY_API_BASE_URL}
+      - GATSBY_IS_PREVIEW=true
+      - ENABLE_GATSBY_REFRESH_ENDPOINT=true
+
+  forward-auth:
+    container_name: preview-forward-auth
+    image: ${AUTH_IMAGE:-}
+    build:
+      context: forward-auth
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    networks:
+      - preview-net
+    environment:
+      - STRAPI_URL=${GATSBY_STRAPI_API_URL}
+
+  caddy:
+    container_name: preview-caddy
+    image: caddy:2-alpine
+    restart: unless-stopped
+    networks:
+      - preview-net
+    ports:
+      - "${PREVIEW_HTTPS_PORT:-443}:443"
+      - "${PREVIEW_HTTP_PORT:-80}:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ${PREVIEW_CERTS_PATH:-./.certs}:/etc/caddy/certs:ro
+    environment:
+      - PREVIEW_DOMAIN=${PREVIEW_DOMAIN:-localhost}
+
+networks:
+  preview-net:
+    driver: bridge
