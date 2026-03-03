@@ -176,6 +176,10 @@ function buildBlogType(schema) {
         },
       },
       content: 'String', // dynamiczone simplified to string
+      thumbnail: {
+        type: 'STRAPI__MEDIA',
+        extensions: { link: { from: 'thumbnail___NODE' } },
+      },
     },
   });
 }
@@ -223,6 +227,10 @@ function buildConditionType(schema) {
       order: 'Int',
       description: 'String',
       content: 'String', // dynamiczone simplified to string
+      thumbnail: {
+        type: 'STRAPI__MEDIA',
+        extensions: { link: { from: 'thumbnail___NODE' } },
+      },
     },
   });
 }
@@ -249,6 +257,10 @@ function buildProviderType(schema) {
       retirementNotice: {
         type: 'STRAPI__COMPONENT_PROVIDERS_RETIREMENT',
         extensions: { link: { from: 'retirementNotice___NODE' } },
+      },
+      image: {
+        type: 'STRAPI__MEDIA',
+        extensions: { link: { from: 'image___NODE' } },
       },
       body: 'String',
     },
