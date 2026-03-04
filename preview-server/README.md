@@ -123,15 +123,15 @@ The workflow will:
 
 ```bash
 # Check all three containers are running
-ssh preview-deploy@<host> docker compose ps
+ssh preview-deploy@<host> podman compose ps
 
 # Test HTTPS (should redirect to /login)
 curl -I https://preview.aascmed.com
 
 # Check container logs
-ssh preview-deploy@<host> docker compose logs preview
-ssh preview-deploy@<host> docker compose logs forward-auth
-ssh preview-deploy@<host> docker compose logs caddy
+ssh preview-deploy@<host> podman compose logs preview
+ssh preview-deploy@<host> podman compose logs forward-auth
+ssh preview-deploy@<host> podman compose logs caddy
 ```
 
 ## Authentication
@@ -153,17 +153,17 @@ cp example.env .env
 nano .env   # fill in STRAPI_TOKEN, GATSBY_MAPBOX_API_KEY, etc.
 
 # If using pre-built GHCR images (set PREVIEW_IMAGE / AUTH_IMAGE in .env):
-docker compose pull
-docker compose up -d
+podman compose pull
+podman compose up -d
 
 # Or build from source (leave PREVIEW_IMAGE / AUTH_IMAGE empty in .env):
-docker compose up -d --build
+podman compose up -d --build
 
 # Useful commands when SSH'd in:
-docker compose ps                    # check status
-docker compose logs -f preview       # tail Gatsby logs
-docker compose restart preview       # restart just Gatsby
-docker compose down && docker compose up -d  # full restart
+podman compose ps                    # check status
+podman compose logs -f preview       # tail Gatsby logs
+podman compose restart preview       # restart just Gatsby
+podman compose down && podman compose up -d  # full restart
 ```
 
 All services have `restart: unless-stopped`, so they survive reboots and crashes.
@@ -173,7 +173,7 @@ All services have `restart: unless-stopped`, so they survive reboots and crashes
 | Issue | Fix |
 |-------|-----|
 | Node OOM (heap out of memory) | Increase `--max-old-space-size` in `NODE_OPTIONS` (in `.env` or compose) or add swap on host |
-| Caddy can't resolve `preview` or `forward-auth` | Ensure `docker compose ps` shows all 3 services running |
-| 502 from Caddy | Gatsby is still starting — wait for build to finish (`docker compose logs preview`) |
-| Login fails | Check `STRAPI_URL` is reachable from the server (`docker compose logs forward-auth`) |
+| Caddy can't resolve `preview` or `forward-auth` | Ensure `podman compose ps` shows all 3 services running |
+| 502 from Caddy | Gatsby is still starting — wait for build to finish (`podman compose logs preview`) |
+| Login fails | Check `STRAPI_URL` is reachable from the server (`podman compose logs forward-auth`) |
 | Certificate errors | Ensure Cloudflare SSL mode is "Full (strict)" and origin cert matches the domain |

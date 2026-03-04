@@ -97,7 +97,7 @@ jobs:
           target: "/home/${{ secrets.PREVIEW_SERVER_USER }}/"
           strip_components: 1
 
-      - name: Deploy with Docker Compose
+      - name: Deploy with Podman Compose
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.PREVIEW_SERVER_HOST }}
@@ -129,8 +129,8 @@ jobs:
             sed -i 's/^[[:space:]]*//' .env
 
             # ── Pull and (re)start ──────────────────────────────────────
-            docker compose pull
-            docker compose up -d --remove-orphans
+            podman compose pull
+            podman compose up -d --remove-orphans
 
             # ── Cleanup ─────────────────────────────────────────────────
-            docker image prune -f
+            podman image prune -f
