@@ -112,21 +112,19 @@ jobs:
             cd ~/
 
             # ── Write .env with secrets and image tags ──────────────────
-            cat > .env <<'DOTENV'
-            PREVIEW_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
-            AUTH_IMAGE=${{ env.REGISTRY }}/${{ env.AUTH_IMAGE_NAME }}:${{ github.ref_name }}
-            GATSBY_STRAPI_API_URL=${{ vars.GATSBY_STRAPI_API_URL }}
-            STRAPI_TOKEN=${{ secrets.STRAPI_TOKEN }}
-            GATSBY_REFRESH_TOKEN=${{ secrets.GATSBY_REFRESH_TOKEN }}
-            GATSBY_MAPBOX_API_KEY=${{ secrets.GATSBY_MAPBOX_API_KEY }}
-            GATSBY_API_BASE_URL=${{ vars.GATSBY_API_BASE_URL }}
-            PREVIEW_DOMAIN=${{ vars.PREVIEW_DOMAIN }}
-            PREVIEW_CERTS_PATH=${{ vars.PREVIEW_CERTS_PATH }}
-            PREVIEW_HTTPS_PORT=8443
-            PREVIEW_HTTP_PORT=8080
-            DOTENV
-            # Strip leading whitespace from heredoc
-            sed -i 's/^[[:space:]]*//' .env
+            printf '%s\n' \
+              'PREVIEW_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}' \
+              'AUTH_IMAGE=${{ env.REGISTRY }}/${{ env.AUTH_IMAGE_NAME }}:${{ github.ref_name }}' \
+              'GATSBY_STRAPI_API_URL=${{ vars.GATSBY_STRAPI_API_URL }}' \
+              'STRAPI_TOKEN=${{ secrets.STRAPI_TOKEN }}' \
+              'GATSBY_REFRESH_TOKEN=${{ secrets.GATSBY_REFRESH_TOKEN }}' \
+              'GATSBY_MAPBOX_API_KEY=${{ secrets.GATSBY_MAPBOX_API_KEY }}' \
+              'GATSBY_API_BASE_URL=${{ vars.GATSBY_API_BASE_URL }}' \
+              'PREVIEW_DOMAIN=${{ vars.PREVIEW_DOMAIN }}' \
+              'PREVIEW_CERTS_PATH=${{ vars.PREVIEW_CERTS_PATH }}' \
+              'PREVIEW_HTTPS_PORT=8443' \
+              'PREVIEW_HTTP_PORT=8080' \
+              > .env
 
             # ── Pull and (re)start ──────────────────────────────────────
             podman compose pull
