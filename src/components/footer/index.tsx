@@ -70,9 +70,11 @@ export const Footer = () => {
                     <nav>
                         <ul>
                             <li><a href={"https://login.patientfusion.com/"} target="_BLANK" rel="noopener">Patient Portal</a></li>
+                            <li><a href={"https://www.instagram.com/allergy.asthma.sinus.centers/"} target="_BLANK" rel="noopener">Instagram</a></li>
+                            <li><a href={"https://www.tiktok.com/@allergyasthmasinuscenter"} target="_BLANK" rel="noopener">TikTok</a></li>
                             <li><a href={"https://www.facebook.com/AllergyAsthmaAndSinusCenters/"} target="_BLANK" rel="noopener">Facebook</a></li>
                             <li><a href={"https://twitter.com/DrMaazAllergy"} target="_BLANK" rel="noopener">Twitter</a></li>
-                            <li><a href={"https://wise-positivity-21c2bd6b3f.strapiapp.com/"} target="_BLANK" rel="noopener">Site Administration</a></li>
+                            <li><a href={"/admin"} target="_BLANK" rel="noopener">Site Administration</a></li>
                         </ul>
                     </nav>
                     <p>Website by <a href="https://msalmankhan.co.uk/" target="_BLANK" rel="noopener">Salman Khan.</a></p>
