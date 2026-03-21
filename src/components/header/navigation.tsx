@@ -64,7 +64,7 @@ const stylesSkipToMain = css(stylesScreenReaderText, css`
 `);
 
 const stylesNav = css(
-  gridContainer(mediaBreakpoints.lg),
+  gridContainer(mediaBreakpoints.xl),
   css`
       justify-content: space-between;
       align-items: center;
@@ -113,7 +113,7 @@ const stylesToggleButton = css`
 
 
 const stylesLogoLink = css(
-  cols(3, mediaBreakpoints.lg),
+  cols(3, mediaBreakpoints.xl),
   css`
       svg {
         width: 100%;
@@ -138,7 +138,7 @@ const stylesLogoLink = css(
 const stylesHorizontalLogo: CSSInterpolation = css`
   display: none;
 
-  ${breakpointStrings.lg} {
+  ${breakpointStrings.xl} {
     display: block;
     height: 5em;
   }
@@ -148,13 +148,13 @@ const stylesStackedLogo = css`
   margin: 0 auto ${gridSpacing}em;
   display: block;
 
-  ${breakpointStrings.lg} {
+  ${breakpointStrings.xl} {
     display: none;
   }
 `;
 
 const expandedHeight = "60em";
-const stylesNavContainer = cols(9, mediaBreakpoints.lg);
+const stylesNavContainer = cols(9, mediaBreakpoints.xl);
 const stylesNavigationUl = css`
       padding: 0;
       margin: 0 auto;
@@ -211,7 +211,7 @@ const stylesNavigationUl = css`
         }
       }
 
-      ${breakpointStrings.lg} {
+      ${breakpointStrings.xl} {
         text-align: right;
         padding-right: 0;
       }
