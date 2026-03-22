@@ -98,11 +98,12 @@ interface ServiceUpdateArchiveProps {
     frontPage: boolean,
     heading: string,
     textContent?: React.ReactNode,
+    media?: React.ReactNode,
 }
 
 
 export const ServiceUpdateArchive: React.FC<ServiceUpdateArchiveProps> =
-    ({ className, heading, textContent, serviceUpdates, frontPage }) => {
+    ({ className, heading, textContent, media, serviceUpdates, frontPage }) => {
         if (serviceUpdates.length == 0) {
             return <></>;
         }
@@ -115,6 +116,7 @@ export const ServiceUpdateArchive: React.FC<ServiceUpdateArchiveProps> =
                             <h1 css={stylesBigH1}>{heading}</h1>
                     }
                     bodyContent={textContent}
+                    media={media}
                 />
                 <ServiceUpdateList serviceUpdates={serviceUpdates as [ServiceUpdateSummary]} frontPage={frontPage} />
                 {

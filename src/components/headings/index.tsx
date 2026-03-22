@@ -2,7 +2,7 @@ import { ClassNames, css } from "@emotion/react";
 import { colours, fontWeightHeadings } from "../../styles/theme";
 import React, { ReactNode } from "react";
 import { mediaBreakpoints } from "../../styles/breakpoints";
-import { cols } from "../../styles/grid";
+import { cols, gridContainer } from "../../styles/grid";
 
 const stylesHeadings = css({
     fontWeight: fontWeightHeadings,
@@ -108,10 +108,38 @@ interface SectionHeadingProps {
     className?: string
     heading: ReactNode
     bodyContent?: ReactNode
+    media?: ReactNode
 }
 
-export const SectionHeader = (props: SectionHeadingProps) =>
-    <div className={props.className} css={stylesSectionHeading}>
-        {props.heading}
-        {props.bodyContent}
-    </div>
+const stylesSectionHeaderRow = css(
+    gridContainer(),
+    { alignItems: "flex-start" },
+);
+
+const stylesMediaColumn = css(
+    cols(12),
+    cols(4, mediaBreakpoints.md),
+);
+
+export const SectionHeader = (props: SectionHeadingProps) => {
+    if (!props.media) {
+        return (
+            <div className={props.className} css={stylesSectionHeading}>
+                {props.heading}
+                {props.bodyContent}
+            </div>
+        );
+    }
+
+    return (
+        <div className={props.className} css={stylesSectionHeaderRow}>
+            <div css={stylesSectionHeading}>
+                {props.heading}
+                {props.bodyContent}
+            </div>
+            <div css={stylesMediaColumn}>
+                {props.media}
+            </div>
+        </div>
+    );
+}

@@ -10,6 +10,7 @@ import { CSSInterpolation } from "@emotion/serialize";
 interface HeroProps extends HTMLProps<HTMLDivElement> {
     heading: string,
     textContent?: React.ReactNode,
+    media?: React.ReactNode,
     image?: IGatsbyImageData,
 }
 
@@ -99,7 +100,7 @@ const getParallaxValues = (height: number): ParallaxParameters => {
     }
 }
 
-export const Hero: React.FC<HeroProps> = ({ heading, textContent, image, children }) => {
+export const Hero: React.FC<HeroProps> = ({ heading, textContent, media, image, children }) => {
     const headerRef = useRef<HTMLElement | null>(null);
     const [parallax, setParallax] = useState<ParallaxParameters>({ textTranslation: 0, backgroundOpacity: 0 });
 
@@ -129,10 +130,13 @@ export const Hero: React.FC<HeroProps> = ({ heading, textContent, image, childre
                 {image && <GatsbyImage css={stylesHeroBackgroundImage} draggable={false} image={image} alt={""} loading="eager" />}
                 <Navigation css={stylesNavigation} frontPage={true} />
                 <div className="translate" css={css(stylesHeroContent)} style={{ transform: `translate3d(0, -${parallax.textTranslation}%, 0)` }}>
-                    <div>
-                        {children}
-                        <h2>{heading}</h2>
-                        {textContent}
+                    <div css={media ? css({ display: 'flex', gap: '2em', alignItems: 'center', flexWrap: 'wrap', [`@media screen and (min-width: ${breakpointStrings.md})`]: { flexWrap: 'nowrap' } }) : undefined}>
+                        <div css={media ? css({ flex: '1 1 60%' }) : undefined}>
+                            {children}
+                            <h2>{heading}</h2>
+                            {textContent}
+                        </div>
+                        {media && <div css={css({ flex: '1 1 35%', maxWidth: '400px' })}>{media}</div>}
                     </div>
                 </div>
                 <div />

@@ -17,11 +17,26 @@ import { SEO } from "../components/seo";
 import { Footer } from "../components/footer";
 import { BlogArchive } from "../components/blog-posts";
 import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
+import { SectionMedia, SectionMediaItem, filterValidMedia } from "../components/strapi/section-media";
+import { SectionHeader, stylesBigH1 } from "../components/headings";
 
 // Helper to parse text blocks from a section in internal.content
 const parseTextBlocks = (parsedData: any, sectionName: string): any[] | null => {
   if (!parsedData || !parsedData[sectionName]?.text) return null;
   return parsedData[sectionName].text;
+};
+
+// Helper to extract media items from a homepage section
+const parseSectionMedia = (section: any): SectionMediaItem[] | null => {
+  if (!section?.media || !Array.isArray(section.media) || section.media.length === 0) return null;
+  return section.media;
+};
+
+// Helper to render SectionMedia if valid media items exist
+const renderMedia = (media: SectionMediaItem[] | null | undefined): React.ReactNode | undefined => {
+  const valid = filterValidMedia(media);
+  if (valid.length === 0) return undefined;
+  return <SectionMedia media={valid} />;
 };
 
 const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
@@ -36,10 +51,22 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
   // Hero section
   const heroTitle = homePage?.hero?.heading || siteTitle;
   const heroTextBlocks = parseTextBlocks(parsedData, 'hero');
+  const heroMedia = parseSectionMedia(homePage?.hero);
+
+  // Generic below-hero sections
+  const genericBelowHeroSections = ((homePage as any)?.genericBelowHero || []).map((section: any, idx: number) => {
+    const textBlocks = parsedData?.genericBelowHero?.[idx]?.text || null;
+    return {
+      heading: section?.heading || "",
+      textBlocks,
+      media: parseSectionMedia(section),
+    };
+  }).filter((s: any) => s.heading || s.textBlocks || s.media);
 
   // Conditions section
   const conditionsTitle = homePage?.conditions?.heading || "Learn more about the conditions we treat.";
   const conditionsTextBlocks = parseTextBlocks(parsedData, 'conditions');
+  const conditionsMedia = parseSectionMedia(homePage?.conditions);
   const conditions: ConditionSummary[] = data.conditions.nodes.map(node => ({
     slug: `/conditions/${node.slug}/`,
     title: node.heading || node.title || "",
@@ -49,6 +76,7 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
   // Service updates section
   const serviceUpdatesTitle = homePage?.serviceUpdates?.heading || "Service Updates";
   const serviceUpdatesTextBlocks = parseTextBlocks(parsedData, 'serviceUpdates');
+  const serviceUpdatesMedia = parseSectionMedia(homePage?.serviceUpdates);
   const serviceUpdates: ServiceUpdateSummary[] = data.serviceUpdates.nodes.map(node => {
     const date = node.date ? new Date(node.date) : null;
     const year = date ? date.getFullYear() : '';
@@ -68,6 +96,7 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
   // Blog section
   const blogsTitle = homePage?.blog?.heading || "Blog";
   const blogsTextBlocks = parseTextBlocks(parsedData, 'blog');
+  const blogsMedia = parseSectionMedia(homePage?.blog);
   const blogs: ServiceUpdateSummary[] = data.blogs.nodes.map(node => ({
     slug: `/blog/${node.slug}/`,
     title: node.title || "",
@@ -78,6 +107,7 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
   // Providers section
   const providersTitle = homePage?.providers?.heading || "Meet the team";
   const providersTextBlocks = parseTextBlocks(parsedData, 'providers');
+  const providersMedia = parseSectionMedia(homePage?.providers);
   const providers: ProviderSummary[] = data.providers.nodes
     .filter(node => !node.retirementNotice?.retired) // Exclude retired providers
     .map(node => ({
@@ -121,6 +151,7 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
   // Locations/Practices section
   const practicesTitle = homePage?.locations?.heading || "Practices";
   const practicesTextBlocks = parseTextBlocks(parsedData, 'locations');
+  const locationsMedia = parseSectionMedia(homePage?.locations);
   const practices: PracticeSummary[] = data.practices.nodes.map(clinic => ({
     slug: '/clinics/' + (clinic.slug || `${(clinic.clinic_name || "").toLowerCase().replace(/\s+/g, '-')}/`),
     clinic_name: clinic.clinic_name || "Untitled Clinic",
@@ -134,6 +165,7 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
   // Contact section
   const contactTitle = homePage?.contact?.heading || "Contact Us";
   const contactTextBlocks = parseTextBlocks(parsedData, 'contact');
+  const contactMedia = parseSectionMedia(homePage?.contact);
 
   return (
     <App>
@@ -141,52 +173,71 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
         image={heroImage} 
         heading={heroTitle} 
         textContent={heroTextBlocks ? <StrapiBlocksRenderer content={heroTextBlocks} /> : undefined}
+        media={renderMedia(heroMedia)}
       />
       <main id={"main"}>
+        {genericBelowHeroSections.length > 0 && (
+          <Container>
+            {genericBelowHeroSections.map((section: any, idx: number) => (
+              <section key={idx} css={css({ marginTop: "4em" })}>
+                <SectionHeader
+                  heading={<h2 css={stylesBigH1}>{section.heading}</h2>}
+                  bodyContent={section.textBlocks ? <StrapiBlocksRenderer content={section.textBlocks} /> : undefined}
+                  media={renderMedia(section.media)}
+                />
+              </section>
+            ))}
+          </Container>
+        )}
         <Container>
           <ConditionsArchive 
-            showViewAll={true} 
-            heading={conditionsTitle} 
-            textContent={conditionsTextBlocks ? <StrapiBlocksRenderer content={conditionsTextBlocks} /> : undefined}
-            frontPage={true} 
-            conditionsList={conditions} 
-            css={css({ marginTop: "5em", })} 
-          />
+              showViewAll={true} 
+              heading={conditionsTitle} 
+              textContent={conditionsTextBlocks ? <StrapiBlocksRenderer content={conditionsTextBlocks} /> : undefined}
+              media={renderMedia(conditionsMedia)}
+              frontPage={true} 
+              conditionsList={conditions} 
+              css={css({ marginTop: "5em", })} 
+            />
           <BlogArchive 
-            blogPosts={blogs} 
-            frontPage={true} 
-            heading={blogsTitle} 
-            textContent={blogsTextBlocks ? <StrapiBlocksRenderer content={blogsTextBlocks} /> : undefined}
-            css={css({ marginTop: "4em", })} 
-          />
+              blogPosts={blogs} 
+              frontPage={true} 
+              heading={blogsTitle} 
+              textContent={blogsTextBlocks ? <StrapiBlocksRenderer content={blogsTextBlocks} /> : undefined}
+              media={renderMedia(blogsMedia)}
+              css={css({ marginTop: "4em", })} 
+            />
           <ProvidersArchiveHomePageLayout 
-            providers={providers} 
-            heading={providersTitle} 
-            textContent={providersTextBlocks ? <StrapiBlocksRenderer content={providersTextBlocks} /> : undefined}
-            css={css({ marginTop: "4em", })} 
-          />
+              providers={providers} 
+              heading={providersTitle} 
+              textContent={providersTextBlocks ? <StrapiBlocksRenderer content={providersTextBlocks} /> : undefined}
+              media={renderMedia(providersMedia)}
+              css={css({ marginTop: "4em", })} 
+            />
           <ServiceUpdateArchive 
-            serviceUpdates={serviceUpdates} 
-            frontPage={true} 
-            heading={serviceUpdatesTitle} 
-            textContent={serviceUpdatesTextBlocks ? <StrapiBlocksRenderer content={serviceUpdatesTextBlocks} /> : undefined}
-            css={css({ marginTop: "4em", })} 
-          />
+              serviceUpdates={serviceUpdates} 
+              frontPage={true} 
+              heading={serviceUpdatesTitle} 
+              textContent={serviceUpdatesTextBlocks ? <StrapiBlocksRenderer content={serviceUpdatesTextBlocks} /> : undefined}
+              media={renderMedia(serviceUpdatesMedia)}
+              css={css({ marginTop: "4em", })} 
+            />
         </Container>
         <PatientFeedback css={css({ marginTop: "5em", })} averageRating={avgRating} reviews={reviews} />
         <Container>
           <ContactSection 
-            css={css({ marginTop: "5em", })} 
-            title={contactTitle} 
-            textContent={contactTextBlocks ? <StrapiBlocksRenderer content={contactTextBlocks} /> : undefined}
-          />
+              css={css({ marginTop: "5em", })} 
+              title={contactTitle} 
+              textContent={contactTextBlocks ? <StrapiBlocksRenderer content={contactTextBlocks} /> : undefined}
+            />
           <PracticeArchive 
-            css={css({ marginTop: "5em", })} 
-            practices={practices} 
-            heading={practicesTitle} 
-            textContent={practicesTextBlocks ? <StrapiBlocksRenderer content={practicesTextBlocks} /> : undefined}
-            isHomePage={true} 
-          />
+              css={css({ marginTop: "5em", })} 
+              practices={practices} 
+              heading={practicesTitle} 
+              textContent={practicesTextBlocks ? <StrapiBlocksRenderer content={practicesTextBlocks} /> : undefined}
+              media={renderMedia(locationsMedia)}
+              isHomePage={true} 
+            />
         </Container>
       </main>
       <Footer />
@@ -228,18 +279,73 @@ export const query = graphql`
       }
       hero {
         heading
+        media {
+          mime
+          name
+          url
+          localFile {
+            childImageSharp {
+              gatsbyImageData(width: 600)
+            }
+            publicURL
+          }
+        }
       }
       conditions {
         heading
+        media {
+          mime
+          name
+          url
+          localFile {
+            childImageSharp {
+              gatsbyImageData(width: 600)
+            }
+            publicURL
+          }
+        }
       }
       serviceUpdates {
         heading
+        media {
+          mime
+          name
+          url
+          localFile {
+            childImageSharp {
+              gatsbyImageData(width: 600)
+            }
+            publicURL
+          }
+        }
       }
       blog {
         heading
+        media {
+          mime
+          name
+          url
+          localFile {
+            childImageSharp {
+              gatsbyImageData(width: 600)
+            }
+            publicURL
+          }
+        }
       }
       providers {
         heading
+        media {
+          mime
+          name
+          url
+          localFile {
+            childImageSharp {
+              gatsbyImageData(width: 600)
+            }
+            publicURL
+          }
+        }
       }
       feedback {
         rating
@@ -249,9 +355,45 @@ export const query = graphql`
       }
       locations {
         heading
+        media {
+          mime
+          name
+          url
+          localFile {
+            childImageSharp {
+              gatsbyImageData(width: 600)
+            }
+            publicURL
+          }
+        }
       }
       contact {
         heading
+        media {
+          mime
+          name
+          url
+          localFile {
+            childImageSharp {
+              gatsbyImageData(width: 600)
+            }
+            publicURL
+          }
+        }
+      }
+      genericBelowHero {
+        heading
+        media {
+          mime
+          name
+          url
+          localFile {
+            childImageSharp {
+              gatsbyImageData(width: 600)
+            }
+            publicURL
+          }
+        }
       }
     }
     heroImage: file(relativePath: {eq: "hero-bg.png"}) {

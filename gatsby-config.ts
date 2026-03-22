@@ -170,7 +170,8 @@ const config: GatsbyConfig = {
                                 providers: { populate: '*' },
                                 feedback: { populate: '*' },
                                 locations: { populate: '*' },
-                                contact: { populate: '*' }
+                                contact: { populate: '*' },
+                                genericBelowHero: { populate: '*' }
                             }
                         }
                     },

@@ -14,6 +14,7 @@ interface ProvidersArchiveProps {
     className?: string,
     heading: string,
     textContent?: React.ReactNode,
+    media?: React.ReactNode,
     providers: ProviderSummary[]
 }
 interface ProvidersProps {
@@ -79,7 +80,7 @@ const Providers: React.FC<ProvidersProps> = ({ className, providers }) => {
 
 
 export const ProvidersArchiveHomePageLayout: React.FC<ProvidersArchiveProps> =
-    ({ className, heading, textContent, providers }) => {
+    ({ className, heading, textContent, media, providers }) => {
         if (providers.length == 0)
             return <></>;
 
@@ -90,6 +91,7 @@ export const ProvidersArchiveHomePageLayout: React.FC<ProvidersArchiveProps> =
                         <h2 css={stylesBigH1}>{heading}</h2>
                     }
                     bodyContent={textContent}
+                    media={media}
                 />
                 <Providers providers={providers as [ProviderSummary]} />
             </section>

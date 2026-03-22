@@ -213,10 +213,11 @@ export const ReviewSlider: React.FC<ReviewSliderProps> = ({className, reviews, i
     return (
         // viewport
         <Container className={className}>
-            {/*@ts-ignore*/}
             <CarouselProvider
+                naturalSlideWidth={100}
+                naturalSlideHeight={100}
                 totalSlides={reviews.length}
-                isIntrinsicHeight={true}
+                isIntrinsicHeight={true} // overrides naturalSlide aspect ratio — slides size to content
                 interval={10000}
                 isPlaying={inViewPort}
                 infinite={true}
