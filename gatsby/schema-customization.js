@@ -134,6 +134,10 @@ function buildHomePageType(schema) {
         type: 'STRAPI__COMPONENT_HOMEPAGE_CONDITIONS_SECTION',
         extensions: { link: { from: 'contact___NODE' } },
       },
+      genericBelowHero: {
+        type: '[STRAPI__COMPONENT_HOMEPAGE_CONDITIONS_SECTION]',
+        extensions: { link: { from: 'genericBelowHero___NODE' } },
+      },
     },
   });
 }
@@ -605,6 +609,10 @@ function buildHomepageSectionType(schema) {
     fields: {
       heading: 'String',
       text: 'String',
+      media: {
+        type: '[STRAPI__MEDIA]',
+        extensions: { link: { from: 'media___NODE' } },
+      },
     },
   });
 }

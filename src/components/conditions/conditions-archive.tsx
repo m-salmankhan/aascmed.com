@@ -18,6 +18,7 @@ export interface ConditionSummary {
 interface ConditionsArchiveProps {
     heading: string,
     textContent?: React.ReactNode,
+    media?: React.ReactNode,
     className?: string,
     frontPage: boolean,
     conditionsList: ConditionSummary[],
@@ -98,7 +99,7 @@ export const ConditionList: React.FC<ConditionListProps> = ({ className, conditi
 
 
 
-export const ConditionsArchive: React.FC<ConditionsArchiveProps> = ({ className, textContent, heading, frontPage, conditionsList, showViewAll = true }) => {
+export const ConditionsArchive: React.FC<ConditionsArchiveProps> = ({ className, textContent, media, heading, frontPage, conditionsList, showViewAll = true }) => {
     return (
         <section className={className}>
             <SectionHeader
@@ -108,6 +109,7 @@ export const ConditionsArchive: React.FC<ConditionsArchiveProps> = ({ className,
                         <h1 css={stylesBigH1}>{heading}</h1>
                 }
                 bodyContent={textContent}
+                media={media}
             />
             <ConditionList conditions={conditionsList} showViewAll={showViewAll} />
         </section>
