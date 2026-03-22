@@ -128,7 +128,7 @@ jobs:
 
             # ── Pull and (re)start ──────────────────────────────────────
             podman compose pull
-            podman compose up -d --remove-orphans
+            podman compose up -d --remove-orphans --force-recreate
 
             # ── Cleanup ─────────────────────────────────────────────────
             podman image prune -f
