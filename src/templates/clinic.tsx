@@ -17,7 +17,15 @@ const to12Hr = (time: string) => {
     if (!time) return "";
     const [hrs, mins] = time.split(":");
     const hour = parseFloat(hrs);
-    return (hour <= 12) ? `${hour}:${mins} a.m.` : `${hour - 12}:${mins} p.m.`;
+    if (hour <= 12) {
+        if (hour == 12) {
+            return `${hour}:${mins} p.m.`;
+        } else {
+            return `${hour}:${mins} a.m.`;
+        }
+    } else {
+        return `${hour - 12}:${mins} p.m.`;
+    }
 }
 
 const formatHours = (startTime: string | null, endTime: string | null): string => {
