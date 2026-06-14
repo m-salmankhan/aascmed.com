@@ -30,17 +30,17 @@
     "gatsby-source-filesystem": "^5.16.0",
     "gatsby-source-strapi": "^5.0.4",
     "gatsby-transformer-sharp": "^5.16.0",
-    "graphql": "^16.13.0",
-    "mapbox-gl": "^3.19.0",
+    "graphql": "^16.14.2",
+    "mapbox-gl": "^3.24.1",
     "pure-react-carousel": "^1.35.0",
     "react": "^18",
     "react-dom": "^18",
     "react-helmet": "^6.1.0",
-    "sharp": "^0.32.6"
+    "sharp": "^0.35.1"
   },
   "resolutions": {
     "graphql": "^16.12.0",
-    "sharp": "0.32.6"
+    "sharp": "0.35.1"
   },
   "devDependencies": {
     "@types/color": "^4",
