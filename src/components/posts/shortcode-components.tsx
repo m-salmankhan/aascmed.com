@@ -7,10 +7,10 @@ import {
 import { Link } from "gatsby";
 import { colours, gridSpacing } from "../../styles/theme";
 import { css } from "@emotion/react";
-import { H2, stylesH2 } from "../headings";
 import { CSSInterpolation } from "@emotion/serialize";
 import { ZocDocURL } from "../zocdoc";
 import { FaIcons, IconStyles } from "../font-awesome";
+import { CalloutBanner } from "../cta/banner";
 
 interface ShortCodeProps {
     children?: ReactNode,
@@ -42,26 +42,18 @@ export const ButtonList: React.FC<ShortCodeProps> = ({ className, children }) =>
     </nav>
 
 
-const stylesContactBanner: CSSInterpolation = {
-    margin: `${gridSpacing * 2}em 0`,
-    background: colours.brandPrimary,
-    padding: `${gridSpacing}em`,
-    color: colours.bodyBackground,
-
-    "h1, h2": [stylesH2, {
-        marginTop: 0,
-        color: `${colours.bodyBackground}!important`, // TODO: using !important here is ugly. Refactor this later.
-    }]
-}
-
 export const ContactBanner: React.FC<ShortCodeProps> = ({ className, children }) =>
-    <aside className={className} css={stylesContactBanner}>
-        <h2>Questions? Drop us a note!</h2>
-        <p>If you have any questions, get in touch with us! You can contact us by telephone on (815) 729 9900 or by email at info@aascmed.com. Or you can fill in our contact form.</p>
+    <CalloutBanner
+        className={className}
+        variant={"dark"}
+        titleSize={"compact"}
+        title={"Questions? Drop us a note!"}
+        description={"If you have any questions, get in touch with us! You can contact us by telephone on (815) 729 9900 or by email at info@aascmed.com. Or you can fill in our contact form."}
+    >
         {children}
         <Link css={[stylesButton, stylesBtnSecondary, { marginRight: `${gridSpacing / 2}em` }]} to={"/contact"}>Contact Us</Link>
         <SecondaryAnchor href={ZocDocURL} target="_BLANK" rel="noopener">Book online with ZocDoc</SecondaryAnchor>
-    </aside>
+    </CalloutBanner>
 
 const stylesInfoNotice: CSSInterpolation = {
     margin: `${gridSpacing / 2}em 0`,

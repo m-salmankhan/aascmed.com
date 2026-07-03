@@ -6,6 +6,7 @@ import { mediaBreakpoints } from "../../styles/breakpoints";
 import { H3, stylesH1 } from "../headings";
 import { Logo } from "../logo";
 import { Link } from "gatsby";
+import { HorizontalCalloutBanner } from "../cta/horizontal-banner";
 
 const stylesFooter = css`
     background: ${colours.brandPrimary};
@@ -80,6 +81,15 @@ export const Footer = () => {
                     <p>Website by <a href="https://msalmankhan.co.uk/" target="_BLANK" rel="noopener">Salman Khan.</a></p>
                 </div>
             </Container>
+            <HorizontalCalloutBanner
+                title="Patient Forms"
+                description="Fill out your intake paperwork online before your appointment."
+                primaryButtonLabel="Registration Form"
+                primaryButtonUrl="https://form-aasc-allergy.raga.ai/forms/patient-registration-form"
+                secondaryButtonLabel="Health History Form"
+                secondaryButtonUrl="https://form-aasc-allergy.raga.ai/forms/patient-health-history-form"
+                compactInContainer={true}
+            />
         </footer>
     )
 }

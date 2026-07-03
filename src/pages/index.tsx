@@ -19,6 +19,8 @@ import { BlogArchive } from "../components/blog-posts";
 import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 import { SectionMedia, SectionMediaItem, filterValidMedia } from "../components/strapi/section-media";
 import { SectionHeader, stylesBigH1 } from "../components/headings";
+import { PatientFormsBanner } from "../components/patient-forms/cta-banner";
+import { HorizontalCalloutBanner } from "../components/cta/horizontal-banner";
 
 // Helper to parse text blocks from a section in internal.content
 const parseTextBlocks = (parsedData: any, sectionName: string): any[] | null => {
@@ -175,6 +177,10 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
         textContent={heroTextBlocks ? <StrapiBlocksRenderer content={heroTextBlocks} /> : undefined}
         media={renderMedia(heroMedia)}
       />
+      <PatientFormsBanner
+        registrationFormUrl={"https://form-aasc-allergy.raga.ai/forms/patient-registration-form"}
+        healthHistoryFormUrl={"https://form-aasc-allergy.raga.ai/forms/patient-health-history-form"}
+      />
       <main id={"main"}>
         {genericBelowHeroSections.length > 0 && (
           <Container>
@@ -240,6 +246,14 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
             />
         </Container>
       </main>
+      <HorizontalCalloutBanner
+        title="New patient? Save time at your first visit."
+        description="Complete both forms online before you arrive."
+        primaryButtonLabel="Registration Form"
+        primaryButtonUrl="https://form-aasc-allergy.raga.ai/forms/patient-registration-form"
+        secondaryButtonLabel="Health History Form"
+        secondaryButtonUrl="https://form-aasc-allergy.raga.ai/forms/patient-health-history-form"
+      />
       <Footer />
       <Script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></Script>
       <script dangerouslySetInnerHTML={{
