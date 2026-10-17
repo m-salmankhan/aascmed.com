@@ -195,24 +195,20 @@ const stylesNavigationUl = css`
       }
 
       ${breakpointStrings.md} {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.25em ${gridSpacing / 2}em;
         margin: 0;
 
         li {
-          display: inline-block;
-          padding: 0 ${gridSpacing / 2}em;
-
-          &:first-of-type {
-            padding-left: 0;
-          }
-
-          &:last-of-type {
-            padding-right: 0;
-          }
+          padding: 0;
+          white-space: nowrap;
         }
       }
 
       ${breakpointStrings.xl} {
-        text-align: right;
+        justify-content: flex-end;
         padding-right: 0;
       }
 
@@ -236,7 +232,7 @@ const stylesNavigationUl = css`
         display: none;
         // Don't hide if screen size large
         ${breakpointStrings.md} {
-          display: block;
+          display: flex;
         }
       }
 
@@ -380,6 +376,7 @@ export const Navigation: React.FC<NavigationProps> = ({ frontPage, className }) 
             <NavItem link="/providers/">Our Team</NavItem>
             <NavItem link="/clinics/">Locations</NavItem>
             <NavItem link="/blog/">Blog</NavItem>
+            <NavItem link="https://allercorehealth.com/">AllerCore Health</NavItem>
             <NavItem link="https://login.patientfusion.com">Patient Portal</NavItem>
             <NavItem link={ZocDocURL}>Bookings</NavItem>
             <NavItem link="/contact/">Contact</NavItem>
@@ -396,6 +393,7 @@ export const Navigation: React.FC<NavigationProps> = ({ frontPage, className }) 
             <NavItem link="/conditions/">Patient Education</NavItem>
             <NavItem link="/providers/">Our Team</NavItem>
             <NavItem link="/clinics/">Locations</NavItem>
+            <NavItem link="https://allercorehealth.com/">AllerCore Health</NavItem>
             <NavItem link="https://login.patientfusion.com">Patient Portal</NavItem>
             <NavItem link={ZocDocURL}>Bookings</NavItem>
             <NavItem link="/contact/">Contact</NavItem>
@@ -406,4 +404,3 @@ export const Navigation: React.FC<NavigationProps> = ({ frontPage, className }) 
     </div>
   )
 }
-
