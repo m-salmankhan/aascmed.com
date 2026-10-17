@@ -421,7 +421,7 @@ export const query = graphql`
         title
       }
     }
-    conditions: allStrapiCondition(sort: {order: ASC}, limit: 8) {
+    conditions: allStrapiCondition(sort: {order: ASC}, limit: 11) {
       nodes {
         slug
         title
