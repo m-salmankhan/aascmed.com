@@ -51,6 +51,6 @@
     "formdata-node": "^6.0.3",
     "gatsby-plugin-webpack-bundle-analyser-v2": "^1.1.31",
     "gray-matter": "^4.0.3",
-    "typescript": "^5.9.3"
+    "typescript": "^7.0.2"
   }
 }
