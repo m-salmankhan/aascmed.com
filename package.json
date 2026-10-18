@@ -30,7 +30,7 @@
     "gatsby-source-filesystem": "^5.16.0",
     "gatsby-source-strapi": "^5.0.4",
     "gatsby-transformer-sharp": "^5.16.0",
-    "graphql": "^16.13.0",
+    "graphql": "^17.0.2",
     "mapbox-gl": "^3.33.0",
     "pure-react-carousel": "^1.35.0",
     "react": "^18",
