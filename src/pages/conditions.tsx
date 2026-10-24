@@ -1,4 +1,5 @@
 import { graphql, HeadProps, PageProps } from "gatsby"
+import { GatsbyImage } from "gatsby-plugin-image";
 import { Layout } from "../components/layouts/default";
 import { ConditionsArchive } from "../components/conditions";
 import { css } from "@emotion/react";
@@ -21,7 +22,9 @@ const ConditionsPage = ({ data }: PageProps<Queries.ConditionsArchiveQuery>) => 
   const conditions: ConditionSummary[] = data.conditions.nodes.map(node => ({
     slug: `/conditions/${node.slug}/`,
     title: node.heading || node.title || "untitled",
-    thumbnail: node.thumbnail?.localFile?.childImageSharp?.gatsbyImageData,
+    thumbnail: node.thumbnail?.localFile?.childImageSharp?.gatsbyImageData
+      ? <GatsbyImage alt={node.heading || node.title || "untitled"} image={node.thumbnail.localFile.childImageSharp.gatsbyImageData} />
+      : undefined,
   }));
 
   return (

@@ -2,7 +2,6 @@ import React from "react";
 import { css } from "@emotion/react";
 import { bounceTransition, colours } from "../../styles/theme";
 import { FaIcons, IconStyles } from "../font-awesome";
-import { GatsbyImage, IGatsbyImageData } from "gatsby-plugin-image";
 import { MapBoxProps } from "../mapbox";
 import { StaticMap } from "../mapbox/static";
 import Color from "color";
@@ -13,7 +12,7 @@ const stylesThumbnail = (iconSize: number, showOverlay: boolean, elipse: boolean
     overflow: hidden;
     transition: transform .25s ease 0s;
 
-    .gatsby-image-wrapper {
+    .gatsby-image-wrapper, img {
         height: 100%;
     }
     
@@ -87,7 +86,7 @@ interface ThumbnailProps {
     overlayIcon: string
     overlayIconStyle: IconStyles,
     overlayIconSize?: number,
-    gatsbyImage?: IGatsbyImageData,
+    image?: React.ReactNode,
     mapboxStaticMap?: MapBoxProps,
     imageAlt?: string,
     shape?: "elipse" | "rect",
@@ -95,7 +94,7 @@ interface ThumbnailProps {
 }
 export const Thumbnail: React.FC<ThumbnailProps> = ({
     className,
-    gatsbyImage,
+    image,
     mapboxStaticMap,
     imageAlt,
     overlayIconStyle,
@@ -106,7 +105,7 @@ export const Thumbnail: React.FC<ThumbnailProps> = ({
 }) => {
     return (
         <div className={className} css={css(stylesThumbnail(overlayIconSize || 3, showOverlay || false, shape === "elipse"))}>
-            {gatsbyImage && <GatsbyImage alt={imageAlt || ""} image={gatsbyImage} />}
+            {image}
             {mapboxStaticMap && <StaticMap {...mapboxStaticMap} />}
             <div className={"overlay"}>
                 <FaIcons iconStyle={overlayIconStyle} icon={overlayIcon} className={"icon"} />
