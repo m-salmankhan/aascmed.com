@@ -1,5 +1,4 @@
 import React, { HTMLProps, useEffect, useRef, useState } from "react";
-import { GatsbyImage, IGatsbyImageData } from "gatsby-plugin-image";
 import { Navigation } from "./navigation";
 import { css } from "@emotion/react";
 import { PaddedContainer } from "../containers";
@@ -7,11 +6,11 @@ import { colours, fontBaseSize, gridSpacing } from "../../styles/theme";
 import { breakpointStrings } from "../../styles/breakpoints";
 import { CSSInterpolation } from "@emotion/serialize";
 
-interface HeroProps extends HTMLProps<HTMLDivElement> {
+interface HeroProps extends Omit<HTMLProps<HTMLDivElement>, "media"> {
     heading: string,
     textContent?: React.ReactNode,
     media?: React.ReactNode,
-    image?: IGatsbyImageData,
+    image?: React.ReactNode,
 }
 
 // what variables the parallax effect is made of
@@ -127,7 +126,7 @@ export const Hero: React.FC<HeroProps> = ({ heading, textContent, media, image, 
     return (
         <PaddedContainer css={stylesHero}>
             <header ref={headerRef}>
-                {image && <GatsbyImage css={stylesHeroBackgroundImage} draggable={false} image={image} alt={""} loading="eager" />}
+                {image && <div css={stylesHeroBackgroundImage}>{image}</div>}
                 <Navigation css={stylesNavigation} frontPage={true} />
                 <div className="translate" css={css(stylesHeroContent)} style={{ transform: `translate3d(0, -${parallax.textTranslation}%, 0)` }}>
                     <div css={media ? css({ display: 'flex', gap: '2em', alignItems: 'center', flexWrap: 'wrap', [`@media screen and (min-width: ${breakpointStrings.md})`]: { flexWrap: 'nowrap' } }) : undefined}>

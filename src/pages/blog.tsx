@@ -7,7 +7,7 @@ import { Container } from "../components/containers";
 import { gridSpacing } from "../styles/theme";
 import { SEO } from "../components/seo";
 import { BlogArchive, BlogSummary } from "../components/blog-posts";
-import { getImage } from "gatsby-plugin-image";
+import { GatsbyImage, getImage } from "gatsby-plugin-image";
 import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 
 const BlogPage: React.FC<PageProps<Queries.BlogsQuery>> = ({ data }) => {
@@ -24,7 +24,10 @@ const BlogPage: React.FC<PageProps<Queries.BlogsQuery>> = ({ data }) => {
     title: node.title || "Untitled",
     date: node.date || "",
     description: node.description || "",
-    thumbnail: getImage(node.thumbnail?.localFile?.childImageSharp?.gatsbyImageData ?? null) ?? undefined,
+    thumbnail: (() => {
+      const image = getImage(node.thumbnail?.localFile?.childImageSharp?.gatsbyImageData ?? null);
+      return image ? <GatsbyImage alt={node.title || "Untitled"} image={image} /> : undefined;
+    })(),
   }));
   return (
     <Layout>
@@ -86,4 +89,3 @@ export const query = graphql`
     }
   }
 `
-

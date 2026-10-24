@@ -1,5 +1,6 @@
 import React from "react";
 import { graphql, HeadProps, PageProps, Script } from "gatsby";
+import { GatsbyImage } from "gatsby-plugin-image";
 import { Hero } from "../components/header";
 import { css } from "@emotion/react";
 import { ConditionsArchive } from "../components/conditions/";
@@ -31,7 +32,14 @@ const parseTextBlocks = (parsedData: any, sectionName: string): any[] | null => 
 // Helper to extract media items from a homepage section
 const parseSectionMedia = (section: any): SectionMediaItem[] | null => {
   if (!section?.media || !Array.isArray(section.media) || section.media.length === 0) return null;
-  return section.media;
+  return section.media.map((item: any) => ({
+    mime: item.mime,
+    name: item.name,
+    url: item.localFile?.publicURL || item.url,
+    image: item.mime?.startsWith("image/") && item.localFile?.childImageSharp?.gatsbyImageData
+      ? <GatsbyImage alt={item.name || ""} image={item.localFile.childImageSharp.gatsbyImageData} />
+      : undefined,
+  }));
 };
 
 // Helper to render SectionMedia if valid media items exist
@@ -72,7 +80,9 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
   const conditions: ConditionSummary[] = data.conditions.nodes.map(node => ({
     slug: `/conditions/${node.slug}/`,
     title: node.heading || node.title || "",
-    thumbnail: node.thumbnail?.localFile?.childImageSharp?.gatsbyImageData,
+    thumbnail: node.thumbnail?.localFile?.childImageSharp?.gatsbyImageData
+      ? <GatsbyImage alt={node.heading || node.title || ""} image={node.thumbnail.localFile.childImageSharp.gatsbyImageData} />
+      : undefined,
   }));
 
   // Service updates section
@@ -120,7 +130,9 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
         degreeAbbr: node.name?.qualificationAbbr || "",
       },
       retired: false,
-      image: node.image?.localFile?.childImageSharp?.gatsbyImageData,
+      image: node.image?.localFile?.childImageSharp?.gatsbyImageData
+        ? <GatsbyImage alt={node.name?.fullName || ""} image={node.image.localFile.childImageSharp.gatsbyImageData} />
+        : undefined,
     }));
 
   // Feedback section
@@ -172,7 +184,7 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
   return (
     <App>
       <Hero 
-        image={heroImage} 
+        image={heroImage ? <GatsbyImage alt="" image={heroImage} loading="eager" /> : undefined}
         heading={heroTitle} 
         textContent={heroTextBlocks ? <StrapiBlocksRenderer content={heroTextBlocks} /> : undefined}
         media={renderMedia(heroMedia)}

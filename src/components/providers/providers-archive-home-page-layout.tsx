@@ -64,7 +64,7 @@ const Providers: React.FC<ProvidersProps> = ({ className, providers }) => {
                             {provider.image && <Thumbnail
                                 overlayIcon={"user-doctor"}
                                 overlayIconStyle={IconStyles.SOLID}
-                                gatsbyImage={provider.image}
+                                image={provider.image}
                                 imageAlt={`An image of ${provider.name.title} ${provider.name.fullName}`}
                                 shape={"elipse"}
                             />}

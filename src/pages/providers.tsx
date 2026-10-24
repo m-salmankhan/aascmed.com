@@ -1,4 +1,5 @@
 import { graphql, HeadProps, PageProps } from "gatsby"
+import { GatsbyImage } from "gatsby-plugin-image";
 import { Layout } from "../components/layouts/default";
 import { Container } from "../components/containers";
 import { Breadcrumbs } from "../components/breadcrumbs";
@@ -37,7 +38,9 @@ const ProvidersPage = ({ data }: PageProps<Queries.ProvidersPageQuery>) => {
         title: node.name?.honorific && node.name.honorific !== "None" ? node.name.honorific : "",
         degreeAbbr: node.name?.qualificationAbbr || "",
       },
-      image: node.image?.localFile?.childImageSharp?.gatsbyImageData,
+      image: node.image?.localFile?.childImageSharp?.gatsbyImageData
+        ? <GatsbyImage alt={`An image of ${node.name?.honorific || ""} ${node.name?.fullName || ""}`.trim()} image={node.image.localFile.childImageSharp.gatsbyImageData} />
+        : undefined,
       excerpt,
       retired: node.retirementNotice?.retired || false,
     };
