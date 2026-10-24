@@ -4,13 +4,12 @@ import { css } from "@emotion/react";
 import { cols, gridContainer } from "../../styles/grid";
 import { mediaBreakpoints } from "../../styles/breakpoints";
 import { IconStyles } from "../font-awesome";
-import { IGatsbyImageData } from "gatsby-plugin-image";
 import { Link } from "gatsby";
 import { gridSpacing } from "../../styles/theme";
 import { Thumbnail } from "../thumbnails";
 
 export interface ConditionSummary {
-    thumbnail?: IGatsbyImageData,
+    thumbnail?: React.ReactNode,
     title: string,
     slug: string
 }
@@ -73,7 +72,7 @@ export const ConditionList: React.FC<ConditionListProps> = ({ className, conditi
                                 css={stylesThumbnail}
                                 overlayIconStyle={IconStyles.SOLID}
                                 overlayIcon={"magnifying-glass"}
-                                gatsbyImage={condition.thumbnail}
+                                image={condition.thumbnail}
                             />
                             <H2 css={stylesH5} className={"heading"}>{condition.title}</H2>
                         </Link>

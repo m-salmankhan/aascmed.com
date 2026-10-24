@@ -1,6 +1,5 @@
 import React from "react";
 import { css } from "@emotion/react";
-import { GatsbyImage, IGatsbyImageData } from "gatsby-plugin-image";
 import { CarouselProvider, Slide, Slider, ButtonBack, ButtonNext } from "pure-react-carousel";
 import "pure-react-carousel/dist/react-carousel.es.css";
 import { cols, gridContainer } from "../../styles/grid";
@@ -13,12 +12,7 @@ export interface SectionMediaItem {
   mime?: string | null;
   name?: string | null;
   url?: string | null;
-  localFile?: {
-    childImageSharp?: {
-      gatsbyImageData?: IGatsbyImageData;
-    } | null;
-    publicURL?: string | null;
-  } | null;
+  image?: React.ReactNode;
 }
 
 /** Filter to only valid image/video items */
@@ -87,24 +81,18 @@ const MediaItem: React.FC<{ item: SectionMediaItem }> = ({ item }) => {
   const isImage = item.mime?.startsWith("image/");
   const alt = item.name || "";
 
-  if (isImage && item.localFile?.childImageSharp?.gatsbyImageData) {
-    return (
-      <GatsbyImage
-        alt={alt}
-        image={item.localFile.childImageSharp.gatsbyImageData}
-        css={css({ borderRadius: "8px" })}
-      />
-    );
+  if (isImage && item.image) {
+    return <>{item.image}</>;
   }
 
   if (isVideo) {
-    const src = item.localFile?.publicURL || item.url;
+    const src = item.url;
     if (!src) return null;
     return <video controls src={src} aria-label={alt} />;
   }
 
-  if (isImage && (item.localFile?.publicURL || item.url)) {
-    const src = item.localFile?.publicURL || item.url || "";
+  if (isImage && item.url) {
+    const src = item.url;
     return <img src={src} alt={alt} css={css({ width: "100%", borderRadius: "8px" })} />;
   }
 

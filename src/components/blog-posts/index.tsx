@@ -6,14 +6,13 @@ import { mediaBreakpoints } from "../../styles/breakpoints";
 import { Link } from "gatsby";
 import { bounceTransition, colours, gridSpacing } from "../../styles/theme";
 import Color from "color";
-import { GatsbyImage, IGatsbyImageData } from "gatsby-plugin-image";
 
 export interface BlogSummary {
     slug: string,
     date: string,
     title: string,
     description: string,
-    thumbnail?: IGatsbyImageData,
+    thumbnail?: React.ReactNode,
 }
 
 interface BlogListProps {
@@ -50,7 +49,7 @@ const stylesLi = css(
             transition: `transform 1s ${bounceTransition} 0s`,
 
 
-            ".gatsby-image-wrapper": {
+            ".gatsby-image-wrapper, img": {
                 width: "100%",
                 height: "100%",
             },
@@ -116,7 +115,7 @@ export const BlogList: React.FC<BlogListProps> = ({ className, Blogs, frontPage 
                         <article>
                             {post.thumbnail && (
                                 <Link to={post.slug} className="thumbnail">
-                                    <GatsbyImage alt={post.title} image={post.thumbnail} />
+                                    {post.thumbnail}
                                 </Link>
                             )}
                             <header>
