@@ -6,7 +6,7 @@ import { colours, fontBaseSize, gridSpacing } from "../../styles/theme";
 import { breakpointStrings } from "../../styles/breakpoints";
 import { CSSInterpolation } from "@emotion/serialize";
 
-interface HeroProps extends HTMLProps<HTMLDivElement> {
+interface HeroProps extends Omit<HTMLProps<HTMLDivElement>, "media"> {
     heading: string,
     textContent?: React.ReactNode,
     media?: React.ReactNode,
