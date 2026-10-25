@@ -28,13 +28,16 @@ async function preparePage(page, url) {
     await expect(page).toHaveURL(url);
     await expect(page.locator("#main")).toBeVisible();
   }
-  for (const image of await page.locator("img[data-main-image]").all()) {
+  for (const image of await page.locator("img[data-main-image], img.map").all()) {
     await image.scrollIntoViewIfNeeded();
     await expect.poll(() => image.evaluate(element => ({
       loaded: element.complete && element.naturalWidth > 0,
       source: element.currentSrc,
     }))).toMatchObject({ loaded: true });
   }
+  await expect.poll(() => page.locator("img.lazy-preview").evaluateAll(images =>
+    images.every(image => getComputedStyle(image).opacity === "0")
+  )).toBe(true);
   await page.evaluate(() => scrollTo({ top: 0, behavior: "instant" }));
   await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
   await page.locator("body").evaluate(() => new Promise(resolve =>
