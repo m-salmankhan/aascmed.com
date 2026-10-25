@@ -6,7 +6,7 @@ module.exports = defineConfig({
   expect: { timeout: 10_000 },
   workers: 4,
   fullyParallel: true,
-  reporter: [["list"], ["html", { open: "never" }]],
+  reporter: [["list"], ["html", { open: "never" }], ["json", { outputFile: "ui-results.json" }]],
   use: {
     baseURL: process.env.UI_BASE_URL || "http://localhost:9000",
     trace: "retain-on-failure",
