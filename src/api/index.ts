@@ -5,7 +5,7 @@ export class API {
     readonly baseURL: string;
 
     constructor() {
-        this.baseURL = process.env.GATBSY_API_BASE_URL || "https://api.aascmed.com";
+        this.baseURL = process.env.GATSBY_API_BASE_URL || "https://api.aascmed.com";
     }
 
     async contact(fields: ContactFormFields): Promise<void | ContactFormErrorResponse> {
