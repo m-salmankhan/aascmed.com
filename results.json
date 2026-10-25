@@ -1,0 +1,647 @@
+{
+  "head": "27c8e1f732918a46781df9d257feb3003fa3e63f",
+  "baseline": "c33ca0f",
+  "tests": 136,
+  "metrics": [
+    {
+      "route": "/",
+      "viewport": "desktop",
+      "difference": "7974 pixels (0.0624%)"
+    },
+    {
+      "route": "/blog/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/clinics/",
+      "viewport": "desktop",
+      "difference": "21 pixels (0.0009%)"
+    },
+    {
+      "route": "/conditions/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/contact/",
+      "viewport": "desktop",
+      "difference": "21 pixels (0.0006%)"
+    },
+    {
+      "route": "/privacy/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/providers/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/service-updates/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/404.html",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/can-allergy-treatment-make-you-dizzy/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/baby-vaccine-allergy-treatment/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/does-eczema-cause-coughing/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/sinus-infection-bacterial-vs-viral/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/how-to-tell-if-you-have-hives-or-eczema/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/diagnose-drug-allergy/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/how-long-does-eczema-last/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/how-much-allergy-medication-injected/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/appointment-drug-chemical-allergy-treatment-illinois/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/how-to-get-rid-of-eczema-hives/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/food-allergy-vs-intolerance/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/insect-allergy-shots-immunotherapy/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/symptops-of-being-allergic-to-medication/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/what-diseases-start-with-hives/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/first-step-in-treatment-of-food-allergies/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/what-is-the-last-stage-of-asthma/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/treatment-for-sinus-infection/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/drug-and-chemical-allergy-treatment-near-me-illinois/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/why-am-i-allergic-to-so-many-drugs/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/how-to-stop-hives-permanently/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/is-eczema-treatment-effective/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/best-treatments-for-eczema/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/symptoms-of-respiratory-distress-in-asthma/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/what-chemicals-are-released-during-drug-allergy/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/untreated-sinus-infection/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/what-heals-eczema-fastest/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/first-visit-drug-chemical-allergy-center-illinois/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/aascforfamily/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/ili/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/allergysymptoms/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/fall-allergies-cold-or-flu/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/hiddenwaysallergiesaffectkids/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/travel-safely/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/conditions/food-allergy/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/conditions/sinus-nasal-allergy/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/conditions/insect-allergy/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/conditions/eczema-hives-rashes/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/conditions/asthma-respiratory-problems/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/conditions/drug-and-chemical-allergies/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/conditions/immunotherapy/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/conditions/immunodeficiency/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/conditions/mast-cell-activation-syndrome/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/conditions/hereditary-angioedema/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/providers/maaz-mohiuddin/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/providers/adriana-flores-munoz/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/providers/brenda-kelley/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/providers/syed-rizvi/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/providers/renee-lantner/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/service-updates/2025/02/dr-lantner-retirement/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/service-updates/2022/08/western-springs-asthma-allergy-has-merged-with-allergies-asthma-and-sinus-centers/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/service-updates/2025/07/western-springs-clinic-relocating/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/clinics/crest-hill/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/clinics/countryside/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/clinics/bolingbrook/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/clinics/aurora/",
+      "viewport": "desktop",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/",
+      "viewport": "mobile",
+      "difference": "160 pixels (0.0022%)"
+    },
+    {
+      "route": "/blog/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/clinics/",
+      "viewport": "mobile",
+      "difference": "63 pixels (0.0040%)"
+    },
+    {
+      "route": "/conditions/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/contact/",
+      "viewport": "mobile",
+      "difference": "195 pixels (0.0091%)"
+    },
+    {
+      "route": "/privacy/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/providers/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/service-updates/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/404.html",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/can-allergy-treatment-make-you-dizzy/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/baby-vaccine-allergy-treatment/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/does-eczema-cause-coughing/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/sinus-infection-bacterial-vs-viral/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/how-to-tell-if-you-have-hives-or-eczema/",
+      "viewport": "mobile",
+      "difference": "5 pixels (0.0001%)"
+    },
+    {
+      "route": "/blog/diagnose-drug-allergy/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/how-long-does-eczema-last/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/how-much-allergy-medication-injected/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/appointment-drug-chemical-allergy-treatment-illinois/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/how-to-get-rid-of-eczema-hives/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/food-allergy-vs-intolerance/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/insect-allergy-shots-immunotherapy/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/symptops-of-being-allergic-to-medication/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/what-diseases-start-with-hives/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/first-step-in-treatment-of-food-allergies/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/what-is-the-last-stage-of-asthma/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/treatment-for-sinus-infection/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/drug-and-chemical-allergy-treatment-near-me-illinois/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/why-am-i-allergic-to-so-many-drugs/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/how-to-stop-hives-permanently/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/is-eczema-treatment-effective/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/best-treatments-for-eczema/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/symptoms-of-respiratory-distress-in-asthma/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/what-chemicals-are-released-during-drug-allergy/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/untreated-sinus-infection/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/what-heals-eczema-fastest/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/first-visit-drug-chemical-allergy-center-illinois/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/aascforfamily/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/ili/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/allergysymptoms/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/fall-allergies-cold-or-flu/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/hiddenwaysallergiesaffectkids/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/blog/travel-safely/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/conditions/food-allergy/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/conditions/sinus-nasal-allergy/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/conditions/insect-allergy/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/conditions/eczema-hives-rashes/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/conditions/asthma-respiratory-problems/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/conditions/drug-and-chemical-allergies/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/conditions/immunotherapy/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/conditions/immunodeficiency/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/conditions/mast-cell-activation-syndrome/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/conditions/hereditary-angioedema/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/providers/maaz-mohiuddin/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/providers/adriana-flores-munoz/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/providers/brenda-kelley/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/providers/syed-rizvi/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/providers/renee-lantner/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/service-updates/2025/02/dr-lantner-retirement/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/service-updates/2022/08/western-springs-asthma-allergy-has-merged-with-allergies-asthma-and-sinus-centers/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/service-updates/2025/07/western-springs-clinic-relocating/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/clinics/crest-hill/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/clinics/countryside/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/clinics/bolingbrook/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    },
+    {
+      "route": "/clinics/aurora/",
+      "viewport": "mobile",
+      "difference": "0 pixels (0.0000%)"
+    }
+  ]
+}
