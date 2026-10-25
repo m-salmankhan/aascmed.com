@@ -45,6 +45,10 @@ normalized for comparison so a localhost/preview origin does not cause false
 link failures. Text whitespace is normalized; heading IDs, content order,
 external URLs, metadata and form requirements are not masked.
 JSON-LD is parsed, so object-key formatting does not matter and invalid JSON fails.
+With JavaScript enabled, hidden `noscript` fallback markup is excluded from
+main-content and link-label text contracts. A desktop/mobile fixture changes only
+that fallback markup and verifies both contracts stay unchanged. The separate
+JavaScript-disabled journey still exercises rendered fallback navigation.
 
 Full-page screenshots allow at most **0.1% differing pixels**, using pixelmatch's
 0.1 per-pixel color threshold and default antialias handling. Screenshot dimensions
@@ -86,7 +90,10 @@ migration gates, not claims made by this suite.
    Freeze CMS changes during capture or use an approved retained published-content
    export; do not commit private content or access tokens.
 3. For Gatsby-to-Gatsby comparisons, additionally compare every generated
-   `public/page-data/**/page-data.json`'s `result.data`. For Gatsby-to-Astro,
+   `public/page-data/**/page-data.json`'s `result.data`. Gatsby's build-local File
+   node IDs can depend on the absolute worktree path: normalize only confirmed
+   File identifiers (such as serialized `localFile___NODE` and `heroImage.id`),
+   never CMS document IDs or content differences. For Gatsby-to-Astro,
    use the matched source snapshot plus the framework-neutral DOM contracts.
 4. Supply two different site-root URLs. Missing URLs, credentials in URLs,
    non-HTTP URLs and identical URLs fail configuration rather than silently

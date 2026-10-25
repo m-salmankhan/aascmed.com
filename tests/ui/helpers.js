@@ -82,7 +82,7 @@ async function pageContract(page) {
       return url.href;
     };
     const main = document.querySelector("#main").cloneNode(true);
-    main.querySelectorAll("script, style, .map-container, .mapboxgl-map").forEach(element => element.remove());
+    main.querySelectorAll("script, style, noscript, .map-container, .mapboxgl-map").forEach(element => element.remove());
     const meta = selector => [...document.querySelectorAll(selector)].map(element =>
       [element.getAttribute("name") || element.getAttribute("property"), element.getAttribute("content")]).sort();
     return {
@@ -97,7 +97,11 @@ async function pageContract(page) {
       content: text(main.textContent),
       links: [...document.querySelectorAll("nav a, #main a, footer a")]
         .filter(element => !element.closest("noscript, .map-container, .mapboxgl-map"))
-        .map(element => ({ text: text(element.textContent), href: localURL(element.getAttribute("href")) })),
+        .map(element => {
+          const anchor = element.cloneNode(true);
+          anchor.querySelectorAll("noscript").forEach(fallback => fallback.remove());
+          return { text: text(anchor.textContent), href: localURL(element.getAttribute("href")) };
+        }),
       forms: [...document.querySelectorAll("#main input, #main select, #main textarea, #main button[type=submit]")]
         .map(element => ({
           tag: element.tagName, name: element.name, type: element.type, required: element.required || false,
