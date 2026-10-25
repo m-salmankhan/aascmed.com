@@ -1,9 +1,10 @@
 import {css} from "@emotion/react";
+import {CSSObject} from "@emotion/serialize";
 import {defaultTotalColumnCount, gridSpacing} from "./theme";
 
 // Returns CSS to turn element into Flexbox Grid Container
 export const gridContainer = (breakpoint: number = 0) => {
-    const breakpointStyles = {}
+    const breakpointStyles: Record<string, CSSObject> = {}
 
     breakpointStyles[`@media screen and (min-width: ${breakpoint}em)`] = {
         display: "flex",
@@ -30,7 +31,7 @@ const colsWidth = (columnSpan: number, totalColumnCount: number = defaultTotalCo
 * @returns {SerializedStyles} Emotion CSS for element of correct width and padding
 * */
 export const cols = (colspan: number, breakpoint: number = 0, totalColumnCount: number = defaultTotalColumnCount) => {
-    const breakpointStyles = {}
+    const breakpointStyles: Record<string, CSSObject> = {}
     breakpointStyles[`@media screen and (min-width: ${breakpoint}em)`] = {
         width: colsWidth(colspan, totalColumnCount),
         paddingLeft: `${gridSpacing/2}em`,
@@ -48,7 +49,7 @@ Offset a column by a certain number of columns
 * @returns {SerializedStyles} Emotion CSS for offsetting element
 * */
 export const offsetCols = (cols: number, breakpoint: number = 0, totalColumnCount: number = defaultTotalColumnCount) => {
-    const breakpointStyles = {}
+    const breakpointStyles: Record<string, CSSObject> = {}
     breakpointStyles[`@media screen and (min-width: ${breakpoint}em)`] = {
         marginLeft: colsWidth(cols, totalColumnCount),
     };
@@ -64,7 +65,7 @@ Pull a column by a certain number of columns
 * @returns {SerializedStyles} Emotion CSS for pulling element
 * */
 export const pullCols = (cols: number, breakpoint: number = 0, totalColumnCount: number = defaultTotalColumnCount) => {
-    const breakpointStyles = {}
+    const breakpointStyles: Record<string, CSSObject> = {}
     breakpointStyles[`@media screen and (min-width: ${breakpoint}em)`] = {
         marginLeft: `calc(-1 * ${colsWidth(cols, totalColumnCount)})`,
     };

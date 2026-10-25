@@ -2,7 +2,7 @@ import { css } from "@emotion/react";
 import mapboxgl from "mapbox-gl";
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useState, useEffect, useRef } from "react";
-import ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import { MapBoxProps } from ".";
 import { colours } from "../../styles/theme";
 import { stylesH5 } from "../headings";
@@ -24,17 +24,19 @@ const stylesMapPopUp = css`
 
 function addPopup(label: string, mapboxMap: mapboxgl.Map, longitude: number, latitude: number): mapboxgl.Popup {
     const element = document.createElement('div');
-    ReactDOM.render(
+    const root = createRoot(element);
+    root.render(
         <div css={stylesMapPopUp}>
             <Logo />
             <div css={stylesH5}>{label}</div>
         </div>
-        , element);
+    );
 
     const popup = new mapboxgl.Popup({ maxWidth: "50%", })
         .addTo(mapboxMap)
         .setLngLat([longitude, latitude])
         .setDOMContent(element);
+    popup.on("close", () => root.unmount());
 
     return popup;
 }
@@ -76,6 +78,10 @@ export const MapBox: React.FC<MapBoxProps> = (props) => {
             .setPopup(addPopup(props.label, mapboxMap, props.longitude, props.latitude))
             .addTo(mapboxMap);
 
+        return () => {
+            mapboxMap.remove();
+            map.current = null;
+        };
     }, [map, mapContainer, setLng, setLat, setZoom, jsEnabled]);
 
     if (jsEnabled) {

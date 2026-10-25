@@ -81,7 +81,7 @@ const Provider = ({ data, location }: PageProps<Queries.ProviderPageQuery>) => {
                     <>
                       <H4>Featured Review</H4>
                       <p>{review.text}</p>
-                      <p>{review.reviewer} - <Link to={review.link}>{review.date}</Link></p>
+                      <p>{review.reviewer} - {review.link ? <Link to={review.link}>{review.date}</Link> : review.date}</p>
                     </>
                   )
                 }

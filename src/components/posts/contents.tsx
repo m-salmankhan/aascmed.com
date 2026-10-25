@@ -4,6 +4,7 @@ import { colours, gridSpacing } from "../../styles/theme";
 import Color from "color";
 import { breakpointStrings, mediaBreakpoints } from "../../styles/breakpoints";
 import { H2, stylesH1 } from "../headings";
+import { CSSObject } from "@emotion/serialize";
 
 type url = string;
 export interface ContentsPageItem {
@@ -32,7 +33,7 @@ const ContentsItem: React.FC<ContentsItemProps> = ({ heading, active, activeIDs 
     );
 }
 
-const stylesContents = {
+const stylesContents: CSSObject = {
     padding: "1rem",
     paddingBottom: "1rem",
     background: "rgba(0, 0, 0, 0.03)",
@@ -99,7 +100,7 @@ const stylesContents = {
     },
 };
 
-stylesContents[breakpointStrings.md] = {
+(stylesContents as Record<string, CSSObject>)[breakpointStrings.md] = {
     padding: 0,
     background: "transparent",
     borderTop: "none",
@@ -134,12 +135,13 @@ export const Contents: React.FC<ContentsProps> = ({ className, items }) => {
     // Initialise Observer
     const observerRef = useRef<IntersectionObserver | null>(null);
     useEffect(() => {
+        const intersectionThreshold = 0.5;
         const observerOptions: IntersectionObserverInit = {
-            threshold: 0.5
+            threshold: intersectionThreshold
         };
         const observerCallback: IntersectionObserverCallback = (entries) => {
             entries.forEach((entry) => {
-                if (entry.isIntersecting && entry.intersectionRatio > observerOptions.threshold) {
+                if (entry.isIntersecting && entry.intersectionRatio > intersectionThreshold) {
                     setActiveIDs(ids => [...ids, entry.target.id]);
                 } else {
                     setActiveIDs(ids => ids.filter(id => id !== entry.target.id));
