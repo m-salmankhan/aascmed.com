@@ -98,6 +98,10 @@ migration gates, not claims made by this suite.
 4. Supply two different site-root origins (scheme, hostname and port). Normalized
    origin comparison rejects self-comparisons even with empty `?`/`#` suffixes,
    hostname casing differences or explicit default ports.
+   The candidate base URL is resolved to `/` so accepted empty suffixes cannot
+   cause false URL mismatches after home navigation. A configuration regression
+   test loads the real Playwright config for these aliases and preserves
+   non-default ports.
    Missing URLs, credentials in URLs,
    non-HTTP URLs and identical URLs fail configuration rather than silently
    comparing against live production or the candidate itself.

@@ -1,5 +1,7 @@
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
+const { execFileSync } = require("node:child_process");
+const { resolve } = require("node:path");
 const { PNG } = require("pngjs");
 const { assertRouteInventory, compareImages, sitemapLocations, validateTargets } = require("../ui/contracts");
 
@@ -46,6 +48,26 @@ test("comparison rejects same-origin aliases with empty query or fragment delimi
     UI_BASE_URL: "https://candidate.test/#",
     UI_REFERENCE_URL: "https://reference.test/?",
   }));
+});
+
+test("Playwright base URL matches home navigation for accepted root aliases", () => {
+  for (const [candidate, home] of [
+    ["https://candidate.test", "https://candidate.test/"],
+    ["https://candidate.test/", "https://candidate.test/"],
+    ["https://candidate.test/#", "https://candidate.test/"],
+    ["https://candidate.test/?", "https://candidate.test/"],
+    ["https://candidate.test/?#", "https://candidate.test/"],
+    ["https://CANDIDATE.test:443/?", "https://candidate.test/"],
+    ["http://localhost:9000/?#", "http://localhost:9000/"],
+  ]) {
+    const baseURL = execFileSync(process.execPath,
+      ["-e", 'process.stdout.write(require("./playwright.config").use.baseURL)'], {
+        cwd: resolve(__dirname, "../.."),
+        env: { ...process.env, UI_BASE_URL: candidate, UI_REFERENCE_URL: "https://reference.test/?#" },
+        encoding: "utf8",
+      });
+    assert.equal(baseURL, home, `${candidate} must match the URL reached by the home link`);
+  }
 });
 
 function image(width, height, changed = 0) {
