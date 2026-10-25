@@ -12,13 +12,27 @@ const fixture = `<!doctype html><html lang="en-US"><head>
   <img alt="Clinic" loading="lazy" draggable="false" width="10" height="10"
     src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10'%3E%3C/svg%3E">
   <img aria-hidden="true" alt="" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==">
-  <a href="/contact/">Contact</a></main><footer><a href="/privacy/">Privacy</a></footer>
-  <button>Dismiss</button><script>
-    setTimeout(() => document.querySelector("button").onclick = event => event.target.remove(), 250);
+  <a href="/contact/">Contact</a><form><input type="hidden" name="clinic" value="Clinic"></form>
+  </main><footer><a href="/privacy/">Privacy</a></footer>
+  <a href="https://www.zocdoc.com/practice/test"><button>Dismiss</button></a><script>
+    setTimeout(() => {
+      document.querySelector("button").onclick = event => {
+        event.preventDefault();
+        event.stopPropagation();
+        event.target.remove();
+      };
+      const script = document.createElement("script");
+      script.src = "https://offsiteschedule.zocdoc.com/plugin/embed";
+      document.head.append(script);
+    }, 250);
   </script></body></html>`;
 
 test.beforeEach(async ({ context }) => {
   await context.route(url, route => route.fulfill({ contentType: "text/html", body: fixture }));
+  await context.route("https://offsiteschedule.zocdoc.com/plugin/embed",
+    route => route.fulfill({ contentType: "application/javascript", body: "" }));
+  await context.route("https://www.zocdoc.com/practice/test",
+    route => route.fulfill({ contentType: "text/html", body: "<h1>Unwanted premature navigation</h1>" }));
 });
 
 test("readiness works without Gatsby markers and waits for interactive dismissal", async ({ page }) => {
@@ -38,6 +52,7 @@ test("contract detects text, metadata, heading, link and structured-data mutatio
     ["h1", null, "Changed heading"],
     ['#main a', "href", "/wrong/"],
     ['script[type="application/ld+json"]', null, '{"@type":"Wrong"}'],
+    ['input[name="clinic"]', "value", "Wrong clinic"],
   ]) {
     await page.evaluate(({ selector, attribute, value }) => {
       const element = document.querySelector(selector);

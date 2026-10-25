@@ -26,8 +26,15 @@ credentials, network access or WebGL support fail this integration check.
 
 `ui/helpers.js` uses HTML semantics and observable behavior, not Gatsby's
 performance markers or `data-main-image`. It waits for document load, fonts,
-layout remeasurement and successful interaction with the booking dismiss control
-when present. It scrolls visible content images into view and waits for decoding
+layout remeasurement and successful keyboard interaction with the booking dismiss
+control when present. Before pressing it, the helper waits for the booking
+component's observable script insertion: the shared component performs that
+insertion in its post-hydration effect, after event handlers are attached. This
+avoids clicking an unhydrated button nested inside a booking link and accidentally
+navigating away. A replacement booking integration must preserve this readiness
+contract (or introduce an equivalent documented shared hook), not insert the
+script during SSR before its controls are interactive.
+It scrolls visible content images into view and waits for decoding
 and lazy-map previews to disappear before returning to the top.
 Actual navigation, form, carousel and map tests prove their own interactive
 readiness. An Astro candidate needs the same public behavior/HTML contract, not

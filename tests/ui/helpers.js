@@ -38,11 +38,7 @@ async function preparePage(page, url) {
   await openPage(page, url);
   const dismiss = page.getByRole("button", { name: "Dismiss", exact: true });
   if (await dismiss.count()) {
-    // A real interaction proves hydration without depending on a framework marker.
-    await expect(async () => {
-      if (await dismiss.count()) await dismiss.click();
-      await expect(dismiss).toHaveCount(0, { timeout: 500 });
-    }).toPass({ timeout: 10_000 });
+    await dismissBooking(page);
     await expect(page).toHaveURL(url);
   }
   for (const image of await page.locator(imageSelector).all()) {
@@ -57,6 +53,15 @@ async function preparePage(page, url) {
   await page.evaluate(() => scrollTo({ top: 0, behavior: "instant" }));
   await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
   await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+}
+
+async function dismissBooking(page) {
+  // The shared booking component injects this script only after its handlers are attached.
+  await expect(page.locator('script[src="https://offsiteschedule.zocdoc.com/plugin/embed"]')).toBeAttached();
+  const dismiss = page.getByRole("button", { name: "Dismiss", exact: true });
+  await dismiss.focus();
+  await dismiss.press("Enter");
+  await expect(dismiss).toHaveCount(0);
 }
 
 async function semanticImages(page) {
@@ -96,6 +101,7 @@ async function pageContract(page) {
       forms: [...document.querySelectorAll("#main input, #main select, #main textarea, #main button[type=submit]")]
         .map(element => ({
           tag: element.tagName, name: element.name, type: element.type, required: element.required || false,
+          value: element.type === "hidden" || element.tagName === "SELECT" ? element.value : undefined,
           options: element.tagName === "SELECT" ? [...element.options].map(option => [option.value, text(option.text)]) : undefined,
         })),
     };
@@ -119,4 +125,4 @@ async function readSitemap(request, baseURL) {
   return paths;
 }
 
-module.exports = { imageSelector, installSafety, openPage, preparePage, semanticImages, pageContract, readSitemap };
+module.exports = { imageSelector, installSafety, openPage, preparePage, dismissBooking, semanticImages, pageContract, readSitemap };
