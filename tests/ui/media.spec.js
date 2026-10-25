@@ -16,15 +16,17 @@ async function preparePage(page, url) {
     expect(response.status()).toBe(200);
   }
   await expect(page.locator("header").first()).toBeVisible();
-  await expect(page.locator("main")).toBeVisible();
-  await expect(page.locator("main")).not.toHaveText("");
+  await expect(page.locator("#main")).toBeVisible();
+  await expect(page.locator("#main")).not.toHaveText("");
   await page.evaluate(() => document.fonts.ready);
+  await page.evaluate(() => dispatchEvent(new Event("resize")));
   const dismiss = page.getByRole("button", { name: "Dismiss", exact: true });
   if (await dismiss.isVisible()) {
-    await dismiss.click();
+    await dismiss.focus();
+    await dismiss.press("Enter");
     await expect(dismiss).toHaveCount(0);
     await expect(page).toHaveURL(url);
-    await expect(page.locator("main")).toBeVisible();
+    await expect(page.locator("#main")).toBeVisible();
   }
   for (const image of await page.locator("img[data-main-image]").all()) {
     await image.scrollIntoViewIfNeeded();
@@ -65,7 +67,7 @@ test("condition thumbnails retain hover, keyboard focus, and navigation", async 
   await expect(card.locator(".overlay")).toHaveCSS("opacity", "1");
   await card.press("Enter");
   await expect(page).toHaveURL(new URL(target, baseURL).href);
-  await expect(page.locator("main")).toBeVisible();
+  await expect(page.locator("#main")).toBeVisible();
 });
 
 test("navigation remains usable at each viewport", async ({ page, baseURL }) => {
@@ -78,7 +80,7 @@ test("navigation remains usable at each viewport", async ({ page, baseURL }) => 
   }
   await page.locator('nav a[href="/providers/"]').first().click();
   await expect(page).toHaveURL(new URL("/providers/", baseURL).href);
-  await expect(page.locator("main")).toBeVisible();
+  await expect(page.locator("#main")).toBeVisible();
 });
 
 test("hero background covers the complete hero before and after scrolling", async ({ page, baseURL }) => {
@@ -104,11 +106,15 @@ for (const route of routes) {
     await preparePage(reference, new URL(route, referenceURL).href);
     await preparePage(page, new URL(route, baseURL).href);
     expect.soft(await imageSemantics(page)).toEqual(await imageSemantics(reference));
+    const mapSizes = target => target.locator(".mapboxgl-canvas").evaluateAll(canvases =>
+      canvases.map(canvas => ({ width: canvas.clientWidth, height: canvas.clientHeight }))
+    );
+    expect(await mapSizes(page)).toEqual(await mapSizes(reference));
     const options = { fullPage: true, animations: "disabled" };
     const expectedPath = testInfo.outputPath("production.png");
     const actualPath = testInfo.outputPath("candidate.png");
-    const expectedBuffer = await reference.screenshot({ ...options, path: expectedPath });
-    const actualBuffer = await page.screenshot({ ...options, path: actualPath });
+    const expectedBuffer = await reference.screenshot({ ...options, path: expectedPath, mask: [reference.locator(".mapboxgl-canvas")] });
+    const actualBuffer = await page.screenshot({ ...options, path: actualPath, mask: [page.locator(".mapboxgl-canvas")] });
     await testInfo.attach("production", { path: expectedPath, contentType: "image/png" });
     await testInfo.attach("candidate", { path: actualPath, contentType: "image/png" });
     const expected = PNG.sync.read(expectedBuffer);
