@@ -11,7 +11,7 @@ module.exports = defineConfig({
   fullyParallel: true,
   reporter: [["list"], ["html", { open: "never" }], ["json", { outputFile: "ui-results.json" }]],
   use: {
-    baseURL: new URL(process.env.UI_BASE_URL).href,
+    baseURL: new URL("/", process.env.UI_BASE_URL).href,
     serviceWorkers: "block",
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
