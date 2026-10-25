@@ -137,10 +137,13 @@ ssh preview-deploy@<host> podman compose logs caddy
 ## Authentication
 
 - Visit `https://preview.aascmed.com` — unauthenticated visitors are redirected to `/login`.
-- Sign in with any **Strapi user** (email + password).
-- The auth service calls Strapi's `/api/auth/local`, receives a JWT, and sets it as an `HttpOnly` cookie.
-- On subsequent requests, Caddy calls `/verify` on the auth service. If the JWT is valid (verified against Strapi's `/api/users/me`), the request is proxied to the Gatsby preview. Otherwise, the user is redirected to login.
-- Visit `/logout` to clear the cookie.
+- Sign in with a **Strapi administrator account** (the email and password used by the Strapi admin panel). A regular Content API user account cannot authenticate to this preview.
+- The forward-auth service posts the credentials to the Strapi admin endpoint `/admin/login`. It reads the administrator token from `body.data.token` and stores it in the `preview_jwt` cookie (or the value configured by `COOKIE_NAME`).
+- The cookie is `HttpOnly`, `Secure`, `SameSite=None`, valid for one week, and scoped to `/`. `SameSite=None` is required when the preview is embedded in the Strapi editor iframe; browsers may still block third-party cookies according to their privacy settings. If the embedded preview cannot stay signed in, open the preview URL directly in a tab and sign in there.
+- On subsequent requests, Caddy calls `/verify` on the auth service. The service validates the cookie against the Strapi admin endpoint `/admin/users/me`. A valid administrator session is then proxied to the Gatsby preview; missing or invalid sessions are redirected to `/login`.
+- Visit `/logout` to clear the administrator session cookie.
+
+The `STRAPI_TOKEN` used by Gatsby is separate from this administrator session. It is a Content API token used by the preview site to fetch draft content; it is not a browser login credential and is never placed in the session cookie.
 
 ## Manual Deployment
 
@@ -175,5 +178,6 @@ All services have `restart: unless-stopped`, so they survive reboots and crashes
 | Node OOM (heap out of memory) | Increase `--max-old-space-size` in `NODE_OPTIONS` (in `.env` or compose) or add swap on host |
 | Caddy can't resolve `preview` or `forward-auth` | Ensure `podman compose ps` shows all 3 services running |
 | 502 from Caddy | Gatsby is still starting — wait for build to finish (`podman compose logs preview`) |
-| Login fails | Check `STRAPI_URL` is reachable from the server (`podman compose logs forward-auth`) |
+| Login fails | Confirm the account is a Strapi administrator, check that `GATSBY_STRAPI_API_URL` reaches `/admin/login` from the server, and inspect `podman compose logs forward-auth` |
+| Preview works directly but not in the editor iframe | Open the preview directly to sign in, then check browser third-party-cookie/privacy settings; iframe support depends on the browser and embedding context |
 | Certificate errors | Ensure Cloudflare SSL mode is "Full (strict)" and origin cert matches the domain |
