@@ -14,7 +14,9 @@
     "serve": "gatsby serve",
     "clean": "gatsby clean",
     "typecheck": "tsc --noEmit",
-    "test:ui": "playwright test"
+    "test:ui": "playwright test",
+    "test:infrastructure": "node --test tests/infrastructure/contracts.test.js && playwright test --config playwright.infrastructure.config.js",
+    "test:smoke": "playwright test tests/ui/behavior.spec.js"
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",
