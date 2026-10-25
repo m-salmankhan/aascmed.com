@@ -95,7 +95,10 @@ migration gates, not claims made by this suite.
    File identifiers (such as serialized `localFile___NODE` and `heroImage.id`),
    never CMS document IDs or content differences. For Gatsby-to-Astro,
    use the matched source snapshot plus the framework-neutral DOM contracts.
-4. Supply two different site-root URLs. Missing URLs, credentials in URLs,
+4. Supply two different site-root origins (scheme, hostname and port). Normalized
+   origin comparison rejects self-comparisons even with empty `?`/`#` suffixes,
+   hostname casing differences or explicit default ports.
+   Missing URLs, credentials in URLs,
    non-HTTP URLs and identical URLs fail configuration rather than silently
    comparing against live production or the candidate itself.
 5. Run the suite and retain its provenance/report. Contract failures can identify
