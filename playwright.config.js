@@ -4,7 +4,7 @@ module.exports = defineConfig({
   testDir: "./tests/ui",
   timeout: 120_000,
   expect: { timeout: 10_000 },
-  workers: 4,
+  workers: 2,
   fullyParallel: true,
   reporter: [["list"], ["html", { open: "never" }], ["json", { outputFile: "ui-results.json" }]],
   use: {

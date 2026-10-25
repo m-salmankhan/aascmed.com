@@ -7,4 +7,6 @@ playwright-report/
 test-results/
 before-test-results/
 all-pages-test-results/
+retry-test-results/
+final-test-results/
 ui-results.json
