@@ -26,6 +26,28 @@ test("comparison requires two explicit, distinct HTTP targets", () => {
   assert.doesNotThrow(() => validateTargets({ UI_BASE_URL: "http://localhost:9000", UI_REFERENCE_URL: "http://localhost:9001" }));
 });
 
+test("comparison rejects same-origin aliases with empty query or fragment delimiters", () => {
+  const aliases = [
+    "https://candidate.test/",
+    "https://candidate.test/#",
+    "https://candidate.test/?",
+    "https://candidate.test/?#",
+    "https://CANDIDATE.test:443/?",
+  ];
+  for (const candidate of aliases) {
+    for (const reference of aliases) {
+      assert.throws(() => validateTargets({
+        UI_BASE_URL: candidate,
+        UI_REFERENCE_URL: reference,
+      }), /distinct/, `${candidate} and ${reference} identify the same comparison target`);
+    }
+  }
+  assert.doesNotThrow(() => validateTargets({
+    UI_BASE_URL: "https://candidate.test/#",
+    UI_REFERENCE_URL: "https://reference.test/?",
+  }));
+});
+
 function image(width, height, changed = 0) {
   const png = new PNG({ width, height });
   png.data.fill(255);

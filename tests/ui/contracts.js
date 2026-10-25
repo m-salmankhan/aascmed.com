@@ -26,7 +26,7 @@ function validateTargets(env = process.env) {
     assert.equal(url.pathname, "/", `${name} must be a site root`);
     assert.equal(url.search + url.hash, "", `${name} must not contain query strings or fragments`);
   }
-  assert.notEqual(new URL(env.UI_BASE_URL).href, new URL(env.UI_REFERENCE_URL).href,
+  assert.notEqual(new URL(env.UI_BASE_URL).origin, new URL(env.UI_REFERENCE_URL).origin,
     "Candidate and reference must be distinct deployments, not a self-comparison");
 }
 
