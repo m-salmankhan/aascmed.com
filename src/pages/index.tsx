@@ -81,7 +81,7 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
     slug: `/conditions/${node.slug}/`,
     title: node.heading || node.title || "",
     thumbnail: node.thumbnail?.localFile?.childImageSharp?.gatsbyImageData
-      ? <GatsbyImage alt={node.heading || node.title || ""} image={node.thumbnail.localFile.childImageSharp.gatsbyImageData} />
+      ? <GatsbyImage alt="" image={node.thumbnail.localFile.childImageSharp.gatsbyImageData} />
       : undefined,
   }));
 
@@ -131,7 +131,7 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
       },
       retired: false,
       image: node.image?.localFile?.childImageSharp?.gatsbyImageData
-        ? <GatsbyImage alt={node.name?.fullName || ""} image={node.image.localFile.childImageSharp.gatsbyImageData} />
+        ? <GatsbyImage alt={`An image of ${node.name?.honorific && node.name.honorific !== "None" ? node.name.honorific : ""} ${node.name?.fullName || ""}`} image={node.image.localFile.childImageSharp.gatsbyImageData} />
         : undefined,
     }));
 
@@ -184,7 +184,7 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
   return (
     <App>
       <Hero 
-        image={heroImage ? <GatsbyImage alt="" image={heroImage} loading="eager" /> : undefined}
+        image={heroImage ? <GatsbyImage alt="" image={heroImage} loading="eager" draggable={false} /> : undefined}
         heading={heroTitle} 
         textContent={heroTextBlocks ? <StrapiBlocksRenderer content={heroTextBlocks} /> : undefined}
         media={renderMedia(heroMedia)}

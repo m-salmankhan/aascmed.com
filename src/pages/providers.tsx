@@ -39,7 +39,7 @@ const ProvidersPage = ({ data }: PageProps<Queries.ProvidersPageQuery>) => {
         degreeAbbr: node.name?.qualificationAbbr || "",
       },
       image: node.image?.localFile?.childImageSharp?.gatsbyImageData
-        ? <GatsbyImage alt={`An image of ${node.name?.honorific || ""} ${node.name?.fullName || ""}`.trim()} image={node.image.localFile.childImageSharp.gatsbyImageData} />
+        ? <GatsbyImage alt={`An image of ${node.name?.honorific && node.name.honorific !== "None" ? `${node.name.honorific} ` : ""}${node.name?.fullName || ""}`} image={node.image.localFile.childImageSharp.gatsbyImageData} />
         : undefined,
       excerpt,
       retired: node.retirementNotice?.retired || false,

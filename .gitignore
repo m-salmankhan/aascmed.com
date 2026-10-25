@@ -3,3 +3,7 @@ node_modules/
 public
 src/gatsby-types.d.ts
 .env.*
+playwright-report/
+test-results/
+before-test-results/
+all-pages-test-results/

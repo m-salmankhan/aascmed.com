@@ -23,7 +23,7 @@ const ConditionsPage = ({ data }: PageProps<Queries.ConditionsArchiveQuery>) => 
     slug: `/conditions/${node.slug}/`,
     title: node.heading || node.title || "untitled",
     thumbnail: node.thumbnail?.localFile?.childImageSharp?.gatsbyImageData
-      ? <GatsbyImage alt={node.heading || node.title || "untitled"} image={node.thumbnail.localFile.childImageSharp.gatsbyImageData} />
+      ? <GatsbyImage alt="" image={node.thumbnail.localFile.childImageSharp.gatsbyImageData} />
       : undefined,
   }));
 
