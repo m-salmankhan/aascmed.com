@@ -1,0 +1,83 @@
+name: Regression tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      candidate_url:
+        description: "Public candidate deployment URL (site root, no credentials)"
+        required: true
+        type: string
+      reference_url:
+        description: "Pinned public reference deployment URL with matching CMS content"
+        required: true
+        type: string
+      baseline_id:
+        description: "Reference commit/deployment and matched CMS snapshot identifier"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: regression-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+jobs:
+  infrastructure:
+    name: Fast regression-infrastructure checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+      - run: yarn install --frozen-lockfile
+      - run: yarn playwright install --with-deps chromium
+      - run: yarn test:infrastructure
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: infrastructure-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+
+  browser:
+    name: Full matched-content website regression
+    if: github.event_name == 'workflow_dispatch'
+    needs: infrastructure
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      UI_BASE_URL: ${{ inputs.candidate_url }}
+      UI_REFERENCE_URL: ${{ inputs.reference_url }}
+      UI_BASELINE_ID: ${{ inputs.baseline_id }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+      - run: yarn install --frozen-lockfile
+      - run: yarn playwright install --with-deps chromium
+      - name: Record comparison provenance
+        run: |
+          printf '## Matched-content comparison\n\nCandidate: %s\n\nReference: %s\n\nBaseline: %s\n\nTest code commit: %s\n' \
+            "$UI_BASE_URL" "$UI_REFERENCE_URL" "$UI_BASELINE_ID" "$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+      - run: yarn test:ui
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: website-regression-report
+          path: |
+            playwright-report/
+            test-results/
+            ui-results.json
+          retention-days: 14
