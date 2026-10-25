@@ -6,11 +6,12 @@ import regular from "./regular.svg"
 // @ts-ignore
 import solid from "./solid.svg"
 
-export enum IconStyles {
-    BRANDS = brands,
-    REGULAR = regular,
-    SOLID = solid,
-}
+export const IconStyles = {
+    BRANDS: brands,
+    REGULAR: regular,
+    SOLID: solid,
+} as const;
+export type IconStyles = typeof IconStyles[keyof typeof IconStyles];
 
 type FaIconProps = {
     iconStyle: IconStyles,
