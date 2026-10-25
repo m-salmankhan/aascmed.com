@@ -12,3 +12,22 @@
 
 Coming soon&trade;
 
+## UI regression tests
+
+Run `yarn playwright install chromium` once, build with `yarn build`, and serve
+with `yarn serve --port 9000`. In another terminal, run `yarn test:ui`.
+Set `UI_BASE_URL` to test a deployed candidate instead; `UI_REFERENCE_URL`
+defaults to the production site and can point to a pinned baseline deployment.
+Both URLs must serve the same CMS content for a meaningful comparison.
+
+The Chromium suite checks desktop (1440px) and mobile (390px) hero coverage,
+image accessibility/loading behavior, and full-page visual parity for the
+every published route (all five dynamic templates, all static pages, and the
+404 page). A sitemap assertion prevents newly published pages from silently
+missing coverage; update `tests/ui/routes.json` when content routes change.
+It also exercises thumbnail hover/focus/click and responsive navigation.
+It excludes third-party
+booking/deploy-preview widgets, waits for fonts and lazy images, and allows at
+most 0.1% differing pixels (with a 0.1 per-pixel color threshold to ignore
+antialiasing). Production, candidate, and difference screenshots are attached
+to the HTML report. Open it with `yarn playwright show-report`.

@@ -13,7 +13,8 @@
     "build": "gatsby build",
     "serve": "gatsby serve",
     "clean": "gatsby clean",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:ui": "playwright test"
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",
@@ -43,6 +44,7 @@
     "sharp": "0.35.5"
   },
   "devDependencies": {
+    "@playwright/test": "^1.56.1",
     "@types/color": "^4",
     "@types/mapbox-gl": "^3.5.0",
     "@types/node": "^25",
@@ -51,6 +53,8 @@
     "formdata-node": "^6.0.3",
     "gatsby-plugin-webpack-bundle-analyser-v2": "^1.1.31",
     "gray-matter": "^4.0.3",
+    "pixelmatch": "^7.1.0",
+    "pngjs": "^7.0.0",
     "typescript": "^5.9.3"
   }
 }
