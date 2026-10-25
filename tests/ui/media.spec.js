@@ -8,16 +8,23 @@ async function preparePage(page, url) {
   // Third-party booking and deploy-preview chrome are not part of the site UI.
   await page.route(/zocdoc\.com|netlify\.com|netlify\.app\/\.netlify/, route => route.abort());
   const response = await page.goto(url, { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => performance.getEntriesByName("onInitialClientRender").length > 0);
+  await expect(page).toHaveURL(url);
   if (url.endsWith("/404.html")) {
     expect([200, 404]).toContain(response.status());
   } else {
     expect(response.status()).toBe(200);
   }
+  await expect(page.locator("header").first()).toBeVisible();
+  await expect(page.locator("main")).toBeVisible();
+  await expect(page.locator("main")).not.toHaveText("");
   await page.evaluate(() => document.fonts.ready);
   const dismiss = page.getByRole("button", { name: "Dismiss", exact: true });
   if (await dismiss.isVisible()) {
     await dismiss.click();
     await expect(dismiss).toHaveCount(0);
+    await expect(page).toHaveURL(url);
+    await expect(page.locator("main")).toBeVisible();
   }
   for (const image of await page.locator("img[data-main-image]").all()) {
     await image.scrollIntoViewIfNeeded();
@@ -26,7 +33,8 @@ async function preparePage(page, url) {
       source: element.currentSrc,
     }))).toMatchObject({ loaded: true });
   }
-  await page.evaluate(() => scrollTo(0, 0));
+  await page.evaluate(() => scrollTo({ top: 0, behavior: "instant" }));
+  await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
   await page.locator("body").evaluate(() => new Promise(resolve =>
     requestAnimationFrame(() => requestAnimationFrame(resolve))
   ));
@@ -81,7 +89,7 @@ test("hero background covers the complete hero before and after scrolling", asyn
   await expect(image).toHaveAttribute("loading", "eager");
   await expect.soft(image).toHaveAttribute("draggable", "false");
   for (const scrollY of [0, 250]) {
-    await page.evaluate(y => scrollTo(0, y), scrollY);
+    await page.evaluate(y => scrollTo({ top: y, behavior: "instant" }), scrollY);
     const heroBox = await hero.boundingBox();
     const imageBox = await image.boundingBox();
     for (const dimension of ["x", "y", "width", "height"]) {
