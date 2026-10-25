@@ -1,5 +1,5 @@
 const { test, expect } = require("./fixtures");
-const { openPage, preparePage } = require("./helpers");
+const { openPage, preparePage, dismissBooking } = require("./helpers");
 
 async function fillContact(page) {
   await page.getByLabel(/^Subject/).fill("Regression test - intercepted");
@@ -93,15 +93,9 @@ test("booking dismiss works by keyboard and the booking CTA hands off to Zocdoc"
     await route.fulfill({ contentType: "text/html", body: "<h1>Booking handoff intercepted</h1>" });
   });
   await openPage(page, baseURL);
-  const dismiss = page.getByRole("button", { name: "Dismiss", exact: true });
-  await expect(async () => {
-    if (await dismiss.count()) {
-      await dismiss.focus();
-      await dismiss.press("Enter");
-    }
-    await expect(dismiss).toHaveCount(0, { timeout: 500 });
-  }).toPass({ timeout: 10_000 });
-  expect(scriptRequested).toBe(true);
+  await expect(page.getByRole("button", { name: "Dismiss", exact: true })).toBeVisible();
+  await dismissBooking(page);
+  await expect.poll(() => scriptRequested).toBe(true);
   await page.getByRole("link", { name: "Book online", exact: true }).click();
   await expect.poll(() => bookingURL).toMatch(/^https:\/\/www\.zocdoc\.com\/practice\/allergy-asthma-and-sinus-centers-3233\?/);
   expect(new URL(bookingURL).searchParams.get("lock")).toBe("true");
