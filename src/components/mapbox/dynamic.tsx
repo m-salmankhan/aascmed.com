@@ -22,9 +22,16 @@ const stylesMapPopUp = css`
   }
 `;
 
-function addPopup(label: string, mapboxMap: mapboxgl.Map, longitude: number, latitude: number): mapboxgl.Popup {
+function addPopup(
+    label: string,
+    mapboxMap: mapboxgl.Map,
+    longitude: number,
+    latitude: number,
+    popupRoots: Set<ReturnType<typeof createRoot>>,
+): mapboxgl.Popup {
     const element = document.createElement('div');
     const root = createRoot(element);
+    popupRoots.add(root);
     root.render(
         <div css={stylesMapPopUp}>
             <Logo />
@@ -36,8 +43,6 @@ function addPopup(label: string, mapboxMap: mapboxgl.Map, longitude: number, lat
         .addTo(mapboxMap)
         .setLngLat([longitude, latitude])
         .setDOMContent(element);
-    popup.on("close", () => root.unmount());
-
     return popup;
 }
 
@@ -59,6 +64,7 @@ export const MapBox: React.FC<MapBoxProps> = (props) => {
         if (map.current) return; // initialize map only once
         if (!mapContainer.current) return; // requires container to be initialised
 
+        const popupRoots = new Set<ReturnType<typeof createRoot>>();
         const mapboxMap = new mapboxgl.Map({
             container: mapContainer.current as HTMLElement,
             style: 'mapbox://styles/mapbox/streets-v12',
@@ -75,11 +81,13 @@ export const MapBox: React.FC<MapBoxProps> = (props) => {
 
         new mapboxgl.Marker({ color: '#1C5E38' })
             .setLngLat([props.longitude, props.latitude])
-            .setPopup(addPopup(props.label, mapboxMap, props.longitude, props.latitude))
+            .setPopup(addPopup(props.label, mapboxMap, props.longitude, props.latitude, popupRoots))
             .addTo(mapboxMap);
 
         return () => {
             mapboxMap.remove();
+            popupRoots.forEach(root => root.unmount());
+            popupRoots.clear();
             map.current = null;
         };
     }, [map, mapContainer, setLng, setLat, setZoom, jsEnabled]);
