@@ -10,6 +10,13 @@ type Entity = StrapiEntity & Record<string, unknown>;
 function string(value: unknown): string | undefined { return typeof value === "string" ? value : undefined; }
 function number(value: unknown): number | undefined { return typeof value === "number" && Number.isFinite(value) ? value : undefined; }
 function bool(value: unknown): boolean | undefined { return typeof value === "boolean" ? value : undefined; }
+function compact<T>(value: T): T {
+  if (Array.isArray(value)) return value.map((child) => child === undefined ? null : compact(child)) as T;
+  if (value && typeof value === "object") return Object.fromEntries(Object.entries(value as Record<string, unknown>)
+    .filter(([, child]) => child !== undefined)
+    .map(([key, child]) => [key, compact(child)])) as T;
+  return value;
+}
 function record(value: unknown): Record<string, unknown> | undefined {
   const unwrapped = value && typeof value === "object" && "data" in value ? (value as { data: unknown }).data : value;
   return unwrapped && typeof unwrapped === "object" && !Array.isArray(unwrapped) ? unwrapped as Record<string, unknown> : undefined;
@@ -81,20 +88,20 @@ function common(entity: Entity, fallbackTitle = ""): { documentId: string; id: s
 
 export function mapStrapiBlog(entity: StrapiEntity, mediaBaseUrl?: string): BlogRecord {
   const source = entity as Entity;
-  return {
+  return compact({
     ...common(source),
     heading: string(source.heading) ?? undefined,
     content: optionalJson(source.content),
     thumbnail: mapStrapiMedia(source.thumbnail, mediaBaseUrl),
-  };
+  });
 }
 
 export function mapStrapiCondition(entity: StrapiEntity, mediaBaseUrl?: string): ConditionRecord {
   const source = entity as Entity;
-  return {
+  return compact({
     ...common(source), heading: string(source.heading) ?? undefined, order: number(source.order) ?? null,
     content: optionalJson(source.content), thumbnail: mapStrapiMedia(source.thumbnail, mediaBaseUrl),
-  };
+  });
 }
 
 export function mapStrapiProvider(entity: StrapiEntity, mediaBaseUrl?: string): ProviderRecord {
@@ -113,7 +120,7 @@ export function mapStrapiProvider(entity: StrapiEntity, mediaBaseUrl?: string): 
     text: string(review.text), reviewer: string(review.reviewer), date: string(review.date) ?? null, link: string(review.link),
   };
   if (retirement) provider.retirementNotice = { retired: bool(retirement.retired), text: optionalJson(retirement.text) };
-  return provider;
+  return compact(provider);
 }
 
 export function mapStrapiClinic(entity: StrapiEntity): ClinicRecord {
@@ -136,30 +143,30 @@ export function mapStrapiClinic(entity: StrapiEntity): ClinicRecord {
   };
   if (contact) mapped.contact = { phone: string(contact.phone), fax: string(contact.fax) };
   if (hours) mapped.hours = hours;
-  return mapped;
+  return compact(mapped);
 }
 
 export function mapStrapiServiceUpdate(entity: StrapiEntity): ServiceUpdateRecord {
   const source = entity as Entity;
-  return { ...common(source), date: string(source.date) ?? null, body: optionalJson(source.body) };
+  return compact({ ...common(source), date: string(source.date) ?? null, body: optionalJson(source.body) });
 }
 
 export function mapStrapiReview(entity: StrapiEntity): ReviewRecord {
   const source = entity as Entity;
-  return {
+  return compact({
     documentId: source.documentId, id: source.documentId, name: string(source.name) ?? "",
     stars: number(source.stars), content: optionalJson(source.content),
     sourceName: string(source.sourceName), sourceUrl: string(source.sourceUrl),
-  };
+  });
 }
 
 export function mapStrapiPage(entity: StrapiEntity): ContentPageRecord {
   const source = entity as Entity;
-  return {
+  return compact({
     documentId: source.documentId, id: source.documentId,
     heading: string(source.heading), title: string(source.title), description: string(source.description),
     metaDescription: string(source.metaDescription), text: optionalJson(source.text),
-  };
+  });
 }
 
 export function mapStrapiHomePage(entity: StrapiEntity, mediaBaseUrl?: string): HomePageRecord {
@@ -184,13 +191,13 @@ export function mapStrapiHomePage(entity: StrapiEntity, mediaBaseUrl?: string): 
     } else value = jsonValue(raw);
     if (value !== undefined) mapped[key] = value;
   }
-  return mapped;
+  return compact(mapped);
 }
 
 export function mapStrapiAnnouncement(entity: StrapiEntity): AnnouncementSettings {
   const source = entity as Entity;
   const type = source.type === "error" || source.type === "success" ? source.type : "info";
-  return { enabled: source.enabled === true, type, message: optionalJson(source.message) };
+  return compact({ enabled: source.enabled === true, type, message: optionalJson(source.message) });
 }
 
 export function mapStrapiTrackingInfo(entity: StrapiEntity): TrackingSettings {

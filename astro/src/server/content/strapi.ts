@@ -33,6 +33,10 @@ const PAGE_SIZE = 100;
 const MAX_PAGES = 10;
 const DEFAULT_TIMEOUT_MS = 5000;
 const inflight = new Map<string, Promise<unknown>>();
+const COLLECTION_PATH: Record<Extract<StrapiKind, "blog" | "clinic" | "condition" | "provider" | "service-update" | "review">, string> = {
+  blog: "blogs", clinic: "clinics", condition: "conditions", provider: "providers",
+  "service-update": "service-updates", review: "reviews",
+};
 
 const sectionWithMedia = { populate: { media: true } };
 const conditionContent = { on: { "generic.faq": { populate: { questions: { populate: "*" } } } } };
@@ -162,7 +166,7 @@ export async function getCollection<T extends StrapiEntity>(
   const config = getAstroServerConfig();
   const base = options.mode === "draft" ? config.draftApiUrl : config.strapiApiUrl;
   const endpoint = safeEndpoint(base);
-  endpoint.pathname = `${endpoint.pathname.replace(/\/$/, "")}/${kind}`;
+  endpoint.pathname = `${endpoint.pathname.replace(/\/$/, "")}/${COLLECTION_PATH[kind]}`;
   endpoint.search = "";
   const all: T[] = [];
   for (let page = 1; page <= MAX_PAGES; page++) {
@@ -176,10 +180,16 @@ export async function getCollection<T extends StrapiEntity>(
     const payload = await requestJson<{ data?: unknown; meta?: { pagination?: { pageCount?: number; total?: number } } }>(url, options.mode, options);
     if (!payload) throw new StrapiRequestError("upstream", `Strapi collection request failed (404)`, 404);
     if (!Array.isArray(payload.data)) throw new StrapiRequestError("invalid-response", `Strapi returned an invalid ${kind} collection`);
-    all.push(...payload.data.map((entity) => validateEntity(entity, kind) as T));
     const pageCount = payload.meta?.pagination?.pageCount;
+    const total = payload.meta?.pagination?.total;
+    if ((pageCount !== undefined && pageCount > MAX_PAGES) || (total !== undefined && total > PAGE_SIZE * MAX_PAGES)) {
+      throw new StrapiRequestError("upstream", `Strapi ${kind} collection exceeds the ${PAGE_SIZE * MAX_PAGES} record safety limit`);
+    }
+    all.push(...payload.data.map((entity) => validateEntity(entity, kind) as T));
     if (pageCount !== undefined ? page >= pageCount : payload.data.length < PAGE_SIZE) break;
-    if (page === MAX_PAGES && pageCount !== undefined && pageCount > MAX_PAGES) console.warn(`[strapi] ${kind} pagination capped at ${MAX_PAGES} pages`);
+    if (page === MAX_PAGES) {
+      throw new StrapiRequestError("upstream", `Strapi ${kind} collection may exceed the ${PAGE_SIZE * MAX_PAGES} record safety limit`);
+    }
   }
   return all;
 }
@@ -195,7 +205,7 @@ export async function getByIdentifier<T extends StrapiEntity>(
   const config = getAstroServerConfig();
   const base = options.mode === "draft" ? config.draftApiUrl : config.strapiApiUrl;
   const endpoint = safeEndpoint(base);
-  endpoint.pathname = `${endpoint.pathname.replace(/\/$/, "")}/${kind}`;
+  endpoint.pathname = `${endpoint.pathname.replace(/\/$/, "")}/${COLLECTION_PATH[kind]}`;
   const filters = kind === "clinic" && field === "slug"
     ? { $or: [{ slug: { $eq: identifier } }, { clinic_name: { $eqi: identifier.replace(/-/g, " ") } }] }
     : { [field]: { $eq: identifier } };

@@ -7,6 +7,7 @@ import {
   mapStrapiPage, mapStrapiProvider, mapStrapiReview, mapStrapiServiceUpdate, mapStrapiTrackingInfo,
 } from "../../astro/src/server/content/mapping.ts";
 import { getByIdentifier, getCollection, getSingle, POPULATE, serializeQuery, StrapiRequestError } from "../../astro/src/server/content/strapi.ts";
+import { getPublishedBuildSnapshot } from "../../astro/src/server/content/loaders.ts";
 
 const fixture = async (name) => JSON.parse(await readFile(new URL(`../fixtures/strapi-v5/${name}.json`, import.meta.url), "utf8"));
 
@@ -53,6 +54,9 @@ test("collection mappers normalize blog, provider, service update and review rec
   assert.equal(update.body?.[0]?.type, "paragraph");
   assert.equal(review.stars, 5);
   assert.equal(review.content?.[0]?.type, "paragraph");
+  const incompleteDraft = mapStrapiBlog(await fixture("draft-blog"));
+  assert.equal(Object.hasOwn(incompleteDraft, "thumbnail"), false);
+  assert.deepEqual(incompleteDraft.content, []);
 });
 
 test("all ten single types map to serializable shared records and nested media", async () => {
@@ -94,27 +98,63 @@ test("collection loader paginates past 100 with bounded page size and explicit p
   assert.ok(requested.every((url) => url.searchParams.has("populate[thumbnail]")));
 });
 
-test("collection pagination stops at the 1,000 record safety limit", async () => {
+test("all six collection requests use their Strapi plural API paths", async () => {
   process.env.ASTRO_STRAPI_API_URL = "https://cms.example.test";
-  const pages = [];
-  const previousWarn = console.warn;
-  console.warn = () => {};
-  try {
-    const records = await getCollection("review", {
+  const paths = [];
+  for (const [kind, path] of [
+    ["blog", "/api/blogs"], ["clinic", "/api/clinics"], ["condition", "/api/conditions"],
+    ["provider", "/api/providers"], ["service-update", "/api/service-updates"], ["review", "/api/reviews"],
+  ]) {
+    await getCollection(kind, {
       mode: "published",
-      fetcher: async (url) => {
-        const page = Number(new URL(url).searchParams.get("pagination[page]"));
-        pages.push(page);
-        return Response.json({
-          data: Array.from({ length: 100 }, (_, index) => ({ documentId: `review-${page}-${index}` })),
-          meta: { pagination: { pageCount: 50 } },
-        });
-      },
+      fetcher: async (url) => { paths.push(new URL(url).pathname); return Response.json({ data: [], meta: { pagination: { pageCount: 1 } } }); },
     });
-    assert.equal(records.length, 1000);
-    assert.equal(pages.length, 10);
-    assert.equal(pages.at(-1), 10);
-  } finally { console.warn = previousWarn; }
+    assert.equal(paths.at(-1), path);
+  }
+});
+
+test("static build snapshot is memoized, publishes only published mode, and keeps at most four reads active", async () => {
+  process.env.ASTRO_STRAPI_API_URL = "https://cms.example.test";
+  const originalFetch = globalThis.fetch;
+  let requests = 0;
+  let active = 0;
+  let maxActive = 0;
+  globalThis.fetch = async (url) => {
+    requests++;
+    active++;
+    maxActive = Math.max(maxActive, active);
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    active--;
+    const parsed = new URL(url);
+    assert.equal(parsed.searchParams.get("status"), "published");
+    return Response.json({ data: [], meta: { pagination: { pageCount: 1, total: 0 } } });
+  };
+  try {
+    const [first, second] = await Promise.all([
+      getPublishedBuildSnapshot({ staticBuild: true }), getPublishedBuildSnapshot({ staticBuild: true }),
+    ]);
+    assert.deepEqual(first, second);
+    assert.equal(requests, 6);
+    assert.ok(maxActive <= 4);
+    assert.ok(maxActive > 1);
+    requests = 0;
+    await getPublishedBuildSnapshot({ staticBuild: false });
+    await getPublishedBuildSnapshot({ staticBuild: false });
+    assert.equal(requests, 12);
+  } finally { globalThis.fetch = originalFetch; }
+});
+
+test("collection pagination fails loudly when content exceeds the 1,000 record safety limit", async () => {
+  process.env.ASTRO_STRAPI_API_URL = "https://cms.example.test";
+  let requests = 0;
+  await assert.rejects(getCollection("review", {
+    mode: "published",
+    fetcher: async () => {
+      requests++;
+      return Response.json({ data: [{ documentId: "review-1" }], meta: { pagination: { pageCount: 11 } } });
+    },
+  }), (error) => error instanceof StrapiRequestError && error.kind === "upstream" && error.message.includes("1000 record"));
+  assert.equal(requests, 1);
 });
 
 test("individual draft route lookup filters by slug and returns null when absent", async () => {
@@ -126,6 +166,7 @@ test("individual draft route lookup filters by slug and returns null when absent
     return Response.json({ data: [] });
   };
   assert.equal(await getByIdentifier("blog", "slug", "new-draft", { mode: "draft", fetcher }), null);
+  assert.equal(parsed[0].pathname, "/api/blogs");
   assert.equal(parsed[0].searchParams.get("status"), "draft");
   assert.equal(parsed[0].searchParams.get("filters[slug][$eq]"), "new-draft");
   assert.equal(parsed[0].searchParams.get("pagination[pageSize]"), "1");
@@ -139,12 +180,13 @@ test("draft requests use the draft status and keep the bearer token off publishe
   const fetcher = async (url, init) => {
     const parsed = new URL(url);
     seen.push({ url: parsed, authorization: new Headers(init.headers).get("Authorization") });
-    if (parsed.pathname.endsWith("/blog")) return Response.json({ data: [await fixture("draft-blog")] });
+    if (parsed.pathname.endsWith("/blogs")) return Response.json({ data: [await fixture("draft-blog")] });
     return Response.json({ data: { documentId: "draft-home" } });
   };
   await getSingle("home-page", { mode: "published", fetcher });
   const drafts = await getCollection("blog", { mode: "draft", fetcher });
   assert.equal(seen[0].url.searchParams.get("status"), "published");
+  assert.equal(seen[0].url.pathname, "/api/home-page");
   assert.equal(seen[0].authorization, null);
   assert.equal(seen[0].url.searchParams.has("populate[hero][populate][media]"), true);
   assert.equal(seen[1].url.searchParams.get("status"), "draft");

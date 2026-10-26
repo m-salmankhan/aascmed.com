@@ -83,19 +83,45 @@ export const getPrivacyPolicy = (mode: ContentMode): Promise<ContentPageRecord |
 export const getHomePage = (mode: ContentMode): Promise<HomePageRecord | null> => single("home-page", mode, (entity) => mapStrapiHomePage(entity, mediaBaseUrl(mode)));
 export const getTrackingInfo = (mode: ContentMode): Promise<TrackingSettings | null> => single("tracking-info", mode, mapStrapiTrackingInfo);
 
-/** Route collections used by static enumeration; always published and bounded to four reads at a time. */
-export async function getPublishedRouteCollections() {
+export interface PublishedContentSnapshot {
+  blogs: BlogRecord[];
+  clinics: ClinicRecord[];
+  conditions: ConditionRecord[];
+  providers: ProviderRecord[];
+  serviceUpdates: ServiceUpdateRecord[];
+  reviews: ReviewRecord[];
+}
+
+async function loadPublishedBuildSnapshot(): Promise<PublishedContentSnapshot> {
   const [blogs, clinics, conditions, providers] = await Promise.all([
     getBlogs("published"), getClinics("published"), getConditions("published"), getProviders("published"),
   ]);
-  const [serviceUpdates] = await Promise.all([getServiceUpdates("published")]);
+  const serviceUpdates = await getServiceUpdates("published");
+  const reviews = await getReviews("published");
+  return { blogs, clinics, conditions, providers, serviceUpdates, reviews };
+}
+
+let staticBuildSnapshot: Promise<PublishedContentSnapshot> | undefined;
+
+/** Memoize only within the static-build module instance; draft and SSR reads are always fresh. */
+export async function getPublishedBuildSnapshot(options: { staticBuild?: boolean } = {}): Promise<PublishedContentSnapshot> {
+  const isStaticBuild = options.staticBuild ?? import.meta.env?.PUBLIC_ASTRO_TARGET === "static";
+  if (!isStaticBuild) return loadPublishedBuildSnapshot();
+  if (!staticBuildSnapshot) {
+    staticBuildSnapshot = loadPublishedBuildSnapshot().catch((error) => {
+      staticBuildSnapshot = undefined;
+      throw error;
+    });
+  }
+  return staticBuildSnapshot;
+}
+
+/** Route collections used by static enumeration; always published. */
+export async function getPublishedRouteCollections() {
+  const { blogs, clinics, conditions, providers, serviceUpdates } = await getPublishedBuildSnapshot();
   return { blogs, clinics, conditions, providers, serviceUpdates };
 }
 
-/** Complete six-collection content snapshot for build consumers; no drafts are retained or published. */
-export async function getPublishedCollections() {
-  const routeCollections = await getPublishedRouteCollections();
-  const reviews = await getReviews("published");
-  return { ...routeCollections, reviews };
-}
+/** Backward-compatible alias for static build consumers needing all six collections. */
+export const getPublishedCollections = getPublishedBuildSnapshot;
 
