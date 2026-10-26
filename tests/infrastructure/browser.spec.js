@@ -1,5 +1,8 @@
 const { test, expect } = require("@playwright/test");
 const { preparePage, pageContract, semanticImages, installSafety } = require("../ui/helpers");
+const fs = require("node:fs");
+const ts = require("typescript");
+const path = require("node:path");
 
 const url = "https://fixture.test/";
 const fixture = `<!doctype html><html lang="en-US"><head>
@@ -33,6 +36,53 @@ test.beforeEach(async ({ context }) => {
     route => route.fulfill({ contentType: "application/javascript", body: "" }));
   await context.route("https://www.zocdoc.com/practice/test",
     route => route.fulfill({ contentType: "text/html", body: "<h1>Unwanted premature navigation</h1>" }));
+});
+
+test("standalone links without an active class still announce the current page", async ({ page }) => {
+  await page.route("http://navigation.fixture.test/**", route =>
+    route.fulfill({ contentType: "text/html", body: '<main id="root"></main>' }));
+  await page.goto("http://navigation.fixture.test/blog/");
+  await page.addScriptTag({ path: path.resolve("node_modules/react/umd/react.development.js") });
+  await page.addScriptTag({ path: path.resolve("node_modules/react-dom/umd/react-dom.development.js") });
+
+  const compileTsx = filename => ts.transpileModule(fs.readFileSync(filename, "utf8"), {
+    compilerOptions: {
+      jsx: ts.JsxEmit.React,
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2022,
+      esModuleInterop: true,
+    },
+    fileName: filename,
+  }).outputText;
+  const modules = {
+    link: compileTsx(path.resolve("src/shared/navigation/link.tsx")),
+    currentPath: compileTsx(path.resolve("src/shared/navigation/current-path.tsx")),
+  };
+  const script = `(() => {
+    const cache = {};
+    function load(name) {
+      if (cache[name]) return cache[name].exports;
+      const module = { exports: {} };
+      cache[name] = module;
+      const localRequire = request => request === "react" ? window.React :
+        request === "./current-path" ? load("currentPath") : (() => { throw new Error(request); })();
+      new Function("require", "module", "exports", ${JSON.stringify(modules.link)})(localRequire, module, module.exports);
+      return module.exports;
+    }
+    const currentPathModule = { exports: {} };
+    new Function("require", "module", "exports", ${JSON.stringify(modules.currentPath)})(
+      request => request === "react" ? window.React : (() => { throw new Error(request); })(),
+      currentPathModule, currentPathModule.exports);
+    cache.currentPath = currentPathModule;
+    const { SiteLink } = load("link");
+    window.ReactDOM.createRoot(document.getElementById("root")).render(
+      window.React.createElement(SiteLink, { href: "/blog/" }, "Footer Blog"));
+  })();`;
+  await page.addScriptTag({ content: script });
+
+  const blog = page.getByRole("link", { name: "Footer Blog" });
+  await expect(blog).toHaveAttribute("aria-current", "page");
+  await expect(blog).not.toHaveAttribute("class");
 });
 
 test("readiness works without Gatsby markers and waits for interactive dismissal", async ({ page }) => {

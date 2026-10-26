@@ -29,7 +29,7 @@ export const SiteLink: React.FC<SiteLinkProps> = ({
   const classes = [className, active && activeClassName].filter(Boolean).join(" ") || undefined;
 
   useEffect(() => {
-    if (providedPath === null && activeClassName) setBrowserPath(normalizePath(window.location.pathname));
+    if (providedPath === null) setBrowserPath(normalizePath(window.location.pathname));
   }, [activeClassName, providedPath]);
 
   return (
