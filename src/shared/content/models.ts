@@ -33,7 +33,12 @@ export interface MediaDescriptor {
   mimeType?: string;
   /** Responsive image candidate list in HTML `srcset` syntax, not a default image URL. */
   srcSet?: string;
-  /** Available named image encodings, such as WebP or AVIF. */
+  /** Responsive source URLs paired with their intrinsic pixel widths. */
+  sources?: Array<{ src: string; width: number }>;
+  /** Intrinsic width-to-height ratio when a layout needs an explicit media box. */
+  aspectRatio?: number;
+  /** Poster image URL for video or other non-image media. */
+  poster?: string;
   formats?: Record<string, MediaFormat>;
   /** Optional CSS/background fallback for SSR and non-JavaScript rendering. */
   placeholder?: string;

@@ -7,8 +7,9 @@ import { Article } from "../components/posts/article";
 import { H1, H4 } from "../components/headings";
 import { ShareButtons } from "../components/social-media/share";
 import { InfoNotice } from "../components/posts/shortcode-components";
-import { GatsbyImage } from "gatsby-plugin-image";
 import { GatsbySEO as SEO } from "../adapters/gatsby/seo";
+import { Image } from "../components/media/image";
+import { mapGatsbyMedia } from "../shared/content/gatsby-adapter";
 import { StrapiDynamicZoneRenderer, StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 
 const stylesImage = css({
@@ -39,7 +40,7 @@ const Provider = ({ data, location }: PageProps<Queries.ProviderPageQuery>) => {
   const body = parsedData?.body as any[] | undefined;
   const retirementText = parsedData?.retirementNotice?.text as any[] | undefined;
 
-  const image = provider.image?.localFile?.childImageSharp?.gatsbyImageData;
+  const image = mapGatsbyMedia({ localFile: provider.image?.localFile });
   const slug = `/providers/${provider.slug}/`;
   
   // Get review data
@@ -74,7 +75,7 @@ const Provider = ({ data, location }: PageProps<Queries.ProviderPageQuery>) => {
               <aside>
                 {
                   image &&
-                  <GatsbyImage css={stylesImage} alt={`A photo of ${honorific} ${name}`.trim()} image={image} />
+                  <Image css={stylesImage} alt={`A photo of ${honorific} ${name}`.trim()} image={image} />
                 }
                 {
                   review && (

@@ -1,6 +1,7 @@
 import React from "react";
 import { graphql, HeadProps, PageProps, Script } from "gatsby";
-import { GatsbyImage } from "gatsby-plugin-image";
+import { mapGatsbyMedia } from "../shared/content/gatsby-adapter";
+import { Image, HeroImage } from "../components/media/image";
 import { Hero } from "../components/header";
 import { css } from "@emotion/react";
 import { ConditionsArchive } from "../components/conditions/";
@@ -36,9 +37,8 @@ const parseSectionMedia = (section: any): SectionMediaItem[] | null => {
     mime: item.mime,
     name: item.name,
     url: item.localFile?.publicURL || item.url,
-    image: item.mime?.startsWith("image/") && item.localFile?.childImageSharp?.gatsbyImageData
-      ? <GatsbyImage alt={item.name || ""} image={item.localFile.childImageSharp.gatsbyImageData} />
-      : undefined,
+    descriptor: mapGatsbyMedia({ ...item, publicURL: item.localFile?.publicURL, localFile: item.localFile }),
+    image: undefined,
   }));
 };
 
@@ -50,7 +50,7 @@ const renderMedia = (media: SectionMediaItem[] | null | undefined): React.ReactN
 };
 
 const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
-  const heroImage = data.heroImage?.childImageSharp?.gatsbyImageData;
+  const heroImage = mapGatsbyMedia({ localFile: { publicURL: data.heroImage?.publicURL, childImageSharp: { gatsbyImageData: data.heroImage?.childImageSharp?.gatsbyImageData } } });
   const siteTitle = data.siteTitle?.siteMetadata?.title || "Allergy Asthma and Sinus Centres";
   const homePage = data.strapiHomePage;
 
@@ -81,7 +81,7 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
     slug: `/conditions/${node.slug}/`,
     title: node.heading || node.title || "",
     thumbnail: node.thumbnail?.localFile?.childImageSharp?.gatsbyImageData
-      ? <GatsbyImage alt="" image={node.thumbnail.localFile.childImageSharp.gatsbyImageData} />
+      ? <Image image={mapGatsbyMedia({ localFile: node.thumbnail.localFile })!} alt="" />
       : undefined,
   }));
 
@@ -131,7 +131,7 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
       },
       retired: false,
       image: node.image?.localFile?.childImageSharp?.gatsbyImageData
-        ? <GatsbyImage alt={`An image of ${node.name?.honorific && node.name.honorific !== "None" ? node.name.honorific : ""} ${node.name?.fullName || ""}`} image={node.image.localFile.childImageSharp.gatsbyImageData} />
+        ? <Image image={mapGatsbyMedia({ localFile: node.image.localFile })!} alt={`An image of ${node.name?.honorific && node.name.honorific !== "None" ? node.name.honorific : ""} ${node.name?.fullName || ""}`} />
         : undefined,
     }));
 
@@ -185,7 +185,7 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
   return (
     <App>
       <Hero 
-        image={heroImage ? <GatsbyImage alt="" image={heroImage} loading="eager" draggable={false} /> : undefined}
+        image={heroImage ? <HeroImage image={heroImage} alt="" draggable={false} /> : undefined}
         heading={heroTitle} 
         textContent={heroTextBlocks ? <StrapiBlocksRenderer content={heroTextBlocks} /> : undefined}
         media={renderMedia(heroMedia)}
@@ -429,6 +429,7 @@ export const query = graphql`
       childImageSharp {
         gatsbyImageData
       }
+      publicURL
     }
     siteTitle: site(siteMetadata: {}) {
       siteMetadata {

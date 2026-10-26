@@ -7,7 +7,8 @@ import { Container } from "../components/containers";
 import { gridSpacing } from "../styles/theme";
 import { GatsbySEO as SEO } from "../adapters/gatsby/seo";
 import { BlogArchive, BlogSummary } from "../components/blog-posts";
-import { GatsbyImage, getImage } from "gatsby-plugin-image";
+import { Image } from "../components/media/image";
+import { mapGatsbyMedia } from "../shared/content/gatsby-adapter";
 import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 
 const BlogPage: React.FC<PageProps<Queries.BlogsQuery>> = ({ data }) => {
@@ -25,8 +26,8 @@ const BlogPage: React.FC<PageProps<Queries.BlogsQuery>> = ({ data }) => {
     date: node.date || "",
     description: node.description || "",
     thumbnail: (() => {
-      const image = getImage(node.thumbnail?.localFile?.childImageSharp?.gatsbyImageData ?? null);
-      return image ? <GatsbyImage alt={node.title || "Untitled"} image={image} /> : undefined;
+      const image = mapGatsbyMedia({ localFile: node.thumbnail?.localFile, altText: node.title || "Untitled" });
+      return image ? <Image image={image} /> : undefined;
     })(),
   }));
   return (

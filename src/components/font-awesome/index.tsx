@@ -11,6 +11,8 @@ export const IconStyles = {
     REGULAR: regular,
     SOLID: solid,
 } as const;
+// Keep fragments separate from imported sprite URLs for webpack/Vite parity.
+const spriteSymbol = (url: string, symbol: string) => `${url}#${symbol}`;
 export type IconStyles = typeof IconStyles[keyof typeof IconStyles];
 
 type FaIconProps = {
@@ -22,5 +24,5 @@ type FaIconProps = {
 
 export const FaIcons: React.FC<FaIconProps> = ({iconStyle, icon, className, ...props}) =>
   <svg {...props} className={className}>
-    <use href={`${iconStyle}#${icon}`}/>
+    <use href={spriteSymbol(iconStyle, icon)}/>
   </svg>

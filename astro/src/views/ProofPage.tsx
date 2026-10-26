@@ -2,14 +2,15 @@ import { Global, css } from '@emotion/react';
 import { HeroBase } from '../../../src/components/header/hero-base';
 import { Columns, Column } from '../../../src/components/layouts/columns';
 import { stylesGlobal } from '../../../src/styles/global';
+import { HeroImage } from '../../../src/components/media/image';
+import type { MediaDescriptor } from '../../../src/shared/content/models';
 
-type Media = { src: string; alt: string };
 type Draft = { title: string; source: 'fixture' | 'strapi' };
 
-export default function ProofPage({ target, draft, media }: { target: string; draft: Draft; media: Media }) {
+export default function ProofPage({ target, draft, media }: { target: string; draft: Draft; media: MediaDescriptor }) {
   return <>
     <Global styles={stylesGlobal} />
-    <HeroBase heading="A reusable, styled first paint" navigation={<nav aria-label="Main navigation" css={css`position:relative;z-index:1`}><a href="#main">AASC · care for every breath</a></nav>} image={<img src={media.src} alt={media.alt} />}>
+    <HeroBase heading="A reusable, styled first paint" navigation={<nav aria-label="Main navigation" css={css`position:relative;z-index:1`}><a href="#main">AASC · care for every breath</a></nav>} image={<HeroImage image={media} draggable={false} />}>
       <p css={css`text-transform:uppercase; letter-spacing:.12em; font-weight:bold;`}>Astro migration proof</p>
       <p>Real static media, server-rendered content, and an independent hydrated control.</p>
     </HeroBase>

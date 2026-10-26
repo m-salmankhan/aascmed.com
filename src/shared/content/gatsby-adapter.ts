@@ -13,7 +13,7 @@ import type {
 
 /** Gatsby image plugin output fields used to extract a plain media source. */
 interface GatsbyImageData {
-  images?: { fallback?: { src?: string; width?: number; height?: number; srcSet?: string } };
+  images?: { fallback?: { src?: string; width?: number; height?: number; srcSet?: string }; sources?: Array<{ srcSet?: string }> };
   width?: number;
   height?: number;
   src?: string;
@@ -207,14 +207,21 @@ export function mapGatsbyMedia(media: GatsbyMedia | null | undefined): MediaDesc
   const srcSet = fallback?.srcSet || image?.srcSet;
   const descriptor: MediaDescriptor = {
     src,
-    alt: media.altText || media.alternativeText || "",
+    alt: media.altText || media.alternativeText || (media as GatsbyMedia & { name?: string | null }).name || "",
   };
   const width = fallback?.width || image?.width || media.width;
   const height = fallback?.height || image?.height || media.height;
   if (width != null) descriptor.width = width;
   if (height != null) descriptor.height = height;
-  if (media.mime) descriptor.mimeType = media.mime;
   if (srcSet) descriptor.srcSet = srcSet;
+  const mimeType = media.mime || (media as GatsbyMedia & { mimeType?: string | null }).mimeType;
+  if (mimeType) descriptor.mimeType = mimeType;
+  const candidates = (fallback?.srcSet || image?.srcSet || "").split(",").map((candidate) => {
+    const match = candidate.trim().match(/^(\S+)\s+(\d+)w$/);
+    return match ? { src: match[1], width: Number(match[2]) } : undefined;
+  }).filter((candidate): candidate is { src: string; width: number } => !!candidate);
+  if (candidates.length) descriptor.sources = candidates;
+  if (width && height) descriptor.aspectRatio = width / height;
   return descriptor;
 }
 

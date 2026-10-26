@@ -108,7 +108,7 @@ test("Gatsby adapters keep blocks and media serializable and omit absent optiona
   });
   assert.deepEqual(mapped.content, [block]);
   assert.equal("body" in mapped, false);
-  assert.deepEqual(mapped.thumbnail, { src: "/cover.jpg", alt: "Cover", width: 640, height: 360, mimeType: "image/jpeg" });
+  assert.deepEqual(mapped.thumbnail, { src: "/cover.jpg", alt: "Cover", width: 640, height: 360, mimeType: "image/jpeg", aspectRatio: 640 / 360 });
   assert.deepEqual(mapGatsbyMedia({ url: "/source.jpg" }), { src: "/source.jpg", alt: "" });
   assert.equal("internal" in mapped, false);
   assert.equal(isJsonValue(mapped), true);
@@ -174,6 +174,22 @@ test("shared query consumers stay free of Gatsby static queries", async () => {
 
 });
 
+test("Gatsby responsive image candidates map into plain descriptors with crop dimensions", () => {
+  const media = mapGatsbyMedia({
+    name: "Doctor portrait",
+    mime: "image/webp",
+    localFile: { childImageSharp: { gatsbyImageData: { images: { fallback: {
+      src: "/doctor-400.webp", width: 400, height: 400,
+      srcSet: "/doctor-200.webp 200w, /doctor-400.webp 400w",
+    } } } } },
+  });
+  assert.deepEqual(media, {
+    src: "/doctor-400.webp", alt: "Doctor portrait", width: 400, height: 400,
+    mimeType: "image/webp", srcSet: "/doctor-200.webp 200w, /doctor-400.webp 400w",
+    sources: [{ src: "/doctor-200.webp", width: 200 }, { src: "/doctor-400.webp", width: 400 }],
+    aspectRatio: 1,
+  });
+});
 test("shared model declarations stay free of framework nodes, GraphQL query types, and credentials", async () => {
   const modelText = await readFile(new URL("../../src/shared/content/models.ts", import.meta.url), "utf8");
   const declarations = modelText.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, "");
