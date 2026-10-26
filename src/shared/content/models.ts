@@ -35,6 +35,8 @@ export interface MediaDescriptor {
 }
 
 export interface ContentRecord {
+  /** Strapi v5 stable identity. Gatsby adapters may omit it during migration. */
+  documentId?: string;
   id: string;
   slug: string | null;
   title: string;
@@ -88,6 +90,42 @@ export interface ClinicRecord extends ContentRecord {
 
 export interface ServiceUpdateRecord extends ContentRecord {
   date: string | null;
+}
+
+export interface ReviewRecord {
+  documentId?: string;
+  id: string;
+  name: string;
+  stars?: number;
+  content?: JsonValue[];
+  sourceName?: string;
+  sourceUrl?: string;
+}
+
+/** Normalized singleton page fields shared by archive and fixed page views. */
+export interface ContentPageRecord {
+  documentId: string;
+  id: string;
+  heading?: string;
+  title?: string;
+  description?: string;
+  metaDescription?: string;
+  text?: JsonValue[];
+}
+
+export interface HomePageRecord {
+  documentId: string;
+  id: string;
+  metaDescription?: string;
+  hero?: JsonValue;
+  genericBelowHero?: JsonValue;
+  conditions?: JsonValue;
+  serviceUpdates?: JsonValue;
+  blog?: JsonValue;
+  providers?: JsonValue;
+  feedback?: JsonValue;
+  locations?: JsonValue;
+  contact?: JsonValue;
 }
 
 export interface SiteSettings {

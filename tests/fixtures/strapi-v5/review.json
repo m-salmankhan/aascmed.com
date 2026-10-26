@@ -1,0 +1,8 @@
+{
+  "documentId": "review-1",
+  "name": "A patient",
+  "stars": 5,
+  "sourceName": "Directory",
+  "sourceUrl": "https://example.test/review",
+  "content": [{ "type": "paragraph", "children": [{ "type": "text", "text": "Helpful and kind." }] }]
+}
