@@ -2,6 +2,7 @@ import React from "react";
 import type { GatsbySSR } from "gatsby";
 import GatsbySiteDataAdapter from "./src/adapters/gatsby/site-data";
 import GatsbyAnnouncementAdapter from "./src/adapters/gatsby/announcement";
+import { CurrentPathProvider } from "./src/shared/navigation/current-path";
 
 /** Mount site settings and announcement data while Gatsby renders pages on the server.
  * @param props Gatsby page element supplied by the SSR API.
@@ -11,4 +12,8 @@ export const wrapRootElement: GatsbySSR["wrapRootElement"] = ({ element }) => (
   <GatsbySiteDataAdapter>
     <><GatsbyAnnouncementAdapter />{element}</>
   </GatsbySiteDataAdapter>
+);
+
+export const wrapPageElement: GatsbySSR["wrapPageElement"] = ({ element, props }) => (
+  <CurrentPathProvider path={props.location.pathname}>{element}</CurrentPathProvider>
 );
