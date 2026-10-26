@@ -1,6 +1,7 @@
 import { css, Global } from "@emotion/react"
 import { useState, useId, useRef, useEffect } from "react"
 import { MapBoxProps } from "."
+import { gatsbyPublicConfig } from "../../config/gatsby-public";
 
 interface StaticMapBoxParameters {
     label: string
@@ -12,7 +13,7 @@ interface StaticMapBoxParameters {
     zoom: number
 }
 const mapSrc = ({ label, latitude, longitude, width, height, retina, zoom }: StaticMapBoxParameters) =>
-    `https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/pin-l-${label}+1C5E38(${longitude},${latitude})/${longitude},${latitude},${zoom},0/${width}x${height}${retina ? "@2x" : ""}?access_token=${process.env.GATSBY_MAPBOX_API_KEY}`;
+    `https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/pin-l-${label}+1C5E38(${longitude},${latitude})/${longitude},${latitude},${zoom},0/${width}x${height}${retina ? "@2x" : ""}?access_token=${gatsbyPublicConfig.mapboxAccessToken}`;
 
 enum ImageState {
     INITIAL = "init",

@@ -1,11 +1,12 @@
 import { ContactFormErrorResponse, ContactFormFields, HTTP_STATUS } from "./types";
+import { gatsbyPublicConfig } from "../config/gatsby-public";
 
 export class API {
     // Contact form
     readonly baseURL: string;
 
     constructor() {
-        this.baseURL = process.env.GATSBY_API_BASE_URL || "https://api.aascmed.com";
+        this.baseURL = gatsbyPublicConfig.apiBaseUrl;
     }
 
     async contact(fields: ContactFormFields): Promise<void | ContactFormErrorResponse> {

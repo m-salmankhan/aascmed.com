@@ -8,8 +8,9 @@ import { colours } from "../../styles/theme";
 import { stylesH5 } from "../headings";
 import { Logo } from "../logo";
 import { StaticMap } from "./static";
+import { gatsbyPublicConfig } from "../../config/gatsby-public";
 
-mapboxgl.accessToken = process.env["GATSBY_MAPBOX_API_KEY"] || "";
+mapboxgl.accessToken = gatsbyPublicConfig.mapboxAccessToken;
 
 const stylesMapPopUp = css`
   text-align: center;

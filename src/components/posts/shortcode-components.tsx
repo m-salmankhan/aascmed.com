@@ -4,7 +4,7 @@ import {
     stylesBtnSecondary,
     stylesButton
 } from "../buttons";
-import { Link } from "gatsby";
+import { SiteLink } from "../../shared/navigation/link";
 import { colours, gridSpacing } from "../../styles/theme";
 import { css } from "@emotion/react";
 import { CSSInterpolation } from "@emotion/serialize";
@@ -37,7 +37,7 @@ export const ButtonList: React.FC<ShortCodeProps> = ({ className, children }) =>
     <nav className={className} css={stylesButtonList}>
         {children}
         <PrimaryAnchor href={"#faq"} css={stylesFAQBtn}>Skip to FAQ</PrimaryAnchor>
-        <Link css={[stylesButton, stylesBtnSecondary, stylesContactBtn]} to={"/contact"}>Get in Touch</Link>
+        <SiteLink css={[stylesButton, stylesBtnSecondary, stylesContactBtn]} href={"/contact"}>Get in Touch</SiteLink>
         <SecondaryAnchor href={ZocDocURL} target={"_BLANK"} rel={"noopener"}>Book online with ZocDoc</SecondaryAnchor>
     </nav>
 
@@ -51,7 +51,7 @@ export const ContactBanner: React.FC<ShortCodeProps> = ({ className, children })
         description={"If you have any questions, get in touch with us! You can contact us by telephone on (815) 729 9900 or by email at info@aascmed.com. Or you can fill in our contact form."}
     >
         {children}
-        <Link css={[stylesButton, stylesBtnSecondary, { marginRight: `${gridSpacing / 2}em` }]} to={"/contact"}>Contact Us</Link>
+        <SiteLink css={[stylesButton, stylesBtnSecondary, { marginRight: `${gridSpacing / 2}em` }]} href={"/contact"}>Contact Us</SiteLink>
         <SecondaryAnchor href={ZocDocURL} target="_BLANK" rel="noopener">Book online with ZocDoc</SecondaryAnchor>
     </CalloutBanner>
 

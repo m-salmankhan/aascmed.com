@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Link } from "gatsby";
+import { SiteLink } from "../../shared/navigation/link";
 import { colours, gridSpacing } from "../../styles/theme";
 import Color from "color";
 import { breakpointStrings, mediaBreakpoints } from "../../styles/breakpoints";
@@ -21,7 +21,7 @@ interface ContentsItemProps {
 const ContentsItem: React.FC<ContentsItemProps> = ({ heading, active, activeIDs }) => {
     return (
         <li>
-            <Link className={active ? "active" : ""} to={heading.url}>{heading.title}</Link>
+            <SiteLink className={active ? "active" : ""} href={heading.url}>{heading.title}</SiteLink>
             {(heading.subHeadings.length > 0) &&
                 <ol>
                     {heading.subHeadings.map((subHeading, idx) =>

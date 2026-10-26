@@ -1,10 +1,13 @@
+import { getAstroServerConfig } from './config';
+
 export type DraftPreview = { title: string; source: 'fixture' | 'strapi' };
 const fixture: DraftPreview = { title: 'Proof draft: seasonal allergy update', source: 'fixture' };
 
 /** One bounded request per page render. No response or draft data is cached. */
 export async function getDraftPreview(): Promise<DraftPreview> {
   if (import.meta.env.PUBLIC_ASTRO_TARGET === 'static') return fixture;
-  const endpoint = process.env.ASTRO_DRAFT_API_URL;
+  const { draftApiUrl, strapiToken } = getAstroServerConfig();
+  const endpoint = draftApiUrl;
   if (!endpoint) return fixture;
   let url: URL;
   try {
@@ -16,7 +19,7 @@ export async function getDraftPreview(): Promise<DraftPreview> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 1800);
   try {
-    const token = process.env.ASTRO_STRAPI_TOKEN;
+    const token = strapiToken;
     url.searchParams.set('status', 'draft');
     const headers = new Headers({ 'Cache-Control': 'no-store' });
     if (token) headers.set('Authorization', `Bearer ${token}`);

@@ -5,7 +5,7 @@ import { cols, gridContainer } from "../../styles/grid";
 import { mediaBreakpoints } from "../../styles/breakpoints";
 import { H3, stylesH1 } from "../headings";
 import { Logo } from "../logo";
-import { Link } from "gatsby";
+import { SiteLink } from "../../shared/navigation/link";
 import { HorizontalCalloutBanner } from "../cta/horizontal-banner";
 
 const stylesFooter = css`
@@ -56,13 +56,13 @@ export const Footer = () => {
                     <H3 css={stylesH1}>Navigation</H3>
                     <nav>
                         <ul>
-                            <li><Link to={"/"}>Home</Link></li>
-                            <li><Link to={"/conditions/"}>Conditions</Link></li>
-                            <li><Link to={"/service-updates/"}>Service Updates</Link></li>
-                            <li><Link to={"/blog/"}>Blog Posts</Link></li>
-                            <li><Link to={"/providers/"}>Meet the team</Link></li>
-                            <li><Link to={"/clinics/"}>Practice Locations</Link></li>
-                            <li><Link to={"/privacy/"}>Privacy Policy</Link></li>
+                            <li><SiteLink href={"/"}>Home</SiteLink></li>
+                            <li><SiteLink href={"/conditions/"}>Conditions</SiteLink></li>
+                            <li><SiteLink href={"/service-updates/"}>Service Updates</SiteLink></li>
+                            <li><SiteLink href={"/blog/"}>Blog Posts</SiteLink></li>
+                            <li><SiteLink href={"/providers/"}>Meet the team</SiteLink></li>
+                            <li><SiteLink href={"/clinics/"}>Practice Locations</SiteLink></li>
+                            <li><SiteLink href={"/privacy/"}>Privacy Policy</SiteLink></li>
                         </ul>
                     </nav>
                 </div>
