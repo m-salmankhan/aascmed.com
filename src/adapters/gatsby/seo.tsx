@@ -20,11 +20,14 @@ const GatsbySEODataQuery = graphql`
   }
 `;
 
+/** Caller-supplied SEO display values; Gatsby provides the site and tracking settings. */
+type GatsbySEOProps = Omit<React.ComponentProps<typeof SEO>, "siteSettings" | "trackingSettings">;
+
 /** Read Gatsby metadata and pass normalized settings to the shared SEO view.
- * @param props SEO display props other than framework-provided site and tracking settings.
+ * @param props SEO display values; Gatsby supplies site and tracking settings.
  * @returns The shared SEO component with data from Gatsby queries.
  */
-export function GatsbySEO(props: Omit<React.ComponentProps<typeof SEO>, "siteSettings" | "trackingSettings">): React.ReactElement {
+export function GatsbySEO(props: GatsbySEOProps): React.ReactElement {
   const data = useStaticQuery<Queries.GatsbySEOAdapterQuery>(GatsbySEODataQuery);
 
   return (
