@@ -1,6 +1,7 @@
 import React, { ComponentProps, useEffect, useState } from "react";
 import { normalizePath, useCurrentPath } from "./current-path";
 
+/** Browser anchor props plus route-aware active-state options. */
 type SiteLinkProps = Omit<ComponentProps<"a">, "href"> & {
   href: string;
   /** Add the class when this link points at the current document path. */
@@ -9,7 +10,10 @@ type SiteLinkProps = Omit<ComponentProps<"a">, "href"> & {
   partiallyActive?: boolean;
 };
 
-/** A framework-neutral link. It deliberately uses normal browser navigation. */
+/** Render a browser anchor with optional exact or child-route active styling.
+ * @param props Anchor attributes, destination, active class, and matching options.
+ * @returns An anchor with `aria-current="page"` on exact path matches.
+ */
 export const SiteLink: React.FC<SiteLinkProps> = ({
   href,
   activeClassName,

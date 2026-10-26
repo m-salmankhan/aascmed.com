@@ -14,6 +14,10 @@ export const wrapRootElement: GatsbySSR["wrapRootElement"] = ({ element }) => (
   </GatsbySiteDataAdapter>
 );
 
+/** Provide the current route during SSR so active links match hydrated markup.
+ * @param props Gatsby page element and location pathname.
+ * @returns The page element wrapped in the current-path provider.
+ */
 export const wrapPageElement: GatsbySSR["wrapPageElement"] = ({ element, props }) => (
   <CurrentPathProvider path={props.location.pathname}>{element}</CurrentPathProvider>
 );

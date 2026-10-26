@@ -14,6 +14,10 @@ export const wrapRootElement: GatsbyBrowser["wrapRootElement"] = ({ element }) =
   </GatsbySiteDataAdapter>
 );
 
+/** Provide the current browser route to shared page links.
+ * @param props Gatsby page element and location pathname.
+ * @returns The page element wrapped in the current-path provider.
+ */
 export const wrapPageElement: GatsbyBrowser["wrapPageElement"] = ({ element, props }) => (
   <CurrentPathProvider path={props.location.pathname}>{element}</CurrentPathProvider>
 );
