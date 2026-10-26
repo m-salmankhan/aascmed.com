@@ -42,14 +42,14 @@ async function resolveCommentTargets({ github, owner, repo, pullNumber, actor })
       }
     });
   assert.ok(deployment, `Netlify has not reported a deploy preview for PR #${pullNumber} at the current commit yet`);
-  const newestContextStatus = contextStatuses[0];
-  if (newestContextStatus.created_at > deployment.created_at) {
-    let newestHost;
+  const newerStatuses = contextStatuses.filter(status => status.created_at > deployment.created_at);
+  for (const newerStatus of newerStatuses) {
+    let newerHost;
     try {
-      newestHost = new URL(newestContextStatus.target_url).hostname;
+      newerHost = new URL(newerStatus.target_url).hostname;
     } catch {}
     assert.match(
-      newestHost || "",
+      newerHost || "",
       /^deploy-preview-\d+--aascmed\.netlify\.app$/,
       "Netlify reported a newer preview status that cannot be matched to a PR; wait for it to finish before retrying",
     );

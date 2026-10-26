@@ -139,3 +139,13 @@ test("rejects a newer ambiguous Netlify status rather than labeling an older suc
 
   await assert.rejects(setupState.resolve(), /newer preview status that cannot be matched/i);
 });
+
+test("rejects an ambiguous status between the requested PR success and another PR's newer success", async () => {
+  const setupState = setup({ statuses: [
+    status({ url: "https://deploy-preview-121--aascmed.netlify.app/", createdAt: "2026-01-03T00:00:00Z" }),
+    status({ url: "https://app.netlify.com/projects/aascmed/deploys/pending", state: "pending", createdAt: "2026-01-02T00:00:00Z" }),
+    status({ createdAt: "2026-01-01T00:00:00Z" }),
+  ] });
+
+  await assert.rejects(setupState.resolve(), /newer preview status that cannot be matched/i);
+});
