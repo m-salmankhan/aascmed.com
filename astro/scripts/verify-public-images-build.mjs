@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
-import { access, readFile, rm, writeFile } from 'node:fs/promises';
+import { access, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { spawn } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -9,18 +9,19 @@ import { publicImagesIntegration } from '../src/integrations/public-images.ts';
 
 const astroRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const routePath = path.join(astroRoot, 'src', 'pages', 'public-image-fixture.astro');
+const configPath = path.join(astroRoot, 'astro.config.public-images-fixture.mjs');
 const outputImagePath = path.join(astroRoot, 'dist-static', 'og-images', 'blog', 'fixture-post-hero-bg.jpg');
 const outputRoutePath = path.join(astroRoot, 'dist-static', 'public-image-fixture', 'index.html');
-const stagingDir = path.join(astroRoot, '.astro', 'public-images');
-const cacheDir = path.join(astroRoot, '.astro', 'public-image-cache');
-const manifestPath = path.join(astroRoot, '.astro', 'public-image-manifest.json');
-const publishedSnapshotPath = path.join(astroRoot, '.astro', 'published-content-snapshot.json');
+const stagingDir = path.join(astroRoot, '.astro', 'public-images-fixture');
+const cacheDir = path.join(astroRoot, '.astro', 'public-image-cache-fixture');
+const manifestPath = path.join(astroRoot, '.astro', 'public-image-manifest-fixture.json');
+const publishedSnapshotPath = path.join(astroRoot, '.astro', 'published-content-snapshot-fixture.json');
 
 async function exists(target) {
   try { await access(target); return true; } catch { return false; }
 }
 
-for (const target of [routePath, outputImagePath, outputRoutePath, stagingDir, cacheDir, manifestPath, publishedSnapshotPath]) {
+for (const target of [routePath, configPath, outputImagePath, outputRoutePath, stagingDir, cacheDir, manifestPath, publishedSnapshotPath]) {
   assert.equal(await exists(target), false, `Refusing to overwrite existing fixture path: ${target}`);
 }
 
@@ -42,6 +43,23 @@ const manifest = await getPublishedImageManifest();
 const media = manifest?.mediaByRoute['blog:fixture-post'];
 ---
 <html><head><meta property="og:image" content={image} /></head><body><img id="responsive" src={media?.src} srcset={media?.formats?.[1]?.srcSet} /></body></html>
+`;
+
+const fixtureConfig = `
+import base from './astro.config.static.mjs';
+import { publicImagesIntegration } from './src/integrations/public-images.ts';
+import path from 'node:path';
+const integration = publicImagesIntegration({
+  loadPublishedCollections: async () => {
+    const { getPublishedBuildSnapshot } = await import('./src/server/content/loaders.ts');
+    return getPublishedBuildSnapshot({ staticBuild: true });
+  },
+  stagingDir: path.resolve('.astro/public-images-fixture'),
+  cacheDir: path.resolve('.astro/public-image-cache-fixture'),
+  manifestPath: path.resolve('.astro/public-image-manifest-fixture.json'),
+});
+const integrations = base.integrations.filter((item) => item.name !== 'aasc-public-images');
+export default { ...base, integrations: [...integrations, integration] };
 `;
 
 const requests = [];
@@ -67,18 +85,26 @@ const address = mockApi.address();
 assert.ok(address && typeof address === 'object');
 
 try {
+  await writeFile(configPath, fixtureConfig, 'utf8');
   await writeFile(routePath, fixtureRoute, 'utf8');
   const cli = path.join(astroRoot, 'node_modules', 'astro', 'bin', 'astro.mjs');
-  const build = spawn(process.execPath, [cli, 'build', '--config', 'astro.config.static.mjs'], {
-    cwd: astroRoot,
-    stdio: 'inherit',
-    env: { ...process.env, ASTRO_STRAPI_API_URL: `http://127.0.0.1:${address.port}/api` },
-  });
-  const buildStatus = await new Promise((resolve, reject) => {
-    build.once('error', reject);
-    build.once('close', (code) => resolve(code));
-  });
-  assert.equal(buildStatus, 0, 'Astro static fixture build succeeds');
+  const runStaticBuild = async () => {
+    const build = spawn(process.execPath, [cli, 'build', '--config', path.basename(configPath)], {
+      cwd: astroRoot,
+      stdio: 'inherit',
+      env: {
+        ...process.env,
+        ASTRO_STRAPI_API_URL: `http://127.0.0.1:${address.port}/api`,
+        ASTRO_PUBLISHED_CONTENT_SNAPSHOT_PATH: publishedSnapshotPath,
+        ASTRO_PUBLIC_IMAGE_MANIFEST_PATH: manifestPath,
+      },
+    });
+    return new Promise((resolve, reject) => {
+      build.once('error', reject);
+      build.once('close', resolve);
+    });
+  };
+  assert.equal(await runStaticBuild(), 0, 'Astro static fixture build succeeds');
 
   const html = await readFile(outputRoutePath, 'utf8');
   assert.match(html, /content="\/og-images\/blog\/fixture-post-hero-bg\.jpg"/);
@@ -98,10 +124,19 @@ try {
   for (const kind of new Set(requests.map(({ kind }) => kind))) {
     assert.equal(requests.filter((request) => request.kind === kind).length, 1, `${kind} uses one collection fetch across image and route builds`);
   }
-  console.log('Astro static image integration passed: published snapshot reuse, page metadata URL, copied 1200×630 card, and SSR guard.');
+  const stagedCardPath = path.join(stagingDir, 'og-images', 'blog', 'fixture-post-hero-bg.jpg');
+  const stagedMediaPath = path.join(stagingDir, media.src.replace(/^\/+/, ''));
+  const cardBefore = await stat(stagedCardPath);
+  const mediaBefore = await stat(stagedMediaPath);
+  assert.equal(await runStaticBuild(), 0, 'second Astro static fixture build succeeds');
+  assert.equal(requests.length, 12, 'each build refreshes its snapshot once and prerender reuses it');
+  assert.equal((await stat(stagedCardPath)).mtimeMs, cardBefore.mtimeMs, 'unchanged social cards are reused from the private staging directory');
+  assert.equal((await stat(stagedMediaPath)).mtimeMs, mediaBefore.mtimeMs, 'unchanged responsive media files are reused');
+  console.log('Astro static image integration passed: one published snapshot per build, metadata URL, responsive output, persistent cache reuse, and SSR guard.');
 } finally {
   await new Promise((resolve) => mockApi.close(resolve));
   await rm(routePath, { force: true });
+  await rm(configPath, { force: true });
   await rm(outputImagePath, { force: true });
   await rm(outputRoutePath, { force: true });
   await Promise.all(generatedMediaPaths.map((target) => rm(target, { force: true })));

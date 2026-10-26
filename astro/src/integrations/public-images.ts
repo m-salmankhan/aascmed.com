@@ -11,6 +11,7 @@ export interface PublicImagesIntegrationOptions {
   siteTitle?: string;
   stagingDir?: string;
   cacheDir?: string;
+  manifestPath?: string;
 }
 
 /** Static-only Astro hook: build cards before routes prerender, then copy them into the final output. */
@@ -46,10 +47,11 @@ export function publicImagesIntegration(options: PublicImagesIntegrationOptions)
           }
         }
         generatedPaths = [...new Set(generatedPaths)];
-        const manifestPath = path.resolve(process.cwd(), '.astro', 'public-image-manifest.json');
+        const manifestPath = options.manifestPath || path.resolve(process.cwd(), '.astro', 'public-image-manifest.json');
         await mkdir(path.dirname(manifestPath), { recursive: true });
         await writeFile(manifestPath, `${JSON.stringify(imageBuild, null, 2)}\n`);
-        logger.info(`Prepared ${imageBuild.cards.length} published social cards and ${Object.keys(imageBuild.mediaByRoute).length} responsive media sets from the build snapshot.`);
+        const cachedCards = imageBuild.cards.filter((card) => card.wasCached).length;
+        logger.info(`Prepared ${imageBuild.cards.length} published social cards (${cachedCards} cached) and ${Object.keys(imageBuild.mediaByRoute).length} responsive media sets from the build snapshot.`);
       },
       'astro:build:done': async ({ dir }) => {
         if (!isStaticBuild || generatedPaths.length === 0) return;

@@ -104,7 +104,7 @@ async function loadPublishedBuildSnapshot(): Promise<PublishedContentSnapshot> {
 }
 
 let staticBuildSnapshot: Promise<PublishedContentSnapshot> | undefined;
-const buildSnapshotPath = () => path.resolve(process.cwd(), ".astro", "published-content-snapshot.json");
+const buildSnapshotPath = (override?: string) => override || process.env.ASTRO_PUBLISHED_CONTENT_SNAPSHOT_PATH || path.resolve(process.cwd(), ".astro", "published-content-snapshot.json");
 
 function isPublishedSnapshot(value: unknown): value is PublishedContentSnapshot {
   if (!value || typeof value !== "object") return false;
@@ -113,8 +113,8 @@ function isPublishedSnapshot(value: unknown): value is PublishedContentSnapshot 
     .every((key) => Array.isArray(snapshot[key]));
 }
 
-async function readPublishedSnapshotFile(): Promise<PublishedContentSnapshot | null> {
-  const filePath = buildSnapshotPath();
+async function readPublishedSnapshotFile(snapshotPath?: string): Promise<PublishedContentSnapshot | null> {
+  const filePath = buildSnapshotPath(snapshotPath);
   let serialized: string;
   try { serialized = await readFile(filePath, "utf8"); }
   catch (error) {
@@ -128,8 +128,8 @@ async function readPublishedSnapshotFile(): Promise<PublishedContentSnapshot | n
   return value;
 }
 
-async function writePublishedSnapshotFile(snapshot: PublishedContentSnapshot): Promise<void> {
-  const filePath = buildSnapshotPath();
+async function writePublishedSnapshotFile(snapshot: PublishedContentSnapshot, snapshotPath?: string): Promise<void> {
+  const filePath = buildSnapshotPath(snapshotPath);
   await mkdir(path.dirname(filePath), { recursive: true });
   const temporaryPath = `${filePath}.${process.pid}.${Date.now()}.tmp`;
   await writeFile(temporaryPath, `${JSON.stringify(snapshot)}\n`, { flag: "wx" });
@@ -149,21 +149,21 @@ function memoizedSnapshot(work: Promise<PublishedContentSnapshot>): Promise<Publ
  * Astro's separate Vite prerender context can reuse it without another CMS
  * collection crawl. Draft/SSR reads never read or write this file.
  */
-export async function getPublishedBuildSnapshot(options: { staticBuild?: boolean } = {}): Promise<PublishedContentSnapshot> {
+export async function getPublishedBuildSnapshot(options: { staticBuild?: boolean; snapshotPath?: string } = {}): Promise<PublishedContentSnapshot> {
   const isStaticBuild = options.staticBuild ?? import.meta.env?.PUBLIC_ASTRO_TARGET === "static";
   if (!isStaticBuild) return loadPublishedBuildSnapshot();
   if (options.staticBuild === true) {
     return memoizedSnapshot(loadPublishedBuildSnapshot().then(async (snapshot) => {
-      await writePublishedSnapshotFile(snapshot);
+      await writePublishedSnapshotFile(snapshot, options.snapshotPath);
       return snapshot;
     }));
   }
   if (!staticBuildSnapshot) {
     staticBuildSnapshot = (async () => {
-      const existing = await readPublishedSnapshotFile();
+      const existing = await readPublishedSnapshotFile(options.snapshotPath);
       if (existing) return existing;
       const snapshot = await loadPublishedBuildSnapshot();
-      await writePublishedSnapshotFile(snapshot);
+      await writePublishedSnapshotFile(snapshot, options.snapshotPath);
       return snapshot;
     })().catch((error) => {
       staticBuildSnapshot = undefined;

@@ -89,11 +89,7 @@ export async function buildPublishedSocialCards(
 /** Read the generated public descriptors only from Astro's static build context. */
 export async function getPublishedImageManifest(): Promise<PublishedImageBuildResult | null> {
   if (import.meta.env?.PUBLIC_ASTRO_TARGET !== 'static') return null;
-  const manifestPath = path.resolve(process.cwd(), '.astro', 'public-image-manifest.json');
-  try {
-    const { readFile } = await import('node:fs/promises');
-    return JSON.parse(await readFile(manifestPath, 'utf8')) as PublishedImageBuildResult;
-  } catch {
-    return null;
-  }
+  const manifestPath = process.env.ASTRO_PUBLIC_IMAGE_MANIFEST_PATH || path.resolve(process.cwd(), '.astro', 'public-image-manifest.json');
+  const { readFile } = await import('node:fs/promises');
+  return JSON.parse(await readFile(manifestPath, 'utf8')) as PublishedImageBuildResult;
 }
