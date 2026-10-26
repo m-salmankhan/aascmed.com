@@ -37,5 +37,7 @@ export async function getDraftPreview(): Promise<DraftPreview> {
     return fixture;
   } finally {
     clearTimeout(timeout);
+    // Cancel an unread error response body as well as any pending request.
+    controller.abort();
   }
 }
