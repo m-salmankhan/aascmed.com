@@ -50,6 +50,19 @@ function stringOrEmpty(value: string | null | undefined): string {
   return value || "";
 }
 
+/** Keep absent optional fields out of objects crossing the JSON content boundary. */
+function omitUndefined<T>(value: T): T {
+  if (Array.isArray(value)) return value.map(omitUndefined) as T;
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .filter(([, child]) => child !== undefined)
+        .map(([key, child]) => [key, omitUndefined(child)]),
+    ) as T;
+  }
+  return value;
+}
+
 function readInternalContent(value: string | null | undefined): Record<string, unknown> | null {
   if (!value) return null;
   try {
@@ -97,7 +110,7 @@ export function mapGatsbySiteSettings(metadata: { title?: string | null; siteUrl
 }
 
 export function mapGatsbyBlog(node: GatsbyNode): BlogRecord {
-  return {
+  return omitUndefined({
     id: node.id,
     slug: node.slug || null,
     title: stringOrEmpty(node.title || node.heading) || "Untitled",
@@ -106,11 +119,11 @@ export function mapGatsbyBlog(node: GatsbyNode): BlogRecord {
     date: node.date || null,
     content: mapGatsbyBlocks(node, "content"),
     thumbnail: mapGatsbyMedia(node.thumbnail),
-  };
+  }) as BlogRecord;
 }
 
 export function mapGatsbyCondition(node: GatsbyNode): ConditionRecord {
-  return {
+  return omitUndefined({
     id: node.id,
     slug: node.slug || null,
     title: stringOrEmpty(node.title || node.heading) || "Untitled",
@@ -119,7 +132,7 @@ export function mapGatsbyCondition(node: GatsbyNode): ConditionRecord {
     order: node.order,
     content: mapGatsbyBlocks(node, "content"),
     thumbnail: mapGatsbyMedia(node.thumbnail),
-  };
+  }) as ConditionRecord;
 }
 
 export function mapGatsbyProvider(node: GatsbyNode & {
@@ -127,7 +140,7 @@ export function mapGatsbyProvider(node: GatsbyNode & {
   retirementNotice?: ProviderRecord["retirementNotice"];
   review?: ProviderRecord["review"];
 }): ProviderRecord {
-  return {
+  return omitUndefined({
     id: node.id,
     slug: node.slug || null,
     title: node.name?.fullName || "Untitled",
@@ -138,7 +151,7 @@ export function mapGatsbyProvider(node: GatsbyNode & {
     retirementNotice: node.retirementNotice,
     review: node.review,
     image: mapGatsbyMedia(node.image),
-  };
+  }) as ProviderRecord;
 }
 
 export function mapGatsbyClinic(node: GatsbyNode & {
@@ -146,7 +159,7 @@ export function mapGatsbyClinic(node: GatsbyNode & {
   contact?: { phone?: string | null; fax?: string | null } | null;
   hours?: Array<{ day?: string | null; open?: boolean | null; opening_hours?: { start_time?: string | null; end_time?: string | null } | null; shot_hours?: { start_time?: string | null; end_time?: string | null } | null }>;
 }): ClinicRecord {
-  return {
+  return omitUndefined({
     id: node.id,
     slug: node.slug || null,
     title: node.title || node.clinic_name || "Untitled Clinic",
@@ -167,18 +180,18 @@ export function mapGatsbyClinic(node: GatsbyNode & {
       openingHours: hour.opening_hours ? { startTime: hour.opening_hours.start_time || undefined, endTime: hour.opening_hours.end_time || undefined } : undefined,
       shotHours: hour.shot_hours ? { startTime: hour.shot_hours.start_time || undefined, endTime: hour.shot_hours.end_time || undefined } : undefined,
     })),
-  };
+  }) as ClinicRecord;
 }
 
 export function mapGatsbyServiceUpdate(node: GatsbyNode): ServiceUpdateRecord {
-  return {
+  return omitUndefined({
     id: node.id,
     slug: node.slug || null,
     title: node.title || "Untitled",
     description: node.description || undefined,
     date: node.date || null,
     body: mapGatsbyBlocks(node, "body"),
-  };
+  }) as ServiceUpdateRecord;
 }
 
 /** Type guard for adapter data that is safe to pass through as JSON. */
