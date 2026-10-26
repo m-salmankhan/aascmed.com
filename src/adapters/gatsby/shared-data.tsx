@@ -37,10 +37,10 @@ const GatsbySharedDataQuery = graphql`
 `;
 
 /** Query Gatsby site data and provide framework-neutral values to the React tree.
- * @param props Optional React children.
+ * @param children Optional React children.
  * @returns Children inside the provider populated from the Gatsby query.
  */
-const GatsbySharedDataAdapter: React.FC<{ children?: ReactNode }> = ({ children }) => {
+function GatsbySharedDataAdapter({ children }: { children?: ReactNode }): React.ReactElement {
   const data = useStaticQuery<Queries.GatsbySharedSiteDataQuery>(GatsbySharedDataQuery);
   const siteSettings = mapGatsbySiteSettings(data.site?.siteMetadata || {});
   const value: SiteData = {
@@ -51,6 +51,6 @@ const GatsbySharedDataAdapter: React.FC<{ children?: ReactNode }> = ({ children 
   };
 
   return <SiteDataProvider value={value}>{children}</SiteDataProvider>;
-};
+}
 
 export default GatsbySharedDataAdapter;

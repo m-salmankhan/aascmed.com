@@ -26,9 +26,9 @@ const SiteDataContext = createContext<SiteData>(defaultSiteData);
  * @param props Normalized site values and optional React children.
  * @returns The children inside the site-data context provider.
  */
-export const SiteDataProvider: React.FC<{ value: SiteData; children?: ReactNode }> = ({ value, children }) => (
-  <SiteDataContext.Provider value={value}>{children}</SiteDataContext.Provider>
-);
+export function SiteDataProvider(props: { value: SiteData; children?: ReactNode }): React.ReactElement {
+  return <SiteDataContext.Provider value={props.value}>{props.children}</SiteDataContext.Provider>;
+}
 
 /** Read shared site data from the nearest provider.
  * @returns Site settings, tracking IDs, announcement, and clinic options.
