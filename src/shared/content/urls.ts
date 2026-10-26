@@ -27,15 +27,11 @@ export function clinicPath(clinic: Pick<ClinicRecord, "slug" | "clinicName">): s
   return pathFor("clinics", clinic.slug || fallbackSlug);
 }
 
-/**
- * Gatsby archive links use an undated fallback when date is absent. Valid
- * calendar dates are interpreted as civil dates so timezone offsets cannot
- * move an item into a different month.
- */
+/** Use the stored civil date to preserve dated service-update URLs. */
 export function serviceUpdatePath(update: Pick<ServiceUpdateRecord, "slug" | "date">): string | null {
   const basePath = pathFor("service-updates", update.slug);
   if (!basePath) return null;
-  if (!update.date) return basePath;
+  if (!update.date) return null;
   const date = civilDateParts(update.date);
   if (!date) return null;
   return `/service-updates/${date.year}/${date.month}/${basePath.split("/")[2]}/`;
@@ -51,8 +47,10 @@ export function sortByOrder<T extends { order?: number | null }>(records: readon
 export function sortByDateDescending<T extends { date?: string | null }>(records: readonly T[]): T[] {
   return records.map((record, index) => ({ record, index }))
     .sort((a, b) => {
-      const left = a.record.date ? Date.parse(a.record.date) : Number.NEGATIVE_INFINITY;
-      const right = b.record.date ? Date.parse(b.record.date) : Number.NEGATIVE_INFINITY;
+      const parsedLeft = a.record.date ? Date.parse(a.record.date) : Number.NEGATIVE_INFINITY;
+      const parsedRight = b.record.date ? Date.parse(b.record.date) : Number.NEGATIVE_INFINITY;
+      const left = Number.isFinite(parsedLeft) ? parsedLeft : Number.NEGATIVE_INFINITY;
+      const right = Number.isFinite(parsedRight) ? parsedRight : Number.NEGATIVE_INFINITY;
       return right - left || a.index - b.index;
     })
     .map(({ record }) => record);
