@@ -109,5 +109,18 @@ export interface ServiceUpdateRecord extends ContentRecord {
 export interface SiteSettings {
   title: string;
   url?: string;
+  twitterHandle?: string;
   defaultImage?: MediaDescriptor;
+}
+
+export interface TrackingSettings {
+  googleAnalyticsId: string;
+  googleTagManagerId: string;
+  pixelId: string;
+}
+
+export interface AnnouncementSettings {
+  enabled: boolean;
+  type: "error" | "info" | "success";
+  message?: JsonValue[];
 }

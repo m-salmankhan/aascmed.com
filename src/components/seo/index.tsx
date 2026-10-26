@@ -1,9 +1,7 @@
 import React, { useEffect } from "react";
-import { useSiteMetadata } from "../../hooks/useSiteMetadata";
 import { ReactNode } from "react";
 import { colours } from "../../styles/theme";
-import { Script } from "gatsby";
-import {useAnalyticsIDs} from "../../hooks/useAnalyticsIDs";
+import type { SiteSettings, TrackingSettings } from "../../shared/content/models";
 
 interface SEOProps {
     description: string
@@ -13,6 +11,8 @@ interface SEOProps {
     useTracking?: boolean
     image?: string
     children?: ReactNode
+    siteSettings: SiteSettings
+    trackingSettings: TrackingSettings
 }
 
 const Favicons = () =>
@@ -26,14 +26,18 @@ const Favicons = () =>
     </>
 
 export const SEO = (props: SEOProps) => {
-    const siteMetadata = useSiteMetadata();
+    const siteMetadata = props.siteSettings;
     const siteTitle = siteMetadata.title;
     const appendBusinessNameToTitle = props.appendBusinessNameToTitle === undefined ? true : props.appendBusinessNameToTitle;
     const useTracking = props.useTracking === true;
-    const siteURL = siteMetadata.url;
-    const twitterHandle = siteMetadata.twitter;
+    const siteURL = siteMetadata.url || "";
+    const twitterHandle = siteMetadata.twitterHandle;
 
-    const analyticsIDs = useAnalyticsIDs()
+    const analyticsIDs = {
+        googleAnalyticsID: props.trackingSettings.googleAnalyticsId,
+        googleTagManagerID: props.trackingSettings.googleTagManagerId,
+        pixelID: props.trackingSettings.pixelId,
+    };
 
     const pageTitle = props.title ?
         (props.title + (appendBusinessNameToTitle ? ` | ${siteTitle}` : "")) :

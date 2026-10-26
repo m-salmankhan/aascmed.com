@@ -8,7 +8,7 @@ import { H1, H4 } from "../components/headings";
 import { ShareButtons } from "../components/social-media/share";
 import { InfoNotice } from "../components/posts/shortcode-components";
 import { GatsbyImage } from "gatsby-plugin-image";
-import { SEO } from "../components/seo";
+import { GatsbySEO as SEO } from "../adapters/gatsby/seo";
 import { StrapiDynamicZoneRenderer, StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 
 const stylesImage = css({

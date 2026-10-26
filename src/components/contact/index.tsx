@@ -1,5 +1,5 @@
 import { Checkbox, DropdownInput, TextArea, TextInput } from "../forms";
-import { Script, graphql, useStaticQuery } from "gatsby";
+import { Script } from "gatsby";
 import React, { FormEventHandler, useEffect, useRef, useState } from "react";
 import { PrimaryButton } from "../buttons";
 import { css } from "@emotion/react";
@@ -9,6 +9,7 @@ import { ErrorNotice, SuccessNotice } from "../forms/notices";
 import { Loading } from "../loading";
 import { stylesH4 } from "../headings";
 import {useGTag} from "../../hooks/useGTag";
+import { useSiteData } from "../../shared/data/site-data";
 
 
 enum FormState {
@@ -31,14 +32,7 @@ export const ContactForm: React.FC<ContactFormProps> = (props) => {
 
     const gtag = useGTag();
 
-    const data: Queries.ClinicNamesQuery = useStaticQuery(graphql`
-    query ClinicNames {
-      allStrapiClinic {
-        clinics: nodes {
-          clinic_name
-        }
-      }
-    }`);
+    const { clinicOptions } = useSiteData();
 
     // update state variables. actual api call happens on rerender
     const formSubmisisonHandler: FormEventHandler<HTMLFormElement> = (event) => {
@@ -163,8 +157,8 @@ export const ContactForm: React.FC<ContactFormProps> = (props) => {
                     props.clinic === undefined ?
                         <DropdownInput label={"Preferred Location"} name="clinic" defaultValue={"none"} error={fieldErrors?.clinic?.join(". ")}>
                             <option value={"none"} disabled={true}>Select a clinic</option>
-                            {data.allStrapiClinic.clinics.map((clinic, idx) =>
-                                <option key={idx} value={clinic.clinic_name || idx}>{clinic.clinic_name}</option>
+                            {clinicOptions.map((clinic) =>
+                                <option key={clinic} value={clinic}>{clinic}</option>
                             )}
                         </DropdownInput> :
                         <input type="hidden" name="clinic" value={props.clinic} />

@@ -5,7 +5,7 @@ import { Breadcrumbs } from "../components/breadcrumbs";
 import { Container } from "../components/containers";
 import { gridSpacing } from "../styles/theme";
 import { PracticeArchive, PracticeSummary } from "../components/practices/practice-archive";
-import { SEO } from "../components/seo";
+import { GatsbySEO as SEO } from "../adapters/gatsby/seo";
 import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 
 const PracticesPage = ({ data }: PageProps<Queries.PracticesArchiveQuery>) => {

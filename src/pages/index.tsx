@@ -14,7 +14,7 @@ import { Review } from "../components/patient-feedback/reviews";
 import { Container } from "../components/containers";
 import { PracticeArchive, PracticeSummary } from "../components/practices/practice-archive";
 import { ContactSection } from "../components/contact/full-form";
-import { SEO } from "../components/seo";
+import { GatsbySEO as SEO } from "../adapters/gatsby/seo";
 import { Footer } from "../components/footer";
 import { BlogArchive } from "../components/blog-posts";
 import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";

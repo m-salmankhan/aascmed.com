@@ -18,6 +18,9 @@ import {
   mapGatsbyMedia,
   mapGatsbyProvider,
   mapGatsbyServiceUpdate,
+  mapGatsbyAnnouncement,
+  mapGatsbySiteSettings,
+  mapGatsbyTrackingSettings,
   isJsonValue,
 } from "../../src/shared/content/gatsby-adapter.ts";
 import { validateContentRecord } from "../../src/shared/content/validation.ts";
@@ -137,6 +140,38 @@ test("Gatsby adapters keep blocks and media serializable and omit absent optiona
   assert.equal(mapGatsbyClinic({ id: "clinic-2", hours: null }).hours, undefined);
   assert.equal(isJsonValue(provider), true);
   assert.equal(isJsonValue(clinic), true);
+});
+
+test("shared Gatsby settings adapters produce plain values and preserve announcement blocks", () => {
+  const message = [{ type: "paragraph", children: [{ type: "text", text: "We are open." }] }];
+  assert.deepEqual(mapGatsbySiteSettings({ title: "AASC", siteUrl: "https://www.aascmed.com", twitterHandle: "@AASC" }), {
+    title: "AASC", url: "https://www.aascmed.com", twitterHandle: "@AASC",
+  });
+  assert.deepEqual(mapGatsbyTrackingSettings({ googleAnalyticsId: "G-TEST", googleTagManagerId: null, pixelId: "123" }), {
+    googleAnalyticsId: "G-TEST", googleTagManagerId: "", pixelId: "123",
+  });
+  assert.deepEqual(mapGatsbyAnnouncement({
+    enabled: true,
+    type: "success",
+    internal: { content: JSON.stringify({ message }) },
+  }), { enabled: true, type: "success", message });
+  assert.deepEqual(mapGatsbyAnnouncement({ enabled: true, type: "unexpected", internal: { content: "invalid" } }), {
+    enabled: true, type: "info",
+  });
+});
+
+test("shared query consumers stay free of Gatsby static queries", async () => {
+  const files = [
+    "../../src/components/AnnouncementBanner.tsx",
+    "../../src/components/contact/index.tsx",
+    "../../src/components/social-media/share.tsx",
+    "../../src/hooks/useSiteMetadata.ts",
+    "../../src/hooks/useAnalyticsIDs.ts",
+  ];
+  for (const file of files) {
+    const source = await readFile(new URL(file, import.meta.url), "utf8");
+    assert.doesNotMatch(source, /useStaticQuery|from ["']gatsby["'].*graphql|\bgraphql\s*`/, file);
+  }
 });
 
 test("shared model declarations stay free of framework nodes, GraphQL query types, and credentials", async () => {
