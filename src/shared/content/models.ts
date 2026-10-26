@@ -109,6 +109,7 @@ export interface ServiceUpdateRecord extends ContentRecord {
 export interface SiteSettings {
   title: string;
   url?: string;
+  /** Optional social account handle used by the SEO metadata. */
   twitterHandle?: string;
   defaultImage?: MediaDescriptor;
 }
