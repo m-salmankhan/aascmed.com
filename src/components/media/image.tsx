@@ -47,4 +47,3 @@ export function Image({ image, alt, fit, css: callerCss, loading = "lazy", decod
 export function HeroImage({ image, ...props }: ImageProps) {
   return <Image {...props} image={image} fit={props.fit || "cover"} loading="eager" fetchPriority="high" />;
 }
-
