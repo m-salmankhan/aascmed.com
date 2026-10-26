@@ -13,18 +13,18 @@ function report(annotations = [], unexpected = 0) {
   };
 }
 
-function options(annotations = []) {
+function options(annotations = [], commentId = "42") {
   const comments = [];
   const github = {
     rest: { pulls: {
       get: async () => ({ data: { state: "open", head: { sha: "candidate-sha" } } }),
-      listFiles: async () => {},
-      createReviewComment: async comment => { comments.push(comment); return { data: { html_url: "https://github.test/review" } }; },
+    }, issues: {
+      updateComment: async comment => { comments.push(comment); return { data: { html_url: "https://github.test/comment" } }; },
+      createComment: async comment => { comments.push(comment); return { data: { html_url: "https://github.test/comment" } }; },
     } },
-    paginate: async () => [{ filename: "src/pages/index.tsx" }],
   };
   return {
-    github, comments, owner: "owner", repo: "repo", pullNumber: "113", commitSha: "candidate-sha",
+    github, comments, owner: "owner", repo: "repo", pullNumber: "113", commentId, commitSha: "candidate-sha",
     report: report(annotations), runURL: "https://github.test/run", artifactURL: "https://github.test/artifact",
     candidateURL: "https://candidate.test/", referenceURL: "https://reference.test/", baselineId: "snapshot-42",
   };
@@ -47,31 +47,29 @@ test("review summary preserves functional failures and rejects missing or empty 
   }]) assert.throws(() => summarizeReport(invalid));
 });
 
-test("different pages produce a resolvable file-level review conversation with report links", async () => {
+test("different pages update the command comment in the PR conversation with report links", async () => {
   const input = options([difference]);
   const result = await publishReview(input);
   assert.equal(result.posted, true);
   assert.equal(input.comments.length, 1);
   const comment = input.comments[0];
-  assert.equal(comment.subject_type, "file");
-  assert.equal(comment.path, "src/pages/index.tsx");
-  assert.equal(comment.commit_id, "candidate-sha");
-  assert.equal(comment.pull_number, 113);
+  assert.equal(comment.comment_id, 42);
   assert.match(comment.body, /mobile/);
   assert.match(comment.body, /Changed pixels/);
   assert.match(comment.body, /https:\/\/github.test\/artifact/);
   assert.match(comment.body, /https:\/\/github.test\/run/);
   assert.match(comment.body, /snapshot-42/);
-  assert.match(comment.body, /Resolve this conversation/);
-  assert.match(comment.body, /does not override functional/);
+  assert.doesNotMatch(comment.body, /Resolve this conversation/);
+  assert.match(comment.body, /functional or execution failures still fail/i);
   assert.match(comment.body, /\| Viewport \| Page\/check \| Differences \|\n\| --- \| --- \| --- \|\n\|/);
 });
 
-test("an unchanged comparison posts no review conversation", async () => {
+test("an unchanged comparison updates the command comment with a no-differences result", async () => {
   const input = options();
   const result = await publishReview(input);
-  assert.equal(result.posted, false);
-  assert.equal(input.comments.length, 0);
+  assert.equal(result.posted, true);
+  assert.equal(input.comments.length, 1);
+  assert.match(input.comments[0].body, /No reference differences found/);
 });
 
 test("functional failures remain visible even when reference differences are advisory", async () => {
@@ -103,7 +101,7 @@ test("review publication rejects invalid PR numbers and missing artifacts", asyn
 
 test("review API failures are surfaced instead of returning a successful result", async () => {
   const input = options([difference]);
-  input.github.rest.pulls.createReviewComment = async () => { throw new Error("API permission denied"); };
+  input.github.rest.issues.updateComment = async () => { throw new Error("API permission denied"); };
   await assert.rejects(() => publishReview(input), /API permission denied/);
 });
 

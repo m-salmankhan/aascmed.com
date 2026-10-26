@@ -162,21 +162,42 @@ Open the last HTML report with `yarn playwright show-report`.
 take roughly 30 seconds locally, excluding dependency/browser installation.
 They protect the harness, **not a deployed PR's application behavior**.
 
-The website suite is intentionally **manual**, not a required network/CMS-heavy
-check on every commit. A fresh Gatsby build alone took about 4 minutes locally;
-full-site comparisons add multiple minutes, live fonts/maps and a matched
-reference deployment. A mutable production URL is not a reliable automatic
-baseline. Run the manual website job before approving migration/refactor work.
+The website suite is **on demand**, not a required network/CMS-heavy check on
+every commit. A fresh Gatsby build alone took about 4 minutes locally; full-site
+comparisons add multiple minutes, live fonts/maps and a reference deployment.
+For a quick PR review, same-repository PRs get a top-level instruction comment: after the
+Netlify deploy preview for the current head is ready, comment `/regression-check`.
+That run compares the PR's `deploy-preview-N--aascmed.netlify.app` deployment
+with `main--aascmed.netlify.app`, after verifying that the PR includes current
+`main` and that Netlify reported a successful preview for the exact head commit.
+It records the PR head and the main commit seen when the run started. Netlify's
+`main--` URL is a moving branch alias, so it can still serve the previous
+successful deploy while a newer main deploy is pending or has failed. This is a
+quick, advisory comparison against the main deploy alias, not a commit-pinned
+baseline. No content export or freeze is needed. If page text, photos, or other
+published content changed between the builds, those changes can appear in the
+report alongside code and layout changes. The fast infrastructure job
+remains separate from both browser comparison paths. The command comment is
+updated with a running notice and then the results, all in the PR conversation;
+it does not create a review comment that needs resolving.
 
-After this workflow is merged into the default branch, choose **Actions >
-Regression tests > Run workflow**, select the branch containing the intended test
-code at the current head of the intended open PR, then enter:
+For an on-demand PR comparison, wait for the Netlify preview deployment to
+succeed, then comment `/regression-check` (`/run-regression` is also accepted as
+an alias). The workflow checks that the PR is open,
+targets current `main`, comes from this repository, and has a successful Netlify
+preview status for its current head commit. Only repository collaborators with
+write access can trigger it. The workflow code runs from the default branch for
+comment-triggered runs; it does not check out or execute PR code.
+
+To compare custom deployments instead, choose **Actions > Regression tests > Run
+workflow**, select the branch containing the intended test code at the current
+head of the intended open PR, then enter:
 
 - `pull_request_number`: that PR's number; the job rejects closed PRs or a
   selected test-code commit that no longer matches the PR head;
 - `candidate_url`: the deployed candidate from that PR commit;
-- `reference_url`: the immutable reference built from matching content;
-- `baseline_id`: base/candidate deployment or commit IDs and CMS snapshot ID.
+- `reference_url`: the reference deployment;
+- `baseline_id`: identifiers for the reference and candidate deployments.
 
 Manual runs first execute the infrastructure gate, then the full website suite
 (30-minute timeout). The run summary records URLs, baseline ID and test-code
@@ -186,35 +207,37 @@ deployment commit explicitly. No CMS/deployment secrets are needed by these jobs
 
 ### Reviewing and accepting differences
 
-After the manual run, `ci/review.js` reads the actual Playwright JSON report.
-If reference differences exist, CI creates **one resolvable file-level PR review
-conversation** listing affected pages/viewports and difference categories,
-including changed-pixel counts or screenshot dimensions. It links the CI run and
-downloadable report with reference/candidate/difference images and contract JSON.
-Download and extract the artifact, then open its HTML report with
-`yarn playwright show-report <extracted-playwright-report-directory>`.
-Images are in the report, not embedded directly in the PR comment.
+After a browser comparison, `ci/review.js` reads the actual Playwright JSON report.
+The command's top-level PR conversation comment is updated with the affected
+pages/viewports and difference categories, including changed-pixel counts or
+screenshot dimensions. It links the CI run and downloadable report with
+reference/candidate/difference images and contract JSON. An unchanged comparison
+updates the same comment with a no-differences result. Download and extract the
+artifact, then open its HTML report with
+`yarn playwright show-report <extracted-playwright-report-directory>`. Images
+are in the report, not embedded directly in the PR comment.
 
 1. Review the differences. An intentional background/content/design change does
    not require weakening the tests or making the old and new sites identical.
-2. Fix unexpected regressions, or **resolve the conversation** to acknowledge
-   intentional differences. Each manual run with differences creates a fresh
-   conversation; an older resolution does not approve later results.
+2. Fix unexpected regressions or decide whether intentional differences are
+   acceptable. The comparison comment reports results but does not create a
+   review thread or gate merging.
 3. Merge once functional checks and the rest of the PR review are satisfied.
 
-Enable **Require conversation resolution before merging** in the main branch's
-protection/ruleset if GitHub should enforce that acknowledgement. The workflow
-does not change repository merge rules. Reference differences themselves never
-turn the CI job red; resolving a conversation does not override functional
-failures. Publishing/API failures, missing/empty reports and stale PR heads are
-infrastructure errors and fail the job rather than silently omitting the review.
-An unchanged comparison creates no conversation; its summary is still recorded
-on the Actions run. A cancelled run is not an acceptance result.
+Reference differences themselves never turn the CI job red. Functional or
+execution failures still fail the job and remain visible in the published
+results. Publishing/API failures, missing/empty reports and stale PR heads are
+infrastructure errors and fail the job. A cancelled run is not an acceptance
+result.
 
-Only the manually dispatched browser job receives `pull-requests: write`, using
-GitHub's built-in token. Automatic PR infrastructure jobs remain read-only.
-No Kaneo credential or external image hosting is needed. Manual dispatch executes
-the selected branch's test code with that permission, so run only trusted branches.
+Only browser runs and the same-repository PR instruction comment receive the
+write permissions they need, using GitHub's built-in token. The instruction
+comment runs with `pull_request_target` and does not check out or execute PR code.
+Automatic PR infrastructure checks remain read-only. No Kaneo credential or external image
+hosting is needed. Manual dispatch executes the selected branch's test code with
+write permission, so run only trusted branches. Comment-triggered runs use the
+default branch's test code and accept commands only from write collaborators on
+same-repository PRs.
 
 ## Updating coverage
 

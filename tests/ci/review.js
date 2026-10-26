@@ -47,8 +47,10 @@ function reviewBody({ summary, runURL, artifactURL, commitSha, candidateURL, ref
   const omitted = summary.differences.length - rows.length;
   return [
     "<!-- website-reference-review -->",
-    "### Website reference comparison",
-    `Reference differences: **${summary.differences.length} page/viewport comparisons**. Functional/execution failures: **${summary.failures}**.`,
+    "### Website regression check",
+    summary.differences.length
+      ? `Visual differences: **${summary.differences.length} page/viewport comparisons**. Functional/execution failures: **${summary.failures}**.`
+      : `No reference differences found across ${summary.total} checks. Functional/execution failures: **${summary.failures}**.`,
     `Tests: ${summary.total}; skipped: ${summary.skipped}; flaky: ${summary.flaky}.`,
     "",
     `Commit: ${code(commitSha)}`,
@@ -62,11 +64,9 @@ function reviewBody({ summary, runURL, artifactURL, commitSha, candidateURL, ref
     ...(rows.length ? ["| Viewport | Page/check | Differences |", "| --- | --- | --- |", ...rows] : ["No reference differences recorded."]),
     ...(omitted ? [`${omitted} more comparisons are listed in the complete report.`] : []),
     "",
-    ...(summary.differences.length ? [
-      "**Resolve this conversation** after reviewing and accepting intentional changes, or after fixing unexpected differences.",
-      "Reference differences do not fail CI. Resolving this conversation does not override functional or execution failures.",
-      "This file-level conversation summarizes the whole website comparison, not just the file it is attached to.",
-    ] : ["No review conversation was needed. Functional or execution failures still fail the CI job."]),
+    ...(summary.differences.length
+      ? ["This comparison is advisory. Review the differences and decide whether they are expected; functional or execution failures still fail the CI job."]
+      : ["Functional or execution failures still fail the CI job."]),
   ].join("\n");
 }
 
@@ -81,18 +81,14 @@ async function validatePullRequest({ github, owner, repo, pullNumber, commitSha 
 }
 
 async function publishReview(options) {
-  const { github, owner, repo, commitSha, artifactURL } = options;
+  const { github, owner, repo, commitSha, artifactURL, commentId } = options;
   assert.ok(artifactURL, "A report artifact URL is required");
   const summary = summarizeReport(options.report);
   const pullNumber = await validatePullRequest(options);
   const body = reviewBody({ ...options, summary });
-  if (!summary.differences.length) return { summary, body, posted: false };
-  const files = await github.paginate(github.rest.pulls.listFiles, { owner, repo, pull_number: pullNumber, per_page: 100 });
-  assert.ok(files.length, "No changed PR file available for the review conversation");
-  const { data: comment } = await github.rest.pulls.createReviewComment({
-    owner, repo, pull_number: pullNumber, commit_id: commitSha,
-    path: files[0].filename, subject_type: "file", body,
-  });
+  const { data: comment } = commentId
+    ? await github.rest.issues.updateComment({ owner, repo, comment_id: Number(commentId), body })
+    : await github.rest.issues.createComment({ owner, repo, issue_number: pullNumber, body });
   return { summary, body, posted: true, commentURL: comment.html_url };
 }
 
