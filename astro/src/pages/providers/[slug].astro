@@ -1,22 +1,25 @@
 ---
 import SiteDocument from '../../layouts/SiteDocument.astro';
-import { getProviderBySlug, getProviders } from '../../server/content/loaders';
+import { getProviderBySlug, getPublishedBuildSnapshot } from '../../server/content/loaders';
 import { providerPath } from '../../../../src/shared/content/urls';
-import { getPageSiteData } from '../../server/content/site-data';
+import { getAstroSiteData } from '../../server/content/route-data';
 import { AstroProviderPage, AstroContentNotFound } from '../../../../src/views/astro-content-pages';
+import type { ProviderRecord } from '../../../../src/shared/content/models';
 
 const isStatic = import.meta.env.PUBLIC_ASTRO_TARGET === 'static';
 export const prerender = import.meta.env.PUBLIC_ASTRO_TARGET === 'static';
 
 export async function getStaticPaths() {
-  const providers = await getProviders('published');
-  return providers.flatMap((provider) => providerPath(provider.slug) ? [{ params: { slug: provider.slug! } }] : []);
+  const { providers } = await getPublishedBuildSnapshot();
+  return providers.flatMap((provider) => providerPath(provider.slug) ? [{ params: { slug: provider.slug! }, props: { staticRecord: provider } }] : []);
 }
 
 const mode = isStatic ? 'published' : 'draft';
-const provider = await getProviderBySlug(Astro.params.slug || '', mode);
+const provider = isStatic
+  ? Astro.props.staticRecord as ProviderRecord | undefined
+  : await getProviderBySlug(Astro.params.slug || '', mode);
 if (!provider) Astro.response.status = 404;
-const siteData = provider ? await getPageSiteData(mode) : undefined;
+const siteData = provider ? await getAstroSiteData(mode) : undefined;
 const name = provider?.name?.fullName || 'Untitled';
 const honorific = provider?.name?.honorific && provider.name.honorific !== 'None' ? provider.name.honorific : '';
 const title = `${honorific} ${name}`.trim();

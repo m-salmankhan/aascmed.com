@@ -1,13 +1,16 @@
 ---
 import SiteDocument from '../../layouts/SiteDocument.astro';
-import { getProviders, getProvidersPage } from '../../server/content/loaders';
-import { getPageSiteData } from '../../server/content/site-data';
+import { getProviders, getProvidersPage, getPublishedBuildSnapshot } from '../../server/content/loaders';
+import { getAstroSiteData } from '../../server/content/route-data';
 import { toProviderArchiveItems } from '../../server/content/archive-items';
 import { AstroProvidersArchivePage } from '../../../../src/views/astro-content-pages';
 
 const mode = import.meta.env.PUBLIC_ASTRO_TARGET === 'static' ? 'published' : 'draft';
+const recordsPromise = mode === 'published'
+  ? getPublishedBuildSnapshot().then((snapshot) => snapshot.providers)
+  : getProviders(mode);
 const [archive, records, siteData] = await Promise.all([
-  getProvidersPage(mode), getProviders(mode), getPageSiteData(mode),
+  getProvidersPage(mode), recordsPromise, getAstroSiteData(mode),
 ]);
 const providers = toProviderArchiveItems(records);
 const heading = archive?.heading || 'Meet the team';

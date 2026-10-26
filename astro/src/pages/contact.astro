@@ -1,15 +1,18 @@
 ---
 import SiteDocument from '../layouts/SiteDocument.astro';
 import { AstroContactPage } from '../../../src/views/astro-fixed-pages';
-import { getContact, getClinics } from '../server/content/loaders.ts';
+import { getContact, getClinics, getPublishedBuildSnapshot } from '../server/content/loaders.ts';
 import { clinicPath } from '../../../src/shared/content/urls.ts';
 import type { PracticeSummary } from '../../../src/components/practices/practice-archive';
 import { getAstroSiteData, getRouteContentMode, isAstroPreview } from '../server/content/route-data.ts';
 
 const mode = getRouteContentMode();
+const clinicsPromise = mode === 'published'
+  ? getPublishedBuildSnapshot().then((snapshot) => snapshot.clinics)
+  : getClinics(mode);
 const [page, clinics, siteData] = await Promise.all([
   getContact(mode),
-  getClinics(mode),
+  clinicsPromise,
   getAstroSiteData(mode, true),
 ]);
 const practices: PracticeSummary[] = clinics.map((clinic) => ({

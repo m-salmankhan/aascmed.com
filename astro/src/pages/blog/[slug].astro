@@ -1,24 +1,28 @@
 ---
 import SiteDocument from '../../layouts/SiteDocument.astro';
-import { getBlogBySlug, getBlogs } from '../../server/content/loaders';
+import { getBlogBySlug, getPublishedBuildSnapshot } from '../../server/content/loaders';
 import { blogPath } from '../../../../src/shared/content/urls';
 import { formatContentDate } from '../../server/content/presentation';
-import { getPageSiteData } from '../../server/content/site-data';
+import { getAstroSiteData } from '../../server/content/route-data';
 import { AstroBlogPostPage, AstroContentNotFound } from '../../../../src/views/astro-content-pages';
+import type { BlogRecord } from '../../../../src/shared/content/models';
 
 const isStatic = import.meta.env.PUBLIC_ASTRO_TARGET === 'static';
 export const prerender = import.meta.env.PUBLIC_ASTRO_TARGET === 'static';
 
 export async function getStaticPaths() {
-  const blogs = await getBlogs('published');
-  return blogs.flatMap((blog) => blogPath(blog.slug) ? [{ params: { slug: blog.slug! } }] : []);
+  const { blogs } = await getPublishedBuildSnapshot();
+  return blogs.flatMap((blog) => blogPath(blog.slug) ? [{ params: { slug: blog.slug! }, props: { staticRecord: blog } }] : []);
 }
 
 const mode = isStatic ? 'published' : 'draft';
-const blog = await getBlogBySlug(Astro.params.slug || '', mode);
+const blog = isStatic
+  ? Astro.props.staticRecord as BlogRecord | undefined
+  : await getBlogBySlug(Astro.params.slug || '', mode);
 if (!blog) Astro.response.status = 404;
-const siteData = blog ? await getPageSiteData(mode) : undefined;
+const siteData = blog ? await getAstroSiteData(mode) : undefined;
 const imageModule = isStatic ? await import('../../server/content/public-images') : null;
+const imageLibrary = isStatic ? await import('../../lib/public-images') : null;
 const imageManifest = imageModule ? await imageModule.getPublishedImageManifest() : null;
 const title = blog?.title || blog?.heading || 'Untitled';
 const description = blog?.description || '';
@@ -30,8 +34,8 @@ const displayBlog = blog ? {
   date: formatContentDate(blog.date),
 } : null;
 const socialImagePath = blog
-  ? isStatic && imageModule && routeSlug
-    ? imageModule.getSocialCardImagePath({ kind: 'blog', slug: routeSlug, title: blog.heading || blog.title, backgroundImage: blog.thumbnail?.src })
+  ? isStatic && imageLibrary && routeSlug
+    ? imageLibrary.getSocialCardImagePath({ kind: 'blog', slug: routeSlug, backgroundImage: blog.thumbnail?.src })
     : blog.thumbnail?.src
   : undefined;
 ---

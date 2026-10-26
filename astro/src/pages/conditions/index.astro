@@ -1,13 +1,16 @@
 ---
 import SiteDocument from '../../layouts/SiteDocument.astro';
-import { getConditions, getConditionsArchive } from '../../server/content/loaders';
-import { getPageSiteData } from '../../server/content/site-data';
+import { getConditions, getConditionsArchive, getPublishedBuildSnapshot } from '../../server/content/loaders';
+import { getAstroSiteData } from '../../server/content/route-data';
 import { toConditionArchiveItems } from '../../server/content/archive-items';
 import { AstroConditionsArchivePage } from '../../../../src/views/astro-content-pages';
 
 const mode = import.meta.env.PUBLIC_ASTRO_TARGET === 'static' ? 'published' : 'draft';
+const recordsPromise = mode === 'published'
+  ? getPublishedBuildSnapshot().then((snapshot) => snapshot.conditions)
+  : getConditions(mode);
 const [archive, records, siteData] = await Promise.all([
-  getConditionsArchive(mode), getConditions(mode), getPageSiteData(mode),
+  getConditionsArchive(mode), recordsPromise, getAstroSiteData(mode),
 ]);
 const imageModule = mode === 'published' ? await import('../../server/content/public-images') : null;
 const imageManifest = imageModule ? await imageModule.getPublishedImageManifest() : null;

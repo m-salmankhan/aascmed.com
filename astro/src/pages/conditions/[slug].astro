@@ -1,23 +1,27 @@
 ---
 import SiteDocument from '../../layouts/SiteDocument.astro';
-import { getConditionBySlug, getConditions } from '../../server/content/loaders';
+import { getConditionBySlug, getPublishedBuildSnapshot } from '../../server/content/loaders';
 import { conditionPath } from '../../../../src/shared/content/urls';
-import { getPageSiteData } from '../../server/content/site-data';
+import { getAstroSiteData } from '../../server/content/route-data';
 import { AstroConditionPage, AstroContentNotFound } from '../../../../src/views/astro-content-pages';
+import type { ConditionRecord } from '../../../../src/shared/content/models';
 
 const isStatic = import.meta.env.PUBLIC_ASTRO_TARGET === 'static';
 export const prerender = import.meta.env.PUBLIC_ASTRO_TARGET === 'static';
 
 export async function getStaticPaths() {
-  const conditions = await getConditions('published');
-  return conditions.flatMap((condition) => conditionPath(condition.slug) ? [{ params: { slug: condition.slug! } }] : []);
+  const { conditions } = await getPublishedBuildSnapshot();
+  return conditions.flatMap((condition) => conditionPath(condition.slug) ? [{ params: { slug: condition.slug! }, props: { staticRecord: condition } }] : []);
 }
 
 const mode = isStatic ? 'published' : 'draft';
-const condition = await getConditionBySlug(Astro.params.slug || '', mode);
+const condition = isStatic
+  ? Astro.props.staticRecord as ConditionRecord | undefined
+  : await getConditionBySlug(Astro.params.slug || '', mode);
 if (!condition) Astro.response.status = 404;
-const siteData = condition ? await getPageSiteData(mode) : undefined;
+const siteData = condition ? await getAstroSiteData(mode) : undefined;
 const imageModule = isStatic ? await import('../../server/content/public-images') : null;
+const imageLibrary = isStatic ? await import('../../lib/public-images') : null;
 const imageManifest = imageModule ? await imageModule.getPublishedImageManifest() : null;
 const title = condition?.title || condition?.heading || 'Untitled';
 const description = condition?.description || '';
@@ -28,8 +32,8 @@ const displayCondition = condition ? {
   thumbnail: routeSlug ? imageManifest?.mediaByRoute[`condition:${routeSlug}`] ?? condition.thumbnail : condition.thumbnail,
 } : null;
 const socialImagePath = condition
-  ? isStatic && imageModule && routeSlug
-    ? imageModule.getSocialCardImagePath({ kind: 'conditions', slug: routeSlug, title: condition.heading || condition.title, backgroundImage: condition.thumbnail?.src })
+  ? isStatic && imageLibrary && routeSlug
+    ? imageLibrary.getSocialCardImagePath({ kind: 'conditions', slug: routeSlug, backgroundImage: condition.thumbnail?.src })
     : condition.thumbnail?.src
   : undefined;
 ---

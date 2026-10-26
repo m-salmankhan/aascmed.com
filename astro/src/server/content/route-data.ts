@@ -1,6 +1,6 @@
 import type { SiteSettings, TrackingSettings } from "../../../../src/shared/content/models.ts";
 import type { SiteData } from "../../../../src/shared/data/site-data.tsx";
-import { getAnnouncement, getClinics, getTrackingInfo } from "./loaders.ts";
+import { getAnnouncement, getClinics, getPublishedBuildSnapshot, getTrackingInfo } from "./loaders.ts";
 import type { ContentMode } from "./strapi.ts";
 
 /** The site settings are Gatsby site metadata today; keep their values at the Astro boundary. */
@@ -14,10 +14,15 @@ const emptyTracking: TrackingSettings = { googleAnalyticsId: "", googleTagManage
 
 /** Resolve the shared React context for one Astro page render. Draft data is request scoped in SSR. */
 export async function getAstroSiteData(mode: ContentMode, includeClinicOptions = false): Promise<SiteData> {
+  const clinicsPromise = includeClinicOptions
+    ? mode === "published"
+      ? getPublishedBuildSnapshot().then((snapshot) => snapshot.clinics)
+      : getClinics(mode)
+    : Promise.resolve([]);
   const [announcement, tracking, clinics] = await Promise.all([
     getAnnouncement(mode),
     getTrackingInfo(mode),
-    includeClinicOptions ? getClinics(mode) : Promise.resolve([]),
+    clinicsPromise,
   ]);
 
   return {

@@ -64,6 +64,15 @@ export default { ...base, integrations: [...integrations, integration] };
 
 const requests = [];
 const generatedMediaPaths = [];
+const singleTypes = {
+  announcement: { documentId: 'announcement', enabled: false, type: 'info', message: [] },
+  'tracking-info': { documentId: 'tracking-info', googleAnalyticsId: '', googleTagManagerId: '', pixelId: '' },
+  'blog-archive': { documentId: 'blog-archive', heading: 'Blog', metaDescription: 'Blog fixture', text: [] },
+  'conditions-archive': { documentId: 'conditions-archive', heading: 'Conditions', metaDescription: 'Condition fixture', text: [] },
+  'providers-page': { documentId: 'providers-page', heading: 'Meet the team', metaDescription: 'Provider fixture', text: [] },
+  'privacy-policy': { documentId: 'privacy-policy', heading: 'Privacy Policy', title: 'Privacy Policy', metaDescription: 'Privacy fixture', text: [] },
+  contact: { documentId: 'contact', heading: 'Contact Us', title: 'Contact Us', metaDescription: 'Contact fixture', text: [] },
+};
 const mockApi = createServer(async (request, response) => {
   const url = new URL(request.url || '/', 'http://127.0.0.1');
   const kind = url.pathname.split('/').filter(Boolean).at(-1);
@@ -75,9 +84,11 @@ const mockApi = createServer(async (request, response) => {
     title: 'Fixture Post',
     heading: 'Fixture Post',
     thumbnail: { url: backgroundPath, alternativeText: 'Fixture cover' },
-  }] : [];
+  }] : kind in singleTypes ? singleTypes[kind] : [];
   response.writeHead(200, { 'content-type': 'application/json' });
-  response.end(JSON.stringify({ data, meta: { pagination: { pageCount: 1, total: data.length } } }));
+  response.end(JSON.stringify(Array.isArray(data)
+    ? { data, meta: { pagination: { pageCount: 1, total: data.length } } }
+    : { data }));
 });
 
 await new Promise((resolve) => mockApi.listen(0, '127.0.0.1', resolve));
@@ -119,17 +130,19 @@ try {
   const mediaUrls = [media.src, ...(media.sources || []).map(({ src }) => src), ...(media.formats || []).flatMap(({ srcSet }) => srcSet.split(',').map((item) => item.trim().split(/\s+/)[0]))];
   generatedMediaPaths.push(...mediaUrls.map((mediaUrl) => path.join(astroRoot, 'dist-static', mediaUrl.replace(/^\/+/, ''))));
   for (const mediaUrl of mediaUrls) assert.equal(await exists(path.join(astroRoot, 'dist-static', mediaUrl.replace(/^\/+/, ''))), true, `responsive image exists for ${mediaUrl}`);
-  assert.deepEqual(new Set(requests.map(({ kind }) => kind)), new Set(['blogs', 'clinics', 'conditions', 'providers', 'service-updates', 'reviews']));
+  const collectionKinds = new Set(['blogs', 'clinics', 'conditions', 'providers', 'service-updates', 'reviews']);
+  const collectionRequests = () => requests.filter(({ kind }) => collectionKinds.has(kind));
+  assert.deepEqual(new Set(collectionRequests().map(({ kind }) => kind)), collectionKinds);
   assert.ok(requests.every(({ status }) => status === 'published'), 'the build snapshot requests only published content');
-  for (const kind of new Set(requests.map(({ kind }) => kind))) {
-    assert.equal(requests.filter((request) => request.kind === kind).length, 1, `${kind} uses one collection fetch across image and route builds`);
+  for (const kind of collectionKinds) {
+    assert.equal(collectionRequests().filter((request) => request.kind === kind).length, 1, `${kind} uses one collection fetch across image and route builds`);
   }
   const stagedCardPath = path.join(stagingDir, 'og-images', 'blog', 'fixture-post-hero-bg.jpg');
   const stagedMediaPath = path.join(stagingDir, media.src.replace(/^\/+/, ''));
   const cardBefore = await stat(stagedCardPath);
   const mediaBefore = await stat(stagedMediaPath);
   assert.equal(await runStaticBuild(), 0, 'second Astro static fixture build succeeds');
-  assert.equal(requests.length, 12, 'each build refreshes its snapshot once and prerender reuses it');
+  assert.equal(collectionRequests().length, 12, 'each build refreshes its snapshot once and prerender reuses it');
   assert.equal((await stat(stagedCardPath)).mtimeMs, cardBefore.mtimeMs, 'unchanged social cards are reused from the private staging directory');
   assert.equal((await stat(stagedMediaPath)).mtimeMs, mediaBefore.mtimeMs, 'unchanged responsive media files are reused');
   console.log('Astro static image integration passed: one published snapshot per build, metadata URL, responsive output, persistent cache reuse, and SSR guard.');
