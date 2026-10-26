@@ -162,15 +162,32 @@ Open the last HTML report with `yarn playwright show-report`.
 take roughly 30 seconds locally, excluding dependency/browser installation.
 They protect the harness, **not a deployed PR's application behavior**.
 
-The website suite is intentionally **manual**, not a required network/CMS-heavy
-check on every commit. A fresh Gatsby build alone took about 4 minutes locally;
-full-site comparisons add multiple minutes, live fonts/maps and a matched
-reference deployment. A mutable production URL is not a reliable automatic
-baseline. Run the manual website job before approving migration/refactor work.
+The website suite is **on demand**, not a required network/CMS-heavy check on
+every commit. A fresh Gatsby build alone took about 4 minutes locally; full-site
+comparisons add multiple minutes, live fonts/maps and a reference deployment.
+For a quick PR review, same-repository PRs get an instruction comment: after the
+Netlify deploy preview for the current head is ready, comment `/run-regression`.
+That run compares the PR's `deploy-preview-N--aascmed.netlify.app` deployment
+with `main--aascmed.netlify.app`, after verifying that the PR targets current
+`main` and that Netlify reported a successful preview for the exact head commit.
+It records both commit SHAs, but the Netlify branch builds may have fetched
+different published CMS snapshots, so this run is advisory and can include
+content drift. Production is not used as the reference.
 
-After this workflow is merged into the default branch, choose **Actions >
-Regression tests > Run workflow**, select the branch containing the intended test
-code at the current head of the intended open PR, then enter:
+For a deterministic acceptance comparison, use the manual workflow below with
+an immutable reference deployment and a matched CMS snapshot. The fast
+infrastructure job remains separate from both browser comparison paths.
+
+For an on-demand PR comparison, wait for the Netlify preview deployment to
+succeed, then comment `/run-regression`. The workflow checks that the PR is open,
+targets current `main`, comes from this repository, and has a successful Netlify
+preview status for its current head commit. Only repository collaborators with
+write access can trigger it. The workflow code runs from the default branch for
+comment-triggered runs; it does not check out or execute PR code.
+
+For a deterministic matched-content run, choose **Actions > Regression tests >
+Run workflow**, select the branch containing the intended test code at the
+current head of the intended open PR, then enter:
 
 - `pull_request_number`: that PR's number; the job rejects closed PRs or a
   selected test-code commit that no longer matches the PR head;
@@ -186,7 +203,7 @@ deployment commit explicitly. No CMS/deployment secrets are needed by these jobs
 
 ### Reviewing and accepting differences
 
-After the manual run, `ci/review.js` reads the actual Playwright JSON report.
+After a browser comparison, `ci/review.js` reads the actual Playwright JSON report.
 If reference differences exist, CI creates **one resolvable file-level PR review
 conversation** listing affected pages/viewports and difference categories,
 including changed-pixel counts or screenshot dimensions. It links the CI run and
@@ -198,7 +215,7 @@ Images are in the report, not embedded directly in the PR comment.
 1. Review the differences. An intentional background/content/design change does
    not require weakening the tests or making the old and new sites identical.
 2. Fix unexpected regressions, or **resolve the conversation** to acknowledge
-   intentional differences. Each manual run with differences creates a fresh
+   intentional differences. Each run with differences creates a fresh
    conversation; an older resolution does not approve later results.
 3. Merge once functional checks and the rest of the PR review are satisfied.
 
@@ -211,10 +228,13 @@ infrastructure errors and fail the job rather than silently omitting the review.
 An unchanged comparison creates no conversation; its summary is still recorded
 on the Actions run. A cancelled run is not an acceptance result.
 
-Only the manually dispatched browser job receives `pull-requests: write`, using
-GitHub's built-in token. Automatic PR infrastructure jobs remain read-only.
-No Kaneo credential or external image hosting is needed. Manual dispatch executes
-the selected branch's test code with that permission, so run only trusted branches.
+Only browser runs and the same-repository PR instruction comment receive the
+write permissions they need, using GitHub's built-in token. Automatic PR
+infrastructure checks remain read-only. No Kaneo credential or external image
+hosting is needed. Manual dispatch executes the selected branch's test code with
+write permission, so run only trusted branches. Comment-triggered runs use the
+default branch's test code and accept commands only from write collaborators on
+same-repository PRs.
 
 ## Updating coverage
 

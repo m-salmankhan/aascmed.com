@@ -22,18 +22,21 @@ on:
         description: "Reference commit/deployment and matched CMS snapshot identifier"
         required: true
         type: string
+  issue_comment:
+    types: [created]
 
 permissions:
   contents: read
 
 concurrency:
-  group: regression-${{ github.ref }}-${{ github.event_name }}
+  group: regression-${{ github.event.issue.number || github.ref }}-${{ github.event_name }}
   cancel-in-progress: true
 
 jobs:
   infrastructure:
     name: Fast regression-infrastructure checks
     runs-on: ubuntu-latest
+    if: github.event_name != 'issue_comment' || (github.event.issue.pull_request && github.event.comment.body == '/run-regression')
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
@@ -55,20 +58,66 @@ jobs:
 
   browser:
     name: Website functionality and advisory reference review
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'issue_comment' && github.event.issue.pull_request && github.event.comment.body == '/run-regression')
     needs: infrastructure
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
     permissions:
       contents: read
       pull-requests: write
-    env:
-      UI_PULL_REQUEST_NUMBER: ${{ inputs.pull_request_number }}
-      UI_BASE_URL: ${{ inputs.candidate_url }}
-      UI_REFERENCE_URL: ${{ inputs.reference_url }}
-      UI_BASELINE_ID: ${{ inputs.baseline_id }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.ref || github.event.repository.default_branch }}
+      - name: Resolve and validate comparison targets
+        id: targets
+        uses: actions/github-script@v7
+        env:
+          INPUT_PULL_REQUEST_NUMBER: ${{ inputs.pull_request_number }}
+          INPUT_CANDIDATE_URL: ${{ inputs.candidate_url }}
+          INPUT_REFERENCE_URL: ${{ inputs.reference_url }}
+          INPUT_BASELINE_ID: ${{ inputs.baseline_id }}
+        with:
+          script: |
+            const { validatePullRequest } = require("./tests/ci/review");
+            if (context.eventName === "workflow_dispatch") {
+              const pullNumber = await validatePullRequest({
+                github, ...context.repo,
+                pullNumber: process.env.INPUT_PULL_REQUEST_NUMBER,
+                commitSha: context.sha,
+              });
+              core.setOutput("pull_number", String(pullNumber));
+              core.setOutput("candidate_url", process.env.INPUT_CANDIDATE_URL);
+              core.setOutput("reference_url", process.env.INPUT_REFERENCE_URL);
+              core.setOutput("baseline_id", process.env.INPUT_BASELINE_ID);
+              core.setOutput("candidate_commit", context.sha);
+            } else {
+              const { resolveCommentTargets } = require("./tests/ci/targets");
+              const target = await resolveCommentTargets({
+                github, ...context.repo,
+                pullNumber: context.payload.issue.number,
+                actor: context.actor,
+              });
+              core.setOutput("pull_number", String(target.pullNumber));
+              core.setOutput("candidate_url", target.candidateURL);
+              core.setOutput("reference_url", target.referenceURL);
+              core.setOutput("baseline_id", target.baselineId);
+              core.setOutput("candidate_commit", target.candidateCommit);
+            }
+      - name: Expose resolved comparison inputs
+        env:
+          UI_PULL_REQUEST_NUMBER: ${{ steps.targets.outputs.pull_number }}
+          UI_BASE_URL: ${{ steps.targets.outputs.candidate_url }}
+          UI_REFERENCE_URL: ${{ steps.targets.outputs.reference_url }}
+          UI_BASELINE_ID: ${{ steps.targets.outputs.baseline_id }}
+          UI_CANDIDATE_COMMIT: ${{ steps.targets.outputs.candidate_commit }}
+        run: |
+          printf 'UI_PULL_REQUEST_NUMBER=%s\n' "$UI_PULL_REQUEST_NUMBER" >> "$GITHUB_ENV"
+          printf 'UI_BASE_URL=%s\n' "$UI_BASE_URL" >> "$GITHUB_ENV"
+          printf 'UI_REFERENCE_URL=%s\n' "$UI_REFERENCE_URL" >> "$GITHUB_ENV"
+          printf 'UI_BASELINE_ID=%s\n' "$UI_BASELINE_ID" >> "$GITHUB_ENV"
+          printf 'UI_CANDIDATE_COMMIT=%s\n' "$UI_CANDIDATE_COMMIT" >> "$GITHUB_ENV"
+        shell: bash
       - name: Validate comparison PR and selected commit
         uses: actions/github-script@v7
         with:
@@ -77,7 +126,7 @@ jobs:
             await validatePullRequest({
               github, ...context.repo,
               pullNumber: process.env.UI_PULL_REQUEST_NUMBER,
-              commitSha: context.sha,
+              commitSha: process.env.UI_CANDIDATE_COMMIT,
             });
       - uses: actions/setup-node@v4
         with:
@@ -89,7 +138,7 @@ jobs:
         run: node -e 'require("./tests/ui/contracts").validateTargets()'
       - name: Record comparison provenance
         run: |
-          printf '## Matched-content comparison\n\nCandidate: %s\n\nReference: %s\n\nBaseline: %s\n\nTest code commit: %s\n' \
+          printf '## Website comparison\n\nCandidate: %s\n\nReference: %s\n\nBaseline: %s\n\nTest code commit: %s\n' \
             "$UI_BASE_URL" "$UI_REFERENCE_URL" "$UI_BASELINE_ID" "$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
       - run: yarn test:ui
       - uses: actions/upload-artifact@v4
@@ -114,7 +163,7 @@ jobs:
             const result = await publishReview({
               github, ...context.repo,
               pullNumber: process.env.UI_PULL_REQUEST_NUMBER,
-              commitSha: context.sha,
+              commitSha: process.env.UI_CANDIDATE_COMMIT,
               report: JSON.parse(readFileSync("ui-results.json", "utf8")),
               runURL: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
               artifactURL: process.env.UI_REPORT_ARTIFACT_URL,
@@ -124,3 +173,34 @@ jobs:
             });
             await core.summary.addRaw(result.body).write();
             if (result.posted) core.notice(`Reference differences need review: ${result.commentURL}`);
+
+  regression-instructions:
+    name: Add on-demand regression instructions to the PR
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    needs: infrastructure
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: read
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = "<!-- on-demand-website-regression -->";
+            const number = context.payload.pull_request.number;
+            const body = [
+              marker,
+              "### Run the website regression check",
+              "When the PR's Netlify deploy preview is ready, comment `/run-regression` on this PR. The browser comparison runs on demand and checks the PR preview against the current `main` branch build.",
+              "",
+              "This is advisory: the main and PR builds can contain different published CMS snapshots. For a deterministic acceptance comparison, use **Actions → Regression tests → Run workflow** with an immutable reference and matched CMS snapshot.",
+            ].join("\n");
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              ...context.repo, issue_number: number, per_page: 100,
+            });
+            const existing = comments.find(comment => comment.user?.login === "github-actions[bot]" && comment.body?.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ ...context.repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ ...context.repo, issue_number: number, body });
+            }
