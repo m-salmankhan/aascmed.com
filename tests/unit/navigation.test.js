@@ -23,7 +23,7 @@ const { SiteLink } = require("../../src/shared/navigation/link.tsx");
 const Module = require("node:module");
 const originalLoad = Module._load;
 Module._load = function (request, parent, isMain) {
-  if (request === "./src/adapters/gatsby/shared-data" && /gatsby-(browser|ssr)\.tsx$/.test(parent?.filename || "")) {
+  if (["./src/adapters/gatsby/site-data", "./src/adapters/gatsby/announcement"].includes(request) && /gatsby-(browser|ssr)\.tsx$/.test(parent?.filename || "")) {
     return { __esModule: true, default: ({ children }) => children };
   }
   return originalLoad.call(this, request, parent, isMain);
