@@ -29,8 +29,13 @@ export interface FixedViewProps {
 /** Privacy page copy with an optional date displayed beneath the policy. */
 type PrivacyViewProps = FixedViewProps & { lastUpdated?: string };
 
-/** Contact page content and clinic summaries for the location archive. */
-type ContactViewProps = FixedViewProps & { practices: PracticeSummary[] };
+/** Contact page content, clinic archive summaries, and preferred-location choices. */
+export interface ContactViewProps extends FixedViewProps {
+  /** Normalized clinic cards shown in the practice archive. */
+  practices: PracticeSummary[];
+  /** Non-empty clinic names from the page query, before display-label fallbacks. */
+  clinicOptions: readonly string[];
+}
 
 /** Render the site-wide not-found page.
  * @returns The not-found layout with a contact link.
@@ -60,15 +65,15 @@ export function PrivacyView({ heading = "Privacy Policy", blocks, lastUpdated }:
   </main></PrimarySecondaryColumnsLayout>;
 }
 
-/** Render contact content and the supplied clinic list.
- * @param props Page heading, rich-text blocks, and clinic summaries.
- * @returns The contact page layout and practice archive.
+/** Render contact content, a clinic-aware form, and the supplied clinic archive.
+ * @param props Page copy, clinic summaries, and preferred-location choices.
+ * @returns The contact page layout with its form and practice archive.
  */
-export function ContactView({ heading = "Contact Us", blocks, practices }: ContactViewProps) {
+export function ContactView({ heading = "Contact Us", blocks, practices, clinicOptions }: ContactViewProps) {
   return <Layout><main><Container>
     <Breadcrumbs path={[["/", "Home"], ["/contact/", "Contact Us"]]} css={css({ marginTop: "3em" })} />
     <ContactSection title={heading} textContent={blocks ? <StrapiBlocksRenderer content={blocks} /> : undefined}
-      css={css`margin: 0 -${gridSpacing / 2}rem`} />
+      clinicOptions={clinicOptions} css={css`margin: 0 -${gridSpacing / 2}rem`} />
     <PracticeArchive practices={practices} heading="Practice Locations" isHomePage={true}
       css={css({ margin: `0 -${gridSpacing / 2}em` })} />
   </Container></main></Layout>;
