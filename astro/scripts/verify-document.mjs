@@ -16,6 +16,11 @@ const cms = createServer((request, response) => {
   const singleTypes = {
     '/api/announcement': { documentId: 'announcement', enabled: false, type: 'info' },
     '/api/tracking-info': { documentId: 'tracking-info', googleAnalyticsId: '', googleTagManagerId: '', pixelId: '' },
+    '/api/blog-archive': { documentId: 'blog-archive', heading: 'Fixture Blog', metaDescription: 'Blog archive fixture.', text: pageCopy('blog archive') },
+    '/api/conditions-archive': { documentId: 'conditions-archive', heading: 'Fixture Conditions', metaDescription: 'Conditions archive fixture.', text: pageCopy('conditions archive') },
+    '/api/clinics-archive': { documentId: 'clinics-archive', heading: 'Fixture Clinics', metaDescription: 'Clinics archive fixture.', text: pageCopy('clinics archive') },
+    '/api/providers-page': { documentId: 'providers-page', heading: 'Fixture Providers', metaDescription: 'Providers archive fixture.', text: pageCopy('providers archive') },
+    '/api/service-update-page': { documentId: 'service-update-page', heading: 'Fixture Service Updates', metaDescription: 'Service updates archive fixture.', text: pageCopy('service update archive') },
     '/api/contact': { documentId: 'contact', heading: 'Fixture Contact', metaDescription: 'Contact route metadata fixture.', text: pageCopy('contact') },
     '/api/privacy-policy': { documentId: 'privacy-policy', title: 'Fixture Privacy', description: 'Privacy route metadata fixture.', metaDescription: 'Privacy metadata.', updatedAt: '2026-01-15T12:00:00.000Z', text: pageCopy('privacy') },
   };
@@ -32,15 +37,23 @@ const cms = createServer((request, response) => {
     }));
     return;
   }
+  if (url.pathname === '/api/service-updates') {
+    const title = `${preview ? 'Preview' : 'Published'} Service Update`;
+    response.end(JSON.stringify({
+      data: [{ documentId: `${status}-fixture-update`, slug: 'fixture-update', title, description: `${title} description.`, date: '2026-10-26T12:00:00.000Z', body: pageCopy('service update') }],
+      meta: { pagination: { pageCount: 1, total: 1 } },
+    }));
+    return;
+  }
   response.end(JSON.stringify({ data: [], meta: { pagination: { pageCount: 1, total: 0 } } }));
 });
 await new Promise((resolve) => cms.listen(0, '127.0.0.1', resolve));
 const cmsUrl = `http://127.0.0.1:${cms.address().port}`;
 
-async function runBuild(config) {
+async function runBuild(config, extraEnv = {}) {
   await new Promise((resolve, reject) => {
     const child = spawn(process.execPath, ['node_modules/astro/bin/astro.mjs', 'build', '--config', config], {
-      env: { ...process.env, ASTRO_STRAPI_API_URL: cmsUrl, ASTRO_DRAFT_STRAPI_API_URL: cmsUrl },
+      env: { ...process.env, ASTRO_STRAPI_API_URL: cmsUrl, ASTRO_DRAFT_STRAPI_API_URL: cmsUrl, ...extraEnv },
       stdio: 'inherit',
     });
     child.once('error', reject);
@@ -53,6 +66,8 @@ try {
   await runBuild('astro.config.static.mjs');
   assert.ok(observedCmsRequests.length >= 5, 'static sitemap loads its published route collections');
   assert.ok(observedCmsRequests.every((url) => url.searchParams.get('status') === 'published'), 'static build requests published content only');
+  assert.equal(observedCmsRequests.filter((url) => url.pathname === '/api/clinics').length, 1, 'all static clinic routes reuse the published snapshot');
+  assert.equal(observedCmsRequests.filter((url) => url.pathname === '/api/service-updates').length, 1, 'all static service-update routes reuse the published snapshot');
 
   const staticHtml = await readFile('dist-static/index.html', 'utf8');
   for (const expected of [
@@ -77,6 +92,15 @@ try {
   assert.ok(staticContact.includes('Published contact route fixture.'));
   assert.ok(staticContact.includes('Published Clinic'));
   assert.ok(staticContact.includes('name="phone"'));
+  const staticClinic = await readFile('dist-static/clinics/published-clinic/index.html', 'utf8');
+  assert.ok(staticClinic.includes('02000000000'));
+  assert.ok(staticClinic.includes('api.mapbox.com/styles/v1/mapbox/streets-v11/static'), 'clinic SSR keeps the static map fallback');
+  assert.ok(staticClinic.includes('https://www.aascmed.com/clinics/published-clinic/'), 'clinic structured data uses its canonical path');
+  const staticServiceUpdate = await readFile('dist-static/service-updates/2026/10/fixture-update/index.html', 'utf8');
+  assert.ok(staticServiceUpdate.includes('<title>Published Service Update | Allergy, Asthma and Sinus Centers</title>'));
+  assert.ok(staticServiceUpdate.includes('26th October 2026'));
+  const staticServiceUpdateArchive = await readFile('dist-static/service-updates/index.html', 'utf8');
+  assert.ok(staticServiceUpdateArchive.includes('/service-updates/2026/10/fixture-update/'));
   for (const asset of [
     'assets/favicon/favicon.svg',
     'assets/favicon/favicon-32x32.png',
@@ -101,7 +125,7 @@ try {
   assert.equal((sitemap.match(/published-clinic/g) || []).length, 1, 'sitemap routes are deduplicated');
   assert.ok(!sitemap.includes('draft.example'), 'sitemap ignores non-path manifest values');
 
-  await runBuild('astro.config.ssr.mjs');
+  await runBuild('astro.config.ssr.mjs', { PUBLIC_MAPBOX_API_KEY: 'fixture-public-mapbox-token' });
   const portProbe = await new Promise((resolve) => {
     const server = createServer();
     server.listen(0, '127.0.0.1', () => {
@@ -110,7 +134,7 @@ try {
     });
   });
   app = spawn(process.execPath, ['dist-ssr/server/entry.mjs'], {
-    env: { ...process.env, HOST: '127.0.0.1', PORT: String(portProbe), ASTRO_STRAPI_API_URL: cmsUrl, ASTRO_DRAFT_STRAPI_API_URL: cmsUrl },
+    env: { ...process.env, HOST: '127.0.0.1', PORT: String(portProbe), ASTRO_STRAPI_API_URL: cmsUrl, ASTRO_DRAFT_STRAPI_API_URL: cmsUrl, PUBLIC_MAPBOX_API_KEY: 'fixture-public-mapbox-token' },
     stdio: 'ignore',
   });
   const base = `http://127.0.0.1:${portProbe}`;
@@ -153,6 +177,28 @@ try {
   assert.ok(ssrContactHtml.includes('Preview Clinic'));
   assert.ok(ssrContactHtml.includes('name="phone"'));
   assert.ok(ssrContact.headers.get('cache-control')?.includes('no-store'));
+
+  const ssrClinic = await fetch(`${base}/clinics/preview-clinic/`);
+  assert.equal(ssrClinic.status, 200);
+  const ssrClinicHtml = await ssrClinic.text();
+  assert.ok(ssrClinicHtml.includes('Preview Clinic'));
+  assert.ok(ssrClinicHtml.includes('fixture-public-mapbox-token'), 'Astro public Mapbox token reaches the hydrated shared clinic view');
+  assert.ok(ssrClinicHtml.includes('https://www.aascmed.com/clinics/preview-clinic/'));
+  assert.ok(ssrClinic.headers.get('cache-control')?.includes('no-store'));
+  const missingClinic = await fetch(`${base}/clinics/not-known/`);
+  assert.equal(missingClinic.status, 404);
+
+  const ssrServiceUpdate = await fetch(`${base}/service-updates/2026/10/fixture-update/`);
+  assert.equal(ssrServiceUpdate.status, 200);
+  const ssrServiceUpdateHtml = await ssrServiceUpdate.text();
+  assert.ok(ssrServiceUpdateHtml.includes('<title>Preview Service Update | Allergy, Asthma and Sinus Centers</title>'));
+  assert.ok(ssrServiceUpdateHtml.includes('26th October 2026'));
+  assert.ok(ssrServiceUpdate.headers.get('cache-control')?.includes('no-store'));
+  for (const path of [
+    '/service-updates/2026/09/fixture-update/',
+    '/service-updates/2026/13/fixture-update/',
+    '/service-updates/2026/10/not-known/',
+  ]) assert.equal((await fetch(`${base}${path}`)).status, 404, `${path} must return 404`);
 
   const browser = await chromium.launch({ headless: true });
   try {
@@ -205,7 +251,7 @@ try {
   assert.match(dynamicSitemap.headers.get('content-type') || '', /application\/xml/);
   assert.ok((await dynamicSitemap.text()).includes('https://www.aascmed.com/'));
   assert.ok(observedCmsRequests.slice(beforeSitemapRequests).every((url) => url.searchParams.get('status') === 'published'), 'SSR sitemap requests published content only');
-  console.log(JSON.stringify({ static: 'metadata, fixed-page content, 404, assets, headers, redirects and published sitemap verified', ssr: 'privacy/contact draft content and metadata, true 404, no-store, tracking suppression, redirect and PDF verified', contact: 'browser-submitted payload intercepted; field errors and retry verified without email', cms: 'local mock only; static fixed pages request published content and SSR fixed pages request draft content' }));
+  console.log(JSON.stringify({ static: 'metadata, clinic and dated update detail/archive routes, map fallback, structured data, fixed-page content, 404, assets, headers, redirects and published sitemap verified', ssr: 'clinic/update/contact/privacy drafts, strict dated paths, Mapbox token propagation, true 404, no-store, tracking suppression, redirect and PDF verified', contact: 'browser-submitted payload intercepted; field errors and retry verified without email', cms: 'local mock only; static routes request published content and SSR detail/fixed pages request draft content' }));
 } finally {
   if (app?.exitCode === null) {
     const exited = new Promise((resolve) => app.once('exit', resolve));

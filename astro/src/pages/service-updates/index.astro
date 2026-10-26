@@ -1,13 +1,16 @@
 ---
 import SiteDocument from '../../layouts/SiteDocument.astro';
-import { getServiceUpdatePage, getServiceUpdates } from '../../server/content/loaders.ts';
+import { getPublishedBuildSnapshot, getServiceUpdatePage, getServiceUpdates } from '../../server/content/loaders.ts';
 import { getAstroSiteData, getRouteContentMode } from '../../server/content/route-data.ts';
 import { toServiceUpdateArchiveItems } from '../../server/content/clinic-update-items.ts';
 import { AstroServiceUpdatesArchivePage } from '../../../../src/views/astro-clinic-update-pages.tsx';
 
 const mode = getRouteContentMode();
+const updatesPromise = mode === 'published'
+  ? getPublishedBuildSnapshot().then((snapshot) => snapshot.serviceUpdates)
+  : getServiceUpdates(mode);
 const [archive, updates, siteData] = await Promise.all([
-  getServiceUpdatePage(mode), getServiceUpdates(mode), getAstroSiteData(mode),
+  getServiceUpdatePage(mode), updatesPromise, getAstroSiteData(mode),
 ]);
 const heading = archive?.heading || 'Service Updates';
 const description = archive?.metaDescription || '';
