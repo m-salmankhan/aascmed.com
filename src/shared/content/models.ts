@@ -39,7 +39,7 @@ export interface MediaDescriptor {
   placeholder?: string;
 }
 
-/** Common identity, copy, rich-text, media, and date fields for published content. */
+/** Common identity, copy, rich-text, media, and date fields for normalized content records. */
 export interface ContentRecord {
   /** Stable CMS record identifier. */
   id: string;
@@ -100,7 +100,7 @@ export interface ClinicRecord extends ContentRecord {
   }>;
 }
 
-/** A dated service update; its date is required for the published route. */
+/** Service-update data with a nullable date; published routes require a valid calendar date. */
 export interface ServiceUpdateRecord extends ContentRecord {
   date: string | null;
 }

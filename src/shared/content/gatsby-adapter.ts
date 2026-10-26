@@ -49,8 +49,7 @@ interface GatsbyNode {
   internal?: { content?: string | null } | null;
 }
 
-/** Gatsby component fields are nullable even when shared view fields are not. */
-/** Gatsby provider-name fields before nullable values are normalized. */
+/** Nullable Gatsby provider-name fields normalized into the shared provider record. */
 interface GatsbyProviderName {
   fullName?: string | null;
   honorific?: string | null;
