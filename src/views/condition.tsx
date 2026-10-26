@@ -10,8 +10,13 @@ import { StrapiDynamicZoneRenderer } from "../components/strapi/blocks-renderer"
 import type { ConditionRecord } from "../shared/content/models";
 import { extractTableOfContents } from "../utils/strapi-toc";
 
+/** Normalized condition data and browser pathname for sharing links. */
 export interface ConditionViewProps { condition: ConditionRecord; pathname: string }
 
+/** Render a condition detail page from shared content data.
+ * @param props Condition record and current browser pathname.
+ * @returns The condition detail layout with content and table of contents.
+ */
 export function ConditionView({ condition, pathname }: ConditionViewProps) {
   const title = condition.title || "Untitled";
   const heading = condition.heading || title;

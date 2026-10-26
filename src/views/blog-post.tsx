@@ -12,11 +12,16 @@ import { HeroImage } from "../components/media/image";
 import type { BlogRecord } from "../shared/content/models";
 import { extractTableOfContents } from "../utils/strapi-toc";
 
+/** Normalized blog record and browser pathname required by the detail page. */
 export interface BlogPostViewProps {
   blog: BlogRecord;
   pathname: string;
 }
 
+/** Render a blog detail page from shared blog data.
+ * @param props Normalized blog record and current browser pathname for sharing links.
+ * @returns The blog detail layout, including content, table of contents, and media.
+ */
 export function BlogPostView({ blog, pathname }: BlogPostViewProps) {
   const title = blog.title || "Untitled";
   const heading = blog.heading || title;
@@ -49,6 +54,10 @@ export function BlogPostView({ blog, pathname }: BlogPostViewProps) {
   </PrimarySecondaryColumnsLayout>;
 }
 
+/** Render supported blog dynamic-zone entries.
+ * @param props Parsed content entries from the blog record.
+ * @returns Rich-text renderers and contact callouts for recognized entries.
+ */
 function BlogContent({ content }: { content: any[] }) {
   return <>
     {content.map((component, index) => {

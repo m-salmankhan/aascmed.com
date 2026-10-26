@@ -11,10 +11,15 @@ import { StrapiBlocksRenderer, StrapiDynamicZoneRenderer } from "../components/s
 import { SiteLink } from "../shared/navigation/link";
 import type { ProviderRecord } from "../shared/content/models";
 
+/** Normalized provider data and browser pathname for sharing links. */
 export interface ProviderViewProps { provider: ProviderRecord; pathname: string }
 
 const stylesImage = css({ width: "70%", height: "auto", borderRadius: "50%", overflow: "hidden" });
 
+/** Render provider profile details from a shared provider record.
+ * @param props Provider record and current browser pathname.
+ * @returns The provider layout with biography, retirement notice, image, and review.
+ */
 export function ProviderView({ provider, pathname }: ProviderViewProps) {
   const name = provider.name?.fullName || "Untitled";
   const honorific = provider.name?.honorific && provider.name.honorific !== "None" ? provider.name.honorific : "";
@@ -54,6 +59,10 @@ export function ProviderView({ provider, pathname }: ProviderViewProps) {
   </PrimarySecondaryColumnsLayout>;
 }
 
+/** Show the provider's retirement notice only when retired content exists.
+ * @param props Retirement state and optional rich-text notice blocks.
+ * @returns The notice component, or null when it should not be shown.
+ */
 function RetirementNotice({ retired, noticeBlocks }: { retired: boolean; noticeBlocks?: any[] }) {
   if (!retired || !noticeBlocks?.length) return null;
   return <InfoNotice css={css`margin-bottom: 1em;`}><StrapiBlocksRenderer content={noticeBlocks} /></InfoNotice>;

@@ -12,8 +12,13 @@ import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 import { SiteLink } from "../shared/navigation/link";
 import type { ServiceUpdateRecord } from "../shared/content/models";
 
+/** Normalized service-update data and browser pathname for sharing links. */
 export interface ServiceUpdateViewProps { serviceUpdate: ServiceUpdateRecord; pathname: string }
 
+/** Render a dated service-update detail page from shared content data.
+ * @param props Service-update record and current browser pathname.
+ * @returns The update layout with date, rich text, and browser-aware back navigation.
+ */
 export function ServiceUpdateView({ serviceUpdate, pathname }: ServiceUpdateViewProps) {
   const [jsEnabled, setJsEnabled] = React.useState(false);
   React.useEffect(() => setJsEnabled(true), []);

@@ -12,8 +12,13 @@ import { useSiteMetadata } from "../hooks/useSiteMetadata";
 import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 import type { ClinicRecord } from "../shared/content/models";
 
+/** Optional normalized clinic record used to render a clinic detail page. */
 export interface ClinicViewProps { clinic?: ClinicRecord }
 
+/** Format a 24-hour clock value for the clinic hours table.
+ * @param time A clock time in `HH:mm` form.
+ * @returns A 12-hour value with `a.m.`/`p.m.`, or empty text for an empty value.
+ */
 function to12Hr(time: string): string {
   if (!time) return "";
   const [hrs, mins] = time.split(":");
@@ -22,11 +27,20 @@ function to12Hr(time: string): string {
   return `${hour - 12}:${mins} p.m.`;
 }
 
+/** Format one clinic opening interval for display.
+ * @param startTime Optional 24-hour opening time.
+ * @param endTime Optional 24-hour closing time.
+ * @returns A formatted time range, or `Closed` when either endpoint is absent.
+ */
 function formatHours(startTime?: string, endTime?: string): string {
   if (!startTime || !endTime) return "Closed";
   return `${to12Hr(startTime)} - ${to12Hr(endTime)}`;
 }
 
+/** Render clinic contact, location, hours, and structured data from a shared record.
+ * @param props Optional normalized clinic record; absent fields use display fallbacks.
+ * @returns The clinic detail layout and JSON-LD metadata.
+ */
 export function ClinicView({ clinic }: ClinicViewProps) {
   const siteMetadata = useSiteMetadata();
   const clinicName = clinic?.clinicName || "Untitled";
