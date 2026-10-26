@@ -132,11 +132,17 @@ Install dependencies with `yarn install --frozen-lockfile` and browsers once
 with `yarn playwright install chromium`. CI installs Chromium system dependencies
 too. Node 22 and Yarn 1 are used by the workflow.
 
-Fast, CMS-independent checks:
+Source-level unit and contract checks:
 
 ```text
-yarn test:infrastructure
+yarn test:unit
 ```
+
+Harness self-tests are separate from source tests. Run the Node checks for route,
+target, visual-comparison and review-publication helpers with
+`yarn test:infrastructure:node`; run the browser harness checks with
+`yarn test:infrastructure:browser`. The composite `yarn test:infrastructure`
+runs both infrastructure suites, but does not include source unit tests.
 
 Build with `yarn build` and serve the candidate with `yarn serve --port 9000`;
 serve the retained reference separately on port 9001. In PowerShell:
@@ -157,10 +163,12 @@ Open the last HTML report with `yarn playwright show-report`.
 
 ## CI and runtime policy
 
-[Regression tests](../.github/workflows/regression-tests.yml) runs
-`yarn test:infrastructure` on every PR and push to main. The isolated checks
-take roughly 30 seconds locally, excluding dependency/browser installation.
-They protect the harness, **not a deployed PR's application behavior**.
+[Regression tests](../.github/workflows/regression-tests.yml) runs the source
+unit suite and a separate infrastructure job on every PR and push to main. The
+infrastructure job runs `yarn test:infrastructure:node` and
+`yarn test:infrastructure:browser`; together, the isolated checks take roughly
+30 seconds locally, excluding dependency/browser installation. They protect the
+harness, **not a deployed PR's application behavior**.
 
 The website suite is **on demand**, not a required network/CMS-heavy check on
 every commit. A fresh Gatsby build alone took about 4 minutes locally; full-site
