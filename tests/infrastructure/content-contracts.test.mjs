@@ -37,6 +37,9 @@ test("detail URL helpers reproduce representative captured routes", async () => 
   assert.equal(blogPath("draft#section"), null);
   assert.equal(blogPath("draft?mode=preview"), null);
   assert.equal(blogPath("../secret"), null);
+  assert.equal(blogPath(".\n./secret"), null);
+  assert.equal(blogPath("draft\tpreview"), null);
+  assert.equal(blogPath("draft\rpreview"), null);
   assert.equal(blogPath("office//closure"), null);
   assert.equal(blogPath("office/closure"), "/blog/office/closure/");
   assert.equal(serviceUpdatePath({ slug: "office/closure", date: "2025-02-14" }), "/service-updates/2025/02/office/closure/");
