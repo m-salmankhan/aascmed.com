@@ -95,6 +95,10 @@ const stylesAverageRating = css({
     padding: `${gridSpacing*3}em 0`,
 
     ".stars": {
+        display: "flex",
+        flexWrap: "nowrap",
+        justifyContent: "center",
+        fontSize: "min(1em, 3.5vw)",
         paddingBottom: `${gridSpacing/2}em`,
     },
 
