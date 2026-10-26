@@ -9,6 +9,7 @@ import { chromium } from '@playwright/test';
 const astroRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const harnessPath = path.join(astroRoot, '.astro', 'home-verification');
 const cliPath = path.join(astroRoot, 'node_modules', 'astro', 'bin', 'astro.mjs');
+const fixtureImagePath = path.resolve(astroRoot, '..', 'static', 'assets', 'hero-bg.png');
 const staticConfigPath = path.join(harnessPath, 'astro.config.static.mjs');
 const ssrConfigPath = path.join(harnessPath, 'astro.config.ssr.mjs');
 const staticOutputPath = path.join(harnessPath, 'dist-static');
@@ -34,7 +35,7 @@ function collectionData(kind, status) {
   if (kind === 'conditions') return Array.from({ length: 12 }, (_, index) => ({
     id: index + 1, documentId: `condition-doc-${index + 1}`, slug: `condition-${index + 1}`,
     title: `${fixture} condition ${index + 1}`, heading: `${fixture} condition ${index + 1}`, order: index + 1,
-    thumbnail: null,
+    thumbnail: index === 0 ? { url: fixtureImagePath, alternativeText: 'Fixture condition image' } : null,
   }));
   if (kind === 'blogs') return Array.from({ length: 7 }, (_, index) => ({
     id: index + 1, documentId: `blog-doc-${index + 1}`, slug: `blog-${index + 1}`,
@@ -156,6 +157,7 @@ export default { ...base, outDir: '.astro/home-verification/dist-ssr' };
     'Active Provider', 'Patient Feedback', 'Published contact', 'Published locations',
     '312-555-0100', 'Book online', '/assets/hero-bg.png',
   ]) assert.ok(staticHtml.includes(expected), `static home contains ${expected}`);
+  assert.ok(staticHtml.includes('/media/condition-condition-1-'), 'homepage uses the generated responsive condition image descriptor');
   for (const excluded of ['Published condition 12', 'Published blog 7', 'Published update 4', 'Retired Provider', 'home-page-private-published', privateToken]) {
     assert.equal(staticHtml.includes(excluded), false, `static output excludes ${excluded}`);
   }
