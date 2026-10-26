@@ -1,8 +1,11 @@
 import React, { ComponentPropsWithoutRef } from "react"
 import logos from "./logo-sprites.svg"
 
-// SVG imports resolve to a public URL in Gatsby and Astro; append the fragment
-// only at the <use> reference so the same sprite contract works in both builds.
+/** Append a symbol fragment where the SVG `<use>` references the imported sprite.
+ * @param url Imported public sprite URL used by Gatsby and Astro.
+ * @param symbol Sprite symbol identifier without a leading `#`.
+ * @returns The sprite URL followed by its symbol fragment.
+ */
 const spriteSymbol = (url: string, symbol: string) => `${url}#${symbol}`;
 
 type SVGProps = ComponentPropsWithoutRef<"svg">;

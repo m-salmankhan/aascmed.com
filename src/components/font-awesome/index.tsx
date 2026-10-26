@@ -11,7 +11,11 @@ export const IconStyles = {
     REGULAR: regular,
     SOLID: solid,
 } as const;
-// Keep fragments separate from imported sprite URLs for webpack/Vite parity.
+/** Append an SVG symbol fragment to a sprite URL for Gatsby/Vite-compatible references.
+ * @param url Imported public sprite URL.
+ * @param symbol Sprite symbol identifier without a leading `#`.
+ * @returns The sprite URL followed by its symbol fragment.
+ */
 const spriteSymbol = (url: string, symbol: string) => `${url}#${symbol}`;
 export type IconStyles = typeof IconStyles[keyof typeof IconStyles];
 
