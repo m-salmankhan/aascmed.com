@@ -102,7 +102,7 @@ Add these in your repository **Settings → Secrets and variables → Actions**:
 | Name | Example | Description |
 |------|---------|-------------|
 | `GATSBY_STRAPI_API_URL` | `https://cms.example.com` | Strapi API URL |
-| `GATSBY_API_BASE_URL` | `https://api.example.com` | Base URL for API endpoints |
+| `GATSBY_API_BASE_URL` | `https://api.example.com` | Existing public base URL for contact-form API endpoints; separate from Strapi |
 | `PREVIEW_DOMAIN` | `preview.aascmed.com` | Domain for the preview site |
 | `PREVIEW_CERTS_PATH` | `/home/preview-deploy/certs` | Absolute path to cert dir on host |
 

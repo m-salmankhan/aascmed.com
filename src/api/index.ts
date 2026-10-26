@@ -6,7 +6,7 @@ export class API {
     readonly baseURL: string;
 
     constructor() {
-        this.baseURL = gatsbyPublicConfig.apiBaseUrl;
+        this.baseURL = gatsbyPublicConfig.contactApiBaseUrl;
     }
 
     async contact(fields: ContactFormFields): Promise<void | ContactFormErrorResponse> {

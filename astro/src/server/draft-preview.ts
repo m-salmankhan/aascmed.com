@@ -6,8 +6,8 @@ const fixture: DraftPreview = { title: 'Proof draft: seasonal allergy update', s
 /** One bounded request per page render. No response or draft data is cached. */
 export async function getDraftPreview(): Promise<DraftPreview> {
   if (import.meta.env.PUBLIC_ASTRO_TARGET === 'static') return fixture;
-  const { draftApiUrl, strapiToken } = getAstroServerConfig();
-  const endpoint = draftApiUrl;
+  const { draftResourceUrl, strapiToken } = getAstroServerConfig();
+  const endpoint = draftResourceUrl;
   if (!endpoint) return fixture;
   let url: URL;
   try {
