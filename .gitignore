@@ -10,3 +10,8 @@ all-pages-test-results/
 retry-test-results/
 final-test-results/
 ui-results.json
+astro/dist-static/
+astro/dist-ssr/
+astro/.astro/
+dist-astro-static/
+dist-astro-ssr/
