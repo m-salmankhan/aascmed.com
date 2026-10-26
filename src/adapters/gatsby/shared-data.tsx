@@ -47,7 +47,7 @@ const GatsbySharedDataAdapter: React.FC<{ children?: ReactNode }> = ({ children 
     siteSettings,
     trackingSettings: mapGatsbyTrackingSettings(data.strapiTrackingInfo),
     announcement: mapGatsbyAnnouncement(data.strapiAnnouncement),
-    clinicOptions: data.allStrapiClinic?.clinics?.flatMap(({ clinic_name }) => clinic_name ? [clinic_name] : []) ?? [],
+    clinicOptions: data.allStrapiClinic?.clinics?.flatMap((clinic) => clinic?.clinic_name ? [clinic.clinic_name] : []) ?? [],
   };
 
   return <SiteDataProvider value={value}>{children}</SiteDataProvider>;
