@@ -137,12 +137,13 @@ export function mapGatsbyBlocks(node: GatsbyNode, key: "body" | "content"): Json
 
 /** Convert nullable Gatsby image metadata to plain shared media data.
  * @param media Nullable Gatsby or Strapi media query result.
- * @returns A descriptor with public URL, alt text, optional pixel dimensions/srcSet, or undefined without a source.
+ * @returns A descriptor using Gatsby's fallback `src` as the default and `srcSet` only as responsive candidates, or undefined without a source.
  */
 export function mapGatsbyMedia(media: GatsbyMedia | null | undefined): MediaDescriptor | undefined {
   if (!media) return undefined;
   const image = media.localFile?.childImageSharp?.gatsbyImageData;
   const fallback = image?.images?.fallback;
+  // Gatsby's fallback.src is the default URL; srcSet remains the responsive candidate list.
   const src = fallback?.src || image?.src || media.localFile?.publicURL || media.publicURL || media.url;
   if (!src) return undefined;
   const srcSet = fallback?.srcSet || image?.srcSet;

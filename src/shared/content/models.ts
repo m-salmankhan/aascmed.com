@@ -31,7 +31,7 @@ export interface MediaDescriptor {
   height?: number;
   /** MIME type such as `image/jpeg`. */
   mimeType?: string;
-  /** Browser `srcSet` candidates in HTML source-set syntax. */
+  /** Responsive image candidate list in HTML `srcset` syntax, not a default image URL. */
   srcSet?: string;
   /** Available named image encodings, such as WebP or AVIF. */
   formats?: Record<string, MediaFormat>;
