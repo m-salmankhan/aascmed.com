@@ -166,7 +166,7 @@ The website suite is **on demand**, not a required network/CMS-heavy check on
 every commit. A fresh Gatsby build alone took about 4 minutes locally; full-site
 comparisons add multiple minutes, live fonts/maps and a reference deployment.
 For a quick PR review, same-repository PRs get a top-level instruction comment: after the
-Netlify deploy preview for the current head is ready, comment `/run-regression`.
+Netlify deploy preview for the current head is ready, comment `/regression-check`.
 That run compares the PR's `deploy-preview-N--aascmed.netlify.app` deployment
 with `main--aascmed.netlify.app`, after verifying that the PR includes current
 `main` and that Netlify reported a successful preview for the exact head commit.
@@ -177,11 +177,13 @@ quick, advisory comparison against the main deploy alias, not a commit-pinned
 baseline. No content export or freeze is needed. If page text, photos, or other
 published content changed between the builds, those changes can appear in the
 report alongside code and layout changes. The fast infrastructure job
-remains separate from both browser comparison paths. The instruction comment is
-posted to the PR conversation, not the review diff.
+remains separate from both browser comparison paths. The command comment is
+updated with a running notice and then the results, all in the PR conversation;
+it does not create a review comment that needs resolving.
 
 For an on-demand PR comparison, wait for the Netlify preview deployment to
-succeed, then comment `/run-regression`. The workflow checks that the PR is open,
+succeed, then comment `/regression-check` (`/run-regression` is also accepted as
+an alias). The workflow checks that the PR is open,
 targets current `main`, comes from this repository, and has a successful Netlify
 preview status for its current head commit. Only repository collaborators with
 write access can trigger it. The workflow code runs from the default branch for

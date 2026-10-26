@@ -35,10 +35,41 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  prepare-comment-command:
+    name: Acknowledge regression command
+    if: github.event_name == 'issue_comment' && github.event.issue.pull_request && contains(fromJSON('["/regression-check","/run-regression"]'), github.event.comment.body)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: write
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const comment = context.payload.comment;
+            const { data: access } = await github.rest.repos.getCollaboratorPermissionLevel({
+              owner, repo, username: comment.user.login,
+            });
+            if (!["admin", "maintain", "write"].includes(access.permission)) {
+              await github.rest.issues.updateComment({
+                owner, repo, comment_id: comment.id,
+                body: "This regression check can only be run by a repository collaborator with write access.",
+              });
+              core.setFailed("Commenter needs write access to run the regression check");
+              return;
+            }
+            await github.rest.issues.updateComment({
+              owner, repo, comment_id: comment.id,
+              body: "⏳ Regression check started. I’m checking the PR and preview now; I’ll update this comment with the results.",
+            });
+
   infrastructure:
     name: Fast regression-infrastructure checks
     runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request_target' && (github.event_name != 'issue_comment' || (github.event.issue.pull_request && github.event.comment.body == '/run-regression'))
+    needs: [prepare-comment-command]
+    if: always() && github.event_name != 'pull_request_target' && (github.event_name != 'issue_comment' || (needs.prepare-comment-command.result == 'success' && github.event.issue.pull_request && contains(fromJSON('["/regression-check","/run-regression"]'), github.event.comment.body)))
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
@@ -59,12 +90,13 @@ jobs:
           retention-days: 14
 
   browser:
-    name: Website functionality and advisory reference review
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'issue_comment' && github.event.issue.pull_request && github.event.comment.body == '/run-regression')
-    needs: infrastructure
+    name: Website functionality and advisory comparison
+    if: always() && (github.event_name == 'workflow_dispatch' && needs.infrastructure.result == 'success' || github.event_name == 'issue_comment' && needs.infrastructure.result == 'success' && needs.prepare-comment-command.result == 'success' && github.event.issue.pull_request && contains(fromJSON('["/regression-check","/run-regression"]'), github.event.comment.body))
+    needs: [infrastructure, prepare-comment-command]
     permissions:
       contents: read
-      pull-requests: write
+      pull-requests: read
+      issues: write
       statuses: read
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -80,6 +112,7 @@ jobs:
           INPUT_CANDIDATE_URL: ${{ inputs.candidate_url }}
           INPUT_REFERENCE_URL: ${{ inputs.reference_url }}
           INPUT_BASELINE_ID: ${{ inputs.baseline_id }}
+          INPUT_COMMENT_ID: ${{ github.event.comment.id }}
         with:
           script: |
             const { validatePullRequest } = require("./tests/ci/review");
@@ -106,6 +139,7 @@ jobs:
               core.setOutput("reference_url", target.referenceURL);
               core.setOutput("baseline_id", target.baselineId);
               core.setOutput("candidate_commit", target.candidateCommit);
+              core.setOutput("comment_id", String(context.payload.comment.id));
             }
       - name: Expose resolved comparison inputs
         env:
@@ -114,12 +148,14 @@ jobs:
           UI_REFERENCE_URL: ${{ steps.targets.outputs.reference_url }}
           UI_BASELINE_ID: ${{ steps.targets.outputs.baseline_id }}
           UI_CANDIDATE_COMMIT: ${{ steps.targets.outputs.candidate_commit }}
+          UI_COMMENT_ID: ${{ steps.targets.outputs.comment_id }}
         run: |
           printf 'UI_PULL_REQUEST_NUMBER=%s\n' "$UI_PULL_REQUEST_NUMBER" >> "$GITHUB_ENV"
           printf 'UI_BASE_URL=%s\n' "$UI_BASE_URL" >> "$GITHUB_ENV"
           printf 'UI_REFERENCE_URL=%s\n' "$UI_REFERENCE_URL" >> "$GITHUB_ENV"
           printf 'UI_BASELINE_ID=%s\n' "$UI_BASELINE_ID" >> "$GITHUB_ENV"
           printf 'UI_CANDIDATE_COMMIT=%s\n' "$UI_CANDIDATE_COMMIT" >> "$GITHUB_ENV"
+          printf 'UI_COMMENT_ID=%s\n' "$UI_COMMENT_ID" >> "$GITHUB_ENV"
         shell: bash
       - name: Validate comparison PR and selected commit
         uses: actions/github-script@v7
@@ -154,7 +190,7 @@ jobs:
             test-results/
             ui-results.json
           retention-days: 14
-      - name: Publish reference differences for PR review
+      - name: Update regression comment with results
         if: ${{ !cancelled() }}
         uses: actions/github-script@v7
         env:
@@ -166,6 +202,7 @@ jobs:
             const result = await publishReview({
               github, ...context.repo,
               pullNumber: process.env.UI_PULL_REQUEST_NUMBER,
+              commentId: process.env.UI_COMMENT_ID,
               commitSha: process.env.UI_CANDIDATE_COMMIT,
               report: JSON.parse(readFileSync("ui-results.json", "utf8")),
               runURL: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
@@ -175,7 +212,26 @@ jobs:
               baselineId: process.env.UI_BASELINE_ID,
             });
             await core.summary.addRaw(result.body).write();
-            if (result.posted) core.notice(`Reference differences need review: ${result.commentURL}`);
+            if (result.posted) core.notice(`Regression results posted: ${result.commentURL}`);
+
+  report-command-failure:
+    name: Update regression command comment if the check cannot finish
+    if: always() && github.event_name == 'issue_comment' && github.event.issue.pull_request && contains(fromJSON('["/regression-check","/run-regression"]'), github.event.comment.body) && needs.prepare-comment-command.result == 'success' && (needs.infrastructure.result != 'success' || needs.browser.result != 'success')
+    needs: [infrastructure, browser, prepare-comment-command]
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const runURL = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = `⚠️ Regression check couldn't finish. See the [workflow run](${runURL}) for the reason.`;
+            await github.rest.issues.updateComment({
+              ...context.repo,
+              comment_id: context.payload.comment.id,
+              body,
+            });
 
   regression-instructions:
     name: Add on-demand regression instructions to the PR
@@ -192,7 +248,7 @@ jobs:
             const body = [
               marker,
               "### Run the website regression check",
-              "When the PR's Netlify deploy preview is ready, comment `/run-regression` on this PR. The browser comparison runs on demand and checks the PR preview against Netlify's `main` branch deployment.",
+              "When the PR's Netlify deploy preview is ready, comment `/regression-check` on this PR. The browser comparison runs on demand and checks the PR preview against Netlify's `main` branch deployment.",
               "",
               "This is a quick visual comparison. If page text or photos changed between the main and PR builds, those changes may appear in the report too.",
             ].join("\n");
