@@ -1,96 +1,52 @@
-import { graphql, HeadProps, PageProps } from "gatsby"
-import { Layout } from "../components/layouts/default";
-import { css } from "@emotion/react";
-import { Breadcrumbs } from "../components/breadcrumbs";
-import { Container } from "../components/containers";
-import { gridSpacing } from "../styles/theme";
-import { PracticeArchive, PracticeSummary } from "../components/practices/practice-archive";
-import { ContactSection } from "../components/contact/full-form";
+import { graphql, HeadProps, PageProps } from "gatsby";
 import { GatsbySEO as SEO } from "../adapters/gatsby/seo";
-import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
+import { mapGatsbyClinic, mapGatsbyText } from "../shared/content/gatsby-adapter";
+import { clinicPath } from "../shared/content/urls";
+import type { PracticeSummary } from "../components/practices/practice-archive";
+import { ContactView } from "../views/fixed-archive";
 
 const ContactPage = ({ data }: PageProps<Queries.ContactPageQuery>) => {
-  const archiveCopy = data.strapiContact;
-  const heading = archiveCopy?.heading || "Contact Us";
-  
-  // Parse text blocks from internal.content
-  const rawContent = archiveCopy?.internal?.content;
-  const parsedData = rawContent ? JSON.parse(rawContent) : null;
-  const textBlocks = parsedData?.text as any[] | null;
-
-  const practices: PracticeSummary[] = data.practices.nodes.map(clinic => ({
-    slug: '/clinics/' + (clinic.slug || `${(clinic.clinic_name || "").toLowerCase().replace(/\s+/g, '-')}/`),
-    clinic_name: clinic.clinic_name || "Untitled Clinic",
-    longitude: clinic.location?.long || 0,
-    latitude: clinic.location?.lat || 0,
-    address: clinic.location?.address || "",
-    phone: clinic.contact?.phone || "",
-    fax: clinic.contact?.fax || "",
-  }));
-  const clinicOptions = data.practices.nodes.flatMap((clinic) => clinic?.clinic_name ? [clinic.clinic_name] : []);
-
-  return (
-    <Layout>
-      <main>
-        <Container>
-          <Breadcrumbs path={[
-            ["/", "Home"],
-            ["/contact/", "Contact Us"]
-          ]} css={css({ marginTop: "3em" })} />
-          <ContactSection
-            title={heading}
-            textContent={textBlocks ? <StrapiBlocksRenderer content={textBlocks} /> : undefined}
-            clinicOptions={clinicOptions}
-            css={css`margin: 0 -${gridSpacing / 2}rem`}
-          />
-          <PracticeArchive
-            practices={practices} heading={"Practice Locations"}
-            isHomePage={true}
-            css={css({ margin: `0 -${gridSpacing / 2}em` })}
-          />
-        </Container>
-      </main>
-    </Layout>
-  )
-}
+  const copy = data.strapiContact;
+  const clinicOptions = data.practices.nodes.flatMap((node) => node?.clinic_name ? [node.clinic_name] : []);
+  const practices: PracticeSummary[] = data.practices.nodes.flatMap((node) => {
+    if (!node) return [];
+    const clinic = mapGatsbyClinic({ id: node.id, slug: node.slug, clinic_name: node.clinic_name,
+      location: node.location, contact: node.contact });
+    return [{
+      slug: clinicPath(clinic) || "/clinics/",
+      clinic_name: clinic.clinicName || "Untitled Clinic",
+      longitude: clinic.location?.longitude || 0,
+      latitude: clinic.location?.latitude || 0,
+      address: clinic.location?.address || "",
+      phone: clinic.contact?.phone || "",
+      fax: clinic.contact?.fax || "",
+    }];
+  });
+  return <ContactView heading={copy?.heading || "Contact Us"} blocks={mapGatsbyText(copy || {})}
+    practices={practices} clinicOptions={clinicOptions} />;
+};
 
 export const Head = (props: HeadProps<Queries.ContactPageQuery>) => {
   const description = props.data.strapiContact?.metaDescription || "";
   const heading = props.data.strapiContact?.heading || "";
-
-  return (
-    <SEO description={description} slug={props.location.pathname} title={heading} useTracking={true}>
-      <meta name={"og:type"} content={"website"} />
-    </SEO>
-  )
-}
+  return <SEO description={description} slug={props.location.pathname} title={heading} useTracking={true}>
+    <meta name="og:type" content="website" />
+  </SEO>;
+};
 
 export const query = graphql`
   query ContactPage {
-    strapiContact {
-      heading
-      metaDescription
-      internal {
-        content
-      }
-    }
-
+    strapiContact { heading metaDescription internal { content } }
     practices: allStrapiClinic {
       nodes {
+        id
         clinic_name
         slug
-        location {
-          address
-          lat
-          long
-        }
-        contact {
-          phone
-          fax
-        }
+        location { address lat long }
+        contact { phone fax }
       }
     }
   }
-`
+`;
 
-export default ContactPage
+export default ContactPage;

@@ -196,6 +196,15 @@ export function mapGatsbyBlocks(node: GatsbyNode, key: "body" | "content"): Json
   return jsonArray(source?.[key]);
 }
 
+/** Convert Gatsby archive/singleton content to shared rich-text blocks.
+ * @param node Gatsby page result containing serialized internal content.
+ * @returns JSON-safe text blocks, or undefined when no content is available.
+ */
+export function mapGatsbyText(node: { internal?: { content?: string | null } | null }): JsonValue[] | undefined {
+  const source = readInternalContent(node.internal?.content);
+  return jsonArray(source?.text);
+}
+
 /** Convert nullable Gatsby image metadata to plain shared media data.
  * @param media Nullable Gatsby or Strapi media query result.
  * @returns A descriptor using Gatsby's fallback `src` as the default and `srcSet` only as responsive candidates, or undefined without a source.
