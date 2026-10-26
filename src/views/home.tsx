@@ -104,7 +104,10 @@ function renderMedia(media?: HomeMediaItem[]) {
   return <SectionMedia media={valid as SectionMediaItem[]} />;
 }
 
-/** Render the homepage from normalized serializable props.\n * @param props Homepage copy, media, archive items, reviews, and non-empty clinic choices.\n * @returns The shared homepage composition without framework query data.\n */
+/** Render the homepage from normalized serializable props.
+ * @param props Homepage copy, media, archive items, reviews, and non-empty clinic choices.
+ * @returns The shared homepage composition without framework query data.
+ */
 export function HomeView({
   siteTitle,
   hero,

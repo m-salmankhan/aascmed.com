@@ -167,6 +167,7 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
       }
     ` }} />
   </App>;
+};
 
 export const Head = (props: HeadProps<Queries.IndexPageQuery>) => {
   const description = props.data.strapiHomePage?.metaDescription || "";
