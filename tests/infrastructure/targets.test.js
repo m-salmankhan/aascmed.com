@@ -149,3 +149,14 @@ test("rejects an ambiguous status between the requested PR success and another P
 
   await assert.rejects(setupState.resolve(), /newer preview status that cannot be matched/i);
 });
+
+test("rejects an ambiguous status preceding the requested preview when timestamps are equal", async () => {
+  const sameTime = "2026-01-02T00:00:00Z";
+  const setupState = setup({ statuses: [
+    status({ url: "https://deploy-preview-121--aascmed.netlify.app/", createdAt: sameTime }),
+    status({ url: "https://app.netlify.com/projects/aascmed/deploys/pending", state: "pending", createdAt: sameTime }),
+    status({ createdAt: sameTime }),
+  ] });
+
+  await assert.rejects(setupState.resolve(), /newer preview status that cannot be matched/i);
+});
