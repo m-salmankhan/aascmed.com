@@ -12,7 +12,8 @@
     "typecheck": "astro check --config astro.config.static.mjs",
     "verify:proof": "node scripts/verify-proof.mjs",
     "verify:runtime": "node scripts/verify-runtime.mjs",
-    "verify:document": "node scripts/verify-document.mjs"
+    "verify:document": "node scripts/verify-document.mjs",
+    "verify:public-images": "node scripts/verify-public-images.mjs"
   },
   "dependencies": {
     "@astrojs/node": "10.1.4",
@@ -22,7 +23,9 @@
   "peerDependencies": {
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
-    "@emotion/react": "^11.11.0"
+    "@emotion/react": "^11.11.0",
+    "@napi-rs/canvas": "^0.1.95",
+    "sharp": "^0.34.5 || ^0.35.5"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.4",
