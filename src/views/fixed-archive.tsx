@@ -20,11 +20,15 @@ import { ProviderArchive } from "../components/providers";
 import { ServiceUpdateArchive } from "../components/service-updates";
 import { Image } from "../components/media/image";
 
+/** Shared heading and serializable rich-text inputs for fixed and archive views. */
 export interface FixedViewProps {
   heading?: string;
   blocks?: JsonValue[];
 }
 
+/** Render the site-wide not-found page.
+ * @returns The not-found layout with a contact link.
+ */
 export function NotFoundView() {
   return <Layout><main><Container css={css({ minHeight: "50vh", textAlign: "center", marginTop: "5em" })}>
     <Logo css={{ fill: colours.brandPrimary }} />
@@ -34,6 +38,10 @@ export function NotFoundView() {
   </Container></main></Layout>;
 }
 
+/** Render the privacy page from its heading, content blocks, and optional update date.
+ * @param props Privacy copy and optional last-updated display value.
+ * @returns The privacy page layout.
+ */
 export function PrivacyView({ heading = "Privacy Policy", blocks, lastUpdated }: FixedViewProps & { lastUpdated?: string }) {
   return <PrimarySecondaryColumnsLayout><main>
     <Breadcrumbs path={[["/", "Home"], ["/privacy/", heading]]} css={css({ marginTop: "3em" })} />
@@ -46,6 +54,10 @@ export function PrivacyView({ heading = "Privacy Policy", blocks, lastUpdated }:
   </main></PrimarySecondaryColumnsLayout>;
 }
 
+/** Render contact content and the supplied clinic list.
+ * @param props Page heading, rich-text blocks, and clinic summaries.
+ * @returns The contact page layout and practice archive.
+ */
 export function ContactView({ heading = "Contact Us", blocks, practices }: FixedViewProps & { practices: PracticeSummary[] }) {
   return <Layout><main><Container>
     <Breadcrumbs path={[["/", "Home"], ["/contact/", "Contact Us"]]} css={css({ marginTop: "3em" })} />
@@ -56,7 +68,12 @@ export function ContactView({ heading = "Contact Us", blocks, practices }: Fixed
   </Container></main></Layout>;
 }
 
+/** Blog archive card data with thumbnail metadata instead of a Gatsby image node. */
 export interface BlogViewItem extends Omit<BlogSummary, "thumbnail"> { thumbnail?: MediaDescriptor }
+/** Render blog archive cards using plain summary and media data.
+ * @param props Archive heading, rich-text blocks, and ordered blog items.
+ * @returns The blog archive page layout.
+ */
 export function BlogArchiveView({ heading = "Blog", blocks, blogs }: FixedViewProps & { blogs: BlogViewItem[] }) {
   return <Layout><Container>
     <Breadcrumbs path={[["/", "Home"], ["/blog/", "Blog"]]} css={css({ marginTop: "3em" })} />
@@ -66,7 +83,12 @@ export function BlogArchiveView({ heading = "Blog", blocks, blogs }: FixedViewPr
   </Container></Layout>;
 }
 
+/** Condition archive card data with optional plain media metadata. */
 export interface ConditionViewItem { slug: string; title: string; thumbnail?: MediaDescriptor }
+/** Render condition cards from serializable summaries.
+ * @param props Archive heading, rich-text blocks, and ordered condition items.
+ * @returns The conditions archive page layout.
+ */
 export function ConditionsArchiveView({ heading = "Conditions", blocks, conditions }: FixedViewProps & { conditions: ConditionViewItem[] }) {
   return <Layout><main><Container>
     <Breadcrumbs path={[["/", "Home"], ["/conditions/", "Conditions"]]} css={css({ marginTop: "3em" })} />
@@ -76,6 +98,7 @@ export function ConditionsArchiveView({ heading = "Conditions", blocks, conditio
   </Container></main></Layout>;
 }
 
+/** Provider archive card data with serializable name, retirement, and media fields. */
 export interface ProviderViewItem {
   slug: string;
   name?: ProviderRecord["name"];
@@ -83,6 +106,10 @@ export interface ProviderViewItem {
   image?: MediaDescriptor;
   excerpt: string;
 }
+/** Render provider cards from shared provider summaries.
+ * @param props Archive heading, rich-text blocks, and ordered provider items.
+ * @returns The providers archive page layout.
+ */
 export function ProvidersArchiveView({ heading = "Meet the team", blocks, providers }: FixedViewProps & { providers: ProviderViewItem[] }) {
   const stylesExpandGridPadding = css`margin: 0 ${-gridSpacing / 2}em;`;
   return <Layout><Container>
@@ -99,6 +126,10 @@ export function ProvidersArchiveView({ heading = "Meet the team", blocks, provid
   </Container></Layout>;
 }
 
+/** Render clinic cards using the supplied plain clinic summaries.
+ * @param props Archive heading, rich-text blocks, and ordered clinic summaries.
+ * @returns The clinics archive page layout.
+ */
 export function ClinicsArchiveView({ heading = "Clinics", blocks, practices }: FixedViewProps & { practices: PracticeSummary[] }) {
   return <Layout><main><Container>
     <Breadcrumbs path={[["/", "Home"], ["/clinics/", "Clinics"]]} css={css({ marginTop: "3em" })} />
@@ -107,6 +138,10 @@ export function ClinicsArchiveView({ heading = "Clinics", blocks, practices }: F
   </Container></main></Layout>;
 }
 
+/** Render service-update cards from dated, serializable summaries.
+ * @param props Archive heading, rich-text blocks, and ordered update summaries.
+ * @returns The service-updates archive page layout.
+ */
 export function ServiceUpdatesArchiveView({ heading = "Service Updates", blocks, serviceUpdates }: FixedViewProps & { serviceUpdates: Array<{ slug: string; date: string; title: string; description: string }> }) {
   return <Layout><Container>
     <Breadcrumbs path={[["/", "Home"], ["/service-updates/", "Service Updates"]]} css={css({ marginTop: "3em" })} />

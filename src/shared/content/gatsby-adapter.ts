@@ -196,7 +196,7 @@ export function mapGatsbyBlocks(node: GatsbyNode, key: "body" | "content"): Json
   return jsonArray(source?.[key]);
 }
 
-/** Convert Gatsby archive/singleton content to shared rich-text blocks.
+/** Convert Gatsby archive/singleton serialized content to shared rich-text blocks.
  * @param node Gatsby page result containing serialized internal content.
  * @returns JSON-safe text blocks, or undefined when no content is available.
  */
