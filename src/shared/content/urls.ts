@@ -2,7 +2,7 @@ import type { ClinicRecord, ServiceUpdateRecord } from "./models";
 
 /** Build a safe trailing-slash route.
  * @param family Route family segment, such as `blog`.
- * @param slug Relative slug, optionally null or undefined.
+ * @param slug Untrusted content slug to place beneath the route family.
  * @returns `/<family>/<slug>/`, or null when the slug is absent or unsafe.
  */
 function pathFor(family: string, slug: string | null | undefined): string | null {
@@ -11,7 +11,7 @@ function pathFor(family: string, slug: string | null | undefined): string | null
   return `/${family}/${segment}/`;
 }
 
-/** Validate an ISO-like calendar date rather than a timestamp or natural-language date.
+/** Validate a CMS calendar date value for its written calendar day.
  * @param date Content record's ISO-style date/date-time value (for example, `2026-12-12` or `2026-12-12T...`); its written calendar day is preserved for dated URLs.
  * @returns The zero-padded calendar year, month, and day from that value, or null when malformed or impossible.
  */
@@ -28,17 +28,17 @@ function civilDateParts(date: string): { year: string; month: string; day: strin
 }
 
 /** Return the canonical blog route.
- * @param slug Nullable blog slug.
+ * @param slug Blog record's URL slug, when available.
  * @returns `/blog/<slug>/`, or null for an absent or unsafe slug.
  */
 export const blogPath = (slug: string | null | undefined): string | null => pathFor("blog", slug);
 /** Return the canonical condition route.
- * @param slug Nullable condition slug.
+ * @param slug Condition record's URL slug, when available.
  * @returns `/conditions/<slug>/`, or null for an absent or unsafe slug.
  */
 export const conditionPath = (slug: string | null | undefined): string | null => pathFor("conditions", slug);
 /** Return the canonical provider route.
- * @param slug Nullable provider slug.
+ * @param slug Provider record's URL slug, when available.
  * @returns `/providers/<slug>/`, or null for an absent or unsafe slug.
  */
 export const providerPath = (slug: string | null | undefined): string | null => pathFor("providers", slug);
@@ -66,7 +66,7 @@ export function serviceUpdatePath(update: Pick<ServiceUpdateRecord, "slug" | "da
 }
 
 /** Sort by ascending numeric order while preserving input order for ties.
- * @param records Read-only records with optional numeric order values.
+ * @param records Content records in source order, with optional CMS display-order values.
  * @returns A newly sorted array; missing and null orders appear last.
  */
 export function sortByOrder<T extends { order?: number | null }>(records: readonly T[]): T[] {
@@ -76,13 +76,13 @@ export function sortByOrder<T extends { order?: number | null }>(records: readon
 }
 
 /** Sort newest valid date strings first while preserving input order for ties.
- * @param records Read-only records with optional date strings.
+ * @param records Content records in source order, with optional CMS date/date-time values.
  * @returns A newly sorted array; absent and invalid dates appear last.
  */
 export function sortByDateDescending<T extends { date?: string | null }>(records: readonly T[]): T[] {
   /** Convert date text to a sortable timestamp.
-   * @param value Nullable date text.
-   * @returns Milliseconds since the Unix epoch, or negative infinity when invalid.
+   * @param value Content record's date/date-time value, when present.
+   * @returns A comparable date value, or a sentinel for missing or invalid dates.
    */
   const validTimestamp = (value: string | null | undefined): number => {
     if (!value || (/^\d{4}-\d{2}-\d{2}(?:$|T)/.test(value) && !civilDateParts(value))) return Number.NEGATIVE_INFINITY;

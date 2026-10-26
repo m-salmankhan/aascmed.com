@@ -1,4 +1,4 @@
-/** JSON scalar values accepted across the framework boundary; numbers must be finite. */
+/** JSON scalar values used for serializable CMS data. */
 export type JsonPrimitive = string | number | boolean | null;
 /** Recursively JSON-safe data used for CMS rich text and dynamic-zone content. */
 export type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
@@ -20,8 +20,7 @@ export interface MediaFormat {
   size?: number;
 }
 
-/** Framework-neutral replacement for Gatsby's localFile/GatsbyImageData tree. */
-/** Plain media metadata shared by Gatsby and Astro views. */
+/** Framework-neutral image metadata shared by Gatsby and Astro views. */
 export interface MediaDescriptor {
   /** Public image URL used as the default source. */
   src: string;
@@ -42,7 +41,7 @@ export interface MediaDescriptor {
 
 /** Common identity, copy, rich-text, media, and date fields for published content. */
 export interface ContentRecord {
-  /** Stable CMS identifier, represented as a string. */
+  /** Stable CMS record identifier. */
   id: string;
   /** URL slug, or null when the CMS record has no slug. */
   slug: string | null;
