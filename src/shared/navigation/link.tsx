@@ -14,14 +14,14 @@ type SiteLinkProps = Omit<ComponentProps<"a">, "href"> & {
  * @param props Anchor attributes, destination, active class, and matching options.
  * @returns An anchor with `aria-current="page"` on exact path matches.
  */
-export const SiteLink: React.FC<SiteLinkProps> = ({
+export function SiteLink({
   href,
   activeClassName,
   partiallyActive = false,
   className,
   children,
   ...props
-}) => {
+}: SiteLinkProps): React.ReactElement {
   const providedPath = useCurrentPath();
   const [browserPath, setBrowserPath] = useState<string | null>(null);
   const currentPath = providedPath ?? browserPath;
@@ -46,4 +46,4 @@ export const SiteLink: React.FC<SiteLinkProps> = ({
       {children}
     </a>
   );
-};
+}

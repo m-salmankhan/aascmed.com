@@ -15,9 +15,9 @@ export function normalizePath(path: string): string {
  * @param props Provider path and optional React children.
  * @returns A context provider rendering the children with the normalized path.
  */
-export const CurrentPathProvider: React.FC<{ path: string; children?: ReactNode }> = ({ path, children }) => (
-  <CurrentPathContext.Provider value={normalizePath(path)}>{children}</CurrentPathContext.Provider>
-);
+export function CurrentPathProvider(props: { path: string; children?: ReactNode }): React.ReactElement {
+  return <CurrentPathContext.Provider value={normalizePath(props.path)}>{props.children}</CurrentPathContext.Provider>;
+}
 
 /** Read the route path injected by the Gatsby boundary.
  * @returns The normalized path, or null when no provider is mounted.
