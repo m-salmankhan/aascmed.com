@@ -12,7 +12,10 @@ import type {
 } from "./models";
 
 interface GatsbyImageData {
-  images?: { fallback?: { src?: string; width?: number; height?: number; srcSet?: string }; sources?: Array<{ srcSet?: string }> };
+  images?: {
+    fallback?: { src?: string; width?: number; height?: number; srcSet?: string; sizes?: string };
+    sources?: Array<{ srcSet?: string; sizes?: string; type?: string }>;
+  };
   width?: number;
   height?: number;
   src?: string;
@@ -127,6 +130,13 @@ export function mapGatsbyMedia(media: GatsbyMedia | null | undefined): MediaDesc
   if (width != null) descriptor.width = width;
   if (height != null) descriptor.height = height;
   if (srcSet) descriptor.srcSet = srcSet;
+  if (fallback?.sizes) descriptor.sizes = fallback.sizes;
+  const formats = image?.images?.sources?.filter((source) => source.type && source.srcSet).map((source) => ({
+    type: source.type!,
+    srcSet: source.srcSet!,
+    sizes: source.sizes,
+  }));
+  if (formats?.length) descriptor.formats = formats;
   const mimeType = media.mime || (media as GatsbyMedia & { mimeType?: string | null }).mimeType;
   if (mimeType) descriptor.mimeType = mimeType;
   const candidates = (fallback?.srcSet || image?.srcSet || "").split(",").map((candidate) => {

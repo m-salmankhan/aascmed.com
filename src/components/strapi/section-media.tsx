@@ -89,7 +89,7 @@ const MediaItem: React.FC<{ item: SectionMediaItem }> = ({ item }) => {
   }
 
   if (isImage && item.descriptor) {
-    return <Image image={item.descriptor} css={css({ width: "100%", borderRadius: "8px" })} />;
+    return <Image image={item.descriptor} css={css({ width: "100%", height: "auto", borderRadius: "8px" })} />;
   }
 
   if (isVideo) {
@@ -100,7 +100,7 @@ const MediaItem: React.FC<{ item: SectionMediaItem }> = ({ item }) => {
 
   if (isImage && item.url) {
     const src = item.url;
-    return <Image image={{ src, alt }} css={css({ width: "100%", borderRadius: "8px" })} />;
+    return <Image image={{ src, alt }} css={css({ width: "100%", height: "auto", borderRadius: "8px" })} />;
   }
 
   return null;

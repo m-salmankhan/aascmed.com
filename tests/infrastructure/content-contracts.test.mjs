@@ -190,6 +190,32 @@ test("Gatsby responsive image candidates map into plain descriptors with crop di
     aspectRatio: 1,
   });
 });
+
+test("Gatsby image adapters preserve constrained slot sizes and encoded picture sources", () => {
+  const media = mapGatsbyMedia({
+    localFile: { childImageSharp: { gatsbyImageData: { images: {
+      fallback: { src: "/card.jpg", width: 400, height: 250, srcSet: "/card.jpg 400w", sizes: "(min-width: 1200px) 400px, 100vw" },
+      sources: [
+        { type: "image/avif", srcSet: "/card.avif 400w", sizes: "(min-width: 1200px) 400px, 100vw" },
+        { type: "image/webp", srcSet: "/card.webp 400w", sizes: "(min-width: 1200px) 400px, 100vw" },
+      ],
+    } } } },
+  });
+  assert.equal(media?.sizes, "(min-width: 1200px) 400px, 100vw");
+  assert.deepEqual(media?.formats, [
+    { type: "image/avif", srcSet: "/card.avif 400w", sizes: "(min-width: 1200px) 400px, 100vw" },
+    { type: "image/webp", srcSet: "/card.webp 400w", sizes: "(min-width: 1200px) 400px, 100vw" },
+  ]);
+});
+
+test("shared image renderer keeps Gatsby picture sources and sizes in the React boundary", async () => {
+  const source = await readFile(new URL("../../src/components/media/image.tsx", import.meta.url), "utf8");
+  assert.match(source, /<picture css=/);
+  assert.match(source, /<source[^\n]+type=\{format\.type\}[^\n]+srcSet=\{format\.srcSet\}[^\n]+sizes=\{format\.sizes \|\| computedSizes\}/);
+  assert.match(source, /const computedSizes = props\.sizes \|\| image\.sizes/);
+  assert.match(source, /fit=\{props\.fit \|\| "cover"\}/);
+  assert.match(source, /img: \{ width: "100%", height: "100%", objectFit: fit \}/);
+});
 test("shared model declarations stay free of framework nodes, GraphQL query types, and credentials", async () => {
   const modelText = await readFile(new URL("../../src/shared/content/models.ts", import.meta.url), "utf8");
   const declarations = modelText.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, "");

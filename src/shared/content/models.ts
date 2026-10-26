@@ -7,11 +7,9 @@ export type ContentBlock = { [key: string]: JsonValue };
 export type DynamicZoneItem = { __component: string; [key: string]: JsonValue };
 
 export interface MediaFormat {
-  src: string;
-  width?: number;
-  height?: number;
-  mimeType?: string;
-  size?: number;
+  type: string;
+  srcSet: string;
+  sizes?: string;
 }
 
 /** Framework-neutral replacement for Gatsby's localFile/GatsbyImageData tree. */
@@ -22,13 +20,16 @@ export interface MediaDescriptor {
   height?: number;
   mimeType?: string;
   srcSet?: string;
+  /** Browser slot size copied from Gatsby's image data when available. */
+  sizes?: string;
   /** Candidate widths and URLs for renderers that need a responsive source set. */
   sources?: Array<{ src: string; width: number }>;
   /** Preserve source aspect ratio when a layout needs an explicit box. */
   aspectRatio?: number;
   /** A stable content URL for video and other non-image media. */
   poster?: string;
-  formats?: Record<string, MediaFormat>;
+  /** Alternate encodings for a picture element, such as AVIF/WebP. */
+  formats?: MediaFormat[];
   /** Optional CSS/background fallback for SSR and non-JavaScript rendering. */
   placeholder?: string;
 }

@@ -143,13 +143,14 @@ const HeroImage = ({ img, className }: {img: ReturnType<typeof mapGatsbyMedia>, 
         margin: 1.5em auto;
         
         .gatsby-image-wrapper, img {
+            width: 100%;
             height: 20em;
         }
     `;
 
     return(
         <div className={className} css={css(styles)}>
-            <SharedHeroImage alt={""} image={img} />
+            <SharedHeroImage alt={""} image={img} fit="cover" />
         </div>
     );
 }
