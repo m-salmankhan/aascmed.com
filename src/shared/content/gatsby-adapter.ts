@@ -74,9 +74,44 @@ interface GatsbyProviderRetirementNotice {
 interface GatsbyClinicHour {
   day?: string | null;
   open?: boolean | null;
-  opening_hours?: { start_time?: string | null; end_time?: string | null } | null;
-  shot_hours?: { start_time?: string | null; end_time?: string | null } | null;
+  opening_hours?: GatsbyClockRange | null;
+  shot_hours?: GatsbyClockRange | null;
 }
+
+/** Title and canonical URL selected from Gatsby site metadata. */
+type GatsbySiteMetadata = {
+  title?: string | null;
+  siteUrl?: string | null;
+};
+
+/** Nullable Gatsby provider query fields normalized into the shared provider record. */
+type GatsbyProviderNode = GatsbyNode & {
+  name?: GatsbyProviderName | null;
+  retirementNotice?: GatsbyProviderRetirementNotice | null;
+  review?: GatsbyProviderReview | null;
+};
+
+/** Clock times for one clinic service schedule. */
+type GatsbyClockRange = { start_time?: string | null; end_time?: string | null };
+
+/** Address, geographic coordinates, and display metadata selected for a clinic. */
+type GatsbyClinicLocation = {
+  address?: string | null;
+  lat?: number | null;
+  long?: number | null;
+  placeId?: string | null;
+  label_name?: string | null;
+};
+
+/** Phone and fax values selected for a Gatsby clinic. */
+type GatsbyClinicContact = { phone?: string | null; fax?: string | null };
+
+/** Nullable Gatsby clinic query fields normalized into the shared clinic record. */
+type GatsbyClinicNode = GatsbyNode & {
+  location?: GatsbyClinicLocation | null;
+  contact?: GatsbyClinicContact | null;
+  hours?: Array<GatsbyClinicHour | null> | null;
+};
 
 /** Normalize optional Gatsby text for required shared fields.
  * @param value Nullable string from a Gatsby query.
@@ -164,7 +199,7 @@ export function mapGatsbyMedia(media: GatsbyMedia | null | undefined): MediaDesc
  * @param metadata Nullable title/site URL values selected by the Gatsby query.
  * @returns Site settings with an empty title when no title is available.
  */
-export function mapGatsbySiteSettings(metadata: { title?: string | null; siteUrl?: string | null }): SiteSettings {
+export function mapGatsbySiteSettings(metadata: GatsbySiteMetadata): SiteSettings {
   const settings: SiteSettings = { title: metadata.title || "" };
   if (metadata.siteUrl) settings.url = metadata.siteUrl;
   return settings;
@@ -208,11 +243,7 @@ export function mapGatsbyCondition(node: GatsbyNode): ConditionRecord {
  * @param node Gatsby provider fields with nullable name, retirement, and review groups.
  * @returns A normalized provider record with optional nested values omitted when absent.
  */
-export function mapGatsbyProvider(node: GatsbyNode & {
-  name?: GatsbyProviderName | null;
-  retirementNotice?: GatsbyProviderRetirementNotice | null;
-  review?: GatsbyProviderReview | null;
-}): ProviderRecord {
+export function mapGatsbyProvider(node: GatsbyProviderNode): ProviderRecord {
   const content = readInternalContent(node.internal?.content);
   const rawNotice = content?.retirementNotice;
   const noticeText = rawNotice && typeof rawNotice === "object" && !Array.isArray(rawNotice)
@@ -249,11 +280,7 @@ export function mapGatsbyProvider(node: GatsbyNode & {
  * @param node Gatsby clinic query fields, including nullable location, contact, and hours.
  * @returns A normalized clinic record with nullable query values omitted.
  */
-export function mapGatsbyClinic(node: GatsbyNode & {
-  location?: { address?: string | null; lat?: number | null; long?: number | null; placeId?: string | null; label_name?: string | null } | null;
-  contact?: { phone?: string | null; fax?: string | null } | null;
-  hours?: Array<GatsbyClinicHour | null> | null;
-}): ClinicRecord {
+export function mapGatsbyClinic(node: GatsbyClinicNode): ClinicRecord {
   return omitUndefined({
     id: node.id,
     slug: node.slug || null,
