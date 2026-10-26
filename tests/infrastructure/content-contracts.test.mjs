@@ -34,6 +34,12 @@ test("detail URL helpers reproduce representative captured routes", async () => 
 
   for (const path of generated) assert.ok(capturedRoutes.includes(path), `${path} should remain in the route baseline`);
   assert.equal(blogPath("/already-trimmed/"), "/blog/already-trimmed/");
+  assert.equal(blogPath("draft#section"), null);
+  assert.equal(blogPath("draft?mode=preview"), null);
+  assert.equal(blogPath("../secret"), null);
+  assert.equal(blogPath("office//closure"), null);
+  assert.equal(blogPath("office/closure"), "/blog/office/closure/");
+  assert.equal(serviceUpdatePath({ slug: "office/closure", date: "2025-02-14" }), "/service-updates/2025/02/office/closure/");
   assert.equal(serviceUpdatePath({ slug: "historic-update", date: null }), null);
   assert.equal(serviceUpdatePath({ slug: "bad-date", date: "2025-02-30" }), null);
   assert.equal(serviceUpdatePath({ slug: null, date: null }), null);
@@ -55,6 +61,9 @@ test("published validation requires routable records while drafts tolerate incom
   ), ["a valid URL for this content record is required"]);
   assert.deepEqual(validateContentRecord(
     { id: "update-1", title: "Update", slug: "update", date: null }, "serviceUpdate", "published",
+  ), ["a valid URL for this content record is required"]);
+  assert.deepEqual(validateContentRecord(
+    { id: "post-1", title: "Post", slug: "draft#section" }, "blog", "published",
   ), ["a valid URL for this content record is required"]);
   const missingTitles = [
     ["blog", mapGatsbyBlog({ id: "1", slug: "post" })],
