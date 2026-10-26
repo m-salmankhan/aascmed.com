@@ -1,0 +1,38 @@
+---
+import SiteDocument from '../layouts/SiteDocument.astro';
+import { AstroContactPage } from '../../../src/views/astro-fixed-pages';
+import { getContact, getClinics } from '../server/content/loaders.ts';
+import { clinicPath } from '../../../src/shared/content/urls.ts';
+import type { PracticeSummary } from '../../../src/components/practices/practice-archive';
+import { getAstroSiteData, getRouteContentMode, isAstroPreview } from '../server/content/route-data.ts';
+
+const mode = getRouteContentMode();
+const [page, clinics, siteData] = await Promise.all([
+  getContact(mode),
+  getClinics(mode),
+  getAstroSiteData(mode, true),
+]);
+const practices: PracticeSummary[] = clinics.map((clinic) => ({
+  slug: clinicPath(clinic) || '/clinics/',
+  clinic_name: clinic.clinicName || 'Untitled Clinic',
+  longitude: clinic.location?.longitude || 0,
+  latitude: clinic.location?.latitude || 0,
+  address: clinic.location?.address || '',
+  phone: clinic.contact?.phone || '',
+  fax: clinic.contact?.fax || '',
+}));
+const title = page?.heading || 'Contact Us';
+const description = page?.metaDescription || '';
+if (isAstroPreview()) Astro.response.headers.set('Cache-Control', 'private, no-store');
+---
+
+<SiteDocument
+  title={title}
+  description={description}
+  pathname="/contact/"
+  siteSettings={siteData.siteSettings}
+  trackingSettings={siteData.trackingSettings}
+  useTracking
+>
+  <AstroContactPage client:load page={page} practices={practices} siteData={siteData} pathname="/contact/" />
+</SiteDocument>

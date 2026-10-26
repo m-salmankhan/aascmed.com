@@ -164,6 +164,7 @@ export function mapStrapiPage(entity: StrapiEntity): ContentPageRecord {
   const source = entity as Entity;
   return compact({
     documentId: source.documentId, id: source.documentId,
+    updatedAt: string(source.updatedAt),
     heading: string(source.heading), title: string(source.title), description: string(source.description),
     metaDescription: string(source.metaDescription), text: optionalJson(source.text),
   });

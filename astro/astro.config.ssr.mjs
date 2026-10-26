@@ -15,6 +15,7 @@ export default defineConfig({
   adapter: node({ mode: 'standalone' }),
   vite: {
     define: { 'import.meta.env.PUBLIC_ASTRO_TARGET': JSON.stringify('compiled Node SSR') },
-    resolve: { alias: { react: localModule('react'), 'react-dom': localModule('react-dom'), '@emotion/react': localModule('@emotion/react') }, dedupe: ['react', 'react-dom', '@emotion/react'] },
+    ssr: { noExternal: ['@strapi/blocks-react-renderer'] },
+    resolve: { alias: { react: localModule('react'), 'react-dom': localModule('react-dom'), '@emotion/react': localModule('@emotion/react'), '@strapi/blocks-react-renderer': localModule('@strapi/blocks-react-renderer') }, dedupe: ['react', 'react-dom', '@emotion/react'] },
   },
 });

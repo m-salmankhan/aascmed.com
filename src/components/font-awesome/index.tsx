@@ -1,10 +1,10 @@
 import React, {CSSProperties} from "react"
 // @ts-ignore
-import brands from "./brands.svg"
+import brands from "./brands.svg?url"
 // @ts-ignore
-import regular from "./regular.svg"
+import regular from "./regular.svg?url"
 // @ts-ignore
-import solid from "./solid.svg"
+import solid from "./solid.svg?url"
 
 export const IconStyles = {
     BRANDS: brands,

@@ -106,6 +106,7 @@ export interface ReviewRecord {
 export interface ContentPageRecord {
   documentId: string;
   id: string;
+  updatedAt?: string;
   heading?: string;
   title?: string;
   description?: string;

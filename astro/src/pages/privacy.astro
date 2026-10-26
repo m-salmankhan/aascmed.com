@@ -1,0 +1,24 @@
+---
+import SiteDocument from '../layouts/SiteDocument.astro';
+import { AstroPrivacyPage } from '../../../src/views/astro-fixed-pages';
+import { getPrivacyPolicy } from '../server/content/loaders.ts';
+import { getAstroSiteData, getRouteContentMode, isAstroPreview } from '../server/content/route-data.ts';
+
+const mode = getRouteContentMode();
+const [page, siteData] = await Promise.all([getPrivacyPolicy(mode), getAstroSiteData(mode)]);
+const title = page?.title || 'Privacy Policy';
+const description = page?.description || '';
+if (isAstroPreview()) Astro.response.headers.set('Cache-Control', 'private, no-store');
+---
+
+<SiteDocument
+  title={title}
+  description={description}
+  pathname="/privacy/"
+  siteSettings={siteData.siteSettings}
+  trackingSettings={siteData.trackingSettings}
+  useTracking
+  ogType="article"
+>
+  <AstroPrivacyPage client:load page={page} siteData={siteData} pathname="/privacy/" />
+</SiteDocument>

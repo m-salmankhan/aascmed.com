@@ -30,7 +30,12 @@ export function findRedirect(pathname: string, rules: RedirectRule[], search = '
     if (match) {
       const splat = match[1] || '';
       const destination = rule.destination.replace(/:splat/g, splat);
-      return { location: `${destination}${search}`, status: rule.status };
+      const location = `${destination}${search}`;
+      // Netlify's `/*` patterns can also match their directory root. Avoid
+      // turning a canonical route into a redirect to itself (for example,
+      // `/contact/*` matching `/contact/`).
+      if (location === `${pathname}${search}`) continue;
+      return { location, status: rule.status };
     }
   }
 }

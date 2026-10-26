@@ -1,12 +1,21 @@
 ---
 import SiteDocument from '../layouts/SiteDocument.astro';
-// WEB-32 replaces this infrastructure placeholder with the shared NotFoundView.
+import { AstroNotFoundPage } from '../../../src/views/astro-fixed-pages';
+import { getAstroSiteData, getRouteContentMode, isAstroPreview } from '../server/content/route-data.ts';
+
+const mode = getRouteContentMode();
+const siteData = await getAstroSiteData(mode);
+Astro.response.status = 404;
+if (isAstroPreview()) Astro.response.headers.set('Cache-Control', 'private, no-store');
 ---
 
-<SiteDocument title="Page not found" description="The requested page could not be found." pathname="/404.html" noIndex>
-  <main>
-    <h1>Page not found</h1>
-    <p>The page you requested could not be found.</p>
-    <a href="/">Return to the homepage</a>
-  </main>
+<SiteDocument
+  title="Page Not Found!"
+  description="The URL you have entered may be incorrect, or this page has been removed."
+  pathname="/404.html"
+  siteSettings={siteData.siteSettings}
+  trackingSettings={siteData.trackingSettings}
+  noIndex
+>
+  <AstroNotFoundPage client:load siteData={siteData} pathname="/404.html" />
 </SiteDocument>

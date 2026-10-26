@@ -1,5 +1,5 @@
 import React, { ComponentPropsWithoutRef } from "react"
-import logos from "./logo-sprites.svg"
+import logos from "./logo-sprites.svg?url"
 
 // SVG imports resolve to a public URL in Gatsby and Astro; append the fragment
 // only at the <use> reference so the same sprite contract works in both builds.
