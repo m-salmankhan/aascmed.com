@@ -46,6 +46,32 @@ interface GatsbyNode {
   internal?: { content?: string | null } | null;
 }
 
+/** Gatsby component fields are nullable even when shared view fields are not. */
+interface GatsbyProviderName {
+  fullName?: string | null;
+  honorific?: string | null;
+  qualificationLong?: string | null;
+  qualificationAbbr?: string | null;
+}
+
+interface GatsbyProviderReview {
+  text?: string | null;
+  reviewer?: string | null;
+  date?: string | null;
+  link?: string | null;
+}
+
+interface GatsbyProviderRetirementNotice {
+  retired?: boolean | null;
+}
+
+interface GatsbyClinicHour {
+  day?: string | null;
+  open?: boolean | null;
+  opening_hours?: { start_time?: string | null; end_time?: string | null } | null;
+  shot_hours?: { start_time?: string | null; end_time?: string | null } | null;
+}
+
 function stringOrEmpty(value: string | null | undefined): string {
   return value || "";
 }
@@ -136,10 +162,15 @@ export function mapGatsbyCondition(node: GatsbyNode): ConditionRecord {
 }
 
 export function mapGatsbyProvider(node: GatsbyNode & {
-  name?: ProviderRecord["name"];
-  retirementNotice?: ProviderRecord["retirementNotice"];
-  review?: ProviderRecord["review"];
+  name?: GatsbyProviderName | null;
+  retirementNotice?: GatsbyProviderRetirementNotice | null;
+  review?: GatsbyProviderReview | null;
 }): ProviderRecord {
+  const content = readInternalContent(node.internal?.content);
+  const rawNotice = content?.retirementNotice;
+  const noticeText = rawNotice && typeof rawNotice === "object" && !Array.isArray(rawNotice)
+    ? jsonArray((rawNotice as Record<string, unknown>).text)
+    : undefined;
   return omitUndefined({
     id: node.id,
     slug: node.slug || null,
@@ -147,9 +178,22 @@ export function mapGatsbyProvider(node: GatsbyNode & {
     description: node.description || undefined,
     order: node.order,
     body: mapGatsbyBlocks(node, "body"),
-    name: node.name,
-    retirementNotice: node.retirementNotice,
-    review: node.review,
+    name: node.name ? {
+      fullName: node.name.fullName ?? undefined,
+      honorific: node.name.honorific ?? undefined,
+      qualificationLong: node.name.qualificationLong ?? undefined,
+      qualificationAbbr: node.name.qualificationAbbr ?? undefined,
+    } : undefined,
+    retirementNotice: node.retirementNotice || noticeText ? {
+      retired: node.retirementNotice?.retired ?? undefined,
+      text: noticeText,
+    } : undefined,
+    review: node.review ? {
+      text: node.review.text ?? undefined,
+      reviewer: node.review.reviewer ?? undefined,
+      date: node.review.date ?? undefined,
+      link: node.review.link ?? undefined,
+    } : undefined,
     image: mapGatsbyMedia(node.image),
   }) as ProviderRecord;
 }
@@ -157,7 +201,7 @@ export function mapGatsbyProvider(node: GatsbyNode & {
 export function mapGatsbyClinic(node: GatsbyNode & {
   location?: { address?: string | null; lat?: number | null; long?: number | null; placeId?: string | null; label_name?: string | null } | null;
   contact?: { phone?: string | null; fax?: string | null } | null;
-  hours?: Array<{ day?: string | null; open?: boolean | null; opening_hours?: { start_time?: string | null; end_time?: string | null } | null; shot_hours?: { start_time?: string | null; end_time?: string | null } | null }>;
+  hours?: Array<GatsbyClinicHour | null> | null;
 }): ClinicRecord {
   return omitUndefined({
     id: node.id,
@@ -174,7 +218,7 @@ export function mapGatsbyClinic(node: GatsbyNode & {
       label: node.location.label_name || undefined,
     } : undefined,
     contact: node.contact ? { phone: node.contact.phone || undefined, fax: node.contact.fax || undefined } : undefined,
-    hours: node.hours?.map((hour) => ({
+    hours: node.hours?.filter((hour): hour is GatsbyClinicHour => hour != null).map((hour) => ({
       day: hour.day || undefined,
       open: hour.open ?? undefined,
       openingHours: hour.opening_hours ? { startTime: hour.opening_hours.start_time || undefined, endTime: hour.opening_hours.end_time || undefined } : undefined,

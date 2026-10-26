@@ -86,12 +86,27 @@ test("Gatsby adapters keep blocks and media serializable and omit absent optiona
   assert.equal("internal" in mapped, false);
   assert.equal(isJsonValue(mapped), true);
 
-  const provider = mapGatsbyProvider({ id: "provider-1", name: { fullName: "Dr Example" } });
+  const retirementText = [{ type: "paragraph", children: [{ type: "text", text: "Retired" }] }];
+  const provider = mapGatsbyProvider({
+    id: "provider-1",
+    name: { fullName: "Dr Example", honorific: null },
+    retirementNotice: { retired: true },
+    review: { text: null, reviewer: "Patient", date: null },
+    internal: { content: JSON.stringify({ retirementNotice: { text: retirementText } }) },
+  });
   assert.equal(provider.title, "Dr Example");
   assert.equal(provider.body, undefined);
-  const clinic = mapGatsbyClinic({ id: "clinic-1", clinic_name: "Crest Hill", hours: [{ day: "Monday", opening_hours: { start_time: "09:00" } }] });
+  assert.deepEqual(provider.retirementNotice, { retired: true, text: retirementText });
+  assert.deepEqual(provider.name, { fullName: "Dr Example" });
+  assert.deepEqual(provider.review, { reviewer: "Patient" });
+  const sparseProvider = mapGatsbyProvider({ id: "provider-2", name: { fullName: null }, retirementNotice: null, review: null });
+  assert.equal(sparseProvider.title, "Untitled");
+  assert.equal(isJsonValue(sparseProvider), true);
+  const clinic = mapGatsbyClinic({ id: "clinic-1", clinic_name: "Crest Hill", hours: [null, { day: "Monday", opening_hours: { start_time: "09:00" } }] });
   assert.equal(clinic.clinicName, "Crest Hill");
+  assert.equal(clinic.hours?.length, 1);
   assert.deepEqual(clinic.hours?.[0]?.openingHours, { startTime: "09:00" });
+  assert.equal(mapGatsbyClinic({ id: "clinic-2", hours: null }).hours, undefined);
   assert.equal(isJsonValue(provider), true);
   assert.equal(isJsonValue(clinic), true);
 });
