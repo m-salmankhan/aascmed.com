@@ -10,10 +10,8 @@ const config: GatsbyConfig = {
         siteUrl: `https://www.aascmed.com`,
         twitterHandle: `@DrMaazAllergy`,
     },
-    // More easily incorporate content into your pages through automatic TypeScript type generation and better GraphQL IntelliSense.
-    // If you use VSCode you can also use the GraphQL plugin
-    // Learn more at: https://gatsby.dev/graphql-typegen
-    graphqlTypegen: true,
+    // Generate Gatsby's Queries namespace during production builds as well as develop.
+    graphqlTypegen: { generateOnBuild: true },
     plugins: [
         "gatsby-plugin-emotion",
         "gatsby-plugin-sitemap",
