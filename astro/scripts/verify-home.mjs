@@ -63,7 +63,8 @@ function collectionData(kind, status) {
 
 function singleData(kind, status) {
   const fixture = status === 'draft' ? 'Draft' : 'Published';
-  if (kind === 'home-page') return {
+  if (kind === 'home-page') {
+    const page = {
     id: 1, documentId: `home-page-private-${status}`, metaDescription: `${fixture} homepage description`,
     hero: { heading: `${fixture} homepage hero`, text: blocks(`${fixture} hero copy`), media: [] },
     genericBelowHero: [{ heading: `${fixture} welcome`, text: blocks(`${fixture} welcome copy`), media: [] }],
@@ -74,13 +75,19 @@ function singleData(kind, status) {
     feedback: { rating: 0.96, sourceName: 'Fixture source', sourceUrl: 'https://reviews.example.test/', accessDate: '26 October 2026' },
     contact: { heading: `${fixture} contact`, text: blocks('Contact our clinic'), media: [] },
     locations: { heading: `${fixture} locations`, text: blocks('Find a nearby clinic'), media: [] },
-  };
+    };
+    if (status === 'draft' && omitOptionalDraftSections) {
+      for (const key of ['genericBelowHero', 'conditions', 'blog', 'providers', 'serviceUpdates', 'feedback', 'contact', 'locations']) delete page[key];
+    }
+    return page;
+  }
   if (kind === 'announcement') return { id: 2, documentId: 'announcement', enabled: false };
   if (kind === 'tracking-info') return { id: 3, documentId: 'tracking', googleAnalyticsId: '', googleTagManagerId: '', pixelId: '' };
   return null;
 }
 
 const requests = [];
+let omitOptionalDraftSections = false;
 const activeByStatus = new Map();
 const maximumByStatus = new Map();
 let api = createServer(async (request, response) => {
@@ -188,6 +195,14 @@ export default { ...base, outDir: '.astro/home-verification/dist-ssr' };
   const draftRequests = requests.filter(({ status }) => status === 'draft');
   assert.ok(draftRequests.length > 0 && draftRequests.every(({ authorization }) => authorization === `Bearer ${privateToken}`), 'draft token is sent only to server-side Strapi requests');
   assert.ok(maximumByStatus.get('draft') <= 3, `draft collection concurrency is bounded (${maximumByStatus.get('draft')})`);
+
+  omitOptionalDraftSections = true;
+  const incompleteDraft = await (await fetch(baseUrl)).text();
+  for (const fallback of ['Draft homepage hero', 'Learn more about the conditions we treat.', 'Contact Us', 'Practices']) {
+    assert.ok(incompleteDraft.includes(fallback), `incomplete draft keeps the homepage usable with ${fallback}`);
+  }
+  assert.equal(incompleteDraft.includes('Draft welcome copy'), false, 'an omitted draft section does not render stale content');
+  assert.equal(incompleteDraft.includes(privateToken), false, 'incomplete-draft HTML does not expose the CMS token');
 
   browser = await chromium.launch();
   for (const viewport of [{ width: 390, height: 844, name: 'mobile' }, { width: 1440, height: 1000, name: 'desktop' }]) {
