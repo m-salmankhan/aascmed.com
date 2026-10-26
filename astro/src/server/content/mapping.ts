@@ -108,7 +108,7 @@ export function mapStrapiProvider(entity: StrapiEntity, mediaBaseUrl?: string): 
   const source = entity as Entity;
   const name = record(source.name); const review = record(source.review); const retirement = record(source.retirementNotice);
   const provider: ProviderRecord = {
-    ...common(source), order: number(source.order) ?? null,
+    ...common(source, string(name?.fullName) ?? ""), order: number(source.order) ?? null,
     image: mapStrapiMedia(source.image, mediaBaseUrl),
     body: optionalJson(source.body),
   };

@@ -7,9 +7,9 @@ import regular from "./regular.svg?url"
 import solid from "./solid.svg?url"
 
 export const IconStyles = {
-    BRANDS: brands,
-    REGULAR: regular,
-    SOLID: solid,
+    BRANDS: "/assets/font-awesome/brands.svg",
+    REGULAR: "/assets/font-awesome/regular.svg",
+    SOLID: "/assets/font-awesome/solid.svg",
 } as const;
 // Keep fragments separate from imported sprite URLs for webpack/Vite parity.
 const spriteSymbol = (url: string, symbol: string) => `${url}#${symbol}`;

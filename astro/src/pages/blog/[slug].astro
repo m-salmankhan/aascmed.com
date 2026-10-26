@@ -1,0 +1,44 @@
+---
+import SiteDocument from '../../layouts/SiteDocument.astro';
+import { getBlogBySlug, getBlogs } from '../../server/content/loaders';
+import { blogPath } from '../../../../src/shared/content/urls';
+import { formatContentDate } from '../../server/content/presentation';
+import { getPageSiteData } from '../../server/content/site-data';
+import { AstroBlogPostPage, AstroContentNotFound } from '../../../../src/views/astro-content-pages';
+
+const isStatic = import.meta.env.PUBLIC_ASTRO_TARGET === 'static';
+export const prerender = import.meta.env.PUBLIC_ASTRO_TARGET === 'static';
+
+export async function getStaticPaths() {
+  const blogs = await getBlogs('published');
+  return blogs.flatMap((blog) => blogPath(blog.slug) ? [{ params: { slug: blog.slug! } }] : []);
+}
+
+const mode = isStatic ? 'published' : 'draft';
+const blog = await getBlogBySlug(Astro.params.slug || '', mode);
+if (!blog) Astro.response.status = 404;
+const siteData = blog ? await getPageSiteData(mode) : undefined;
+const imageModule = isStatic ? await import('../../server/content/public-images') : null;
+const imageManifest = imageModule ? await imageModule.getPublishedImageManifest() : null;
+const title = blog?.title || blog?.heading || 'Untitled';
+const description = blog?.description || '';
+const pathname = Astro.url.pathname;
+const routeSlug = blogPath(blog?.slug)?.split('/').filter(Boolean).at(-1);
+const displayBlog = blog ? {
+  ...blog,
+  thumbnail: routeSlug ? imageManifest?.mediaByRoute[`blog:${routeSlug}`] ?? blog.thumbnail : blog.thumbnail,
+  date: formatContentDate(blog.date),
+} : null;
+const socialImagePath = blog
+  ? isStatic && imageModule && routeSlug
+    ? imageModule.getSocialCardImagePath({ kind: 'blog', slug: routeSlug, title: blog.heading || blog.title, backgroundImage: blog.thumbnail?.src })
+    : blog.thumbnail?.src
+  : undefined;
+---
+
+{blog && siteData ? <SiteDocument title={title} description={description} pathname={pathname} socialImagePath={socialImagePath} ogType="article" trackingSettings={siteData.trackingSettings} useTracking={true}>
+  <Fragment slot="head"><meta property="article:section" content="blog" /></Fragment>
+  <AstroBlogPostPage client:load pathname={pathname} siteData={siteData} blog={displayBlog!} />
+</SiteDocument> : <SiteDocument title="Page not found" description="The requested page could not be found." pathname={pathname} noIndex>
+  <AstroContentNotFound client:load />
+</SiteDocument>}

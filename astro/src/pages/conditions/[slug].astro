@@ -1,0 +1,42 @@
+---
+import SiteDocument from '../../layouts/SiteDocument.astro';
+import { getConditionBySlug, getConditions } from '../../server/content/loaders';
+import { conditionPath } from '../../../../src/shared/content/urls';
+import { getPageSiteData } from '../../server/content/site-data';
+import { AstroConditionPage, AstroContentNotFound } from '../../../../src/views/astro-content-pages';
+
+const isStatic = import.meta.env.PUBLIC_ASTRO_TARGET === 'static';
+export const prerender = import.meta.env.PUBLIC_ASTRO_TARGET === 'static';
+
+export async function getStaticPaths() {
+  const conditions = await getConditions('published');
+  return conditions.flatMap((condition) => conditionPath(condition.slug) ? [{ params: { slug: condition.slug! } }] : []);
+}
+
+const mode = isStatic ? 'published' : 'draft';
+const condition = await getConditionBySlug(Astro.params.slug || '', mode);
+if (!condition) Astro.response.status = 404;
+const siteData = condition ? await getPageSiteData(mode) : undefined;
+const imageModule = isStatic ? await import('../../server/content/public-images') : null;
+const imageManifest = imageModule ? await imageModule.getPublishedImageManifest() : null;
+const title = condition?.title || condition?.heading || 'Untitled';
+const description = condition?.description || '';
+const pathname = Astro.url.pathname;
+const routeSlug = conditionPath(condition?.slug)?.split('/').filter(Boolean).at(-1);
+const displayCondition = condition ? {
+  ...condition,
+  thumbnail: routeSlug ? imageManifest?.mediaByRoute[`condition:${routeSlug}`] ?? condition.thumbnail : condition.thumbnail,
+} : null;
+const socialImagePath = condition
+  ? isStatic && imageModule && routeSlug
+    ? imageModule.getSocialCardImagePath({ kind: 'conditions', slug: routeSlug, title: condition.heading || condition.title, backgroundImage: condition.thumbnail?.src })
+    : condition.thumbnail?.src
+  : undefined;
+---
+
+{condition && siteData ? <SiteDocument title={title} description={description} pathname={pathname} socialImagePath={socialImagePath} ogType="article" trackingSettings={siteData.trackingSettings}>
+  <Fragment slot="head"><meta property="article:section" content="conditions" /></Fragment>
+  <AstroConditionPage client:load pathname={pathname} siteData={siteData} condition={displayCondition!} />
+</SiteDocument> : <SiteDocument title="Page not found" description="The requested page could not be found." pathname={pathname} noIndex>
+  <AstroContentNotFound client:load />
+</SiteDocument>}
