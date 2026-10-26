@@ -38,7 +38,7 @@ export function Image({ image, alt, fit, css: callerCss, loading = "lazy", decod
     height: "100%",
     img: { width: "100%", height: "100%", objectFit: fit },
   }) : undefined}>
-    {image.formats.map((format) => <source key={format.type} type={format.type} srcSet={format.srcSet} sizes={format.sizes || computedSizes} />)}
+    {image.formats.map((format) => <source key={format.type} type={format.type} srcSet={format.srcSet} sizes={props.sizes || format.sizes || image.sizes} />)}
     {imageNode}
   </picture>;
 }
