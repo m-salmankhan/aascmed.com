@@ -215,6 +215,7 @@ test("shared image renderer keeps Gatsby picture sources and sizes in the React 
   assert.match(source, /const computedSizes = props\.sizes \|\| image\.sizes/);
   assert.match(source, /fit=\{props\.fit \|\| "cover"\}/);
   assert.match(source, /img: \{ width: "100%", height: "100%", objectFit: fit \}/);
+  assert.match(source, /css=\{\[callerCss, fit \? \{ objectFit: fit \} : undefined\]\}/);
 });
 test("shared model declarations stay free of framework nodes, GraphQL query types, and credentials", async () => {
   const modelText = await readFile(new URL("../../src/shared/content/models.ts", import.meta.url), "utf8");
