@@ -2,7 +2,8 @@ import type { ClinicRecord, ServiceUpdateRecord } from "./models";
 
 function pathFor(family: string, slug: string | null | undefined): string | null {
   const segment = slug?.replace(/^\/+|\/+$/g, "");
-  return segment ? `/${family}/${segment}/` : null;
+  if (!segment || segment.split("/").some((part) => !part || part === "." || part === ".." || /[?#\\%]/.test(part))) return null;
+  return `/${family}/${segment}/`;
 }
 
 function civilDateParts(date: string): { year: string; month: string; day: string } | null {
@@ -34,7 +35,7 @@ export function serviceUpdatePath(update: Pick<ServiceUpdateRecord, "slug" | "da
   if (!update.date) return null;
   const date = civilDateParts(update.date);
   if (!date) return null;
-  return `/service-updates/${date.year}/${date.month}/${basePath.split("/")[2]}/`;
+  return `/service-updates/${date.year}/${date.month}/${basePath.slice("/service-updates/".length)}`;
 }
 
 /** Stable helpers for REST adapters that need to reproduce Gatsby ordering. */
