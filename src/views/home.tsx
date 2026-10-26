@@ -25,37 +25,45 @@ import { HorizontalCalloutBanner } from "../components/cta/horizontal-banner";
 /** Plain, JSON-safe homepage data. React nodes and Gatsby data stay out of the view boundary. */
 export interface HomeSection {
   heading: string;
+  /** Strapi Blocks content in its serializable JSON form. */
   text?: JsonValue[];
   media?: HomeMediaItem[];
 }
 
+/** Serializable source metadata used by homepage sections with mixed media. */
 export interface HomeMediaItem {
+  /** CMS MIME value used to distinguish image and video media. */
   mime?: string | null;
   name?: string | null;
   url?: string | null;
   descriptor?: MediaDescriptor;
 }
 
+/** Condition card summary with a plain media descriptor in place of a React node. */
 export interface HomeCondition extends Omit<ConditionSummary, "thumbnail"> {
   thumbnail?: MediaDescriptor;
 }
 
+/** Provider card summary with a plain media descriptor in place of a React node. */
 export interface HomeProvider extends Omit<ProviderSummary, "image"> {
   image?: MediaDescriptor;
 }
 
+/** Blog card summary with a plain media descriptor in place of a React node. */
 export interface HomeBlog extends Omit<BlogSummary, "thumbnail"> {
   thumbnail?: MediaDescriptor;
 }
 
+/** Review summary in the data shape expected by the homepage feedback section. */
 export interface HomeReview {
   reviewerName: string;
   body: JsonValue[] | null;
+  /** Numeric star rating supplied by the reviews CMS. */
   stars: number;
   source: { url: string; name: string };
 }
 
-/** Data assembled by the Gatsby page for the framework-neutral homepage view. */
+/** Complete normalized, framework-neutral data required to render the homepage. */
 export interface HomeViewProps {
   siteTitle: string;
   hero: HomeSection & { image?: MediaDescriptor };
@@ -78,17 +86,25 @@ export interface HomeViewProps {
   locations: HomeSection & { practices: PracticeSummary[] };
 }
 
+/** Convert optional rich-text data into its shared renderer.
+ * @param blocks Optional JSON blocks from CMS content.
+ * @returns A rich-text element, or undefined when no blocks were supplied.
+ */
 function renderText(blocks?: JsonValue[]) {
   return blocks ? <StrapiBlocksRenderer content={blocks as any[]} /> : undefined;
 }
 
+/** Render supported image/video section media.
+ * @param media Optional normalized media items from CMS sections.
+ * @returns A section-media element, or undefined when no displayable items exist.
+ */
 function renderMedia(media?: HomeMediaItem[]) {
   const valid = (media || []).filter((item) => item.mime?.startsWith("image/") || item.mime?.startsWith("video/"));
   if (valid.length === 0) return undefined;
   return <SectionMedia media={valid as SectionMediaItem[]} />;
 }
 
-/** Renders homepage sections from normalized content data without querying Gatsby. */
+/** Render the homepage from normalized serializable props.\n * @param props Homepage copy, media, archive items, reviews, and non-empty clinic choices.\n * @returns The shared homepage composition without framework query data.\n */
 export function HomeView({
   siteTitle,
   hero,

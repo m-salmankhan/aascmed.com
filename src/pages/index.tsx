@@ -6,6 +6,10 @@ import { GatsbySEO as SEO } from "../adapters/gatsby/seo";
 import { App } from "../components/layouts/app";
 import { HomeView, type HomeMediaItem, type HomeSection, type HomeViewProps } from "../views/home";
 
+/** Parse CMS internal content for the homepage data adapter.
+ * @param value Optional serialized CMS content.
+ * @returns A content object, or null when absent or not a JSON object.
+ */
 function readContent(value?: string | null): Record<string, any> | null {
   if (!value) return null;
   try {
@@ -16,10 +20,18 @@ function readContent(value?: string | null): Record<string, any> | null {
   }
 }
 
+/** Keep a CMS field only when it contains JSON-safe rich-text blocks.
+ * @param value Untrusted parsed CMS field.
+ * @returns A serializable block array, or undefined when it has another shape.
+ */
 function jsonBlocks(value: unknown): JsonValue[] | undefined {
   return Array.isArray(value) && value.every(isJsonValue) ? value : undefined;
 }
 
+/** Convert a CMS section's media entries to framework-neutral homepage data.
+ * @param section CMS section query result with optional media entries.
+ * @returns Media summaries with public URLs/descriptors, or undefined when empty.
+ */
 function mapSectionMedia(section: any): HomeMediaItem[] | undefined {
   if (!Array.isArray(section?.media) || section.media.length === 0) return undefined;
   return section.media.map((item: any) => ({
@@ -30,6 +42,13 @@ function mapSectionMedia(section: any): HomeMediaItem[] | undefined {
   }));
 }
 
+/** Normalize one homepage section's heading, rich text, and media.
+ * @param section CMS section query result.
+ * @param content Parsed homepage internal content, when available.
+ * @param key Rich-text property name associated with this section.
+ * @param fallback Display heading used when the CMS heading is absent.
+ * @returns A serializable shared-view section model.
+ */
 function mapSection(section: any, content: Record<string, any> | null, key: string, fallback: string): HomeSection {
   return {
     heading: section?.heading || fallback,
