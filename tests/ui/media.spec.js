@@ -1,6 +1,7 @@
 const { test, expect } = require("./fixtures");
-const { preparePage, semanticImages, pageContract, readSitemap } = require("./helpers");
-const { assertRouteInventory, compareImages } = require("./contracts");
+const { preparePage, readSitemap } = require("./helpers");
+const { assertRouteInventory } = require("./contracts");
+const { comparePages } = require("./comparison");
 
 const referenceURL = new URL(process.env.UI_REFERENCE_URL).href;
 const routes = require("./routes.json");
@@ -60,30 +61,7 @@ for (const route of routes) {
     const reference = await context.newPage();
     await preparePage(reference, new URL(route, referenceURL).href);
     await preparePage(page, new URL(route, baseURL).href);
-    const expectedContract = await pageContract(reference);
-    const actualContract = await pageContract(page);
-    await testInfo.attach("reference-contract", { body: JSON.stringify(expectedContract, null, 2), contentType: "application/json" });
-    await testInfo.attach("candidate-contract", { body: JSON.stringify(actualContract, null, 2), contentType: "application/json" });
-    expect(expectedContract.metadata.title).not.toBe("");
-    expect(expectedContract.metadata.canonical).toMatch(/^https?:\/\//);
-    expect(expectedContract.metadata.tags.find(([name]) => name === "description")).toBeDefined();
-    expect.soft(actualContract, "Content/metadata/link/form contract changed; verify matched CMS content").toEqual(expectedContract);
-    expect.soft(await semanticImages(page)).toEqual(await semanticImages(reference));
-    const mapSizes = target => target.locator(".mapboxgl-canvas").evaluateAll(canvases =>
-      canvases.map(canvas => ({ width: canvas.clientWidth, height: canvas.clientHeight }))
-    );
-    expect(await mapSizes(page)).toEqual(await mapSizes(reference));
-    const options = { fullPage: true, animations: "disabled" };
-    const expectedPath = testInfo.outputPath("production.png");
-    const actualPath = testInfo.outputPath("candidate.png");
-    const expectedBuffer = await reference.screenshot({ ...options, path: expectedPath, mask: [reference.locator(".mapboxgl-canvas")] });
-    const actualBuffer = await page.screenshot({ ...options, path: actualPath, mask: [page.locator(".mapboxgl-canvas")] });
-    await testInfo.attach("production", { path: expectedPath, contentType: "image/png" });
-    await testInfo.attach("candidate", { path: actualPath, contentType: "image/png" });
-    const { changedPixels, changedRatio, passed, diff } = await compareImages(expectedBuffer, actualBuffer);
-    await testInfo.attach("difference", { body: diff, contentType: "image/png" });
-    testInfo.annotations.push({ type: "pixel-difference", description: `${changedPixels} pixels (${(changedRatio * 100).toFixed(4)}%)` });
-    expect(passed, `${changedPixels} visibly changed pixels (${(changedRatio * 100).toFixed(4)}%); limit 0.1%`).toBe(true);
+    await comparePages(reference, page, testInfo);
     await reference.close();
   });
 }

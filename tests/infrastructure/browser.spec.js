@@ -109,3 +109,56 @@ test("JavaScript-enabled contracts ignore noscript fallback markup in content an
   expect(original.content).not.toContain("Fallback");
   expect(original.links.find(link => link.href === "/clinics/test/").text).toBe("Clinic");
 });
+
+test("reference differences are advisory and retain contract and image evidence", async ({ page, context }, testInfo) => {
+  const { comparePages } = require("../ui/comparison");
+  const reference = await context.newPage();
+  await preparePage(reference, url);
+  await preparePage(page, url);
+  await page.evaluate(() => {
+    document.body.style.background = "red";
+    document.querySelector("#main p").textContent = "Changed content";
+    document.querySelector('img[alt="Clinic"]').alt = "Updated clinic";
+  });
+  await comparePages(reference, page, testInfo);
+  const differences = testInfo.annotations.filter(annotation => annotation.type === "reference-difference");
+  expect(differences.map(annotation => annotation.description)).toEqual(
+    expect.arrayContaining(["Content/metadata/links/forms", "Image semantics", expect.stringContaining("Changed pixels")]));
+  expect(testInfo.attachments.map(attachment => attachment.name)).toEqual(
+    expect.arrayContaining(["reference-contract", "candidate-contract", "reference", "candidate", "difference"]));
+});
+
+test("layout dimension differences are advisory and retain both screenshots", async ({ page, context }, testInfo) => {
+  const { comparePages } = require("../ui/comparison");
+  const reference = await context.newPage();
+  await preparePage(reference, url);
+  await preparePage(page, url);
+  await page.evaluate(() => {
+    document.body.style.minHeight = `${Math.max(innerHeight, document.documentElement.scrollHeight) + 400}px`;
+  });
+  await comparePages(reference, page, testInfo);
+  expect(testInfo.annotations).toContainEqual({
+    type: "reference-difference", description: expect.stringContaining("Screenshot dimensions"),
+  });
+  expect(testInfo.attachments.map(attachment => attachment.name)).toEqual(
+    expect.arrayContaining(["reference", "candidate"]));
+});
+
+test("unchanged pages have no reference-difference annotations", async ({ page, context }, testInfo) => {
+  const { comparePages } = require("../ui/comparison");
+  const reference = await context.newPage();
+  await preparePage(reference, url);
+  await preparePage(page, url);
+  await comparePages(reference, page, testInfo);
+  expect(testInfo.annotations.filter(annotation => annotation.type === "reference-difference")).toEqual([]);
+});
+
+test("comparison errors are not converted into advisory differences", async ({ page, context }, testInfo) => {
+  const { comparePages } = require("../ui/comparison");
+  const reference = await context.newPage();
+  await preparePage(reference, url);
+  await preparePage(page, url);
+  await page.locator('script[type="application/ld+json"]').evaluate(script => { script.textContent = "invalid JSON"; });
+  await expect(comparePages(reference, page, testInfo)).rejects.toThrow(/JSON/);
+  expect(testInfo.annotations.filter(annotation => annotation.type === "reference-difference")).toEqual([]);
+});

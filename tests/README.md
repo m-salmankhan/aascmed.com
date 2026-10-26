@@ -8,13 +8,13 @@ complete website coverage. No performance budget is enforced.
 | Layer | Checks | What a failure means |
 | --- | --- | --- |
 | Route inventory | Both deployments' sitemap indexes and every child sitemap must match `ui/routes.json`, without duplicates. | A route was lost/added, a sitemap broke, or the content inventory needs an intentional update. |
-| Every-route contract | Page title, canonical URL, language, description, robots, Open Graph/Twitter tags, parsed JSON-LD, main text, heading hierarchy/IDs, navigation/main/footer link destinations, form field types/requirements/options. | Content, SEO, navigation or form structure differs from the reference. The JSON attachments show exactly what changed. |
-| Every-route appearance | Full-page Chromium screenshots at desktop 1440x1000 and mobile 390x844; image alt/loading/draggable semantics and successful loading; live map canvas dimensions. | Layout, text, imagery, accessibility semantics or responsive styling changed. |
+| Every-route contract (advisory) | Page title, canonical URL, language, description, robots, Open Graph/Twitter tags, parsed JSON-LD, main text, heading hierarchy/IDs, navigation/main/footer link destinations, form field types/requirements/options. | Review content, SEO, navigation or form-structure differences from the reference. JSON attachments show what changed; differences alone do not fail CI. |
+| Every-route appearance (advisory) | Full-page Chromium screenshots at desktop 1440x1000 and mobile 390x844; image alt/loading/draggable semantics; live map canvas dimensions. | Review layout, text, imagery, accessibility semantics or responsive styling differences. Broken image loading still fails page readiness. |
 | Image behavior | Hero bounds at scroll 0/250, eager loading, non-draggable hero; condition-card hover, keyboard focus and Enter navigation. | A media slot, overlay or hero regressed. |
 | Functional journeys | Responsive menu open/close/keyboard navigation and history; all five archive-to-detail families; article contents targets; review-carousel next/back; missing-page HTTP 404 and home link; core content/fallback navigation with JavaScript disabled. | Hydration, routing, anchor IDs, carousel controls or fallback routing broke. |
 | Contact | Native required validation; exact synthetic payload/success on contact, home and clinic pages (including the fixed clinic field); field errors preserving input and successful retry; server-error notice rather than false success. | The form's client-side state machine or request contract broke. No email is sent. |
 | Integration smoke | Booking script request, keyboard dismissal, Zocdoc handoff URL; real Mapbox initialization, nonzero canvas dimensions, marker click and clinic popup. | The website's integration boundary stopped working. This does not verify a completed external appointment or live map-tile accuracy. |
-| Infrastructure self-tests | Missing/extra/duplicate routes, XML entity decoding, explicit/distinct HTTP target validation, exact 0.1% visual threshold and changed dimensions; Gatsby-free delayed interaction readiness; deliberate text/heading/link/metadata/JSON-LD mutations; blocked writes from normal and new pages. | A change weakened the test harness itself. These tests need neither the CMS nor deployed sites. |
+| Infrastructure self-tests | Route/target validation, visual threshold and dimensions; Gatsby-free readiness; deliberate content/image/background/layout changes; malformed JSON/PNG and blocked writes; PR comment formatting, clean/different/failed reports, stale PRs and API failures. | A change weakened the harness or its advisory-versus-failing policy. These tests need neither the CMS nor deployed sites; GitHub API calls are simulated. |
 
 Current inventory: 65 routes (including 404), covering nine fixed routes and all
 five dynamic page families. Each route is compared at both viewport sizes.
@@ -50,12 +50,22 @@ main-content and link-label text contracts. A desktop/mobile fixture changes onl
 that fallback markup and verifies both contracts stay unchanged. The separate
 JavaScript-disabled journey still exercises rendered fallback navigation.
 
-Full-page screenshots allow at most **0.1% differing pixels**, using pixelmatch's
-0.1 per-pixel color threshold and default antialias handling. Screenshot dimensions
-must match exactly. Only live Mapbox canvases are masked; map sizes, markers,
+Full-page screenshots flag more than **0.1% differing pixels** for review, using
+pixelmatch's 0.1 per-pixel color threshold and default antialias handling.
+Changed screenshot dimensions are also advisory: both screenshots and their
+dimensions are retained, without attempting pixelmatch on incompatible images.
+Only live Mapbox canvases are masked; map sizes, markers,
 popups and surrounding layout remain covered. Reports attach reference/candidate
 contract JSON, reference/candidate screenshots, pixel-difference images and
 changed-pixel counts. Failed browser tests retain screenshots and traces.
+
+`ui/comparison.js` records reference differences as `reference-difference`
+annotations, not failed assertions. Intentional changes such as a red background
+therefore leave the job green while retaining evidence for human review.
+This is not `continue-on-error`: broken navigation/forms, route inventory,
+HTTP/image-loading failures, malformed JSON-LD/PNG, unsafe writes and execution
+errors still fail normally. Functional assertions must be updated explicitly
+when their intended behavior changes.
 
 ## Safety and external services
 
@@ -105,7 +115,7 @@ migration gates, not claims made by this suite.
    Missing URLs, credentials in URLs,
    non-HTTP URLs and identical URLs fail configuration rather than silently
    comparing against live production or the candidate itself.
-5. Run the suite and retain its provenance/report. Contract failures can identify
+5. Run the suite and retain its provenance/report. Contract differences can identify
    mismatched content but are **not proof** that two independent CMS fetches used
    the same snapshot. Do not relax assertions to accommodate unrelated CMS edits.
 
@@ -149,7 +159,7 @@ Open the last HTML report with `yarn playwright show-report`.
 
 [Regression tests](../.github/workflows/regression-tests.yml) runs
 `yarn test:infrastructure` on every PR and push to main. The isolated checks
-take roughly 15-25 seconds locally, excluding dependency/browser installation.
+take roughly 30 seconds locally, excluding dependency/browser installation.
 They protect the harness, **not a deployed PR's application behavior**.
 
 The website suite is intentionally **manual**, not a required network/CMS-heavy
@@ -160,8 +170,10 @@ baseline. Run the manual website job before approving migration/refactor work.
 
 After this workflow is merged into the default branch, choose **Actions >
 Regression tests > Run workflow**, select the branch containing the intended test
-code, then enter:
+code at the current head of the intended open PR, then enter:
 
+- `pull_request_number`: that PR's number; the job rejects closed PRs or a
+  selected test-code commit that no longer matches the PR head;
 - `candidate_url`: the deployed candidate from that PR commit;
 - `reference_url`: the immutable reference built from matching content;
 - `baseline_id`: base/candidate deployment or commit IDs and CMS snapshot ID.
@@ -171,6 +183,38 @@ Manual runs first execute the infrastructure gate, then the full website suite
 commit; both jobs upload HTML reports and failure artifacts for 14 days even on
 failure. The test-code branch does not build or deploy the candidate: verify its
 deployment commit explicitly. No CMS/deployment secrets are needed by these jobs.
+
+### Reviewing and accepting differences
+
+After the manual run, `ci/review.js` reads the actual Playwright JSON report.
+If reference differences exist, CI creates **one resolvable file-level PR review
+conversation** listing affected pages/viewports and difference categories,
+including changed-pixel counts or screenshot dimensions. It links the CI run and
+downloadable report with reference/candidate/difference images and contract JSON.
+Download and extract the artifact, then open its HTML report with
+`yarn playwright show-report <extracted-playwright-report-directory>`.
+Images are in the report, not embedded directly in the PR comment.
+
+1. Review the differences. An intentional background/content/design change does
+   not require weakening the tests or making the old and new sites identical.
+2. Fix unexpected regressions, or **resolve the conversation** to acknowledge
+   intentional differences. Each manual run with differences creates a fresh
+   conversation; an older resolution does not approve later results.
+3. Merge once functional checks and the rest of the PR review are satisfied.
+
+Enable **Require conversation resolution before merging** in the main branch's
+protection/ruleset if GitHub should enforce that acknowledgement. The workflow
+does not change repository merge rules. Reference differences themselves never
+turn the CI job red; resolving a conversation does not override functional
+failures. Publishing/API failures, missing/empty reports and stale PR heads are
+infrastructure errors and fail the job rather than silently omitting the review.
+An unchanged comparison creates no conversation; its summary is still recorded
+on the Actions run. A cancelled run is not an acceptance result.
+
+Only the manually dispatched browser job receives `pull-requests: write`, using
+GitHub's built-in token. Automatic PR infrastructure jobs remain read-only.
+No Kaneo credential or external image hosting is needed. Manual dispatch executes
+the selected branch's test code with that permission, so run only trusted branches.
 
 ## Updating coverage
 
@@ -182,5 +226,5 @@ deployment commit explicitly. No CMS/deployment secrets are needed by these jobs
   mutation case to `infrastructure/browser.spec.js`.
 - Keep volatile external content out of visual assertions only with a documented,
   narrow mask plus a separate integration smoke assertion.
-- Do not accept changed screenshots by increasing the threshold or pointing both
+- Do not hide changed screenshots by increasing the threshold or pointing both
   URLs to the same candidate. Review the contract and difference attachments.
