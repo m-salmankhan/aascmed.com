@@ -33,8 +33,15 @@ function validateTargets(env = process.env) {
 async function compareImages(expectedBuffer, actualBuffer) {
   const expected = PNG.sync.read(expectedBuffer);
   const actual = PNG.sync.read(actualBuffer);
-  assert.deepEqual({ width: actual.width, height: actual.height },
-    { width: expected.width, height: expected.height }, "Screenshot dimensions changed");
+  if (actual.width !== expected.width || actual.height !== expected.height) {
+    return {
+      passed: false,
+      dimensions: {
+        expected: { width: expected.width, height: expected.height },
+        actual: { width: actual.width, height: actual.height },
+      },
+    };
+  }
   const diff = new PNG({ width: expected.width, height: expected.height });
   const { default: pixelmatch } = await import(pathToFileURL(require.resolve("pixelmatch")).href);
   const changedPixels = pixelmatch(expected.data, actual.data, diff.data, expected.width, expected.height,

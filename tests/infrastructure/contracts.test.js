@@ -88,6 +88,16 @@ test("visual threshold accepts exactly 0.1% and rejects more", async () => {
   assert.equal((await compareImages(baseline, image(100, 100, 11))).passed, false);
 });
 
-test("visual dimension changes produce a clear failure rather than a pixelmatch crash", async () => {
-  await assert.rejects(() => compareImages(image(100, 100), image(101, 100)), /dimensions/);
+test("visual dimension changes are reportable differences rather than comparison errors", async () => {
+  const result = await compareImages(image(100, 100), image(101, 100));
+  assert.equal(result.passed, false);
+  assert.deepEqual(result.dimensions, {
+    expected: { width: 100, height: 100 },
+    actual: { width: 101, height: 100 },
+  });
+  assert.equal(result.diff, undefined);
+});
+
+test("invalid screenshot data remains a hard comparison error", async () => {
+  await assert.rejects(() => compareImages(image(100, 100), Buffer.from("not a PNG")));
 });

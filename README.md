@@ -15,7 +15,7 @@ Coming soon&trade;
 ## UI regression tests
 
 See [the regression testing guide](tests/README.md) for coverage, safety,
-matched-content baselines, local commands, CI/manual triggers, failure reports,
+matched-content baselines, local commands, CI/manual triggers, advisory reports,
 and the limits of external-service testing.
 
 `yarn test:infrastructure` runs fast, isolated checks on every pull request.
@@ -23,3 +23,6 @@ and the limits of external-service testing.
 suite against explicit `UI_BASE_URL` and `UI_REFERENCE_URL` deployments.
 The longer website suite is available through the **Regression tests** workflow's
 **Run workflow** button; it requires a retained reference with matching CMS content.
+Reference differences do not fail CI: the manual run posts a resolvable PR review
+conversation with report links. Functional and harness failures still fail.
+Supply the PR number and select its current branch/head when dispatching.
