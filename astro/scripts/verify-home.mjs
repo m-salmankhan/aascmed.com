@@ -17,6 +17,7 @@ const ssrOutputPath = path.join(harnessPath, 'dist-ssr');
 const manifestPath = path.join(harnessPath, 'public-image-manifest.json');
 const snapshotPath = path.join(harnessPath, 'published-content-snapshot.json');
 const privateToken = 'verify-home-private-token';
+const screenshotDirectory = process.env.ASTRO_HOME_SCREENSHOT_DIR;
 
 async function exists(target) {
   try { await access(target); return true; } catch { return false; }
@@ -207,6 +208,7 @@ export default { ...base, outDir: '.astro/home-verification/dist-ssr' };
   assert.equal(incompleteDraft.includes(privateToken), false, 'incomplete-draft HTML does not expose the CMS token');
 
   browser = await chromium.launch();
+  if (screenshotDirectory) await mkdir(screenshotDirectory, { recursive: true });
   for (const viewport of [{ width: 390, height: 844, name: 'mobile' }, { width: 1440, height: 1000, name: 'desktop' }]) {
     const context = await browser.newContext({ viewport: { width: viewport.width, height: viewport.height }, javaScriptEnabled: false });
     const page = await context.newPage();
@@ -221,6 +223,7 @@ export default { ...base, outDir: '.astro/home-verification/dist-ssr' };
       styleTags: document.querySelectorAll('style[data-emotion]').length,
     }));
     assert.ok(geometry.width > 0 && geometry.height > 0 && geometry.headingVisible && geometry.styleTags > 0, `${viewport.name} first paint has visible styled hero: ${JSON.stringify(geometry)}`);
+    if (screenshotDirectory) await page.screenshot({ path: path.join(screenshotDirectory, `homepage-${viewport.name}.png`) });
     await context.close();
   }
   console.log('Astro homepage checks passed: published and draft data, section limits/order, retiree filtering, server-only CMS credentials, bounded concurrency, SSR cache headers, and styled desktop/mobile no-JS first paint.');
