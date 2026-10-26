@@ -16,7 +16,10 @@
     "typecheck": "tsc --noEmit",
     "test:ui": "playwright test",
     "test:infrastructure": "node --test tests/infrastructure/contracts.test.js tests/infrastructure/review.test.js tests/infrastructure/targets.test.js && playwright test --config playwright.infrastructure.config.js",
-    "test:smoke": "playwright test tests/ui/behavior.spec.js"
+    "test:smoke": "playwright test tests/ui/behavior.spec.js",
+    "astro:static": "yarn --cwd astro build:static",
+    "astro:ssr:build": "yarn --cwd astro build:ssr",
+    "astro:ssr:start": "yarn --cwd astro start:ssr"
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",
