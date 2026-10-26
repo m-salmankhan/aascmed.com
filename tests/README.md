@@ -165,7 +165,7 @@ They protect the harness, **not a deployed PR's application behavior**.
 The website suite is **on demand**, not a required network/CMS-heavy check on
 every commit. A fresh Gatsby build alone took about 4 minutes locally; full-site
 comparisons add multiple minutes, live fonts/maps and a reference deployment.
-For a quick PR review, same-repository PRs get an instruction comment: after the
+For a quick PR review, same-repository PRs get a top-level instruction comment: after the
 Netlify deploy preview for the current head is ready, comment `/run-regression`.
 That run compares the PR's `deploy-preview-N--aascmed.netlify.app` deployment
 with `main--aascmed.netlify.app`, after verifying that the PR targets current
@@ -176,7 +176,8 @@ content drift. Production is not used as the reference.
 
 For a deterministic acceptance comparison, use the manual workflow below with
 an immutable reference deployment and a matched CMS snapshot. The fast
-infrastructure job remains separate from both browser comparison paths.
+infrastructure job remains separate from both browser comparison paths. The
+instruction comment is posted to the PR conversation, not the review diff.
 
 For an on-demand PR comparison, wait for the Netlify preview deployment to
 succeed, then comment `/run-regression`. The workflow checks that the PR is open,
@@ -229,8 +230,9 @@ An unchanged comparison creates no conversation; its summary is still recorded
 on the Actions run. A cancelled run is not an acceptance result.
 
 Only browser runs and the same-repository PR instruction comment receive the
-write permissions they need, using GitHub's built-in token. Automatic PR
-infrastructure checks remain read-only. No Kaneo credential or external image
+write permissions they need, using GitHub's built-in token. The instruction
+comment runs with `pull_request_target` and does not check out or execute PR code.
+Automatic PR infrastructure checks remain read-only. No Kaneo credential or external image
 hosting is needed. Manual dispatch executes the selected branch's test code with
 write permission, so run only trusted branches. Comment-triggered runs use the
 default branch's test code and accept commands only from write collaborators on
