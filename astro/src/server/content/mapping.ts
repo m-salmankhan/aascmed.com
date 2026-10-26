@@ -173,23 +173,29 @@ export function mapStrapiPage(entity: StrapiEntity): ContentPageRecord {
 export function mapStrapiHomePage(entity: StrapiEntity, mediaBaseUrl?: string): HomePageRecord {
   const source = entity as Entity;
   const mapped: HomePageRecord = { documentId: source.documentId, id: source.documentId, metaDescription: string(source.metaDescription) };
+  const mapSection = (raw: unknown): JsonValue | undefined => {
+    const section = record(raw);
+    if (!section) return jsonValue(raw);
+    const normalized: Record<string, JsonValue> = {};
+    for (const [field, child] of Object.entries(section)) {
+      if (field === "media") {
+        const media = list(child)?.map((item) => mapStrapiMedia(item, mediaBaseUrl)).filter((item): item is MediaDescriptor => !!item);
+        if (media) normalized.media = media as unknown as JsonValue;
+      } else {
+        const json = jsonValue(child);
+        if (json !== undefined) normalized[field] = json;
+      }
+    }
+    return normalized;
+  };
   for (const key of ["hero", "genericBelowHero", "conditions", "serviceUpdates", "blog", "providers", "feedback", "locations", "contact"] as const) {
     const raw = source[key];
     const section = record(raw);
     let value: JsonValue | undefined;
-    if (section && "media" in section) {
-      const normalized: Record<string, JsonValue> = {};
-      for (const [field, child] of Object.entries(section)) {
-        if (field === "media") {
-          const media = list(child)?.map((item) => mapStrapiMedia(item, mediaBaseUrl)).filter((item): item is MediaDescriptor => !!item);
-          if (media) normalized.media = media as unknown as JsonValue;
-        } else {
-          const json = jsonValue(child);
-          if (json !== undefined) normalized[field] = json;
-        }
-      }
-      value = normalized;
-    } else value = jsonValue(raw);
+    if (key === "genericBelowHero" && Array.isArray(raw)) {
+      const sections = raw.map(mapSection).filter((item): item is JsonValue => item !== undefined);
+      value = sections;
+    } else value = section && "media" in section ? mapSection(raw) : jsonValue(raw);
     if (value !== undefined) mapped[key] = value;
   }
   return compact(mapped);

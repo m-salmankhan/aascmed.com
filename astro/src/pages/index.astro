@@ -1,28 +1,22 @@
 ---
-import ProofPage from '../views/ProofPage';
-import { getDraftPreview } from '../server/draft-preview';
-import DraftStatus from '../components/DraftStatus';
-import VisitCounter from '../components/VisitCounter';
 import SiteDocument from '../layouts/SiteDocument.astro';
+import { AstroHomePage } from '../../../src/views/astro-home-page';
+import { getAstroHomePageData } from '../server/content/home-page.ts';
+import { getRouteContentMode, isAstroPreview } from '../server/content/route-data.ts';
 
-const target = import.meta.env.PUBLIC_ASTRO_TARGET;
-const draft = await getDraftPreview();
-if (target === 'compiled Node SSR') Astro.response.headers.set('Cache-Control', 'private, no-store');
-const media = { src: '/assets/hero-bg.png', alt: 'Soft green and blue healthcare themed background', width: 1920, height: 1080 };
-const structuredData = {
-  '@context': 'https://schema.org',
-  '@type': 'WebPage',
-  name: 'Astro architecture proof',
-};
+const { homePage, siteData, viewProps } = await getAstroHomePageData(getRouteContentMode());
+if (isAstroPreview()) Astro.response.headers.set('Cache-Control', 'private, no-store');
 ---
 
 <SiteDocument
-  title="Astro architecture proof"
-  description="Representative Astro and React rendering proof."
+  title="Allergy, Asthma and Sinus Centers in Illinois"
+  description={homePage?.metaDescription || ''}
   pathname="/"
-  structuredData={structuredData}
+  siteSettings={siteData.siteSettings}
+  trackingSettings={siteData.trackingSettings}
+  useTracking
+  appendBusinessNameToTitle={false}
+  ogType="website"
 >
-  <ProofPage target={target} draft={draft} media={media} />
-  <VisitCounter client:load />
-  <DraftStatus client:load initialTitle={draft.title} />
+  <AstroHomePage client:load viewProps={viewProps} siteData={siteData} />
 </SiteDocument>
