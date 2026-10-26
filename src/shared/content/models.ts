@@ -113,12 +113,14 @@ export interface SiteSettings {
   defaultImage?: MediaDescriptor;
 }
 
+/** Public analytics identifiers passed from the framework adapter to shared views. */
 export interface TrackingSettings {
   googleAnalyticsId: string;
   googleTagManagerId: string;
   pixelId: string;
 }
 
+/** Announcement state and optional serializable message supplied to the banner. */
 export interface AnnouncementSettings {
   enabled: boolean;
   type: "error" | "info" | "success";

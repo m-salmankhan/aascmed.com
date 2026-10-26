@@ -1,6 +1,7 @@
 import React, { createContext, ReactNode, useContext } from "react";
 import type { AnnouncementSettings, SiteSettings, TrackingSettings } from "../content/models";
 
+/** Framework-neutral global values needed by shared site components. */
 export interface SiteData {
   siteSettings: SiteSettings;
   trackingSettings: TrackingSettings;
@@ -22,4 +23,5 @@ export const SiteDataProvider: React.FC<{ value: SiteData; children?: ReactNode 
   <SiteDataContext.Provider value={value}>{children}</SiteDataContext.Provider>
 );
 
+/** Read the site data supplied by the nearest framework adapter provider. */
 export const useSiteData = (): SiteData => useContext(SiteDataContext);

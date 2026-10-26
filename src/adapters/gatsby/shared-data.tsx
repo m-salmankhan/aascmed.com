@@ -36,6 +36,7 @@ const GatsbySharedDataQuery = graphql`
   }
 `;
 
+/** Gatsby's nullable query result shape for shared site-wide view data. */
 interface GatsbySharedSiteDataQuery {
   site?: { siteMetadata?: { title?: string | null; siteUrl?: string | null; twitterHandle?: string | null } | null } | null;
   strapiTrackingInfo?: { googleAnalyticsId?: string | null; googleTagManagerId?: string | null; pixelId?: string | null } | null;
@@ -43,6 +44,7 @@ interface GatsbySharedSiteDataQuery {
   allStrapiClinic: { clinics: Array<{ clinic_name?: string | null }> };
 }
 
+/** Query Gatsby site data once and provide framework-neutral values to the React tree. */
 const GatsbySharedDataAdapter: React.FC<{ children?: ReactNode }> = ({ children }) => {
   const data = useStaticQuery<GatsbySharedSiteDataQuery>(GatsbySharedDataQuery);
   const siteSettings = mapGatsbySiteSettings(data.site?.siteMetadata || {});
