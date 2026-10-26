@@ -4,15 +4,30 @@ import { css } from "@emotion/react";
 import type { Interpolation, Theme } from "@emotion/react";
 import type { MediaDescriptor } from "../../shared/content/models";
 
+/** CSS object-fit values supported by shared media renderers. */
+type ImageFit = "cover" | "contain" | "fill";
+
 /** Shared image renderer inputs: a plain media descriptor plus normal image attributes. */
 export interface ImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, "src" | "srcSet" | "alt" | "width" | "height"> {
   image: MediaDescriptor;
   /** Alternative text override; an explicit empty value marks a decorative image. */
   alt?: string;
   /** CSS object-fit behavior used when the image fills its layout box. */
-  fit?: "cover" | "contain" | "fill";
+  fit?: ImageFit;
   css?: Interpolation<Theme>;
 }
+
+const imageFitStyles: Record<ImageFit, Interpolation<Theme>> = {
+  cover: css({ objectFit: "cover" }),
+  contain: css({ objectFit: "contain" }),
+  fill: css({ objectFit: "fill" }),
+};
+
+const pictureFitStyles: Record<ImageFit, Interpolation<Theme>> = {
+  cover: css({ display: "block", width: "100%", height: "100%", img: { width: "100%", height: "100%", objectFit: "cover" } }),
+  contain: css({ display: "block", width: "100%", height: "100%", img: { width: "100%", height: "100%", objectFit: "contain" } }),
+  fill: css({ display: "block", width: "100%", height: "100%", img: { width: "100%", height: "100%", objectFit: "fill" } }),
+};
 
 /** Render responsive image data as an `<img>` or `<picture>` element.
  * @param props Shared media descriptor, optional alt/fit overrides, and image attributes.
@@ -34,15 +49,10 @@ export function Image({ image, alt, fit, css: callerCss, loading = "lazy", decod
     height={image.height}
     loading={loading}
     decoding={decoding}
-    css={[callerCss, fit ? { objectFit: fit } : undefined]}
+    css={[callerCss, fit ? imageFitStyles[fit] : undefined]}
   />;
   if (!image.formats?.length) return imageNode;
-  return <picture css={fit ? css({
-    display: "block",
-    width: "100%",
-    height: "100%",
-    img: { width: "100%", height: "100%", objectFit: fit },
-  }) : undefined}>
+  return <picture css={fit ? pictureFitStyles[fit] : undefined}>
     {image.formats.map((format) => <source key={format.type} type={format.type} srcSet={format.srcSet} sizes={props.sizes || format.sizes || image.sizes} />)}
     {imageNode}
   </picture>;

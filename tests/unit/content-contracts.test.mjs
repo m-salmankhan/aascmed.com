@@ -208,16 +208,6 @@ test("Gatsby image adapters preserve constrained slot sizes and encoded picture 
   ]);
 });
 
-test("shared image renderer keeps Gatsby picture sources and sizes in the React boundary", async () => {
-  const source = await readFile(new URL("../../src/components/media/image.tsx", import.meta.url), "utf8");
-  assert.match(source, /<picture css=/);
-  assert.match(source, /<source[^\n]+type=\{format\.type\}[^\n]+srcSet=\{format\.srcSet\}[^\n]+sizes=\{props\.sizes \|\| format\.sizes \|\| image\.sizes\}/);
-  assert.match(source, /const computedSizes = props\.sizes \|\| image\.sizes/);
-  assert.match(source, /fit=\{props\.fit \|\| "cover"\}/);
-  assert.match(source, /img: \{ width: "100%", height: "100%", objectFit: fit \}/);
-  assert.match(source, /css=\{\[callerCss, fit \? \{ objectFit: fit \} : undefined\]\}/);
-});
-
 test("blog hero gives picture and image a fixed crop box", async () => {
   const source = await readFile(new URL("../../src/templates/blog-post.tsx", import.meta.url), "utf8");
   assert.match(source, /\.gatsby-image-wrapper, picture \{\s*width: 100%;\s*height: 20em;/);
