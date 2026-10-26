@@ -6,7 +6,6 @@ import { getAstroSiteData } from '../../server/content/route-data';
 import { AstroConditionPage, AstroContentNotFound } from '../../../../src/views/astro-content-pages';
 import type { ConditionRecord } from '../../../../src/shared/content/models';
 
-const isStatic = import.meta.env.PUBLIC_ASTRO_TARGET === 'static';
 export const prerender = import.meta.env.PUBLIC_ASTRO_TARGET === 'static';
 
 export async function getStaticPaths() {
@@ -14,14 +13,14 @@ export async function getStaticPaths() {
   return conditions.flatMap((condition) => conditionPath(condition.slug) ? [{ params: { slug: condition.slug! }, props: { staticRecord: condition } }] : []);
 }
 
-const mode = isStatic ? 'published' : 'draft';
-const condition = isStatic
+const mode = (import.meta.env.PUBLIC_ASTRO_TARGET === 'static') ? 'published' : 'draft';
+const condition = (import.meta.env.PUBLIC_ASTRO_TARGET === 'static')
   ? Astro.props.staticRecord as ConditionRecord | undefined
   : await getConditionBySlug(Astro.params.slug || '', mode);
 if (!condition) Astro.response.status = 404;
 const siteData = condition ? await getAstroSiteData(mode) : undefined;
-const imageModule = isStatic ? await import('../../server/content/public-images') : null;
-const imageLibrary = isStatic ? await import('../../lib/public-images') : null;
+const imageModule = (import.meta.env.PUBLIC_ASTRO_TARGET === 'static') ? await import('../../server/content/public-images') : null;
+const imageLibrary = (import.meta.env.PUBLIC_ASTRO_TARGET === 'static') ? await import('../../lib/public-images') : null;
 const imageManifest = imageModule ? await imageModule.getPublishedImageManifest() : null;
 const title = condition?.title || condition?.heading || 'Untitled';
 const description = condition?.description || '';
@@ -32,7 +31,7 @@ const displayCondition = condition ? {
   thumbnail: routeSlug ? imageManifest?.mediaByRoute[`condition:${routeSlug}`] ?? condition.thumbnail : condition.thumbnail,
 } : null;
 const socialImagePath = condition
-  ? isStatic && imageLibrary && routeSlug
+  ? (import.meta.env.PUBLIC_ASTRO_TARGET === 'static') && imageLibrary && routeSlug
     ? imageLibrary.getSocialCardImagePath({ kind: 'conditions', slug: routeSlug, backgroundImage: condition.thumbnail?.src })
     : condition.thumbnail?.src
   : undefined;

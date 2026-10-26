@@ -6,7 +6,6 @@ import { getAstroSiteData } from '../../server/content/route-data';
 import { AstroProviderPage, AstroContentNotFound } from '../../../../src/views/astro-content-pages';
 import type { ProviderRecord } from '../../../../src/shared/content/models';
 
-const isStatic = import.meta.env.PUBLIC_ASTRO_TARGET === 'static';
 export const prerender = import.meta.env.PUBLIC_ASTRO_TARGET === 'static';
 
 export async function getStaticPaths() {
@@ -14,8 +13,8 @@ export async function getStaticPaths() {
   return providers.flatMap((provider) => providerPath(provider.slug) ? [{ params: { slug: provider.slug! }, props: { staticRecord: provider } }] : []);
 }
 
-const mode = isStatic ? 'published' : 'draft';
-const provider = isStatic
+const mode = (import.meta.env.PUBLIC_ASTRO_TARGET === 'static') ? 'published' : 'draft';
+const provider = (import.meta.env.PUBLIC_ASTRO_TARGET === 'static')
   ? Astro.props.staticRecord as ProviderRecord | undefined
   : await getProviderBySlug(Astro.params.slug || '', mode);
 if (!provider) Astro.response.status = 404;
