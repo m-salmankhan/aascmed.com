@@ -219,7 +219,7 @@ test("shared image renderer keeps Gatsby picture sources and sizes in the React 
 });
 
 test("blog hero gives picture and image a fixed crop box", async () => {
-  const source = await readFile(new URL("../../src/templates/blog-post.tsx", import.meta.url), "utf8");
+  const source = await readFile(new URL("../../src/views/blog-post.tsx", import.meta.url), "utf8");
   assert.match(source, /\.gatsby-image-wrapper, picture \{\s*width: 100%;\s*height: 20em;/);
   assert.match(source, /img \{\s*width: 100%;\s*height: 20em;/);
   assert.match(source, /\.gatsby-image-wrapper img, picture img \{\s*height: 100%;/);
