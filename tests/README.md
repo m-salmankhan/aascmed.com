@@ -170,14 +170,12 @@ Netlify deploy preview for the current head is ready, comment `/run-regression`.
 That run compares the PR's `deploy-preview-N--aascmed.netlify.app` deployment
 with `main--aascmed.netlify.app`, after verifying that the PR targets current
 `main` and that Netlify reported a successful preview for the exact head commit.
-It records both commit SHAs, but the Netlify branch builds may have fetched
-different published CMS snapshots, so this run is advisory and can include
-content drift. Production is not used as the reference.
-
-For a deterministic acceptance comparison, use the manual workflow below with
-an immutable reference deployment and a matched CMS snapshot. The fast
-infrastructure job remains separate from both browser comparison paths. The
-instruction comment is posted to the PR conversation, not the review diff.
+It records both commit SHAs and compares against `main`, not production. No
+content export or freeze is needed for this quick check. If page text, photos, or
+other published content changed between the builds, those changes can appear in
+the report alongside code and layout changes. The fast infrastructure job
+remains separate from both browser comparison paths. The instruction comment is
+posted to the PR conversation, not the review diff.
 
 For an on-demand PR comparison, wait for the Netlify preview deployment to
 succeed, then comment `/run-regression`. The workflow checks that the PR is open,
@@ -186,15 +184,15 @@ preview status for its current head commit. Only repository collaborators with
 write access can trigger it. The workflow code runs from the default branch for
 comment-triggered runs; it does not check out or execute PR code.
 
-For a deterministic matched-content run, choose **Actions > Regression tests >
-Run workflow**, select the branch containing the intended test code at the
-current head of the intended open PR, then enter:
+To compare custom deployments instead, choose **Actions > Regression tests > Run
+workflow**, select the branch containing the intended test code at the current
+head of the intended open PR, then enter:
 
 - `pull_request_number`: that PR's number; the job rejects closed PRs or a
   selected test-code commit that no longer matches the PR head;
 - `candidate_url`: the deployed candidate from that PR commit;
-- `reference_url`: the immutable reference built from matching content;
-- `baseline_id`: base/candidate deployment or commit IDs and CMS snapshot ID.
+- `reference_url`: the reference deployment;
+- `baseline_id`: identifiers for the reference and candidate deployments.
 
 Manual runs first execute the infrastructure gate, then the full website suite
 (30-minute timeout). The run summary records URLs, baseline ID and test-code

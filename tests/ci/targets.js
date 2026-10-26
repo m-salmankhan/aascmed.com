@@ -34,7 +34,7 @@ async function resolveCommentTargets({ github, owner, repo, pullNumber, actor })
     candidateURL: candidateURL.href,
     referenceURL: MAIN_REFERENCE_URL,
     candidateCommit: pr.head.sha,
-    baselineId: `Netlify main branch build at base ${pr.base.sha}; PR #${pullNumber} deploy preview at ${pr.head.sha}. Published CMS content is not snapshot-pinned for this on-demand comparison.`,
+    baselineId: `Netlify main build at ${pr.base.sha}; PR #${pullNumber} preview at ${pr.head.sha}. Page content may have changed between builds.`,
   };
 }
 

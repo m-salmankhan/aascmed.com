@@ -193,7 +193,7 @@ jobs:
               "### Run the website regression check",
               "When the PR's Netlify deploy preview is ready, comment `/run-regression` on this PR. The browser comparison runs on demand and checks the PR preview against the current `main` branch build.",
               "",
-              "This is advisory: the main and PR builds can contain different published CMS snapshots. For a deterministic acceptance comparison, use **Actions → Regression tests → Run workflow** with an immutable reference and matched CMS snapshot.",
+              "This is a quick visual comparison. If page text or photos changed between the main and PR builds, those changes may appear in the report too.",
             ].join("\n");
             const comments = await github.paginate(github.rest.issues.listComments, {
               ...context.repo, issue_number: number, per_page: 100,
