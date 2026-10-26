@@ -18,6 +18,9 @@ export interface BlogPostViewProps {
   pathname: string;
 }
 
+/** Parsed blog dynamic-zone entries supported by the detail-page renderer. */
+type BlogContentProps = { content: any[] };
+
 /** Render a blog detail page from shared blog data.
  * @param props Normalized blog record and current browser pathname for sharing links.
  * @returns The blog detail layout, including content, table of contents, and media.
@@ -58,7 +61,7 @@ export function BlogPostView({ blog, pathname }: BlogPostViewProps) {
  * @param props Parsed content entries from the blog record.
  * @returns Rich-text renderers and contact callouts for recognized entries.
  */
-function BlogContent({ content }: { content: any[] }) {
+function BlogContent({ content }: BlogContentProps) {
   return <>
     {content.map((component, index) => {
       const type = component.__component || component.strapi_component;

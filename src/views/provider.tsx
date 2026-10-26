@@ -14,6 +14,9 @@ import type { ProviderRecord } from "../shared/content/models";
 /** Normalized provider data and browser pathname for sharing links. */
 export interface ProviderViewProps { provider: ProviderRecord; pathname: string }
 
+/** Provider retirement state and optional notice content shown to readers. */
+type RetirementNoticeProps = { retired: boolean; noticeBlocks?: any[] };
+
 const stylesImage = css({ width: "70%", height: "auto", borderRadius: "50%", overflow: "hidden" });
 
 /** Render provider profile details from a shared provider record.
@@ -63,7 +66,7 @@ export function ProviderView({ provider, pathname }: ProviderViewProps) {
  * @param props Retirement state and optional rich-text notice blocks.
  * @returns The notice component, or null when it should not be shown.
  */
-function RetirementNotice({ retired, noticeBlocks }: { retired: boolean; noticeBlocks?: any[] }) {
+function RetirementNotice({ retired, noticeBlocks }: RetirementNoticeProps) {
   if (!retired || !noticeBlocks?.length) return null;
   return <InfoNotice css={css`margin-bottom: 1em;`}><StrapiBlocksRenderer content={noticeBlocks} /></InfoNotice>;
 }
