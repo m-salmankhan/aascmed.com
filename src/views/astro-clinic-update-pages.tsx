@@ -29,9 +29,9 @@ export function AstroServiceUpdatesArchivePage(props: WithSiteData & {
   </AstroSiteDataProvider>;
 }
 
-export function AstroClinicPage(props: WithSiteData & { clinic: ClinicRecord }) {
+export function AstroClinicPage(props: WithSiteData & { clinic: ClinicRecord; mapboxAccessToken?: string }) {
   return <AstroSiteDataProvider pathname={props.pathname} siteData={props.siteData}>
-    <ClinicView clinic={props.clinic} />
+    <ClinicView clinic={props.clinic} mapboxAccessToken={props.mapboxAccessToken} />
   </AstroSiteDataProvider>;
 }
 

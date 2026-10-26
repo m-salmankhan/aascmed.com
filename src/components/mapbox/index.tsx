@@ -7,5 +7,7 @@ export interface MapBoxProps {
     width?: number
     inView?: boolean
     zoom: number
+    /** Public token supplied by Astro; Gatsby continues to use its existing public config. */
+    mapboxAccessToken?: string
 }
 

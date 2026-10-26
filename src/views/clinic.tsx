@@ -14,9 +14,9 @@ import type { ClinicRecord } from "../shared/content/models";
 import { clinicPath } from "../shared/content/urls";
 import { getClinicHoursForDisplay } from "../shared/content/clinic-hours";
 
-export interface ClinicViewProps { clinic?: ClinicRecord }
+export interface ClinicViewProps { clinic?: ClinicRecord; mapboxAccessToken?: string }
 
-export function ClinicView({ clinic }: ClinicViewProps) {
+export function ClinicView({ clinic, mapboxAccessToken }: ClinicViewProps) {
   const siteMetadata = useSiteMetadata();
   const clinicName = clinic?.clinicName || "Untitled";
   const clinicAddress = clinic?.location?.address || "";
@@ -60,7 +60,7 @@ export function ClinicView({ clinic }: ClinicViewProps) {
       <H1 css={css`font-size: 2.5em;`}>{clinicName} Clinic</H1>
       <Columns>
         <Column>
-          <MapBox css={css`height: 25em`} longitude={longitude} latitude={latitude} zoom={15} label={pinLabelName} />
+          <MapBox css={css`height: 25em`} longitude={longitude} latitude={latitude} zoom={15} label={pinLabelName} mapboxAccessToken={mapboxAccessToken} />
           {placeId && <PrimaryAnchor
             css={css`margin-top: 1em`}
             href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`Allergy, Asthma and Sinus Centers (${clinicName})`)}&destination_place_id=${placeId}`}

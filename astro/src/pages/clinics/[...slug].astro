@@ -34,7 +34,7 @@ const description = clinic?.description || '';
 ---
 
 {clinic && siteData ? <SiteDocument title={title} description={description} pathname={pathname} siteSettings={siteData.siteSettings} trackingSettings={siteData.trackingSettings} appendBusinessNameToTitle={false} useTracking>
-  <AstroClinicPage client:load pathname={pathname} siteData={siteData} clinic={clinic} />
+  <AstroClinicPage client:load pathname={pathname} siteData={siteData} clinic={clinic} mapboxAccessToken={import.meta.env.PUBLIC_MAPBOX_API_KEY} />
 </SiteDocument> : <SiteDocument title="Page not found" description="The requested page could not be found." pathname={pathname} noIndex>
   <AstroContentNotFound client:load />
 </SiteDocument>}
