@@ -1,5 +1,4 @@
 import { Checkbox, DropdownInput, TextArea, TextInput } from "../forms";
-import { Script } from "gatsby";
 import React, { FormEventHandler, useEffect, useRef, useState } from "react";
 import { PrimaryButton } from "../buttons";
 import { css } from "@emotion/react";
@@ -39,6 +38,11 @@ export function ContactForm(props: ContactFormProps): React.ReactElement {
 
     const gtag = useGTag();
 
+    useEffect(() => {
+        if (formState !== FormState.SUCCESS) return;
+        const fbq = (window as typeof window & { fbq?: (...args: string[]) => void }).fbq;
+        fbq?.("track", "Contact");
+    }, [formState]);
     // update state variables. actual api call happens on rerender
     const formSubmisisonHandler: FormEventHandler<HTMLFormElement> = (event) => {
         event.preventDefault();
@@ -108,8 +112,6 @@ export function ContactForm(props: ContactFormProps): React.ReactElement {
                 formState === FormState.SUCCESS &&
                 <>
                     <SuccessNotice css={css`margin-bottom: 1em;`}>Message successfully sent! If you are a new patient, check your email for the patient registration forms.</SuccessNotice>
-                    {/* Facebook Pixel Code */}
-                    <Script dangerouslySetInnerHTML={{ __html: `fbq('track', 'Contact');` }} />
                 </>
             }
             {
