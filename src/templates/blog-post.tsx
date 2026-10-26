@@ -147,8 +147,12 @@ const HeroImage = ({ img, className }: {img: ReturnType<typeof mapGatsbyMedia>, 
             height: 20em;
         }
 
-        .gatsby-image-wrapper img, picture img, > img {
+        img {
             width: 100%;
+            height: 20em;
+        }
+
+        .gatsby-image-wrapper img, picture img {
             height: 100%;
         }
     `;
