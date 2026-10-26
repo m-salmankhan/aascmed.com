@@ -139,7 +139,7 @@ export function mapGatsbyBlog(node: GatsbyNode): BlogRecord {
   return omitUndefined({
     id: node.id,
     slug: node.slug || null,
-    title: stringOrEmpty(node.title || node.heading) || "Untitled",
+    title: stringOrEmpty(node.title || node.heading),
     heading: node.heading || undefined,
     description: node.description || undefined,
     date: node.date || null,
@@ -152,7 +152,7 @@ export function mapGatsbyCondition(node: GatsbyNode): ConditionRecord {
   return omitUndefined({
     id: node.id,
     slug: node.slug || null,
-    title: stringOrEmpty(node.title || node.heading) || "Untitled",
+    title: stringOrEmpty(node.title || node.heading),
     heading: node.heading || undefined,
     description: node.description || undefined,
     order: node.order,
@@ -174,7 +174,7 @@ export function mapGatsbyProvider(node: GatsbyNode & {
   return omitUndefined({
     id: node.id,
     slug: node.slug || null,
-    title: node.name?.fullName || "Untitled",
+    title: node.name?.fullName || "",
     description: node.description || undefined,
     order: node.order,
     body: mapGatsbyBlocks(node, "body"),
@@ -206,7 +206,7 @@ export function mapGatsbyClinic(node: GatsbyNode & {
   return omitUndefined({
     id: node.id,
     slug: node.slug || null,
-    title: node.title || node.clinic_name || "Untitled Clinic",
+    title: node.title || node.clinic_name || "",
     clinicName: node.clinic_name || null,
     description: node.description || undefined,
     body: mapGatsbyBlocks(node, "body"),
@@ -231,7 +231,7 @@ export function mapGatsbyServiceUpdate(node: GatsbyNode): ServiceUpdateRecord {
   return omitUndefined({
     id: node.id,
     slug: node.slug || null,
-    title: node.title || "Untitled",
+    title: node.title || "",
     description: node.description || undefined,
     date: node.date || null,
     body: mapGatsbyBlocks(node, "body"),

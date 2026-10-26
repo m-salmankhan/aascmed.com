@@ -14,8 +14,10 @@ import {
 import {
   mapGatsbyBlog,
   mapGatsbyClinic,
+  mapGatsbyCondition,
   mapGatsbyMedia,
   mapGatsbyProvider,
+  mapGatsbyServiceUpdate,
   isJsonValue,
 } from "../../src/shared/content/gatsby-adapter.ts";
 import { validateContentRecord } from "../../src/shared/content/validation.ts";
@@ -54,6 +56,16 @@ test("published validation requires routable records while drafts tolerate incom
   assert.deepEqual(validateContentRecord(
     { id: "update-1", title: "Update", slug: "update", date: null }, "serviceUpdate", "published",
   ), ["a valid URL for this content record is required"]);
+  const missingTitles = [
+    ["blog", mapGatsbyBlog({ id: "1", slug: "post" })],
+    ["condition", mapGatsbyCondition({ id: "2", slug: "condition" })],
+    ["provider", mapGatsbyProvider({ id: "3", slug: "provider" })],
+    ["clinic", mapGatsbyClinic({ id: "4", slug: "clinic" })],
+    ["serviceUpdate", mapGatsbyServiceUpdate({ id: "5", slug: "update", date: "2025-02-14" })],
+  ];
+  for (const [family, record] of missingTitles) {
+    assert.deepEqual(validateContentRecord(record, family, "published"), ["title is required"]);
+  }
 });
 
 test("ordering helpers preserve query order for ties and place missing or invalid dates last", () => {
@@ -62,8 +74,8 @@ test("ordering helpers preserve query order for ties and place missing or invali
   ]).map(({ id }) => id), ["first-a", "first-b", "second", "unranked"]);
   assert.deepEqual(sortByDateDescending([
     { id: "missing", date: null }, { id: "old", date: "2022-08-01" }, { id: "bad", date: "not-a-date" },
-    { id: "new", date: "2025-07-01" }, { id: "same-a", date: "2025-07-01" },
-  ]).map(({ id }) => id), ["new", "same-a", "old", "missing", "bad"]);
+    { id: "new", date: "2025-07-01" }, { id: "same-a", date: "2025-07-01" }, { id: "rollover", date: "2025-02-30" },
+  ]).map(({ id }) => id), ["new", "same-a", "old", "missing", "bad", "rollover"]);
 });
 
 test("Gatsby adapters keep blocks and media serializable and omit absent optional content", () => {
@@ -100,7 +112,11 @@ test("Gatsby adapters keep blocks and media serializable and omit absent optiona
   assert.deepEqual(provider.name, { fullName: "Dr Example" });
   assert.deepEqual(provider.review, { reviewer: "Patient" });
   const sparseProvider = mapGatsbyProvider({ id: "provider-2", name: { fullName: null }, retirementNotice: null, review: null });
-  assert.equal(sparseProvider.title, "Untitled");
+  assert.equal(sparseProvider.title, "");
+  assert.deepEqual(validateContentRecord(sparseProvider, "provider", "published"), [
+    "title is required",
+    "a valid URL for this content record is required",
+  ]);
   assert.equal(isJsonValue(sparseProvider), true);
   const clinic = mapGatsbyClinic({ id: "clinic-1", clinic_name: "Crest Hill", hours: [null, { day: "Monday", opening_hours: { start_time: "09:00" } }] });
   assert.equal(clinic.clinicName, "Crest Hill");
