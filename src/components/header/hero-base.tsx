@@ -1,0 +1,145 @@
+import React, { HTMLProps, useEffect, useRef, useState } from "react";
+import { css } from "@emotion/react";
+import { PaddedContainer } from "../containers";
+import { colours, fontBaseSize, gridSpacing } from "../../styles/theme";
+import { breakpointStrings } from "../../styles/breakpoints";
+import { CSSInterpolation } from "@emotion/serialize";
+
+interface HeroProps extends Omit<HTMLProps<HTMLDivElement>, "media"> {
+    heading: string,
+    textContent?: React.ReactNode,
+    media?: React.ReactNode,
+    image?: React.ReactNode,
+    navigation?: React.ReactNode,
+}
+
+// what variables the parallax effect is made of
+interface ParallaxParameters {
+    textTranslation: number,
+    backgroundOpacity: number
+}
+
+const stylesHero = css({
+    minHeight: "60vh",
+    marginBottom: `${2 * gridSpacing}em`,
+    backgroundColor: "green",
+    backgroundRepeat: "no-repeat",
+    backgroundSize: "cover",
+    backgroundPosition: "75% center",
+    color: "#fff",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-around",
+    padding: "2rem",
+    position: "relative",
+    fontSize: fontBaseSize,
+});
+
+const stylesHeroContent: CSSInterpolation = {
+    zIndex: 1,
+    position: "relative",
+    width: "100%",
+    margin: `${gridSpacing / 2}em 0`,
+    willChange: "transform",
+
+    "h1, h2": {
+        marginTop: "1em",
+        fontSize: "2.25rem",
+        lineHeight: 1.25,
+
+        "@media screen and (min-width: 60em)": {
+            fontSize: "3rem",
+        }
+    }
+};
+
+stylesHeroContent[breakpointStrings.md] = {
+    margin: `${gridSpacing * 2}em 0`,
+    width: "75%",
+};
+
+stylesHeroContent[breakpointStrings.lg] = {
+    width: "50%",
+};
+
+
+const stylesHeroBackgroundImage = css({
+    position: "absolute",
+    left: 0,
+    top: 0,
+    width: "100%",
+    height: "100%",
+    zIndex: 0,
+    "> *": {
+        width: "100%",
+        height: "100%",
+    },
+});
+
+const stylesHeroOverlay = css({
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    background: colours.brandGradient,
+    zIndex: 0,
+    opacity: 0,
+    willChange: "opacity",
+})
+
+const getParallaxValues = (height: number): ParallaxParameters => {
+    const percentage = window.scrollY / height;
+    const backgroundOpacity = Math.min(Math.pow(percentage, 1 - percentage), 1);
+    const textTranslation = (backgroundOpacity === 1) ? 100 : percentage * 30;
+    return {
+        backgroundOpacity,
+        textTranslation,
+    }
+}
+
+export const HeroBase: React.FC<HeroProps> = ({ heading, textContent, media, image, navigation, children }) => {
+    const headerRef = useRef<HTMLElement | null>(null);
+    const [parallax, setParallax] = useState<ParallaxParameters>({ textTranslation: 0, backgroundOpacity: 0 });
+
+    // Parallax Effect
+    useEffect(() => {
+        const updateParallax = () => {
+            if (!headerRef.current)
+                return;
+
+            const header = headerRef.current as HTMLElement;
+            const heroHeight = header.scrollHeight;
+            requestAnimationFrame(() => setParallax(getParallaxValues(heroHeight)));
+        }
+
+        addEventListener("scroll", updateParallax);
+        addEventListener("resize", updateParallax);
+
+        return () => {
+            removeEventListener("scroll", updateParallax);
+            removeEventListener("resize", updateParallax);
+        }
+    }, [headerRef, setParallax]);
+
+    return (
+        <PaddedContainer css={stylesHero}>
+            <header ref={headerRef}>
+                {image && <div css={stylesHeroBackgroundImage}>{image}</div>}
+                {navigation}
+                <div className="translate" css={css(stylesHeroContent)} style={{ transform: `translate3d(0, -${parallax.textTranslation}%, 0)` }}>
+                    <div css={media ? css({ display: 'flex', gap: '2em', alignItems: 'center', flexWrap: 'wrap', [`@media screen and (min-width: ${breakpointStrings.md})`]: { flexWrap: 'nowrap' } }) : undefined}>
+                        <div css={media ? css({ flex: '1 1 60%' }) : undefined}>
+                            {children}
+                            <h2>{heading}</h2>
+                            {textContent}
+                        </div>
+                        {media && <div css={css({ flex: '1 1 35%', maxWidth: '400px' })}>{media}</div>}
+                    </div>
+                </div>
+                <div />
+                <div css={stylesHeroOverlay} style={{ opacity: parallax.backgroundOpacity }} />
+            </header>
+        </PaddedContainer>
+    );
+}

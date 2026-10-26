@@ -1,8 +1,25 @@
 ---
+import ProofPage from '../views/ProofPage';
+import { getDraftPreview } from '../server/draft-preview';
+import DraftStatus from '../components/DraftStatus';
+import VisitCounter from '../components/VisitCounter';
+
 const target = import.meta.env.PUBLIC_ASTRO_TARGET;
+const draft = await getDraftPreview();
+if (target === 'compiled Node SSR') Astro.response.headers.set('Cache-Control', 'private, no-store');
+const media = { src: '/assets/hero-bg.png', alt: 'Soft green and blue healthcare themed background' };
 ---
+
 <!doctype html>
 <html lang="en">
-  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width" /><title>Astro migration scaffold</title></head>
-  <body><main><h1>Astro migration scaffold</h1><p>Target: {target}</p></main></body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Astro architecture proof</title>
+  </head>
+  <body>
+    <ProofPage target={target} draft={draft} media={media} />
+    <VisitCounter client:load />
+    <DraftStatus client:load initialTitle={draft.title} />
+  </body>
 </html>
