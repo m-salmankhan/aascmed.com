@@ -208,29 +208,27 @@ deployment commit explicitly. No CMS/deployment secrets are needed by these jobs
 ### Reviewing and accepting differences
 
 After a browser comparison, `ci/review.js` reads the actual Playwright JSON report.
-If reference differences exist, CI creates **one resolvable file-level PR review
-conversation** listing affected pages/viewports and difference categories,
-including changed-pixel counts or screenshot dimensions. It links the CI run and
-downloadable report with reference/candidate/difference images and contract JSON.
-Download and extract the artifact, then open its HTML report with
-`yarn playwright show-report <extracted-playwright-report-directory>`.
-Images are in the report, not embedded directly in the PR comment.
+The command's top-level PR conversation comment is updated with the affected
+pages/viewports and difference categories, including changed-pixel counts or
+screenshot dimensions. It links the CI run and downloadable report with
+reference/candidate/difference images and contract JSON. An unchanged comparison
+updates the same comment with a no-differences result. Download and extract the
+artifact, then open its HTML report with
+`yarn playwright show-report <extracted-playwright-report-directory>`. Images
+are in the report, not embedded directly in the PR comment.
 
 1. Review the differences. An intentional background/content/design change does
    not require weakening the tests or making the old and new sites identical.
-2. Fix unexpected regressions, or **resolve the conversation** to acknowledge
-   intentional differences. Each run with differences creates a fresh
-   conversation; an older resolution does not approve later results.
+2. Fix unexpected regressions or decide whether intentional differences are
+   acceptable. The comparison comment reports results but does not create a
+   review thread or gate merging.
 3. Merge once functional checks and the rest of the PR review are satisfied.
 
-Enable **Require conversation resolution before merging** in the main branch's
-protection/ruleset if GitHub should enforce that acknowledgement. The workflow
-does not change repository merge rules. Reference differences themselves never
-turn the CI job red; resolving a conversation does not override functional
-failures. Publishing/API failures, missing/empty reports and stale PR heads are
-infrastructure errors and fail the job rather than silently omitting the review.
-An unchanged comparison creates no conversation; its summary is still recorded
-on the Actions run. A cancelled run is not an acceptance result.
+Reference differences themselves never turn the CI job red. Functional or
+execution failures still fail the job and remain visible in the published
+results. Publishing/API failures, missing/empty reports and stale PR heads are
+infrastructure errors and fail the job. A cancelled run is not an acceptance
+result.
 
 Only browser runs and the same-repository PR instruction comment receive the
 write permissions they need, using GitHub's built-in token. The instruction
