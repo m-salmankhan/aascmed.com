@@ -10,8 +10,10 @@ let openErrorBody = false;
 let errorBodyClosed = false;
 let observedStatus;
 let observedAuthorization;
+let observedPath;
 const mock = createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
+  observedPath = url.pathname;
   observedStatus = url.searchParams.get('status');
   observedAuthorization = req.headers.authorization;
   if (delay) await new Promise((resolve) => setTimeout(resolve, delay));
@@ -26,7 +28,7 @@ const mock = createServer(async (req, res) => {
     return;
   }
   res.writeHead(responseStatus, { 'content-type': 'application/json' });
-  res.end(JSON.stringify(malformed ? { data: null } : { data: { title } }));
+  res.end(JSON.stringify(malformed ? { data: null } : { data: [{ id: 1, documentId: 'proof-blog', title }] }));
 });
 await new Promise((resolve) => mock.listen(0, '127.0.0.1', resolve));
 const mockPort = mock.address().port;
@@ -36,7 +38,7 @@ const appPort = portProbe.address().port;
 await new Promise((resolve) => portProbe.close(resolve));
 const app = spawn(process.execPath, ['dist-ssr/server/entry.mjs'], {
   cwd: process.cwd(),
-  env: { ...process.env, HOST: '127.0.0.1', PORT: String(appPort), ASTRO_DRAFT_API_URL: `http://localhost:${mockPort}/api/preview/1`, ASTRO_STRAPI_TOKEN: 'web22-local-proof-token' },
+  env: { ...process.env, HOST: '127.0.0.1', PORT: String(appPort), GATSBY_STRAPI_API_URL: `http://localhost:${mockPort}`, STRAPI_TOKEN: 'web22-local-proof-token' },
   stdio: 'ignore',
 });
 try {
@@ -49,7 +51,7 @@ try {
   if (!ready) throw new Error('SSR server did not start');
   const getHtml = async () => (await fetch(`http://127.0.0.1:${appPort}/`)).text();
   const first = await getHtml();
-  if (!first.includes('Fresh saved draft A') || observedStatus !== 'draft' || observedAuthorization !== 'Bearer web22-local-proof-token') throw new Error('Strapi-shaped request A failed');
+  if (!first.includes('Fresh saved draft A') || observedPath !== '/api/blogs' || observedStatus !== 'draft' || observedAuthorization !== 'Bearer web22-local-proof-token') throw new Error('Strapi-shaped request A failed');
   title = 'Fresh saved draft B';
   const secondResponse = await fetch(`http://127.0.0.1:${appPort}/`);
   const second = await secondResponse.text();
