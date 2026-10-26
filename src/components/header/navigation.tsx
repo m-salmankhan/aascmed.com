@@ -1,6 +1,6 @@
 import React, { ComponentProps, MouseEventHandler, useEffect, useId, useRef, useState } from "react";
 import { css } from "@emotion/react";
-import { Link } from "gatsby";
+import { SiteLink } from "../../shared/navigation/link";
 import { stylesScreenReaderText } from "../../styles/accessibility";
 import { HorizontalLogo, StackedLogo } from "../logo";
 import { FaIcons, IconStyles } from "../font-awesome";
@@ -21,7 +21,7 @@ const NavItem: React.FC<NavItemProps> = ({ link, onLinkClicked, children, ...pro
     {
       (link.startsWith(`https://`)) ?
         <a href={link} target="_BLANK" rel="noreferrer">{children}</a> :
-        <Link to={link} activeClassName={"active"}>{children}</Link>
+        <SiteLink href={link} activeClassName={"active"}>{children}</SiteLink>
     }
   </li>
 
@@ -351,14 +351,14 @@ export const Navigation: React.FC<NavigationProps> = ({ frontPage, className }) 
     <div className={className}>
       <a css={stylesSkipToMain} href="#main">Skip to main content</a>
       <nav css={stylesNav}>
-        <Link css={stylesLogoLink} to="/">
+        <SiteLink css={stylesLogoLink} href="/">
           <HorizontalLogo css={stylesHorizontalLogo} />
           <StackedLogo css={stylesStackedLogo} />
           {(frontPage) ?
             <h1 css={stylesScreenReaderText}>{title}</h1> :
             <span css={stylesScreenReaderText}>{title}</span>
           }
-        </Link>
+        </SiteLink>
 
         <div className={"js-only"} css={stylesNavContainer}>
           <div css={css(stylesToggleButton)}>

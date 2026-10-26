@@ -5,7 +5,7 @@ import { cols, gridContainer } from "../../styles/grid";
 import { mediaBreakpoints } from "../../styles/breakpoints";
 import { SectionHeader, stylesBigH1, stylesH1, stylesH2 } from "../headings";
 import { IconStyles } from "../font-awesome";
-import { Link } from "gatsby";
+import { SiteLink } from "../../shared/navigation/link";
 import { colours, gridSpacing } from "../../styles/theme";
 import { Thumbnail } from "../thumbnails";
 import Color from "color";
@@ -60,7 +60,7 @@ const Providers: React.FC<ProvidersProps> = ({ className, providers }) => {
             {
                 providers.map((provider, idx) =>
                     <li key={idx} css={stylesProviderItem}>
-                        <Link to={provider.slug}>
+                        <SiteLink href={provider.slug}>
                             {provider.image && <Thumbnail
                                 overlayIcon={"user-doctor"}
                                 overlayIconStyle={IconStyles.SOLID}
@@ -70,7 +70,7 @@ const Providers: React.FC<ProvidersProps> = ({ className, providers }) => {
                             />}
                             <h3 className={"heading"} css={stylesH2}>{`${provider.name.fullName}, ${provider.name.degreeAbbr}`} {provider.retired && "(Retired)"}</h3>
                             <div className="read-more">Read more...</div>
-                        </Link>
+                        </SiteLink>
                     </li>
                 )
             }

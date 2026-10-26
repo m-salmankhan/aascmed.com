@@ -10,6 +10,8 @@ The `/` SSR route is a **local/candidate proof only**. It renders draft content 
 
 The endpoint should be a specific Strapi REST resource that returns a title in its flattened data object. Only HTTPS is accepted except HTTP localhost for local proof; redirects are rejected. No draft is cached between requests.
 
+Public Astro settings use `PUBLIC_API_BASE_URL` and `PUBLIC_MAPBOX_API_KEY`; Astro may compile these into browser assets. Preview-only settings are separate: `ASTRO_DRAFT_API_URL` and `ASTRO_STRAPI_TOKEN` are read only by the server module. Do not pass either preview setting to a static-site build. Gatsby continues to use its existing `GATSBY_API_BASE_URL` and `GATSBY_MAPBOX_API_KEY` client settings, with `STRAPI_TOKEN` reserved for its server-side source plugin.
+
 ## Styling decision
 
 Keep Emotion for the early migration: Astro's standard React integration emits usable SSR styles and the interaction remains deterministic. Emotion's default SSR style tags make `:nth-child(2)` unsafe when targeting siblings; `Column` uses a semantic class plus `:nth-of-type(2)` so inserted `<style>` siblings do not shift the grid column's type position. A broad conversion is not warranted by this proof. The Astro package aliases React, ReactDOM, and Emotion to its own single local package copies for shared-source imports, preventing a second runtime from entering the candidate build. Gatsby source remains on its established dependencies and is not routed through Astro's runtime. The proof's fixed `stylesGlobal` object is emitted by Astro; checks confirm all tested global rules are present in the initial HTML.

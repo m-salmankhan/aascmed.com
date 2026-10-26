@@ -3,7 +3,7 @@ import { ProviderSummary } from "./index";
 import { css } from "@emotion/react";
 import { cols, gridContainer } from "../../styles/grid";
 import { H2 } from "../headings";
-import { Link } from "gatsby";
+import { SiteLink } from "../../shared/navigation/link";
 import { Thumbnail } from "../thumbnails";
 import { IconStyles } from "../font-awesome";
 import { breakpointStrings, mediaBreakpoints } from "../../styles/breakpoints";
@@ -89,7 +89,7 @@ const Provider: React.FC<ProviderProps> = ({ className, provider }) => {
         <li className={className} css={stylesProvider}>
             <article css={stylesProviderArticle}>
                 <header css={stylesProviderHeader}>
-                    <Link to={provider.slug}>
+                    <SiteLink href={provider.slug}>
                         {
                             provider.image &&
                             <Thumbnail
@@ -103,12 +103,12 @@ const Provider: React.FC<ProviderProps> = ({ className, provider }) => {
                         }
                         <H2>{nameWithTitle} {retiredText}</H2>
                         {!!provider.name.degree && <span className={"degree"}>{provider.name.degree}</span>}
-                    </Link>
+                    </SiteLink>
                 </header>
                 <div css={stylesProviderExcerpt}>
                     {provider.excerpt}
                     <div className={"read-more"}>
-                        <Link to={provider.slug} css={[stylesButton, stylesBtnSecondary]}>Read More</Link>
+                    <SiteLink href={provider.slug} css={[stylesButton, stylesBtnSecondary]}>Read More</SiteLink>
                     </div>
                 </div>
             </article>

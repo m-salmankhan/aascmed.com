@@ -3,7 +3,7 @@ import { css } from "@emotion/react";
 import React from "react";
 import { cols, gridContainer } from "../../styles/grid";
 import { mediaBreakpoints } from "../../styles/breakpoints";
-import { Link } from "gatsby";
+import { SiteLink } from "../../shared/navigation/link";
 import { colours, gridSpacing } from "../../styles/theme";
 import Color from "color";
 
@@ -72,17 +72,17 @@ export const ServiceUpdateList: React.FC<ServiceUpdateListProps> = ({ className,
                     <li key={idx} css={stylesLi}>
                         <article>
                             <header>
-                                <Link to={post.slug}>
+                                <SiteLink href={post.slug}>
                                     <div className={"date"}>{post.date}</div>
                                     {
                                         frontPage ? <H3 css={stylesH4} className={"title"}>{post.title}</H3> :
                                             <H2 css={stylesH4} className={"title"}>{post.title}</H2>
                                     }
-                                </Link>
+                                </SiteLink>
                             </header>
                             {post.description}
                             <footer>
-                                <Link to={post.slug}>Read more&hellip;</Link>
+                                <SiteLink href={post.slug}>Read more&hellip;</SiteLink>
                             </footer>
                         </article>
                     </li>
@@ -121,7 +121,7 @@ export const ServiceUpdateArchive: React.FC<ServiceUpdateArchiveProps> =
                 <ServiceUpdateList serviceUpdates={serviceUpdates as [ServiceUpdateSummary]} frontPage={frontPage} />
                 {
                     frontPage &&
-                    <Link to={"/service-updates/"} css={css(cols(12), { color: "inherit" })}>(View All)</Link>
+                    <SiteLink href={"/service-updates/"} css={css(cols(12), { color: "inherit" })}>(View All)</SiteLink>
                 }
             </section>
         );
