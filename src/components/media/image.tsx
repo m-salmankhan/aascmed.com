@@ -1,6 +1,7 @@
 import React from "react";
 import type { ImgHTMLAttributes } from "react";
 import { css } from "@emotion/react";
+import type { Interpolation, Theme } from "@emotion/react";
 import type { MediaDescriptor } from "../../shared/content/models";
 
 export interface ImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, "src" | "srcSet" | "alt" | "width" | "height"> {
@@ -8,10 +9,11 @@ export interface ImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, "s
   /** An explicit empty string preserves decorative image semantics. */
   alt?: string;
   fit?: "cover" | "contain" | "fill";
+  css?: Interpolation<Theme>;
 }
 
 /** Render a plain JSON image descriptor; safe to use in Gatsby or Astro React views. */
-export function Image({ image, alt, fit, loading = "lazy", decoding = "async", ...props }: ImageProps) {
+export function Image({ image, alt, fit, css: callerCss, loading = "lazy", decoding = "async", ...props }: ImageProps) {
   const srcSet = image.sources?.length
     ? image.sources.map(({ src, width }) => `${src} ${width}w`).join(", ")
     : image.srcSet;
@@ -27,7 +29,7 @@ export function Image({ image, alt, fit, loading = "lazy", decoding = "async", .
     height={image.height}
     loading={loading}
     decoding={decoding}
-    css={fit ? { objectFit: fit } : undefined}
+    css={[callerCss, fit ? { objectFit: fit } : undefined]}
   />;
   if (!image.formats?.length) return imageNode;
   return <picture css={fit ? css({
