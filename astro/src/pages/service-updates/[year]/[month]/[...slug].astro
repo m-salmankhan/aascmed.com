@@ -1,8 +1,10 @@
+---
 import SiteDocument from '../../../../layouts/SiteDocument.astro';
 import { getServiceUpdateBySlug, getServiceUpdates } from '../../../../server/content/loaders.ts';
 import { getPageSiteData } from '../../../../server/content/site-data.ts';
 import { getRouteContentMode, isAstroPreview } from '../../../../server/content/route-data.ts';
 import { matchesServiceUpdateRoute } from '../../../../server/content/route-matching.ts';
+import { serviceUpdatePath } from '../../../../../../src/shared/content/urls.ts';
 import { AstroServiceUpdatePage } from '../../../../../../src/views/astro-clinic-update-pages.tsx';
 import { AstroContentNotFound } from '../../../../../../src/views/astro-content-pages.tsx';
 
