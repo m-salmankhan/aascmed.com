@@ -3,26 +3,26 @@ import ProofPage from '../views/ProofPage';
 import { getDraftPreview } from '../server/draft-preview';
 import DraftStatus from '../components/DraftStatus';
 import VisitCounter from '../components/VisitCounter';
+import SiteDocument from '../layouts/SiteDocument.astro';
 
 const target = import.meta.env.PUBLIC_ASTRO_TARGET;
 const draft = await getDraftPreview();
 if (target === 'compiled Node SSR') Astro.response.headers.set('Cache-Control', 'private, no-store');
 const media = { src: '/assets/hero-bg.png', alt: 'Soft green and blue healthcare themed background', width: 1920, height: 1080 };
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  name: 'Astro architecture proof',
+};
 ---
 
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;800&display=swap" />
-    <title>Astro architecture proof</title>
-  </head>
-  <body>
-    <ProofPage target={target} draft={draft} media={media} />
-    <VisitCounter client:load />
-    <DraftStatus client:load initialTitle={draft.title} />
-  </body>
-</html>
+<SiteDocument
+  title="Astro architecture proof"
+  description="Representative Astro and React rendering proof."
+  pathname="/"
+  structuredData={structuredData}
+>
+  <ProofPage target={target} draft={draft} media={media} />
+  <VisitCounter client:load />
+  <DraftStatus client:load initialTitle={draft.title} />
+</SiteDocument>
