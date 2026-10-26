@@ -81,7 +81,7 @@ function singleData(kind, status) {
     }
     return page;
   }
-  if (kind === 'announcement') return { id: 2, documentId: 'announcement', enabled: false };
+  if (kind === 'announcement') return { id: 2, documentId: 'announcement', enabled: true, type: 'info', message: blocks(`${fixture} site announcement`) };
   if (kind === 'tracking-info') return { id: 3, documentId: 'tracking', googleAnalyticsId: '', googleTagManagerId: '', pixelId: '' };
   return null;
 }
@@ -152,7 +152,7 @@ export default { ...base, outDir: '.astro/home-verification/dist-ssr' };
   const staticHtml = await readFile(path.join(staticOutputPath, 'index.html'), 'utf8');
   for (const expected of [
     'Published homepage hero', 'Published hero copy', 'Published welcome copy',
-    'Published condition 1', 'Published condition 11', 'Published blog 6', 'Published update 3',
+    'Published condition 1', 'Published condition 11', 'Published blog 6', 'Published update 3', 'Published site announcement',
     'Active Provider', 'Patient Feedback', 'Published contact', 'Published locations',
     '312-555-0100', 'Book online', '/assets/hero-bg.png',
   ]) assert.ok(staticHtml.includes(expected), `static home contains ${expected}`);
@@ -186,7 +186,7 @@ export default { ...base, outDir: '.astro/home-verification/dist-ssr' };
   const ssrResponse = await fetch(baseUrl);
   const ssrHtml = await ssrResponse.text();
   assert.equal(ssrResponse.headers.get('cache-control'), 'private, no-store');
-  for (const expected of ['Draft homepage hero', 'Draft hero copy', 'Draft condition 11', 'Draft blog 6', 'Draft update 3', 'Active Provider', 'Draft contact', 'Draft locations', 'Book online']) {
+  for (const expected of ['Draft homepage hero', 'Draft hero copy', 'Draft condition 11', 'Draft blog 6', 'Draft update 3', 'Active Provider', 'Draft contact', 'Draft locations', 'Draft site announcement', 'Book online', 'zocdoc.com/practice/allergy-asthma-and-sinus-centers-3233']) {
     assert.ok(ssrHtml.includes(expected), `SSR home contains ${expected}`);
   }
   for (const excluded of ['Draft condition 12', 'Draft blog 7', 'Draft update 4', 'Retired Provider', 'home-page-private-draft', privateToken]) {
