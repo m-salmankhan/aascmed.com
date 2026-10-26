@@ -6,10 +6,13 @@ import { cols, gridContainer } from "../../styles/grid";
 import { breakpointStrings, mediaBreakpoints } from "../../styles/breakpoints";
 import { colours, gridSpacing } from "../../styles/theme";
 
+/** Contact section copy and clinic labels supplied by its page or view. */
 interface ContactSectionProps {
   className?: string
   title: string
   textContent?: React.ReactNode
+  /** Clinic labels shown in the preferred-location selector. */
+  clinicOptions: readonly string[]
 }
 
 const stylesSideNotice = css(
@@ -50,7 +53,11 @@ const stylesForm = css(
     `
 );
 
-export const ContactSection: React.FC<ContactSectionProps> = (props) => {
+/** Render contact copy and a form with the page's available clinic labels.
+ * @param props Heading, optional copy, clinic labels, and presentation class.
+ * @returns The contact section with its clinic-aware form.
+ */
+export function ContactSection(props: ContactSectionProps): React.ReactElement {
   return (
     <section className={props.className} css={cols(12)}>
       <h2 css={stylesBigH1}>{props.title}</h2>
@@ -61,7 +68,7 @@ export const ContactSection: React.FC<ContactSectionProps> = (props) => {
           </div>
         </div>
         <div css={stylesForm}>
-          <ContactForm />
+          <ContactForm clinicOptions={props.clinicOptions} />
         </div>
       </div>
     </section>

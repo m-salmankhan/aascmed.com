@@ -4,7 +4,6 @@ import { SuccessNotice } from './forms/notices';
 import { InfoNotice } from './forms/notices';
 import { css } from '@emotion/react';
 import { StrapiBlocksRenderer } from './strapi/blocks-renderer';
-import { useSiteData } from '../shared/data/site-data';
 import type { AnnouncementSettings } from '../shared/content/models';
 
 const dismissKey = "announcementDismissed"
@@ -23,13 +22,12 @@ const announcementStyles = css`
     border-radius: 0;
 `;
 
-interface AnnnouncementProps {
-  className?: string
+interface AnnouncementBannerProps {
+  announcement: AnnouncementSettings;
+  className?: string;
 }
 
-const AnnouncementBanner = ({className}: AnnnouncementProps) => {
-    const { announcement }: { announcement: AnnouncementSettings } = useSiteData();
-    
+const AnnouncementBanner = ({ announcement, className }: AnnouncementBannerProps) => {
     if (!announcement.enabled || wasDismissed()) {
         return <></>;
     }

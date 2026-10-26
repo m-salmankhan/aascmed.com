@@ -1,14 +1,13 @@
 import React, { ReactNode } from "react";
 import { graphql, useStaticQuery } from "gatsby";
 import {
-  mapGatsbyAnnouncement,
   mapGatsbySiteSettings,
   mapGatsbyTrackingSettings,
 } from "../../shared/content/gatsby-adapter";
 import { SiteData, SiteDataProvider } from "../../shared/data/site-data";
 
-const GatsbySharedDataQuery = graphql`
-  query GatsbySharedSiteData {
+const GatsbySiteDataQuery = graphql`
+  query GatsbySiteData {
     site {
       siteMetadata {
         title
@@ -21,36 +20,22 @@ const GatsbySharedDataQuery = graphql`
       googleTagManagerId
       pixelId
     }
-    strapiAnnouncement {
-      enabled
-      type
-      internal {
-        content
-      }
-    }
-    allStrapiClinic {
-      clinics: nodes {
-        clinic_name
-      }
-    }
   }
 `;
 
-/** Query Gatsby site data and provide framework-neutral values to the React tree.
+/** Query Gatsby site metadata and tracking values for the React tree.
  * @param children Optional React children.
  * @returns Children inside the provider populated from the Gatsby query.
  */
-function GatsbySharedDataAdapter({ children }: { children?: ReactNode }): React.ReactElement {
-  const data = useStaticQuery<Queries.GatsbySharedSiteDataQuery>(GatsbySharedDataQuery);
+function GatsbySiteDataAdapter({ children }: { children?: ReactNode }): React.ReactElement {
+  const data = useStaticQuery<Queries.GatsbySiteDataQuery>(GatsbySiteDataQuery);
   const siteSettings = mapGatsbySiteSettings(data.site?.siteMetadata || {});
   const value: SiteData = {
     siteSettings,
     trackingSettings: mapGatsbyTrackingSettings(data.strapiTrackingInfo),
-    announcement: mapGatsbyAnnouncement(data.strapiAnnouncement),
-    clinicOptions: data.allStrapiClinic?.clinics?.flatMap((clinic) => clinic?.clinic_name ? [clinic.clinic_name] : []) ?? [],
   };
 
   return <SiteDataProvider value={value}>{children}</SiteDataProvider>;
 }
 
-export default GatsbySharedDataAdapter;
+export default GatsbySiteDataAdapter;

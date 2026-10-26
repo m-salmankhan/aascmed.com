@@ -1,5 +1,5 @@
 import React, { createContext, ReactNode, useContext } from "react";
-import type { AnnouncementSettings, SiteSettings, TrackingSettings } from "../content/models";
+import type { SiteSettings, TrackingSettings } from "../content/models";
 
 /** Framework-neutral global values needed by shared site components. */
 export interface SiteData {
@@ -7,17 +7,11 @@ export interface SiteData {
   siteSettings: SiteSettings;
   /** Analytics identifiers, represented as strings even when unconfigured. */
   trackingSettings: TrackingSettings;
-  /** Normalized banner state and optional rich-text content. */
-  announcement: AnnouncementSettings;
-  /** Nonempty clinic names available to the contact form selector. */
-  clinicOptions: string[];
 }
 
 const defaultSiteData: SiteData = {
   siteSettings: { title: "Untitled Site", url: "" },
   trackingSettings: { googleAnalyticsId: "", googleTagManagerId: "", pixelId: "" },
-  announcement: { enabled: false, type: "info" },
-  clinicOptions: [],
 };
 
 const SiteDataContext = createContext<SiteData>(defaultSiteData);
@@ -31,6 +25,6 @@ export function SiteDataProvider(props: { value: SiteData; children?: ReactNode 
 }
 
 /** Read shared site data from the nearest provider.
- * @returns Site settings, tracking IDs, announcement, and clinic options.
+ * @returns Site settings and tracking IDs.
  */
 export const useSiteData = (): SiteData => useContext(SiteDataContext);

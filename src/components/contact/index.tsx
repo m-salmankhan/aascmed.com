@@ -9,7 +9,6 @@ import { ErrorNotice, SuccessNotice } from "../forms/notices";
 import { Loading } from "../loading";
 import { stylesH4 } from "../headings";
 import {useGTag} from "../../hooks/useGTag";
-import { useSiteData } from "../../shared/data/site-data";
 
 
 enum FormState {
@@ -19,11 +18,17 @@ enum FormState {
     ERROR
 }
 
-interface ContactFormProps {
-    className?: string,
-    clinic?: string
-}
-export const ContactForm: React.FC<ContactFormProps> = (props) => {
+/** Contact form data; a selector needs clinic options unless one clinic is fixed. */
+type ContactFormProps = { className?: string } & (
+    | { clinicOptions: readonly string[]; clinic?: undefined }
+    | { clinic: string; clinicOptions?: never }
+);
+
+/** Render the contact form from explicit clinic-selection data.
+ * @param props Available clinic labels or a fixed clinic, with optional class styling.
+ * @returns The form with its current submission-status notices.
+ */
+export function ContactForm(props: ContactFormProps): React.ReactElement {
     const [formState, setFormState] = useState(FormState.DEFAULT);
     const [formData, setFormData] = useState<FormData | undefined>(undefined);
     const [fieldErrors, setFieldErrors] = useState<ContactFormFieldErrors | undefined>();
@@ -31,8 +36,6 @@ export const ContactForm: React.FC<ContactFormProps> = (props) => {
     const formRef = useRef<HTMLFormElement>(null);
 
     const gtag = useGTag();
-
-    const { clinicOptions } = useSiteData();
 
     // update state variables. actual api call happens on rerender
     const formSubmisisonHandler: FormEventHandler<HTMLFormElement> = (event) => {
@@ -157,7 +160,7 @@ export const ContactForm: React.FC<ContactFormProps> = (props) => {
                     props.clinic === undefined ?
                         <DropdownInput label={"Preferred Location"} name="clinic" defaultValue={"none"} error={fieldErrors?.clinic?.join(". ")}>
                             <option value={"none"} disabled={true}>Select a clinic</option>
-                            {clinicOptions.map((clinic) =>
+                            {props.clinicOptions.map((clinic) =>
                                 <option key={clinic} value={clinic}>{clinic}</option>
                             )}
                         </DropdownInput> :

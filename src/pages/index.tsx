@@ -175,6 +175,7 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
     phone: clinic.contact?.phone || "",
     fax: clinic.contact?.fax || "",
   }));
+  const clinicOptions = data.practices.nodes.flatMap((clinic) => clinic?.clinic_name ? [clinic.clinic_name] : []);
 
   // Contact section
   const contactTitle = homePage?.contact?.heading || "Contact Us";
@@ -247,6 +248,7 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
               css={css({ marginTop: "5em", })} 
               title={contactTitle} 
               textContent={contactTextBlocks ? <StrapiBlocksRenderer content={contactTextBlocks} /> : undefined}
+              clinicOptions={clinicOptions}
             />
           <PracticeArchive 
               css={css({ marginTop: "5em", })} 

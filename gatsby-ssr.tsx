@@ -1,11 +1,14 @@
 import React from "react";
 import type { GatsbySSR } from "gatsby";
-import GatsbySharedDataAdapter from "./src/adapters/gatsby/shared-data";
+import GatsbySiteDataAdapter from "./src/adapters/gatsby/site-data";
+import GatsbyAnnouncementAdapter from "./src/adapters/gatsby/announcement";
 
-/** Apply the shared-data provider while Gatsby renders pages on the server.
+/** Mount site settings and announcement data while Gatsby renders pages on the server.
  * @param props Gatsby page element supplied by the SSR API.
- * @returns The element inside the shared-data provider.
+ * @returns The announcement banner and page element inside the site-data provider.
  */
 export const wrapRootElement: GatsbySSR["wrapRootElement"] = ({ element }) => (
-  <GatsbySharedDataAdapter>{element}</GatsbySharedDataAdapter>
+  <GatsbySiteDataAdapter>
+    <><GatsbyAnnouncementAdapter />{element}</>
+  </GatsbySiteDataAdapter>
 );

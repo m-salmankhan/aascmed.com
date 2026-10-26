@@ -172,6 +172,7 @@ test("shared query consumers stay free of Gatsby static queries", async () => {
     const source = await readFile(new URL(file, import.meta.url), "utf8");
     assert.doesNotMatch(source, /useStaticQuery|from ["']gatsby["'].*graphql|\bgraphql\s*`/, file);
   }
+
 });
 
 test("shared model declarations stay free of framework nodes, GraphQL query types, and credentials", async () => {

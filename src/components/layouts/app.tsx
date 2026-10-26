@@ -3,7 +3,6 @@ import { stylesGlobal } from "../../styles/global";
 import React, { ReactNode, useEffect } from "react";
 import { ZocDoc } from "../zocdoc";
 import { Script } from "gatsby";
-import AnnouncementBanner from "../AnnouncementBanner";
 
 
 
@@ -39,7 +38,6 @@ export const App: React.FC<AppProps> = ({ children, className, useTracking }) =>
         }
 
         <Global styles={stylesGlobal} />
-        <AnnouncementBanner />
         {children}
         <ZocDoc />
     </div>
