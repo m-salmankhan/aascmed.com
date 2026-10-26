@@ -4,7 +4,7 @@ import test from "node:test";
 import { formatContentDate } from "../../src/shared/content/dates.ts";
 import { getClinicHoursForDisplay } from "../../src/shared/content/clinic-hours.ts";
 import { sortByDateDescending } from "../../src/shared/content/urls.ts";
-import { toClinicArchiveItems, toServiceUpdateArchiveItems } from "../../astro/src/server/content/clinic-update-items.ts";
+import { getServiceUpdateRouteParams, toClinicArchiveItems, toServiceUpdateArchiveItems } from "../../astro/src/server/content/clinic-update-items.ts";
 import { matchesClinicRoute, matchesServiceUpdateRoute } from "../../astro/src/server/content/route-matching.ts";
 
 test("clinic archive items keep the clinic-name fallback and selected contact details", () => {
@@ -65,4 +65,11 @@ test("service update archive items omit unroutable dates and keep stable date so
     { slug: "/service-updates/2025/02/new/", date: "14th February 2025" },
     { slug: "/service-updates/2025/01/old/", date: "1st January 2025" },
   ]);
+});
+
+test("static service update path params retain year, month, and nested slug segments", () => {
+  assert.deepEqual(getServiceUpdateRouteParams({ id: "update", slug: "office/closure", date: "2025-02-14" }), {
+    year: "2025", month: "02", slug: "office/closure",
+  });
+  assert.equal(getServiceUpdateRouteParams({ id: "missing-date", slug: "update", date: null }), null);
 });

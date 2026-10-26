@@ -1,22 +1,20 @@
 ---
 import SiteDocument from '../../../../layouts/SiteDocument.astro';
-import { getServiceUpdateBySlug, getServiceUpdates } from '../../../../server/content/loaders.ts';
+import { getServiceUpdateBySlug, getPublishedBuildSnapshot } from '../../../../server/content/loaders.ts';
 import { getAstroSiteData, getRouteContentMode, isAstroPreview } from '../../../../server/content/route-data.ts';
 import { matchesServiceUpdateRoute } from '../../../../server/content/route-matching.ts';
-import { serviceUpdatePath } from '../../../../../../src/shared/content/urls.ts';
+import { getServiceUpdateRouteParams } from '../../../../server/content/clinic-update-items.ts';
 import { AstroServiceUpdatePage } from '../../../../../../src/views/astro-clinic-update-pages.tsx';
 import { AstroContentNotFound } from '../../../../../../src/views/astro-content-pages.tsx';
+import type { ServiceUpdateRecord } from '../../../../../../src/shared/content/models.ts';
 
 export const prerender = import.meta.env.PUBLIC_ASTRO_TARGET === 'static';
 
 export async function getStaticPaths() {
-  const updates = await getServiceUpdates('published');
-  return updates.flatMap((update) => {
-    const pathname = serviceUpdatePath(update);
-    if (!pathname) return [];
-    const [, year, month, ...slug] = pathname.slice('/service-updates/'.length).replace(/\/$/, '').split('/');
-    if (!year || !month || !slug.length) return [];
-    return [{ params: { year, month, slug: slug.join('/') } }];
+  const { serviceUpdates } = await getPublishedBuildSnapshot();
+  return serviceUpdates.flatMap((update) => {
+    const params = getServiceUpdateRouteParams(update);
+    return params ? [{ params, props: { staticRecord: update } }] : [];
   });
 }
 
@@ -25,7 +23,9 @@ const year = Astro.params.year || '';
 const month = Astro.params.month || '';
 const slug = Astro.params.slug || '';
 const validDatePath = /^\d{4}$/.test(year) && /^(0[1-9]|1[0-2])$/.test(month) && Boolean(slug);
-let serviceUpdate = validDatePath ? await getServiceUpdateBySlug(slug, mode) : null;
+let serviceUpdate: ServiceUpdateRecord | null | undefined = mode === 'published'
+  ? Astro.props.staticRecord as ServiceUpdateRecord | undefined
+  : validDatePath ? await getServiceUpdateBySlug(slug, mode) : null;
 const pathname = Astro.url.pathname;
 if (!matchesServiceUpdateRoute(pathname, year, month, slug, serviceUpdate)) serviceUpdate = null;
 if (!serviceUpdate) Astro.response.status = 404;

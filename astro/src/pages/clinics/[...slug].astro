@@ -1,26 +1,29 @@
 ---
 import SiteDocument from '../../layouts/SiteDocument.astro';
-import { getClinicBySlug, getClinics } from '../../server/content/loaders.ts';
+import { getClinicBySlug, getPublishedBuildSnapshot } from '../../server/content/loaders.ts';
 import { getAstroSiteData, getRouteContentMode, isAstroPreview } from '../../server/content/route-data.ts';
 import { matchesClinicRoute } from '../../server/content/route-matching.ts';
 import { clinicPath } from '../../../../src/shared/content/urls.ts';
 import { AstroClinicPage } from '../../../../src/views/astro-clinic-update-pages.tsx';
 import { AstroContentNotFound } from '../../../../src/views/astro-content-pages.tsx';
+import type { ClinicRecord } from '../../../../src/shared/content/models.ts';
 
 export const prerender = import.meta.env.PUBLIC_ASTRO_TARGET === 'static';
 
 export async function getStaticPaths() {
-  const clinics = await getClinics('published');
+  const { clinics } = await getPublishedBuildSnapshot();
   return clinics.flatMap((clinic) => {
     const pathname = clinicPath(clinic);
     if (!pathname) return [];
-    return [{ params: { slug: pathname.slice('/clinics/'.length).replace(/\/$/, '') } }];
+    return [{ params: { slug: pathname.slice('/clinics/'.length).replace(/\/$/, '') }, props: { staticRecord: clinic } }];
   });
 }
 
 const mode = getRouteContentMode();
 const slug = Astro.params.slug || '';
-let clinic = slug ? await getClinicBySlug(slug, mode) : null;
+let clinic: ClinicRecord | null | undefined = mode === 'published'
+  ? Astro.props.staticRecord as ClinicRecord | undefined
+  : slug ? await getClinicBySlug(slug, mode) : null;
 const pathname = Astro.url.pathname;
 if (!matchesClinicRoute(pathname, slug, clinic)) clinic = null;
 if (!clinic) Astro.response.status = 404;

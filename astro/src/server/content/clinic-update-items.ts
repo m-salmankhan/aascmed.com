@@ -31,3 +31,13 @@ export function toServiceUpdateArchiveItems(updates: ServiceUpdateRecord[]) {
     }];
   });
 }
+
+/** Convert a canonical dated route to Astro's catch-all parameter shape. */
+export function getServiceUpdateRouteParams(update: ServiceUpdateRecord): { year: string; month: string; slug: string } | null {
+  const pathname = serviceUpdatePath(update);
+  if (!pathname) return null;
+  const segments = pathname.slice("/service-updates/".length).replace(/\/$/, "").split("/");
+  const [year, month, ...slug] = segments;
+  if (!/^\d{4}$/.test(year || "") || !/^(0[1-9]|1[0-2])$/.test(month || "") || !slug.length) return null;
+  return { year, month, slug: slug.join("/") };
+}
