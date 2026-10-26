@@ -1,0 +1,18 @@
+{
+  "documentId": "clinic-crest-hill",
+  "title": "Crest Hill Clinic",
+  "clinic_name": "Crest Hill",
+  "slug": null,
+  "location": {
+    "address": "1 Main Street, Crest Hill",
+    "lat": 41.55,
+    "long": -88.1,
+    "placeId": "place-123",
+    "label_name": "Crest Hill"
+  },
+  "contact": { "phone": "555-0100", "fax": "555-0101" },
+  "hours": [
+    { "day": "Monday", "open": true, "opening_hours": { "start_time": "09:00", "end_time": "17:00" }, "shot_hours": { "start_time": "10:00", "end_time": "14:00" } },
+    { "day": "Tuesday", "open": false }
+  ]
+}
