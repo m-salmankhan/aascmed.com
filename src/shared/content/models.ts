@@ -57,7 +57,7 @@ export interface ProviderRecord extends ContentRecord {
     qualificationLong?: string;
     qualificationAbbr?: string;
   };
-  retirementNotice?: { retired?: boolean; text?: string };
+  retirementNotice?: { retired?: boolean; text?: JsonValue[] };
   review?: { text?: string; reviewer?: string; date?: string | null; link?: string };
 }
 
