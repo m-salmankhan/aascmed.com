@@ -166,7 +166,6 @@ test("shared query consumers stay free of Gatsby static queries", async () => {
     "../../src/components/contact/index.tsx",
     "../../src/components/social-media/share.tsx",
     "../../src/hooks/useSiteMetadata.ts",
-    "../../src/hooks/useAnalyticsIDs.ts",
   ];
   for (const file of files) {
     const source = await readFile(new URL(file, import.meta.url), "utf8");

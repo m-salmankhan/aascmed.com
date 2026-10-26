@@ -1,17 +1,14 @@
 import React, { createContext, ReactNode, useContext } from "react";
-import type { SiteSettings, TrackingSettings } from "../content/models";
+import type { SiteSettings } from "../content/models";
 
-/** Framework-neutral global values needed by shared site components. */
+/** Framework-neutral site metadata needed by shared site components. */
 export interface SiteData {
   /** Public title, URL, and optional social/media metadata. */
   siteSettings: SiteSettings;
-  /** Analytics identifiers, represented as strings even when unconfigured. */
-  trackingSettings: TrackingSettings;
 }
 
 const defaultSiteData: SiteData = {
   siteSettings: { title: "Untitled Site", url: "" },
-  trackingSettings: { googleAnalyticsId: "", googleTagManagerId: "", pixelId: "" },
 };
 
 const SiteDataContext = createContext<SiteData>(defaultSiteData);
@@ -25,6 +22,6 @@ export function SiteDataProvider(props: { value: SiteData; children?: ReactNode 
 }
 
 /** Read shared site data from the nearest provider.
- * @returns Site settings and tracking IDs.
+ * @returns Shared site metadata.
  */
 export const useSiteData = (): SiteData => useContext(SiteDataContext);
