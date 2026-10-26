@@ -8,16 +8,14 @@ export type ContentBlock = { [key: string]: JsonValue };
 /** One serializable Strapi dynamic-zone entry, identified by its component name. */
 export type DynamicZoneItem = { __component: string; [key: string]: JsonValue };
 
-/** A generated or uploaded image variant with its source dimensions and format. */
+/** Alternate image source for a responsive HTML picture element. */
 export interface MediaFormat {
-  /** Public URL for this image variant. */
-  src: string;
-  /** Intrinsic image dimensions in pixels. */
-  width?: number;
-  height?: number;
-  /** MIME type such as `image/webp`. */
-  mimeType?: string;
-  size?: number;
+  /** Encoding MIME type, such as `image/webp`. */
+  type: string;
+  /** Browser candidates in HTML `srcset` syntax. */
+  srcSet: string;
+  /** Optional HTML `sizes` hint describing the rendered slot width. */
+  sizes?: string;
 }
 
 /** Framework-neutral image metadata shared by Gatsby and Astro views. */
@@ -34,12 +32,15 @@ export interface MediaDescriptor {
   /** Responsive image candidate list in HTML `srcset` syntax, not a default image URL. */
   srcSet?: string;
   /** Responsive source URLs paired with their intrinsic pixel widths. */
+  /** Browser slot size copied from Gatsby's image data when available. */
+  sizes?: string;
   sources?: Array<{ src: string; width: number }>;
   /** Intrinsic width-to-height ratio when a layout needs an explicit media box. */
   aspectRatio?: number;
   /** Poster image URL for video or other non-image media. */
   poster?: string;
-  formats?: Record<string, MediaFormat>;
+  /** Alternate encodings for a picture element, such as AVIF/WebP. */
+  formats?: MediaFormat[];
   /** Optional CSS/background fallback for SSR and non-JavaScript rendering. */
   placeholder?: string;
 }

@@ -27,7 +27,7 @@ const BlogPage: React.FC<PageProps<Queries.BlogsQuery>> = ({ data }) => {
     description: node.description || "",
     thumbnail: (() => {
       const image = mapGatsbyMedia({ localFile: node.thumbnail?.localFile, altText: node.title || "Untitled" });
-      return image ? <Image image={image} /> : undefined;
+      return image ? <Image image={image} fit="cover" /> : undefined;
     })(),
   }));
   return (
