@@ -9,6 +9,7 @@ import type {
   ServiceUpdateRecord,
 } from "./models";
 
+/** Gatsby image plugin output fields used to extract a plain media source. */
 interface GatsbyImageData {
   images?: { fallback?: { src?: string; width?: number; height?: number; srcSet?: string } };
   width?: number;
@@ -17,6 +18,7 @@ interface GatsbyImageData {
   srcSet?: string;
 }
 
+/** Nullable media shape returned by current Gatsby and Strapi GraphQL queries. */
 interface GatsbyMedia {
   url?: string | null;
   publicURL?: string | null;
@@ -31,6 +33,7 @@ interface GatsbyMedia {
   } | null;
 }
 
+/** Common nullable fields selected for Gatsby content records. */
 interface GatsbyNode {
   id: string;
   slug?: string | null;
@@ -47,6 +50,7 @@ interface GatsbyNode {
 }
 
 /** Gatsby component fields are nullable even when shared view fields are not. */
+/** Gatsby provider-name fields before nullable values are normalized. */
 interface GatsbyProviderName {
   fullName?: string | null;
   honorific?: string | null;
@@ -54,6 +58,7 @@ interface GatsbyProviderName {
   qualificationAbbr?: string | null;
 }
 
+/** Nullable review fields selected for a Gatsby provider. */
 interface GatsbyProviderReview {
   text?: string | null;
   reviewer?: string | null;
@@ -61,10 +66,12 @@ interface GatsbyProviderReview {
   link?: string | null;
 }
 
+/** Nullable retirement flag selected from Gatsby provider data. */
 interface GatsbyProviderRetirementNotice {
   retired?: boolean | null;
 }
 
+/** Gatsby clinic hours use snake-case names and nullable nested values. */
 interface GatsbyClinicHour {
   day?: string | null;
   open?: boolean | null;
@@ -72,6 +79,7 @@ interface GatsbyClinicHour {
   shot_hours?: { start_time?: string | null; end_time?: string | null } | null;
 }
 
+/** Normalize nullable Gatsby text to the empty string used by required view fields. */
 function stringOrEmpty(value: string | null | undefined): string {
   return value || "";
 }
@@ -89,6 +97,7 @@ function omitUndefined<T>(value: T): T {
   return value;
 }
 
+/** Parse Gatsby's serialized internal content, returning null for invalid or non-object JSON. */
 function readInternalContent(value: string | null | undefined): Record<string, unknown> | null {
   if (!value) return null;
   try {
@@ -99,16 +108,19 @@ function readInternalContent(value: string | null | undefined): Record<string, u
   }
 }
 
+/** Keep a parsed value only when it is an array of recursively JSON-safe items. */
 function jsonArray(value: unknown): JsonValue[] | undefined {
   if (!Array.isArray(value)) return undefined;
   return value.every(isJsonValue) ? value : undefined;
 }
 
+/** Read one rich-text field from Gatsby's serialized internal content. */
 export function mapGatsbyBlocks(node: GatsbyNode, key: "body" | "content"): JsonValue[] | undefined {
   const source = readInternalContent(node.internal?.content);
   return jsonArray(source?.[key]);
 }
 
+/** Convert nullable Gatsby image metadata to a serializable shared media descriptor. */
 export function mapGatsbyMedia(media: GatsbyMedia | null | undefined): MediaDescriptor | undefined {
   if (!media) return undefined;
   const image = media.localFile?.childImageSharp?.gatsbyImageData;
@@ -129,12 +141,14 @@ export function mapGatsbyMedia(media: GatsbyMedia | null | undefined): MediaDesc
   return descriptor;
 }
 
+/** Normalize queried Gatsby metadata into public site settings. */
 export function mapGatsbySiteSettings(metadata: { title?: string | null; siteUrl?: string | null }): SiteSettings {
   const settings: SiteSettings = { title: metadata.title || "" };
   if (metadata.siteUrl) settings.url = metadata.siteUrl;
   return settings;
 }
 
+/** Map a Gatsby blog query node to the framework-neutral blog contract. */
 export function mapGatsbyBlog(node: GatsbyNode): BlogRecord {
   return omitUndefined({
     id: node.id,
@@ -148,6 +162,7 @@ export function mapGatsbyBlog(node: GatsbyNode): BlogRecord {
   }) as BlogRecord;
 }
 
+/** Map a Gatsby condition query node to the shared condition contract. */
 export function mapGatsbyCondition(node: GatsbyNode): ConditionRecord {
   return omitUndefined({
     id: node.id,
@@ -161,6 +176,7 @@ export function mapGatsbyCondition(node: GatsbyNode): ConditionRecord {
   }) as ConditionRecord;
 }
 
+/** Map Gatsby provider fields and embedded rich text without leaking query types. */
 export function mapGatsbyProvider(node: GatsbyNode & {
   name?: GatsbyProviderName | null;
   retirementNotice?: GatsbyProviderRetirementNotice | null;
@@ -198,6 +214,7 @@ export function mapGatsbyProvider(node: GatsbyNode & {
   }) as ProviderRecord;
 }
 
+/** Map Gatsby clinic fields, translating nested snake-case location and hour values. */
 export function mapGatsbyClinic(node: GatsbyNode & {
   location?: { address?: string | null; lat?: number | null; long?: number | null; placeId?: string | null; label_name?: string | null } | null;
   contact?: { phone?: string | null; fax?: string | null } | null;
@@ -227,6 +244,7 @@ export function mapGatsbyClinic(node: GatsbyNode & {
   }) as ClinicRecord;
 }
 
+/** Map a Gatsby service-update query node to the shared dated-record contract. */
 export function mapGatsbyServiceUpdate(node: GatsbyNode): ServiceUpdateRecord {
   return omitUndefined({
     id: node.id,

@@ -8,8 +8,10 @@ import {
 } from "./urls.ts";
 
 export type ContentFamily = "blog" | "condition" | "provider" | "clinic" | "serviceUpdate";
+/** Validation strictness: drafts may be incomplete, while published records must be routable. */
 export type ContentMode = "draft" | "published";
 
+/** Minimum fields shared by record families during boundary validation. */
 type Candidate = Partial<ContentRecord> & { clinicName?: string | null };
 
 /**

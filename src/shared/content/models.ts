@@ -1,11 +1,14 @@
 /** Values that can cross a framework boundary as plain JSON data. */
 export type JsonPrimitive = string | number | boolean | null;
+/** Recursively JSON-safe data used for CMS rich text and dynamic-zone content. */
 export type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
 
 /** Strapi Blocks nodes and dynamic-zone entries stay data; views create React elements. */
 export type ContentBlock = { [key: string]: JsonValue };
+/** One serializable Strapi dynamic-zone entry, identified by its component name. */
 export type DynamicZoneItem = { __component: string; [key: string]: JsonValue };
 
+/** A generated or uploaded image variant with its source dimensions and format. */
 export interface MediaFormat {
   src: string;
   width?: number;
@@ -15,6 +18,7 @@ export interface MediaFormat {
 }
 
 /** Framework-neutral replacement for Gatsby's localFile/GatsbyImageData tree. */
+/** Plain media metadata shared by Gatsby and Astro views. */
 export interface MediaDescriptor {
   src: string;
   alt: string;
@@ -27,6 +31,7 @@ export interface MediaDescriptor {
   placeholder?: string;
 }
 
+/** Common identity, copy, rich-text, media, and date fields for published content. */
 export interface ContentRecord {
   id: string;
   slug: string | null;
@@ -38,17 +43,20 @@ export interface ContentRecord {
   date?: string | null;
 }
 
+/** Blog content with its optional display heading and archive thumbnail. */
 export interface BlogRecord extends ContentRecord {
   heading?: string;
   thumbnail?: MediaDescriptor;
 }
 
+/** Condition content with stable archive ordering and an optional thumbnail. */
 export interface ConditionRecord extends ContentRecord {
   heading?: string;
   order?: number | null;
   thumbnail?: MediaDescriptor;
 }
 
+/** Provider content, including optional credentials, retirement notice, and review. */
 export interface ProviderRecord extends ContentRecord {
   order?: number | null;
   name?: {
@@ -61,6 +69,7 @@ export interface ProviderRecord extends ContentRecord {
   review?: { text?: string; reviewer?: string; date?: string | null; link?: string };
 }
 
+/** Clinic content with nullable name and optional location, contact, and hours data. */
 export interface ClinicRecord extends ContentRecord {
   clinicName: string | null;
   location?: {
@@ -79,10 +88,12 @@ export interface ClinicRecord extends ContentRecord {
   }>;
 }
 
+/** A dated service update; its date is required for the published route. */
 export interface ServiceUpdateRecord extends ContentRecord {
   date: string | null;
 }
 
+/** Public site metadata used to render titles and canonical URLs. */
 export interface SiteSettings {
   title: string;
   url?: string;
