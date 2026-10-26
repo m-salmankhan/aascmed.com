@@ -7,9 +7,8 @@
 
 const path = require('node:path');
 const fs = require('node:fs');
-const crypto = require('node:crypto');
 const moment = require('moment');
-const { generateOGImage, initOGImageGenerator, downloadMapboxImage } = require('./og-image-generator');
+const { downloadMapboxImage } = require('./og-image-generator');
 
 /**
  * GraphQL query to fetch all content for page creation
@@ -75,7 +74,7 @@ const PAGE_QUERY = `
 /**
  * Main createPages function
  */
-async function createPages({ graphql, actions, reporter, cache }) {
+async function createPages({ graphql, actions, reporter }) {
   const { createPage } = actions;
 
   const result = await graphql(PAGE_QUERY);
@@ -88,32 +87,14 @@ async function createPages({ graphql, actions, reporter, cache }) {
   const { data } = result;
   const siteTitle = data.site.siteMetadata.title;
 
-  // Initialize OG image generator (downloads fonts, etc.)
-  await initOGImageGenerator();
-
   // Create pages for each content type
-  await createBlogPages(createPage, data.strapiBlogPosts.nodes, reporter, cache);
-  await createConditionPages(createPage, data.strapiConditions.nodes, reporter, cache);
+  await createBlogPages(createPage, data.strapiBlogPosts.nodes, reporter);
+  await createConditionPages(createPage, data.strapiConditions.nodes, reporter);
   createProviderPages(createPage, data.strapiProviders.nodes);
   createServiceUpdatePages(createPage, data.strapiServiceUpdates.nodes);
-  await createClinicPages(createPage, data.clinics.nodes, reporter, cache, siteTitle);
+  await createClinicPages(createPage, data.clinics.nodes, reporter, siteTitle);
 
   reporter.info(`Created pages: ${data.strapiBlogPosts.nodes.length} blogs, ${data.strapiConditions.nodes.length} conditions, ${data.strapiProviders.nodes.length} providers, ${data.strapiServiceUpdates.nodes.length} service updates, ${data.clinics.nodes.length} clinics`);
-}
-
-/**
- * Generate a hash for cache invalidation based on title and thumbnail
- */
-function generateOGImageHash(title, thumbnailPath) {
-  const hash = crypto.createHash('md5');
-  hash.update(title || '');
-  
-  if (thumbnailPath && fs.existsSync(thumbnailPath)) {
-    const stat = fs.statSync(thumbnailPath);
-    hash.update(stat.mtimeMs.toString());
-  }
-  
-  return hash.digest('hex');
 }
 
 /**
@@ -124,41 +105,28 @@ function generateOGImageHash(title, thumbnailPath) {
  * @param {string} options.title - Title text for the image
  * @param {string} options.thumbnailPath - Path to background image (optional)
  * @param {string} options.outputDir - Directory to save the image
- * @param {Object} options.cache - Gatsby cache instance
  * @returns {Promise<{ imagePath: string, wasCached: boolean }>}
  */
-async function getOGImage({ slug, title, thumbnailPath, outputDir, cache }) {
-  const thumbnailName = path.basename(thumbnailPath, path.extname(thumbnailPath));
-  const outputName = `${slug}-${thumbnailName}.jpg`;
-
-  const imagePath = `/og-images/${outputDir}/${outputName}`;
-  const outputPath = path.resolve(`./public/og-images/${outputDir}/${outputName}`);
-  const cacheKey = `og-image-${outputDir}-${slug}`;
-  const contentHash = generateOGImageHash(title, thumbnailPath);
-  
-  // Check cache
-  const cachedHash = await cache.get(cacheKey);
-  const outputExists = fs.existsSync(outputPath);
-  
-  if (cachedHash === contentHash && outputExists) {
-    return { imagePath, wasCached: true };
-  }
-  
-  // Generate new image
-  await generateOGImage({
+async function getOGImage({ slug, title, thumbnailPath, outputDir }) {
+  const { buildSocialCards } = await import('../astro/src/lib/public-images.ts');
+  const kind = outputDir === 'conditions' ? 'conditions' : outputDir;
+  const [card] = await buildSocialCards([{
+    kind,
+    slug,
     title: title || 'Untitled',
-    backgroundImagePath: thumbnailPath,
-    outputPath,
+    backgroundImage: thumbnailPath,
+    mediaName: thumbnailPath ? path.basename(thumbnailPath, path.extname(thumbnailPath)) : 'default',
+  }], {
+    publicDir: path.resolve('./public'),
+    cacheDir: path.resolve('./.cache/public-images'),
   });
-  
-  await cache.set(cacheKey, contentHash);
-  return { imagePath, wasCached: false };
+  return { imagePath: card.imagePath, wasCached: card.wasCached };
 }
 
 /**
  * Create blog post pages and generate OG images (with caching)
  */
-async function createBlogPages(createPage, posts, reporter, cache) {
+async function createBlogPages(createPage, posts, reporter) {
   const blogTemplate = path.resolve('./src/templates/blog-post.tsx');
   
   let generated = 0;
@@ -171,7 +139,6 @@ async function createBlogPages(createPage, posts, reporter, cache) {
         title: node.title,
         thumbnailPath: node.thumbnail?.localFile?.absolutePath,
         outputDir: 'blog',
-        cache,
       });
       
       wasCached ? cached++ : generated++;
@@ -206,7 +173,7 @@ async function createBlogPages(createPage, posts, reporter, cache) {
 /**
  * Create condition pages and generate OG images (with caching)
  */
-async function createConditionPages(createPage, conditions, reporter, cache) {
+async function createConditionPages(createPage, conditions, reporter) {
   const conditionTemplate = path.resolve('./src/templates/condition.tsx');
   
   let generated = 0;
@@ -219,7 +186,6 @@ async function createConditionPages(createPage, conditions, reporter, cache) {
         title: node.heading,
         thumbnailPath: node.thumbnail?.localFile?.absolutePath,
         outputDir: 'conditions',
-        cache,
       });
       
       wasCached ? cached++ : generated++;
@@ -288,7 +254,7 @@ function createServiceUpdatePages(createPage, updates) {
 /**
  * Create clinic pages with OG images using Mapbox static maps
  */
-async function createClinicPages(createPage, clinics, reporter, cache, siteTitle) {
+async function createClinicPages(createPage, clinics, reporter, siteTitle) {
   const clinicTemplate = path.resolve('./src/templates/clinic.tsx');
   const mapCacheDir = path.resolve('./.cache/mapbox');
   
@@ -326,7 +292,6 @@ async function createClinicPages(createPage, clinics, reporter, cache, siteTitle
           title: `${siteTitle} ${node.clinic_name}`,
           thumbnailPath: mapImagePath,
           outputDir: 'clinics',
-          cache,
         });
         
         ogImagePath = imagePath;

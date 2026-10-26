@@ -11,15 +11,18 @@
     "start:ssr": "node dist-ssr/server/entry.mjs",
     "typecheck": "astro check --config astro.config.static.mjs",
     "verify:proof": "node scripts/verify-proof.mjs",
-    "verify:document": "node scripts/verify-document.mjs"
+    "verify:document": "node scripts/verify-document.mjs",
+    "verify:public-images": "node scripts/verify-public-images.mjs"
   },
   "dependencies": {
     "@astrojs/node": "10.1.4",
     "@astrojs/react": "7.1.0",
+    "@napi-rs/canvas": "0.1.95",
     "@emotion/react": "11.14.0",
     "astro": "6.4.2",
     "react": "18.3.1",
-    "react-dom": "18.3.1"
+    "react-dom": "18.3.1",
+    "sharp": "0.34.5"
   },
   "peerDependencies": {
     "react": "^18.0.0",
