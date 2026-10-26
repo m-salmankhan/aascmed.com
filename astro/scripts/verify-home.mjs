@@ -154,8 +154,7 @@ export default { ...base, outDir: '.astro/home-verification/dist-ssr' };
   }
   assert.equal(requests.filter(({ status }) => status === 'published').every(({ status }) => status === 'published'), true);
   for (const kind of ['blogs', 'clinics', 'conditions', 'providers', 'service-updates', 'reviews']) {
-    const expectedBuildFetches = kind === 'clinics' ? 2 : 1; // The existing contact route separately loads clinic options.
-    assert.equal(requests.filter((request) => request.kind === kind && request.status === 'published').length, expectedBuildFetches, `published ${kind} collection uses the expected bounded build fetches`);
+    assert.equal(requests.filter((request) => request.kind === kind && request.status === 'published').length, 1, `published ${kind} collection is fetched once`);
   }
   assert.ok(maximumByStatus.get('published') <= 4, `static collection concurrency is bounded (${maximumByStatus.get('published')})`);
   assert.equal(requests.filter(({ status }) => status === 'draft').length, 0, 'published static build never requests draft content');
