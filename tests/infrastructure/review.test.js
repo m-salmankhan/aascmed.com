@@ -13,7 +13,7 @@ function report(annotations = [], unexpected = 0) {
   };
 }
 
-function options(annotations = [], commentId = "comment-42") {
+function options(annotations = [], commentId = "42") {
   const comments = [];
   const github = {
     rest: { pulls: {
