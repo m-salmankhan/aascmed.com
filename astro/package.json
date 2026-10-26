@@ -10,7 +10,8 @@
     "build:ssr": "astro build --config astro.config.ssr.mjs",
     "start:ssr": "node dist-ssr/server/entry.mjs",
     "typecheck": "astro check --config astro.config.static.mjs",
-    "verify:proof": "node scripts/verify-proof.mjs"
+    "verify:proof": "node scripts/verify-proof.mjs",
+    "verify:document": "node scripts/verify-document.mjs"
   },
   "dependencies": {
     "@astrojs/node": "10.1.4",
