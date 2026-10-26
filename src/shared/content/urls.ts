@@ -2,7 +2,7 @@ import type { ClinicRecord, ServiceUpdateRecord } from "./models";
 
 function pathFor(family: string, slug: string | null | undefined): string | null {
   const segment = slug?.replace(/^\/+|\/+$/g, "");
-  if (!segment || segment.split("/").some((part) => !part || part === "." || part === ".." || /[?#\\%]/.test(part))) return null;
+  if (!segment || segment.split("/").some((part) => !part || part === "." || part === ".." || /[\u0000-\u0020\u007F?#\\%]/.test(part))) return null;
   return `/${family}/${segment}/`;
 }
 
