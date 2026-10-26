@@ -7,7 +7,7 @@ import { css } from "@emotion/react";
 import { Article } from "../components/posts/article";
 import { ShareButtons } from "../components/social-media/share";
 import { ContactBanner } from "../components/posts/shortcode-components";
-import { SEO } from "../components/seo";
+import { GatsbySEO as SEO } from "../adapters/gatsby/seo";
 import { GatsbyImage, IGatsbyImageData } from "gatsby-plugin-image";
 import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 import { Contents } from "../components/posts/contents";

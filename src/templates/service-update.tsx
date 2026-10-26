@@ -8,7 +8,7 @@ import { Article } from "../components/posts/article";
 import { ShareButtons } from "../components/social-media/share";
 import { PrimaryAnchor, PrimaryButton, stylesBtnSecondary, stylesButton } from "../components/buttons";
 import { gridSpacing } from "../styles/theme";
-import { SEO } from "../components/seo";
+import { GatsbySEO as SEO } from "../adapters/gatsby/seo";
 import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 import moment from "moment";
 

@@ -7,6 +7,8 @@ import type {
   ProviderRecord,
   SiteSettings,
   ServiceUpdateRecord,
+  AnnouncementSettings,
+  TrackingSettings,
 } from "./models";
 
 interface GatsbyImageData {
@@ -129,10 +131,39 @@ export function mapGatsbyMedia(media: GatsbyMedia | null | undefined): MediaDesc
   return descriptor;
 }
 
-export function mapGatsbySiteSettings(metadata: { title?: string | null; siteUrl?: string | null }): SiteSettings {
-  const settings: SiteSettings = { title: metadata.title || "" };
+export function mapGatsbySiteSettings(metadata: { title?: string | null; siteUrl?: string | null; twitterHandle?: string | null }): SiteSettings {
+  const settings: SiteSettings = { title: metadata.title || "Untitled Site" };
   if (metadata.siteUrl) settings.url = metadata.siteUrl;
+  if (metadata.twitterHandle) settings.twitterHandle = metadata.twitterHandle;
   return settings;
+}
+
+export function mapGatsbyTrackingSettings(tracking?: {
+  googleAnalyticsId?: string | null;
+  googleTagManagerId?: string | null;
+  pixelId?: string | null;
+} | null): TrackingSettings {
+  return {
+    googleAnalyticsId: tracking?.googleAnalyticsId || "",
+    googleTagManagerId: tracking?.googleTagManagerId || "",
+    pixelId: tracking?.pixelId || "",
+  };
+}
+
+export function mapGatsbyAnnouncement(node?: {
+  enabled?: boolean | null;
+  type?: string | null;
+  internal?: { content?: string | null } | null;
+} | null): AnnouncementSettings {
+  const type = node?.type === "error" || node?.type === "success" ? node.type : "info";
+  const source = readInternalContent(node?.internal?.content);
+  const message = jsonArray(source?.message);
+
+  return omitUndefined({
+    enabled: node?.enabled === true,
+    type,
+    message,
+  }) as AnnouncementSettings;
 }
 
 export function mapGatsbyBlog(node: GatsbyNode): BlogRecord {

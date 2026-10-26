@@ -7,7 +7,7 @@ import { ConditionSummary } from "../components/conditions/conditions-archive";
 import { Breadcrumbs } from "../components/breadcrumbs";
 import { Container } from "../components/containers";
 import { gridSpacing } from "../styles/theme";
-import { SEO } from "../components/seo";
+import { GatsbySEO as SEO } from "../adapters/gatsby/seo";
 import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 
 const ConditionsPage = ({ data }: PageProps<Queries.ConditionsArchiveQuery>) => {

@@ -1,10 +1,10 @@
 import {FaIcons, IconStyles} from "../font-awesome";
 import {stylesScreenReaderText} from "../../styles/accessibility";
 import React from "react";
-import {graphql, useStaticQuery} from "gatsby";
 import Color from "color";
 import {css} from "@emotion/react";
 import {colours} from "../../styles/theme";
+import { useSiteMetadata } from "../../hooks/useSiteMetadata";
 
 enum SocialNetworks {
     facebook = 'facebook',
@@ -106,17 +106,7 @@ interface ShareToSocialsProps {
     path: string,
 }
 export const ShareButtons: React.FC<ShareToSocialsProps> = ({pageTitle, path, className}) => {
-    const data: Queries.siteURLQuery = useStaticQuery(graphql`
-        query siteURL {
-            site {
-                siteMetadata {
-                    siteUrl
-                }
-            }
-        }
-    `);
-
-    const baseURL = ((!!data.site?.siteMetadata) ? data.site.siteMetadata.siteUrl : "") as string;
+    const { url: baseURL } = useSiteMetadata();
     const url = baseURL + path;
 
     return (

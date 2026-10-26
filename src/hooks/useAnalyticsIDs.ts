@@ -1,21 +1,11 @@
-import {graphql, useStaticQuery} from "gatsby";
+import { useSiteData } from "../shared/data/site-data";
 
 export const useAnalyticsIDs = () => {
-    const data: Queries.AnalyticsIDsQuery = useStaticQuery(graphql`
-        query AnalyticsIDs {
-            strapiTrackingInfo {
-                googleAnalyticsId
-                googleTagManagerId
-                pixelId
-            }
-        }
-      `);
-
-    const trackingInfo = data.strapiTrackingInfo;
+    const { trackingSettings } = useSiteData();
 
     return {
-        googleAnalyticsID: trackingInfo?.googleAnalyticsId || "",
-        googleTagManagerID: trackingInfo?.googleTagManagerId || "",
-        pixelID: trackingInfo?.pixelId || ""
+        googleAnalyticsID: trackingSettings.googleAnalyticsId,
+        googleTagManagerID: trackingSettings.googleTagManagerId,
+        pixelID: trackingSettings.pixelId,
     };
 }

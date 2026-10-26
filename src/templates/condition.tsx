@@ -6,7 +6,7 @@ import { Breadcrumbs } from "../components/breadcrumbs";
 import { css } from "@emotion/react";
 import { ShareButtons } from "../components/social-media/share";
 import { Article } from "../components/posts/article";
-import { SEO } from "../components/seo";
+import { GatsbySEO as SEO } from "../adapters/gatsby/seo";
 import { StrapiDynamicZoneRenderer } from "../components/strapi/blocks-renderer";
 import { Contents } from "../components/posts/contents";
 import { extractTableOfContents } from "../utils/strapi-toc";
