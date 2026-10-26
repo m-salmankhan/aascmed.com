@@ -221,7 +221,8 @@ test("shared image renderer keeps Gatsby picture sources and sizes in the React 
 test("blog hero gives picture and image a fixed crop box", async () => {
   const source = await readFile(new URL("../../src/templates/blog-post.tsx", import.meta.url), "utf8");
   assert.match(source, /\.gatsby-image-wrapper, picture \{\s*width: 100%;\s*height: 20em;/);
-  assert.match(source, /\.gatsby-image-wrapper img, picture img, > img \{\s*width: 100%;\s*height: 100%;/);
+  assert.match(source, /img \{\s*width: 100%;\s*height: 20em;/);
+  assert.match(source, /\.gatsby-image-wrapper img, picture img \{\s*height: 100%;/);
 });
 test("shared model declarations stay free of framework nodes, GraphQL query types, and credentials", async () => {
   const modelText = await readFile(new URL("../../src/shared/content/models.ts", import.meta.url), "utf8");
