@@ -1,92 +1,43 @@
-import { graphql, HeadProps, PageProps } from "gatsby"
-import { Image } from "../components/media/image";
-import { mapGatsbyMedia } from "../shared/content/gatsby-adapter";
-import { Layout } from "../components/layouts/default";
-import { ConditionsArchive } from "../components/conditions";
-import { css } from "@emotion/react";
-import { ConditionSummary } from "../components/conditions/conditions-archive";
-import { Breadcrumbs } from "../components/breadcrumbs";
-import { Container } from "../components/containers";
-import { gridSpacing } from "../styles/theme";
+import { graphql, HeadProps, PageProps } from "gatsby";
 import { GatsbySEO as SEO } from "../adapters/gatsby/seo";
-import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
+import { mapGatsbyCondition, mapGatsbyText } from "../shared/content/gatsby-adapter";
+import { conditionPath } from "../shared/content/urls";
+import { ConditionsArchiveView } from "../views/fixed-archive";
 
 const ConditionsPage = ({ data }: PageProps<Queries.ConditionsArchiveQuery>) => {
-  const archiveCopy = data.strapiConditionsArchive;
-  const heading = archiveCopy?.heading || "Conditions";
-  
-  // Parse text blocks from internal.content
-  const rawContent = archiveCopy?.internal?.content;
-  const parsedData = rawContent ? JSON.parse(rawContent) : null;
-  const textBlocks = parsedData?.text as any[] | null;
-
-  const conditions: ConditionSummary[] = data.conditions.nodes.map(node => ({
-    slug: `/conditions/${node.slug}/`,
-    title: node.heading || node.title || "untitled",
-    thumbnail: node.thumbnail?.localFile?.childImageSharp?.gatsbyImageData
-      ? <Image alt="" image={mapGatsbyMedia({ localFile: node.thumbnail.localFile })!} />
-      : undefined,
-  }));
-
-  return (
-    <Layout>
-      <main>
-        <Container>
-          <Breadcrumbs path={[
-            ["/", "Home"],
-            ["/conditions/", "Conditions"]
-          ]} css={css({ marginTop: "3em" })} />
-          <ConditionsArchive
-            heading={heading}
-            textContent={textBlocks ? <StrapiBlocksRenderer content={textBlocks} /> : undefined}
-            frontPage={false}
-            showViewAll={false}
-            conditionsList={conditions}
-            css={{ margin: `2em -${gridSpacing / 2}rem` }}
-          />
-        </Container>
-
-      </main>
-    </Layout>
-  )
-}
+  const archive = data.strapiConditionsArchive;
+  const conditions = data.conditions.nodes.map((node) => {
+    const condition = mapGatsbyCondition({ ...node, id: node.id });
+    return {
+      slug: conditionPath(condition.slug) || "/conditions/",
+      title: condition.heading || condition.title || "untitled",
+      thumbnail: condition.thumbnail,
+    };
+  });
+  return <ConditionsArchiveView heading={archive?.heading || "Conditions"} blocks={mapGatsbyText(archive || {})} conditions={conditions} />;
+};
 
 export const Head = (props: HeadProps<Queries.ConditionsArchiveQuery>) => {
   const description = props.data.strapiConditionsArchive?.metaDescription || "";
   const heading = props.data.strapiConditionsArchive?.heading || "";
-
-  return (
-    <SEO description={description} slug={props.location.pathname} title={heading}>
-      <meta name={"og:type"} content={"website"} />
-    </SEO>
-  )
-}
+  return <SEO description={description} slug={props.location.pathname} title={heading}>
+    <meta name="og:type" content="website" />
+  </SEO>;
+};
 
 export const query = graphql`
   query ConditionsArchive {
-    strapiConditionsArchive {
-      heading
-      metaDescription
-      internal {
-        content
-      }
-    }
-
+    strapiConditionsArchive { heading metaDescription internal { content } }
     conditions: allStrapiCondition(sort: {order: ASC}) {
       nodes {
+        id
         slug
         title
         heading
-        thumbnail {
-          localFile {
-            childImageSharp {
-              gatsbyImageData(width: 800)
-            }
-          }
-        }
+        thumbnail { localFile { childImageSharp { gatsbyImageData(width: 800) } } }
       }
     }
   }
-`
+`;
 
-export default ConditionsPage
+export default ConditionsPage;

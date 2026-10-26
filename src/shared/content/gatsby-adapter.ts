@@ -114,6 +114,12 @@ export function mapGatsbyBlocks(node: GatsbyNode, key: "body" | "content"): Json
   return jsonArray(source?.[key]);
 }
 
+/** Maps the common text dynamic zone used by Gatsby archive and singleton page queries. */
+export function mapGatsbyText(node: { internal?: { content?: string | null } | null }): JsonValue[] | undefined {
+  const source = readInternalContent(node.internal?.content);
+  return jsonArray(source?.text);
+}
+
 export function mapGatsbyMedia(media: GatsbyMedia | null | undefined): MediaDescriptor | undefined {
   if (!media) return undefined;
   const image = media.localFile?.childImageSharp?.gatsbyImageData;
