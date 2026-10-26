@@ -45,12 +45,15 @@ export function sortByOrder<T extends { order?: number | null }>(records: readon
 }
 
 export function sortByDateDescending<T extends { date?: string | null }>(records: readonly T[]): T[] {
+  const validTimestamp = (value: string | null | undefined): number => {
+    if (!value || (/^\d{4}-\d{2}-\d{2}(?:$|T)/.test(value) && !civilDateParts(value))) return Number.NEGATIVE_INFINITY;
+    const timestamp = Date.parse(value);
+    return Number.isFinite(timestamp) ? timestamp : Number.NEGATIVE_INFINITY;
+  };
   return records.map((record, index) => ({ record, index }))
     .sort((a, b) => {
-      const parsedLeft = a.record.date ? Date.parse(a.record.date) : Number.NEGATIVE_INFINITY;
-      const parsedRight = b.record.date ? Date.parse(b.record.date) : Number.NEGATIVE_INFINITY;
-      const left = Number.isFinite(parsedLeft) ? parsedLeft : Number.NEGATIVE_INFINITY;
-      const right = Number.isFinite(parsedRight) ? parsedRight : Number.NEGATIVE_INFINITY;
+      const left = validTimestamp(a.record.date);
+      const right = validTimestamp(b.record.date);
       return right - left || a.index - b.index;
     })
     .map(({ record }) => record);
