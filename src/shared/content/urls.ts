@@ -12,8 +12,8 @@ function pathFor(family: string, slug: string | null | undefined): string | null
 }
 
 /** Validate an ISO-like calendar date rather than a timestamp or natural-language date.
- * @param date `YYYY-MM-DD` or `YYYY-MM-DDT...` text.
- * @returns Zero-padded `{ year, month, day }` strings from the written date, or null if malformed, impossible, or timestamp-invalid.
+ * @param date Content record's ISO-style date/date-time value (for example, `2026-12-12` or `2026-12-12T...`); its written calendar day is preserved for dated URLs.
+ * @returns The zero-padded calendar year, month, and day from that value, or null when malformed or impossible.
  */
 function civilDateParts(date: string): { year: string; month: string; day: string } | null {
   const match = /^(\d{4})-(\d{2})-(\d{2})(?:$|T)/.exec(date);

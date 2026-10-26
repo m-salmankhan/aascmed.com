@@ -7,6 +7,7 @@ import {
   serviceUpdatePath,
 } from "./urls.ts";
 
+/** Content family whose route convention is used when validating published records. */
 export type ContentFamily = "blog" | "condition" | "provider" | "clinic" | "serviceUpdate";
 /** Validation strictness: drafts may be incomplete, while published records must be routable. */
 export type ContentMode = "draft" | "published";
