@@ -43,7 +43,7 @@ const socialImage = new URL(
 ).href;
 const isPreview = import.meta.env.PUBLIC_ASTRO_TARGET !== 'static';
 const shouldNoIndex = isPreview || noIndex === true;
-const analytics = !isPreview && useTracking && trackingSettings;
+const analytics = !isPreview && useTracking ? trackingSettings : undefined;
 const jsonLd = structuredData
   ? JSON.stringify(structuredData).replace(/</g, '\\u003c')
   : undefined;
