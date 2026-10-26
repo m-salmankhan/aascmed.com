@@ -12,7 +12,8 @@
     "typecheck": "astro check --config astro.config.static.mjs",
     "verify:proof": "node scripts/verify-proof.mjs",
     "verify:document": "node scripts/verify-document.mjs",
-    "verify:public-images": "node scripts/verify-public-images.mjs"
+    "verify:public-images": "node scripts/verify-public-images.mjs",
+    "verify:public-images-build": "node scripts/verify-public-images-build.mjs"
   },
   "dependencies": {
     "@astrojs/node": "10.1.4",

@@ -72,6 +72,16 @@ function basenameFromSource(source?: string): string {
   return path.basename(basename, path.extname(basename)) || 'default';
 }
 
+/** Derive the stable public URL without rendering, for page metadata. */
+export function getSocialCardImagePath(entry: Pick<SocialCardEntry, 'kind' | 'slug' | 'mediaName' | 'backgroundImage' | 'mapLocation'>): string {
+  if (!['blog', 'conditions', 'clinics'].includes(entry.kind)) throw new Error(`Unsupported social card kind: ${entry.kind}`);
+  const slug = safeSegment(entry.slug);
+  const mediaName = safeSegment(entry.mediaName || (entry.mapLocation
+    ? `${slug}-${entry.mapLocation.latitude}-${entry.mapLocation.longitude}-map`
+    : basenameFromSource(entry.backgroundImage)));
+  return `/og-images/${entry.kind}/${slug}-${mediaName}.jpg`;
+}
+
 function mapboxStaticUrl(latitude: number, longitude: number, token: string): string {
   if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90 || !Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
     throw new Error('Clinic map coordinates are invalid');
@@ -205,13 +215,12 @@ export async function buildSocialCards(entries: SocialCardEntry[], options: Publ
   const logoBytes = await readFile(LOGO);
   const results: SocialCardResult[] = [];
   for (const entry of entries) {
-    if (!['blog', 'conditions', 'clinics'].includes(entry.kind)) throw new Error(`Unsupported social card kind: ${entry.kind}`);
     const kind = entry.kind;
     const slug = safeSegment(entry.slug);
     const mediaName = safeSegment(entry.mediaName || (entry.mapLocation
       ? `${slug}-${entry.mapLocation.latitude}-${entry.mapLocation.longitude}-map`
       : basenameFromSource(entry.backgroundImage)));
-    const imagePath = `/og-images/${kind}/${slug}-${mediaName}.jpg`;
+    const imagePath = getSocialCardImagePath(entry);
     const outputPath = path.join(cardsDir, kind, `${slug}-${mediaName}.jpg`);
     const cacheKey = `${kind}:${slug}:${mediaName}`;
     let mediaBytes: Buffer | undefined;
