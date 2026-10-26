@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { formatContentDate } from "../../src/shared/content/dates.ts";
+import { getClinicHoursForDisplay } from "../../src/shared/content/clinic-hours.ts";
 import { sortByDateDescending } from "../../src/shared/content/urls.ts";
 import { toClinicArchiveItems, toServiceUpdateArchiveItems } from "../../astro/src/server/content/clinic-update-items.ts";
 import { matchesClinicRoute, matchesServiceUpdateRoute } from "../../astro/src/server/content/route-matching.ts";
@@ -25,6 +26,22 @@ test("clinic detail route matching accepts the captured slug and its fallback bu
   assert.equal(matchesClinicRoute("/clinics/crest-hill", "crest-hill", clinic), true);
   assert.equal(matchesClinicRoute("/clinics/wrong-clinic/", "wrong-clinic", clinic), false);
   assert.equal(matchesClinicRoute("/clinics/crest-hill/", "crest-hill", null), false);
+});
+
+test("clinic hours tolerate missing opening and shot times", () => {
+  assert.deepEqual(getClinicHoursForDisplay(), { openingTimes: [], shotTimes: [] });
+  assert.deepEqual(getClinicHoursForDisplay([
+    { day: "Monday", open: true, openingHours: { startTime: "09:00" }, shotHours: { startTime: "10:00", endTime: "13:00" } },
+    { day: "Tuesday", open: false, openingHours: { startTime: "09:00", endTime: "17:00" }, shotHours: { startTime: "10:00", endTime: "13:00" } },
+    { day: "Wednesday", open: true, openingHours: { startTime: "09:00", endTime: "17:00" } },
+  ]), {
+    openingTimes: [
+      { day: "Monday", hours: "Closed", hours24: "Closed" },
+      { day: "Tuesday", hours: "Closed", hours24: "Closed" },
+      { day: "Wednesday", hours: "9:00 a.m. - 5:00 p.m.", hours24: "09:00 - 17:00" },
+    ],
+    shotTimes: [{ day: "Monday", hours: "10:00 a.m. - 1:00 p.m." }],
+  });
 });
 
 test("service update dates display and route by their stored civil date, independent of local timezone", () => {

@@ -1,15 +1,13 @@
 ---
 import SiteDocument from '../../layouts/SiteDocument.astro';
 import { getClinicBySlug, getClinics } from '../../server/content/loaders.ts';
-import { getPageSiteData } from '../../server/content/site-data.ts';
-import { getRouteContentMode, isAstroPreview } from '../../server/content/route-data.ts';
+import { getAstroSiteData, getRouteContentMode, isAstroPreview } from '../../server/content/route-data.ts';
 import { matchesClinicRoute } from '../../server/content/route-matching.ts';
 import { clinicPath } from '../../../../src/shared/content/urls.ts';
 import { AstroClinicPage } from '../../../../src/views/astro-clinic-update-pages.tsx';
 import { AstroContentNotFound } from '../../../../src/views/astro-content-pages.tsx';
 
-const isStatic = import.meta.env.PUBLIC_ASTRO_TARGET === 'static';
-export const prerender = isStatic;
+export const prerender = import.meta.env.PUBLIC_ASTRO_TARGET === 'static';
 
 export async function getStaticPaths() {
   const clinics = await getClinics('published');
@@ -26,7 +24,7 @@ let clinic = slug ? await getClinicBySlug(slug, mode) : null;
 const pathname = Astro.url.pathname;
 if (!matchesClinicRoute(pathname, slug, clinic)) clinic = null;
 if (!clinic) Astro.response.status = 404;
-const siteData = clinic ? await getPageSiteData(mode) : undefined;
+const siteData = clinic ? await getAstroSiteData(mode) : undefined;
 if (isAstroPreview()) Astro.response.headers.set('Cache-Control', 'private, no-store');
 const title = clinic?.title || 'Untitled';
 const description = clinic?.description || '';

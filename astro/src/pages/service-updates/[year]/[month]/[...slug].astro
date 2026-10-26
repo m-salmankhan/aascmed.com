@@ -1,15 +1,13 @@
 ---
 import SiteDocument from '../../../../layouts/SiteDocument.astro';
 import { getServiceUpdateBySlug, getServiceUpdates } from '../../../../server/content/loaders.ts';
-import { getPageSiteData } from '../../../../server/content/site-data.ts';
-import { getRouteContentMode, isAstroPreview } from '../../../../server/content/route-data.ts';
+import { getAstroSiteData, getRouteContentMode, isAstroPreview } from '../../../../server/content/route-data.ts';
 import { matchesServiceUpdateRoute } from '../../../../server/content/route-matching.ts';
 import { serviceUpdatePath } from '../../../../../../src/shared/content/urls.ts';
 import { AstroServiceUpdatePage } from '../../../../../../src/views/astro-clinic-update-pages.tsx';
 import { AstroContentNotFound } from '../../../../../../src/views/astro-content-pages.tsx';
 
-const isStatic = import.meta.env.PUBLIC_ASTRO_TARGET === 'static';
-export const prerender = isStatic;
+export const prerender = import.meta.env.PUBLIC_ASTRO_TARGET === 'static';
 
 export async function getStaticPaths() {
   const updates = await getServiceUpdates('published');
@@ -31,7 +29,7 @@ let serviceUpdate = validDatePath ? await getServiceUpdateBySlug(slug, mode) : n
 const pathname = Astro.url.pathname;
 if (!matchesServiceUpdateRoute(pathname, year, month, slug, serviceUpdate)) serviceUpdate = null;
 if (!serviceUpdate) Astro.response.status = 404;
-const siteData = serviceUpdate ? await getPageSiteData(mode) : undefined;
+const siteData = serviceUpdate ? await getAstroSiteData(mode) : undefined;
 if (isAstroPreview()) Astro.response.headers.set('Cache-Control', 'private, no-store');
 const title = serviceUpdate?.title || 'Untitled';
 const description = serviceUpdate?.description || '';

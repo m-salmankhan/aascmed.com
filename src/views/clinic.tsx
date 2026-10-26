@@ -12,21 +12,9 @@ import { useSiteMetadata } from "../hooks/useSiteMetadata";
 import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 import type { ClinicRecord } from "../shared/content/models";
 import { clinicPath } from "../shared/content/urls";
+import { getClinicHoursForDisplay } from "../shared/content/clinic-hours";
 
 export interface ClinicViewProps { clinic?: ClinicRecord }
-
-function to12Hr(time: string): string {
-  if (!time) return "";
-  const [hrs, mins] = time.split(":");
-  const hour = parseFloat(hrs);
-  if (hour <= 12) return hour === 12 ? `${hour}:${mins} p.m.` : `${hour}:${mins} a.m.`;
-  return `${hour - 12}:${mins} p.m.`;
-}
-
-function formatHours(startTime?: string, endTime?: string): string {
-  if (!startTime || !endTime) return "Closed";
-  return `${to12Hr(startTime)} - ${to12Hr(endTime)}`;
-}
 
 export function ClinicView({ clinic }: ClinicViewProps) {
   const siteMetadata = useSiteMetadata();
@@ -38,17 +26,7 @@ export function ClinicView({ clinic }: ClinicViewProps) {
   const longitude = clinic?.location?.longitude || 0;
   const latitude = clinic?.location?.latitude || 0;
   const pinLabelName = clinic?.location?.label || clinicName;
-  const hours = clinic?.hours || [];
-  const openingTimes = hours.map(day => ({
-    day: day.day || "",
-    hours: day.open && day.openingHours ? formatHours(day.openingHours.startTime, day.openingHours.endTime) : "Closed",
-    hours24: day.open && day.openingHours?.startTime && day.openingHours?.endTime
-      ? `${day.openingHours.startTime} - ${day.openingHours.endTime}` : "Closed",
-  }));
-  const shotTimes = hours.filter(day => day.open && day.shotHours).map(day => ({
-    day: day.day || "",
-    hours: day.shotHours ? formatHours(day.shotHours.startTime, day.shotHours.endTime) : "Closed",
-  }));
+  const { openingTimes, shotTimes } = getClinicHoursForDisplay(clinic?.hours);
   const slug = clinicPath(clinic) || "/clinics/";
 
   const structuredData = {
