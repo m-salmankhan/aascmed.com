@@ -22,6 +22,12 @@ export interface MediaDescriptor {
   height?: number;
   mimeType?: string;
   srcSet?: string;
+  /** Candidate widths and URLs for renderers that need a responsive source set. */
+  sources?: Array<{ src: string; width: number }>;
+  /** Preserve source aspect ratio when a layout needs an explicit box. */
+  aspectRatio?: number;
+  /** A stable content URL for video and other non-image media. */
+  poster?: string;
   formats?: Record<string, MediaFormat>;
   /** Optional CSS/background fallback for SSR and non-JavaScript rendering. */
   placeholder?: string;

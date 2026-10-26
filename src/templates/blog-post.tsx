@@ -8,7 +8,8 @@ import { Article } from "../components/posts/article";
 import { ShareButtons } from "../components/social-media/share";
 import { ContactBanner } from "../components/posts/shortcode-components";
 import { GatsbySEO as SEO } from "../adapters/gatsby/seo";
-import { GatsbyImage, IGatsbyImageData } from "gatsby-plugin-image";
+import { HeroImage as SharedHeroImage } from "../components/media/image";
+import { mapGatsbyMedia } from "../shared/content/gatsby-adapter";
 import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 import { Contents } from "../components/posts/contents";
 import { extractTableOfContents } from "../utils/strapi-toc";
@@ -49,7 +50,7 @@ const BlogPost = ({ data, location }: PageProps<Queries.BlogPostQuery>) => {
     const heading = blog.heading || title
     const date = blog.date || ""
     const slug = `/blog/${blog.slug}/`
-    const heroImage = blog.thumbnail?.localFile?.childImageSharp?.gatsbyImageData;
+    const heroImage = mapGatsbyMedia({ localFile: blog.thumbnail?.localFile });
     
     // Parse raw JSON content to get full rich text data with all formatting
     const rawContent = blog.internal?.content;
@@ -134,21 +135,21 @@ export const query = graphql`
   }
 `
 
-const HeroImage = ({ img, className }: {img: IGatsbyImageData | undefined, className?: string}) => {
+const HeroImage = ({ img, className }: {img: ReturnType<typeof mapGatsbyMedia>, className?: string}) => {
     if(!img) return <></>
 
     const styles = css`
         width: 100%;
         margin: 1.5em auto;
         
-        .gatsby-image-wrapper {
+        .gatsby-image-wrapper, img {
             height: 20em;
         }
     `;
 
     return(
         <div className={className} css={css(styles)}>
-            <GatsbyImage alt={""} image={img} />
+            <SharedHeroImage alt={""} image={img} />
         </div>
     );
 }
