@@ -76,8 +76,8 @@ jobs:
               body: "⏳ Regression check started. I’m checking the PR and preview now; I’ll update this comment with the results.",
             });
 
-  infrastructure:
-    name: Fast regression-infrastructure checks
+  unit:
+    name: Unit and contract tests
     runs-on: ubuntu-latest
     needs: [prepare-comment-command]
     if: ${{ !cancelled() && github.event_name != 'pull_request_target' && (github.event_name != 'issue_comment' || (needs.prepare-comment-command.result == 'success' && github.event.issue.pull_request && contains(fromJSON('["/regression-check","/run-regression"]'), github.event.comment.body))) }}
@@ -89,8 +89,23 @@ jobs:
           node-version: 22
           cache: yarn
       - run: yarn install --frozen-lockfile
+      - run: yarn test:unit
+
+  infrastructure:
+    name: Browser infrastructure checks
+    runs-on: ubuntu-latest
+    needs: [prepare-comment-command, unit]
+    if: ${{ !cancelled() && needs.unit.result == 'success' && github.event_name != 'pull_request_target' && (github.event_name != 'issue_comment' || (needs.prepare-comment-command.result == 'success' && github.event.issue.pull_request && contains(fromJSON('["/regression-check","/run-regression"]'), github.event.comment.body))) }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+      - run: yarn install --frozen-lockfile
       - run: yarn playwright install --with-deps chromium
-      - run: yarn test:infrastructure
+      - run: yarn test:infrastructure:browser
       - uses: actions/upload-artifact@v4
         if: always()
         with:
