@@ -113,16 +113,22 @@ export interface SiteSettings {
   defaultImage?: MediaDescriptor;
 }
 
-/** Public analytics identifiers passed from the framework adapter to shared views. */
+/** Public analytics identifiers; missing CMS values normalize to empty strings. */
 export interface TrackingSettings {
+  /** Google Analytics measurement ID, or `""` when unconfigured. */
   googleAnalyticsId: string;
+  /** Google Tag Manager container ID, or `""` when unconfigured. */
   googleTagManagerId: string;
+  /** Meta/Facebook Pixel ID, or `""` when unconfigured. */
   pixelId: string;
 }
 
-/** Announcement state and optional serializable message supplied to the banner. */
+/** Announcement state and optional JSON-rich-text message supplied to the banner. */
 export interface AnnouncementSettings {
+  /** True only when the CMS `enabled` value is exactly true. */
   enabled: boolean;
+  /** One supported banner style; adapters normalize unrecognized values to `info`. */
   type: "error" | "info" | "success";
+  /** Optional array of JSON-safe Strapi Blocks nodes. */
   message?: JsonValue[];
 }

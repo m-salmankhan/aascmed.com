@@ -26,7 +26,10 @@ interface GatsbySEOAdapterQuery {
   strapiTrackingInfo?: { googleAnalyticsId?: string | null; googleTagManagerId?: string | null; pixelId?: string | null } | null;
 }
 
-/** Read Gatsby metadata and pass normalized site/tracking settings to the shared SEO view. */
+/** Read Gatsby metadata and pass normalized settings to the shared SEO view.
+ * @param props SEO display props other than framework-provided site and tracking settings.
+ * @returns The shared SEO component with data from Gatsby queries.
+ */
 export const GatsbySEO: React.FC<Omit<React.ComponentProps<typeof SEO>, "siteSettings" | "trackingSettings">> = (props) => {
   const data = useStaticQuery<GatsbySEOAdapterQuery>(GatsbySEODataQuery);
 

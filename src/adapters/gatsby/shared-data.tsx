@@ -44,7 +44,10 @@ interface GatsbySharedSiteDataQuery {
   allStrapiClinic: { clinics: Array<{ clinic_name?: string | null }> };
 }
 
-/** Query Gatsby site data once and provide framework-neutral values to the React tree. */
+/** Query Gatsby site data and provide framework-neutral values to the React tree.
+ * @param props Optional React children.
+ * @returns Children inside the provider populated from the Gatsby query.
+ */
 const GatsbySharedDataAdapter: React.FC<{ children?: ReactNode }> = ({ children }) => {
   const data = useStaticQuery<GatsbySharedSiteDataQuery>(GatsbySharedDataQuery);
   const siteSettings = mapGatsbySiteSettings(data.site?.siteMetadata || {});
