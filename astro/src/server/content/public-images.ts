@@ -1,6 +1,8 @@
 import type { BlogRecord, ClinicRecord, ConditionRecord } from '../../../../src/shared/content/models.ts';
 import { blogPath, clinicPath, conditionPath } from '../../../../src/shared/content/urls.ts';
-import { buildSocialCards, type PublicImageBuildOptions, type SocialCardEntry, type SocialCardResult } from '../../lib/public-images.ts';
+import type { MediaDescriptor } from '../../../../src/shared/content/models.ts';
+import { buildResponsiveImage, buildSocialCards, type PublicImageBuildOptions, type SocialCardEntry, type SocialCardResult } from '../../lib/public-images.ts';
+import path from 'node:path';
 
 export interface PublishedImageCollections {
   blogs: BlogRecord[];
@@ -10,6 +12,11 @@ export interface PublishedImageCollections {
 
 export interface PublishedSocialCardOptions extends Omit<PublicImageBuildOptions, 'fetch'> {
   siteTitle?: string;
+}
+
+export interface PublishedImageBuildResult {
+  cards: SocialCardResult[];
+  mediaByRoute: Record<string, MediaDescriptor>;
 }
 
 const routeSlug = (pathname: string | null): string | null => pathname?.split('/').filter(Boolean).at(-1) ?? null;
@@ -50,6 +57,43 @@ export function publishedSocialCardEntries(
 export async function buildPublishedSocialCards(
   collections: PublishedImageCollections,
   options: PublishedSocialCardOptions,
-): Promise<SocialCardResult[]> {
-  return buildSocialCards(publishedSocialCardEntries(collections, options.siteTitle), options);
+): Promise<PublishedImageBuildResult> {
+  const entries = publishedSocialCardEntries(collections, options.siteTitle);
+  const cards = await buildSocialCards(entries, options);
+  const mediaByRoute: Record<string, MediaDescriptor> = {};
+  for (const blog of collections.blogs) {
+    const slug = routeSlug(blogPath(blog.slug));
+    if (!slug || !blog.thumbnail?.src) continue;
+    mediaByRoute[`blog:${slug}`] = await buildResponsiveImage({
+      source: blog.thumbnail.src,
+      alt: blog.thumbnail.alt,
+      outputDir: path.join(options.publicDir, 'media'),
+      publicUrlPrefix: '/media',
+      filename: `blog-${slug}`,
+    });
+  }
+  for (const condition of collections.conditions) {
+    const slug = routeSlug(conditionPath(condition.slug));
+    if (!slug || !condition.thumbnail?.src) continue;
+    mediaByRoute[`condition:${slug}`] = await buildResponsiveImage({
+      source: condition.thumbnail.src,
+      alt: condition.thumbnail.alt,
+      outputDir: path.join(options.publicDir, 'media'),
+      publicUrlPrefix: '/media',
+      filename: `condition-${slug}`,
+    });
+  }
+  return { cards, mediaByRoute };
+}
+
+/** Read the generated public descriptors only from Astro's static build context. */
+export async function getPublishedImageManifest(): Promise<PublishedImageBuildResult | null> {
+  if (import.meta.env?.PUBLIC_ASTRO_TARGET !== 'static') return null;
+  const manifestPath = path.resolve(process.cwd(), '.astro', 'public-image-manifest.json');
+  try {
+    const { readFile } = await import('node:fs/promises');
+    return JSON.parse(await readFile(manifestPath, 'utf8')) as PublishedImageBuildResult;
+  } catch {
+    return null;
+  }
 }

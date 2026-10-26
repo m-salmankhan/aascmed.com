@@ -1,5 +1,5 @@
 import type { AstroIntegration } from 'astro';
-import { copyFile, mkdir } from 'node:fs/promises';
+import { copyFile, mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildPublishedSocialCards, type PublishedImageCollections } from '../server/content/public-images.ts';
@@ -30,14 +30,26 @@ export function publicImagesIntegration(options: PublicImagesIntegrationOptions)
         if (!isStaticBuild) return;
         stagingPublicDir = options.stagingDir || path.resolve(process.cwd(), '.astro', 'public-images');
         const collections = await options.loadPublishedCollections();
-        const cards = await buildPublishedSocialCards(collections, {
+        const imageBuild = await buildPublishedSocialCards(collections, {
           publicDir: stagingPublicDir,
           cacheDir: imageCacheDir,
           mapboxToken: options.mapboxToken,
           siteTitle: options.siteTitle,
         });
-        generatedPaths = cards.map((card) => card.imagePath);
-        logger.info(`Prepared ${cards.length} published social cards from the build snapshot.`);
+        generatedPaths = imageBuild.cards.map((card) => card.imagePath);
+        for (const descriptor of Object.values(imageBuild.mediaByRoute)) {
+          generatedPaths.push(descriptor.src);
+          for (const candidate of descriptor.sources ?? []) generatedPaths.push(candidate.src);
+          for (const candidate of descriptor.srcSet?.split(',') ?? []) generatedPaths.push(candidate.trim().split(/\s+/)[0]);
+          for (const format of descriptor.formats ?? []) {
+            for (const candidate of format.srcSet.split(',')) generatedPaths.push(candidate.trim().split(/\s+/)[0]);
+          }
+        }
+        generatedPaths = [...new Set(generatedPaths)];
+        const manifestPath = path.resolve(process.cwd(), '.astro', 'public-image-manifest.json');
+        await mkdir(path.dirname(manifestPath), { recursive: true });
+        await writeFile(manifestPath, `${JSON.stringify(imageBuild, null, 2)}\n`);
+        logger.info(`Prepared ${imageBuild.cards.length} published social cards and ${Object.keys(imageBuild.mediaByRoute).length} responsive media sets from the build snapshot.`);
       },
       'astro:build:done': async ({ dir }) => {
         if (!isStaticBuild || generatedPaths.length === 0) return;

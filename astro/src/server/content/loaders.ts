@@ -2,6 +2,8 @@ import type {
   AnnouncementSettings, BlogRecord, ClinicRecord, ConditionRecord, ContentPageRecord,
   HomePageRecord, ProviderRecord, ReviewRecord, ServiceUpdateRecord, TrackingSettings,
 } from "../../../../src/shared/content/models.ts";
+import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import path from "node:path";
 import { sortByDateDescending, sortByOrder } from "../../../../src/shared/content/urls.ts";
 import { validateContentRecord, type ContentMode } from "../../../../src/shared/content/validation.ts";
 import { getAstroServerConfig } from "../config.ts";
@@ -102,13 +104,68 @@ async function loadPublishedBuildSnapshot(): Promise<PublishedContentSnapshot> {
 }
 
 let staticBuildSnapshot: Promise<PublishedContentSnapshot> | undefined;
+const buildSnapshotPath = () => path.resolve(process.cwd(), ".astro", "published-content-snapshot.json");
 
-/** Memoize only within the static-build module instance; draft and SSR reads are always fresh. */
+function isPublishedSnapshot(value: unknown): value is PublishedContentSnapshot {
+  if (!value || typeof value !== "object") return false;
+  const snapshot = value as Record<string, unknown>;
+  return ["blogs", "clinics", "conditions", "providers", "serviceUpdates", "reviews"]
+    .every((key) => Array.isArray(snapshot[key]));
+}
+
+async function readPublishedSnapshotFile(): Promise<PublishedContentSnapshot | null> {
+  const filePath = buildSnapshotPath();
+  let serialized: string;
+  try { serialized = await readFile(filePath, "utf8"); }
+  catch (error) {
+    if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") return null;
+    throw new Error("Could not read the private published content snapshot");
+  }
+  let value: unknown;
+  try { value = JSON.parse(serialized); }
+  catch { throw new Error("The private published content snapshot is malformed"); }
+  if (!isPublishedSnapshot(value)) throw new Error("The private published content snapshot has an invalid shape");
+  return value;
+}
+
+async function writePublishedSnapshotFile(snapshot: PublishedContentSnapshot): Promise<void> {
+  const filePath = buildSnapshotPath();
+  await mkdir(path.dirname(filePath), { recursive: true });
+  const temporaryPath = `${filePath}.${process.pid}.${Date.now()}.tmp`;
+  await writeFile(temporaryPath, `${JSON.stringify(snapshot)}\n`, { flag: "wx" });
+  await rename(temporaryPath, filePath);
+}
+
+function memoizedSnapshot(work: Promise<PublishedContentSnapshot>): Promise<PublishedContentSnapshot> {
+  staticBuildSnapshot = work.catch((error) => {
+    staticBuildSnapshot = undefined;
+    throw error;
+  });
+  return staticBuildSnapshot;
+}
+
+/**
+ * Static builds refresh a private disk snapshot in the Node build hook so
+ * Astro's separate Vite prerender context can reuse it without another CMS
+ * collection crawl. Draft/SSR reads never read or write this file.
+ */
 export async function getPublishedBuildSnapshot(options: { staticBuild?: boolean } = {}): Promise<PublishedContentSnapshot> {
   const isStaticBuild = options.staticBuild ?? import.meta.env?.PUBLIC_ASTRO_TARGET === "static";
   if (!isStaticBuild) return loadPublishedBuildSnapshot();
+  if (options.staticBuild === true) {
+    return memoizedSnapshot(loadPublishedBuildSnapshot().then(async (snapshot) => {
+      await writePublishedSnapshotFile(snapshot);
+      return snapshot;
+    }));
+  }
   if (!staticBuildSnapshot) {
-    staticBuildSnapshot = loadPublishedBuildSnapshot().catch((error) => {
+    staticBuildSnapshot = (async () => {
+      const existing = await readPublishedSnapshotFile();
+      if (existing) return existing;
+      const snapshot = await loadPublishedBuildSnapshot();
+      await writePublishedSnapshotFile(snapshot);
+      return snapshot;
+    })().catch((error) => {
       staticBuildSnapshot = undefined;
       throw error;
     });
