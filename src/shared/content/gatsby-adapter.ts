@@ -79,12 +79,18 @@ interface GatsbyClinicHour {
   shot_hours?: { start_time?: string | null; end_time?: string | null } | null;
 }
 
-/** Normalize nullable Gatsby text to the empty string used by required view fields. */
+/** Normalize optional Gatsby text for required shared fields.
+ * @param value Nullable string from a Gatsby query.
+ * @returns The original nonempty string, or `""` when absent or empty.
+ */
 function stringOrEmpty(value: string | null | undefined): string {
   return value || "";
 }
 
-/** Keep absent optional fields out of objects crossing the JSON content boundary. */
+/** Recursively omit undefined object fields while preserving nulls and array positions.
+ * @param value Object, array, or scalar to normalize.
+ * @returns The same data shape with undefined object properties removed.
+ */
 function omitUndefined<T>(value: T): T {
   if (Array.isArray(value)) return value.map(omitUndefined) as T;
   if (value && typeof value === "object") {
@@ -97,7 +103,10 @@ function omitUndefined<T>(value: T): T {
   return value;
 }
 
-/** Parse Gatsby's serialized internal content, returning null for invalid or non-object JSON. */
+/** Parse Gatsby's serialized internal content as a JSON object.
+ * @param value Nullable JSON text.
+ * @returns A parsed object, or null for empty, malformed, array, or scalar input.
+ */
 function readInternalContent(value: string | null | undefined): Record<string, unknown> | null {
   if (!value) return null;
   try {
@@ -108,19 +117,29 @@ function readInternalContent(value: string | null | undefined): Record<string, u
   }
 }
 
-/** Keep a parsed value only when it is an array of recursively JSON-safe items. */
+/** Narrow unknown data to an array of JSON-safe values.
+ * @param value Untrusted parsed data.
+ * @returns A JSON value array, or undefined when it is not a valid array.
+ */
 function jsonArray(value: unknown): JsonValue[] | undefined {
   if (!Array.isArray(value)) return undefined;
   return value.every(isJsonValue) ? value : undefined;
 }
 
-/** Read one rich-text field from Gatsby's serialized internal content. */
+/** Read a rich-text field from Gatsby's serialized internal content.
+ * @param node Gatsby query result with optional serialized internal content.
+ * @param key Either the `body` or `content` field to read.
+ * @returns A JSON-safe array, or undefined when missing or invalid.
+ */
 export function mapGatsbyBlocks(node: GatsbyNode, key: "body" | "content"): JsonValue[] | undefined {
   const source = readInternalContent(node.internal?.content);
   return jsonArray(source?.[key]);
 }
 
-/** Convert nullable Gatsby image metadata to a serializable shared media descriptor. */
+/** Convert nullable Gatsby image metadata to plain shared media data.
+ * @param media Nullable Gatsby or Strapi media query result.
+ * @returns A descriptor with public URL, alt text, optional pixel dimensions/srcSet, or undefined without a source.
+ */
 export function mapGatsbyMedia(media: GatsbyMedia | null | undefined): MediaDescriptor | undefined {
   if (!media) return undefined;
   const image = media.localFile?.childImageSharp?.gatsbyImageData;
@@ -141,14 +160,20 @@ export function mapGatsbyMedia(media: GatsbyMedia | null | undefined): MediaDesc
   return descriptor;
 }
 
-/** Normalize queried Gatsby metadata into public site settings. */
+/** Normalize queried Gatsby metadata into public site settings.
+ * @param metadata Nullable title/site URL values selected by the Gatsby query.
+ * @returns Site settings with an empty title when no title is available.
+ */
 export function mapGatsbySiteSettings(metadata: { title?: string | null; siteUrl?: string | null }): SiteSettings {
   const settings: SiteSettings = { title: metadata.title || "" };
   if (metadata.siteUrl) settings.url = metadata.siteUrl;
   return settings;
 }
 
-/** Map a Gatsby blog query node to the framework-neutral blog contract. */
+/** Map a Gatsby blog query node to the shared content contract.
+ * @param node Gatsby blog fields, including nullable slug, date, content, and thumbnail.
+ * @returns A normalized blog record with serializable content and media.
+ */
 export function mapGatsbyBlog(node: GatsbyNode): BlogRecord {
   return omitUndefined({
     id: node.id,
@@ -162,7 +187,10 @@ export function mapGatsbyBlog(node: GatsbyNode): BlogRecord {
   }) as BlogRecord;
 }
 
-/** Map a Gatsby condition query node to the shared condition contract. */
+/** Map a Gatsby condition query node to the shared content contract.
+ * @param node Gatsby condition fields, including nullable slug, ordering, content, and thumbnail.
+ * @returns A normalized condition record.
+ */
 export function mapGatsbyCondition(node: GatsbyNode): ConditionRecord {
   return omitUndefined({
     id: node.id,
@@ -176,7 +204,10 @@ export function mapGatsbyCondition(node: GatsbyNode): ConditionRecord {
   }) as ConditionRecord;
 }
 
-/** Map Gatsby provider fields and embedded rich text without leaking query types. */
+/** Map Gatsby provider fields and rich text into the framework-neutral shape.
+ * @param node Gatsby provider fields with nullable name, retirement, and review groups.
+ * @returns A normalized provider record with optional nested values omitted when absent.
+ */
 export function mapGatsbyProvider(node: GatsbyNode & {
   name?: GatsbyProviderName | null;
   retirementNotice?: GatsbyProviderRetirementNotice | null;
@@ -214,7 +245,10 @@ export function mapGatsbyProvider(node: GatsbyNode & {
   }) as ProviderRecord;
 }
 
-/** Map Gatsby clinic fields, translating nested snake-case location and hour values. */
+/** Map Gatsby clinic fields, translating nested snake-case location and hour values.
+ * @param node Gatsby clinic query fields, including nullable location, contact, and hours.
+ * @returns A normalized clinic record with nullable query values omitted.
+ */
 export function mapGatsbyClinic(node: GatsbyNode & {
   location?: { address?: string | null; lat?: number | null; long?: number | null; placeId?: string | null; label_name?: string | null } | null;
   contact?: { phone?: string | null; fax?: string | null } | null;
@@ -244,7 +278,10 @@ export function mapGatsbyClinic(node: GatsbyNode & {
   }) as ClinicRecord;
 }
 
-/** Map a Gatsby service-update query node to the shared dated-record contract. */
+/** Map a Gatsby service-update query node to the shared record shape.
+ * @param node Gatsby update fields, including a nullable stored date.
+ * @returns A normalized update record; the nullable date remains available for route validation.
+ */
 export function mapGatsbyServiceUpdate(node: GatsbyNode): ServiceUpdateRecord {
   return omitUndefined({
     id: node.id,
@@ -256,7 +293,10 @@ export function mapGatsbyServiceUpdate(node: GatsbyNode): ServiceUpdateRecord {
   }) as ServiceUpdateRecord;
 }
 
-/** Type guard for adapter data that is safe to pass through as JSON. */
+/** Check whether unknown data can cross the framework boundary as JSON.
+ * @param value Any runtime value.
+ * @returns True for finite JSON scalars, arrays, and objects containing only JSON values.
+ */
 export function isJsonValue(value: unknown): value is JsonValue {
   if (value === null || typeof value === "string" || typeof value === "boolean") return true;
   if (typeof value === "number") return Number.isFinite(value);

@@ -1,4 +1,4 @@
-/** Values that can cross a framework boundary as plain JSON data. */
+/** JSON scalar values accepted across the framework boundary; numbers must be finite. */
 export type JsonPrimitive = string | number | boolean | null;
 /** Recursively JSON-safe data used for CMS rich text and dynamic-zone content. */
 export type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
@@ -10,9 +10,12 @@ export type DynamicZoneItem = { __component: string; [key: string]: JsonValue };
 
 /** A generated or uploaded image variant with its source dimensions and format. */
 export interface MediaFormat {
+  /** Public URL for this image variant. */
   src: string;
+  /** Intrinsic image dimensions in pixels. */
   width?: number;
   height?: number;
+  /** MIME type such as `image/webp`. */
   mimeType?: string;
   size?: number;
 }
@@ -20,12 +23,18 @@ export interface MediaFormat {
 /** Framework-neutral replacement for Gatsby's localFile/GatsbyImageData tree. */
 /** Plain media metadata shared by Gatsby and Astro views. */
 export interface MediaDescriptor {
+  /** Public image URL used as the default source. */
   src: string;
+  /** Alternative text presented to assistive technology. */
   alt: string;
+  /** Intrinsic image dimensions in pixels. */
   width?: number;
   height?: number;
+  /** MIME type such as `image/jpeg`. */
   mimeType?: string;
+  /** Browser `srcSet` candidates in HTML source-set syntax. */
   srcSet?: string;
+  /** Available named image encodings, such as WebP or AVIF. */
   formats?: Record<string, MediaFormat>;
   /** Optional CSS/background fallback for SSR and non-JavaScript rendering. */
   placeholder?: string;
@@ -33,13 +42,17 @@ export interface MediaDescriptor {
 
 /** Common identity, copy, rich-text, media, and date fields for published content. */
 export interface ContentRecord {
+  /** Stable CMS identifier, represented as a string. */
   id: string;
+  /** URL slug, or null when the CMS record has no slug. */
   slug: string | null;
+  /** Required display title after adapter normalization. */
   title: string;
   description?: string;
   body?: JsonValue[];
   content?: JsonValue[];
   image?: MediaDescriptor;
+  /** Optional CMS date text, commonly an ISO-like calendar date or timestamp. */
   date?: string | null;
 }
 

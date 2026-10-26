@@ -11,13 +11,14 @@ export type ContentFamily = "blog" | "condition" | "provider" | "clinic" | "serv
 /** Validation strictness: drafts may be incomplete, while published records must be routable. */
 export type ContentMode = "draft" | "published";
 
-/** Minimum fields shared by record families during boundary validation. */
+/** Minimal common record fields; clinics may also provide a nullable `clinicName` fallback. */
 type Candidate = Partial<ContentRecord> & { clinicName?: string | null };
 
-/**
- * Draft previews may omit required publishing fields while an editor is working.
- * Published records must have an identity, a useful title, and a routable URL.
- * Optional body/content/media fields are deliberately not required in either mode.
+/** Validate draft or published fields at the content boundary.
+ * @param record Partial shared content fields and an optional clinic-name fallback.
+ * @param family Content family whose route rules apply.
+ * @param mode Drafts are permissive; published records require a nonblank ID/title and valid route.
+ * @returns Human-readable issue strings; draft input currently returns an empty list.
  */
 export function validateContentRecord(
   record: Candidate,
