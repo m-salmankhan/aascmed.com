@@ -6,12 +6,16 @@ function pathFor(family: string, slug: string | null | undefined): string | null
   return `/${family}/${segment}/`;
 }
 
-function civilDateParts(date: string): { year: string; month: string; day: string } | null {
+export interface CivilDateParts { year: string; month: string; day: string }
+
+/** Read the stored calendar date without converting it through the server's local timezone. */
+export function civilDateParts(date: string): CivilDateParts | null {
   const match = /^(\d{4})-(\d{2})-(\d{2})(?:$|T)/.exec(date);
   if (!match) return null;
   const [, year, month, day] = match;
   if (date.includes("T") && !Number.isFinite(Date.parse(date))) return null;
-  const parsed = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+  // The multi-argument Date.UTC form treats years 0–99 as 1900–1999.
+  const parsed = new Date(`${year}-${month}-${day}T00:00:00Z`);
   if (parsed.getUTCFullYear() !== Number(year) || parsed.getUTCMonth() + 1 !== Number(month) || parsed.getUTCDate() !== Number(day)) {
     return null;
   }

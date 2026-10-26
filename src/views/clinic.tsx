@@ -11,6 +11,7 @@ import { Article } from "../components/posts/article";
 import { useSiteMetadata } from "../hooks/useSiteMetadata";
 import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 import type { ClinicRecord } from "../shared/content/models";
+import { clinicPath } from "../shared/content/urls";
 
 export interface ClinicViewProps { clinic?: ClinicRecord }
 
@@ -48,8 +49,7 @@ export function ClinicView({ clinic }: ClinicViewProps) {
     day: day.day || "",
     hours: day.shotHours ? formatHours(day.shotHours.startTime, day.shotHours.endTime) : "Closed",
   }));
-  const slugName = clinicName.toLowerCase().replace(/\s+/g, "-");
-  const slug = `/clinics/${slugName}/`;
+  const slug = clinicPath(clinic) || "/clinics/";
 
   const structuredData = {
     "@context": "https://schema.org",
@@ -113,6 +113,6 @@ export function ClinicView({ clinic }: ClinicViewProps) {
         </Column>
       </Columns>
     </main>
-    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }} />
   </HalfColumnsLayout>;
 }

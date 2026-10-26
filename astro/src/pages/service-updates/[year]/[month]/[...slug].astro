@@ -1,0 +1,43 @@
+import SiteDocument from '../../../../layouts/SiteDocument.astro';
+import { getServiceUpdateBySlug, getServiceUpdates } from '../../../../server/content/loaders.ts';
+import { getPageSiteData } from '../../../../server/content/site-data.ts';
+import { getRouteContentMode, isAstroPreview } from '../../../../server/content/route-data.ts';
+import { matchesServiceUpdateRoute } from '../../../../server/content/route-matching.ts';
+import { AstroServiceUpdatePage } from '../../../../../../src/views/astro-clinic-update-pages.tsx';
+import { AstroContentNotFound } from '../../../../../../src/views/astro-content-pages.tsx';
+
+const isStatic = import.meta.env.PUBLIC_ASTRO_TARGET === 'static';
+export const prerender = isStatic;
+
+export async function getStaticPaths() {
+  const updates = await getServiceUpdates('published');
+  return updates.flatMap((update) => {
+    const pathname = serviceUpdatePath(update);
+    if (!pathname) return [];
+    const [, year, month, ...slug] = pathname.slice('/service-updates/'.length).replace(/\/$/, '').split('/');
+    if (!year || !month || !slug.length) return [];
+    return [{ params: { year, month, slug: slug.join('/') } }];
+  });
+}
+
+const mode = getRouteContentMode();
+const year = Astro.params.year || '';
+const month = Astro.params.month || '';
+const slug = Astro.params.slug || '';
+const validDatePath = /^\d{4}$/.test(year) && /^(0[1-9]|1[0-2])$/.test(month) && Boolean(slug);
+let serviceUpdate = validDatePath ? await getServiceUpdateBySlug(slug, mode) : null;
+const pathname = Astro.url.pathname;
+if (!matchesServiceUpdateRoute(pathname, year, month, slug, serviceUpdate)) serviceUpdate = null;
+if (!serviceUpdate) Astro.response.status = 404;
+const siteData = serviceUpdate ? await getPageSiteData(mode) : undefined;
+if (isAstroPreview()) Astro.response.headers.set('Cache-Control', 'private, no-store');
+const title = serviceUpdate?.title || 'Untitled';
+const description = serviceUpdate?.description || '';
+---
+
+{serviceUpdate && siteData ? <SiteDocument title={title} description={description} pathname={pathname} siteSettings={siteData.siteSettings} trackingSettings={siteData.trackingSettings} ogType="article" useTracking>
+  <Fragment slot="head"><meta property="article:section" content="service-updates" /></Fragment>
+  <AstroServiceUpdatePage client:load pathname={pathname} siteData={siteData} serviceUpdate={serviceUpdate} />
+</SiteDocument> : <SiteDocument title="Page not found" description="The requested page could not be found." pathname={pathname} noIndex>
+  <AstroContentNotFound client:load />
+</SiteDocument>}

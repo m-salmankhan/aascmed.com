@@ -1,0 +1,17 @@
+import SiteDocument from '../../layouts/SiteDocument.astro';
+import { getServiceUpdatePage, getServiceUpdates } from '../../server/content/loaders.ts';
+import { getPageSiteData } from '../../server/content/site-data.ts';
+import { toServiceUpdateArchiveItems } from '../../server/content/clinic-update-items.ts';
+import { AstroServiceUpdatesArchivePage } from '../../../../src/views/astro-clinic-update-pages.tsx';
+
+const mode = import.meta.env.PUBLIC_ASTRO_TARGET === 'static' ? 'published' : 'draft';
+const [archive, updates, siteData] = await Promise.all([
+  getServiceUpdatePage(mode), getServiceUpdates(mode), getPageSiteData(mode),
+]);
+const heading = archive?.heading || 'Service Updates';
+const description = archive?.metaDescription || '';
+---
+
+<SiteDocument title={heading} description={description} pathname="/service-updates/" siteSettings={siteData.siteSettings} trackingSettings={siteData.trackingSettings} useTracking>
+  <AstroServiceUpdatesArchivePage client:load pathname="/service-updates/" siteData={siteData} heading={heading} blocks={archive?.text} serviceUpdates={toServiceUpdateArchiveItems(updates)} />
+</SiteDocument>

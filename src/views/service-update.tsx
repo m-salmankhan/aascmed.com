@@ -1,5 +1,4 @@
 import * as React from "react";
-import moment from "moment";
 import { css } from "@emotion/react";
 import { Breadcrumbs } from "../components/breadcrumbs";
 import { H1 } from "../components/headings";
@@ -11,6 +10,8 @@ import { gridSpacing } from "../styles/theme";
 import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 import { SiteLink } from "../shared/navigation/link";
 import type { ServiceUpdateRecord } from "../shared/content/models";
+import { formatContentDate } from "../shared/content/dates";
+import { serviceUpdatePath } from "../shared/content/urls";
 
 export interface ServiceUpdateViewProps { serviceUpdate: ServiceUpdateRecord; pathname: string }
 
@@ -19,11 +20,8 @@ export function ServiceUpdateView({ serviceUpdate, pathname }: ServiceUpdateView
   React.useEffect(() => setJsEnabled(true), []);
   const title = serviceUpdate.title || "Untitled";
   const rawDate = serviceUpdate.date;
-  const formattedDate = rawDate ? moment(rawDate).format("Do MMMM YYYY") : "";
-  const date = rawDate ? moment(rawDate) : null;
-  const slug = date?.isValid()
-    ? `/service-updates/${date.format("YYYY")}/${date.format("MM")}/${serviceUpdate.slug || ""}/`
-    : `/service-updates/${serviceUpdate.slug || ""}/`;
+  const formattedDate = formatContentDate(rawDate);
+  const slug = serviceUpdatePath(serviceUpdate) || pathname;
 
   return <PrimarySecondaryColumnsLayout>
     <main css={css`margin-bottom: 5rem;`}>

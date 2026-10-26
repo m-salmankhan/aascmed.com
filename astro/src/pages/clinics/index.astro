@@ -1,0 +1,17 @@
+import SiteDocument from '../../layouts/SiteDocument.astro';
+import { getClinics, getClinicsArchive } from '../../server/content/loaders.ts';
+import { getPageSiteData } from '../../server/content/site-data.ts';
+import { toClinicArchiveItems } from '../../server/content/clinic-update-items.ts';
+import { AstroClinicsArchivePage } from '../../../../src/views/astro-clinic-update-pages.tsx';
+
+const mode = import.meta.env.PUBLIC_ASTRO_TARGET === 'static' ? 'published' : 'draft';
+const [archive, clinics, siteData] = await Promise.all([
+  getClinicsArchive(mode), getClinics(mode), getPageSiteData(mode),
+]);
+const heading = archive?.heading || 'Clinics';
+const description = archive?.metaDescription || '';
+---
+
+<SiteDocument title={heading} description={description} pathname="/clinics/" siteSettings={siteData.siteSettings} trackingSettings={siteData.trackingSettings} useTracking>
+  <AstroClinicsArchivePage client:load pathname="/clinics/" siteData={siteData} heading={heading} blocks={archive?.text} practices={toClinicArchiveItems(clinics)} />
+</SiteDocument>

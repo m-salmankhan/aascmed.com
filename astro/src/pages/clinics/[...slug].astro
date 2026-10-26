@@ -1,0 +1,37 @@
+import SiteDocument from '../../layouts/SiteDocument.astro';
+import { getClinicBySlug, getClinics } from '../../server/content/loaders.ts';
+import { getPageSiteData } from '../../server/content/site-data.ts';
+import { getRouteContentMode, isAstroPreview } from '../../server/content/route-data.ts';
+import { matchesClinicRoute } from '../../server/content/route-matching.ts';
+import { AstroClinicPage } from '../../../../src/views/astro-clinic-update-pages.tsx';
+import { AstroContentNotFound } from '../../../../src/views/astro-content-pages.tsx';
+
+const isStatic = import.meta.env.PUBLIC_ASTRO_TARGET === 'static';
+export const prerender = isStatic;
+
+export async function getStaticPaths() {
+  const clinics = await getClinics('published');
+  return clinics.flatMap((clinic) => {
+    const pathname = clinicPath(clinic);
+    if (!pathname) return [];
+    return [{ params: { slug: pathname.slice('/clinics/'.length).replace(/\/$/, '') } }];
+  });
+}
+
+const mode = getRouteContentMode();
+const slug = Astro.params.slug || '';
+let clinic = slug ? await getClinicBySlug(slug, mode) : null;
+const pathname = Astro.url.pathname;
+if (!matchesClinicRoute(pathname, slug, clinic)) clinic = null;
+if (!clinic) Astro.response.status = 404;
+const siteData = clinic ? await getPageSiteData(mode) : undefined;
+if (isAstroPreview()) Astro.response.headers.set('Cache-Control', 'private, no-store');
+const title = clinic?.title || 'Untitled';
+const description = clinic?.description || '';
+---
+
+{clinic && siteData ? <SiteDocument title={title} description={description} pathname={pathname} siteSettings={siteData.siteSettings} trackingSettings={siteData.trackingSettings} appendBusinessNameToTitle={false} useTracking>
+  <AstroClinicPage client:load pathname={pathname} siteData={siteData} clinic={clinic} />
+</SiteDocument> : <SiteDocument title="Page not found" description="The requested page could not be found." pathname={pathname} noIndex>
+  <AstroContentNotFound client:load />
+</SiteDocument>}
