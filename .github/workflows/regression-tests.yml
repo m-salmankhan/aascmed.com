@@ -31,7 +31,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: regression-${{ github.event.issue.number || github.event.pull_request.number || github.ref }}-${{ github.event_name }}
+  group: regression-${{ github.event.issue.number || github.event.pull_request.number || github.ref }}-${{ github.event_name == 'issue_comment' && github.event.comment.id || github.event_name }}
   cancel-in-progress: true
 
 jobs:
@@ -65,6 +65,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+      statuses: read
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -191,7 +192,7 @@ jobs:
             const body = [
               marker,
               "### Run the website regression check",
-              "When the PR's Netlify deploy preview is ready, comment `/run-regression` on this PR. The browser comparison runs on demand and checks the PR preview against the current `main` branch build.",
+              "When the PR's Netlify deploy preview is ready, comment `/run-regression` on this PR. The browser comparison runs on demand and checks the PR preview against Netlify's `main` branch deployment.",
               "",
               "This is a quick visual comparison. If page text or photos changed between the main and PR builds, those changes may appear in the report too.",
             ].join("\n");

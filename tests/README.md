@@ -168,12 +168,15 @@ comparisons add multiple minutes, live fonts/maps and a reference deployment.
 For a quick PR review, same-repository PRs get a top-level instruction comment: after the
 Netlify deploy preview for the current head is ready, comment `/run-regression`.
 That run compares the PR's `deploy-preview-N--aascmed.netlify.app` deployment
-with `main--aascmed.netlify.app`, after verifying that the PR targets current
+with `main--aascmed.netlify.app`, after verifying that the PR includes current
 `main` and that Netlify reported a successful preview for the exact head commit.
-It records both commit SHAs and compares against `main`, not production. No
-content export or freeze is needed for this quick check. If page text, photos, or
-other published content changed between the builds, those changes can appear in
-the report alongside code and layout changes. The fast infrastructure job
+It records the PR head and the main commit seen when the run started. Netlify's
+`main--` URL is a moving branch alias, so it can still serve the previous
+successful deploy while a newer main deploy is pending or has failed. This is a
+quick, advisory comparison against the main deploy alias, not a commit-pinned
+baseline. No content export or freeze is needed. If page text, photos, or other
+published content changed between the builds, those changes can appear in the
+report alongside code and layout changes. The fast infrastructure job
 remains separate from both browser comparison paths. The instruction comment is
 posted to the PR conversation, not the review diff.
 

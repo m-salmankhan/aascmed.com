@@ -15,6 +15,17 @@ async function resolveCommentTargets({ github, owner, repo, pullNumber, actor })
   const { data: main } = await github.rest.repos.getBranch({ owner, repo, branch: "main" });
   assert.equal(pr.base.sha, main.commit.sha, "Update the PR branch to current main before running the comparison");
 
+  const { data: comparison } = await github.rest.repos.compareCommits({
+    owner,
+    repo,
+    base: main.commit.sha,
+    head: pr.head.sha,
+  });
+  assert.ok(
+    ["ahead", "identical"].includes(comparison.status),
+    "Update the PR branch to include the current main commit before running the comparison",
+  );
+
   const statuses = await github.paginate(github.rest.repos.listCommitStatusesForRef, {
     owner, repo, ref: pr.head.sha, per_page: 100,
   });
@@ -34,7 +45,7 @@ async function resolveCommentTargets({ github, owner, repo, pullNumber, actor })
     candidateURL: candidateURL.href,
     referenceURL: MAIN_REFERENCE_URL,
     candidateCommit: pr.head.sha,
-    baselineId: `Netlify main build at ${pr.base.sha}; PR #${pullNumber} preview at ${pr.head.sha}. Page content may have changed between builds.`,
+    baselineId: `Latest successful Netlify main branch deployment (main was ${main.commit.sha} when the comparison started; the branch alias is not pinned to that commit); PR #${pullNumber} preview at ${pr.head.sha}. Page content may have changed between builds.`,
   };
 }
 
