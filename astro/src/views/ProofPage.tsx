@@ -9,14 +9,14 @@ import type { MediaDescriptor } from '../../../src/shared/content/models';
 export type ProofDraft = { title: string; source: 'fixture' | 'strapi' };
 
 /** Serializable values used by the Stage 1 Astro rendering proof. */
-export interface ProofPageProps {
+export type ProofPageProps = {
   /** Display label for the static or server-rendered build target. */
   target: string;
   /** Preview title and provenance selected by the proof loader. */
   draft: ProofDraft;
   /** Hero image source and alternative text shared with the React renderer. */
   media: MediaDescriptor;
-}
+};
 
 /** Render the proof page from its target label, draft preview, and hero media.
  * @param props Build target label, preview data, and shared hero media descriptor.
