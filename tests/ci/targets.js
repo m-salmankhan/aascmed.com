@@ -29,13 +29,36 @@ async function resolveCommentTargets({ github, owner, repo, pullNumber, actor })
   const statuses = await github.paginate(github.rest.repos.listCommitStatusesForRef, {
     owner, repo, ref: pr.head.sha, per_page: 100,
   });
-  const deployment = statuses.find(status => status.context === NETLIFY_CONTEXT);
-  assert.ok(deployment, "Netlify has not reported a deploy preview for the current PR commit yet");
+  const candidateHostname = `deploy-preview-${pullNumber}--aascmed.netlify.app`;
+  const contextStatuses = statuses
+    .filter(status => status.context === NETLIFY_CONTEXT)
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  const deployment = contextStatuses
+    .find(status => {
+      try {
+        return new URL(status.target_url).hostname === candidateHostname;
+      } catch {
+        return false;
+      }
+    });
+  assert.ok(deployment, `Netlify has not reported a deploy preview for PR #${pullNumber} at the current commit yet`);
+  const newestContextStatus = contextStatuses[0];
+  if (newestContextStatus.created_at > deployment.created_at) {
+    let newestHost;
+    try {
+      newestHost = new URL(newestContextStatus.target_url).hostname;
+    } catch {}
+    assert.match(
+      newestHost || "",
+      /^deploy-preview-\d+--aascmed\.netlify\.app$/,
+      "Netlify reported a newer preview status that cannot be matched to a PR; wait for it to finish before retrying",
+    );
+  }
   assert.equal(deployment.state, "success", "Wait for the current PR commit's Netlify deploy preview to succeed, then try again");
 
   const candidateURL = new URL(deployment.target_url);
   assert.equal(candidateURL.protocol, "https:", "Netlify deploy preview must use HTTPS");
-  assert.equal(candidateURL.hostname, `deploy-preview-${pullNumber}--aascmed.netlify.app`, "Netlify status does not point to this PR's deploy preview");
+  assert.equal(candidateURL.hostname, candidateHostname, "Netlify status does not point to this PR's deploy preview");
   candidateURL.pathname = "/";
   candidateURL.search = "";
   candidateURL.hash = "";
