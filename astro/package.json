@@ -11,7 +11,8 @@
     "start:ssr": "node dist-ssr/server/entry.mjs",
     "typecheck": "astro check --config astro.config.static.mjs",
     "verify:proof": "node scripts/verify-proof.mjs",
-    "verify:runtime": "node scripts/verify-runtime.mjs"
+    "verify:runtime": "node scripts/verify-runtime.mjs",
+    "verify:document": "node scripts/verify-document.mjs"
   },
   "dependencies": {
     "@astrojs/node": "10.1.4",
