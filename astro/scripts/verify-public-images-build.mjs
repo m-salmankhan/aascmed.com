@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { publicImagesIntegration } from '../src/integrations/public-images.ts';
+import { buildPublishedSocialCards } from '../src/server/content/public-images.ts';
 import { clearBuildSnapshotBridge, readBuildSnapshotBridge, writeBuildSnapshotBridge } from '../src/server/content/build-snapshot-bridge.ts';
 
 const originalCwd = process.cwd();
@@ -20,6 +21,22 @@ const snapshotFor = (title) => ({
 try {
   await process.chdir(root);
   await writeFile(sourcePath, svg('#df4b31'));
+  const nestedPublicDir = path.join(root, 'nested-public');
+  const nestedBuild = await buildPublishedSocialCards({
+    blogs: [
+      { id: 'blog-one', slug: 'news/spring', title: 'Spring news', thumbnail: { src: sourcePath, alt: 'News thumbnail' } },
+      { id: 'blog-two', slug: 'guides/spring', title: 'Spring guide', thumbnail: { src: sourcePath, alt: 'Guide thumbnail' } },
+    ],
+    clinics: [], conditions: [],
+  }, { publicDir: nestedPublicDir, cacheDir: path.join(root, 'nested-cache') });
+  assert.deepEqual(Object.keys(nestedBuild.mediaByRoute).sort(), ['blog:guides/spring', 'blog:news/spring']);
+  assert.deepEqual(nestedBuild.cards.map(({ imagePath }) => imagePath).sort(), [
+    '/og-images/blog/guides/spring-cover.jpg', '/og-images/blog/news/spring-cover.jpg',
+  ]);
+  assert.notEqual(nestedBuild.cards[0].outputPath, nestedBuild.cards[1].outputPath);
+  for (const card of nestedBuild.cards) assert.ok(await stat(card.outputPath));
+  for (const media of Object.values(nestedBuild.mediaByRoute)) assert.ok(await stat(path.join(nestedPublicDir, 'media', path.basename(media.src))));
+
   delete process.env.ASTRO_BUILD_SNAPSHOT_ID;
   delete process.env.ASTRO_BUILD_SNAPSHOT_PATH;
   const staleId = '4bd18754-8486-4fa4-9118-8d18bba3536d';
@@ -75,7 +92,7 @@ try {
   assert.equal(snapshotLoads, 3);
   assert.equal((await stat(stagedCard)).mtimeMs, beforeReuse.mtimeMs, 'unchanged card files are reused across static builds');
   assert.ok(await stat(second.imagePath));
-  console.log('Public image build hook passed: static-only execution, per-build private snapshot identity, stale snapshot isolation, cleanup, and changed-content regeneration, and unchanged-card reuse.');
+  console.log('Public image build hook passed: static-only execution, per-build private snapshot identity, stale snapshot isolation, nested route/card preservation, cleanup, changed-content regeneration, and unchanged-card reuse.');
 } finally {
   await process.chdir(originalCwd);
   delete process.env.ASTRO_BUILD_SNAPSHOT_ID;

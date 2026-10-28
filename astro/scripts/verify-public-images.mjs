@@ -23,6 +23,9 @@ try {
   }), /cache must be outside the public output directory/);
   await mkdir(publicDir, { recursive: true });
   await writeFile(sourcePath, svg('#e94b35'));
+  await assert.rejects(buildSocialCards([{
+    kind: 'blog', slug: 'bad/../slug', title: 'Unsafe route',
+  }], { publicDir, cacheDir }), /Invalid public image path/);
   const entry = { kind: 'blog', slug: 'fixture-post', title: 'Fixture social card', backgroundImage: sourcePath };
   const first = await buildSocialCards([entry], { publicDir, cacheDir });
   assert.equal(first[0].imagePath, '/og-images/blog/fixture-post-cover.jpg');
@@ -119,7 +122,7 @@ try {
   const gatsbyOutput = path.join(root, 'gatsby-adapter.jpg');
   await gatsbyGenerator.generateOGImage({ title: 'Gatsby adapter fixture', backgroundImagePath: sourcePath, outputPath: gatsbyOutput });
   assert.deepEqual(await sharp(gatsbyOutput).metadata().then(({ width, height }) => [width, height]), [1200, 630]);
-  console.log('Public image fixtures passed: deterministic bytes, cache hit, same-path media change, absent thumbnail, private cache placement, Mapbox token isolation, approved and blocked remote hosts, and responsive AVIF/WebP/JPEG output.');
+  console.log('Public image fixtures passed: deterministic bytes, cache hit, same-path media change, absent thumbnail, safe slug segments, private cache placement, Mapbox token isolation, approved and blocked remote hosts, and responsive AVIF/WebP/JPEG output.');
 } finally {
   await rm(root, { recursive: true, force: true });
 }

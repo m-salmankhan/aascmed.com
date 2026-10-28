@@ -67,6 +67,15 @@ function safeSegment(value: string): string {
   return normalized;
 }
 
+function safePathSegments(value: string): string[] {
+  if (!value || value.includes('\\')) throw new Error(`Invalid public image path: ${value}`);
+  const segments = value.split('/');
+  if (segments.some((segment) => !segment || segment === '.' || segment === '..')) {
+    throw new Error(`Invalid public image path: ${value}`);
+  }
+  return segments.map(safeSegment);
+}
+
 function basenameFromSource(source?: string): string {
   if (!source) return 'default';
   let basename = source;
@@ -233,12 +242,14 @@ export async function buildSocialCards(entries: SocialCardEntry[], options: Publ
   for (const entry of entries) {
     if (!['blog', 'conditions', 'clinics'].includes(entry.kind)) throw new Error(`Unsupported social card kind: ${entry.kind}`);
     const kind = entry.kind;
-    const slug = safeSegment(entry.slug);
+    const slugSegments = safePathSegments(entry.slug);
+    const slug = slugSegments.join('/');
     const mediaName = safeSegment(entry.mediaName || (entry.mapLocation
       ? `${slug}-${entry.mapLocation.latitude}-${entry.mapLocation.longitude}-map`
       : basenameFromSource(entry.backgroundImage)));
-    const imagePath = `/og-images/${kind}/${slug}-${mediaName}.jpg`;
-    const outputPath = path.join(cardsDir, kind, `${slug}-${mediaName}.jpg`);
+    const fileName = `${slugSegments.at(-1)}-${mediaName}.jpg`;
+    const imagePath = `/og-images/${kind}/${[...slugSegments.slice(0, -1), fileName].join('/')}`;
+    const outputPath = path.join(cardsDir, kind, ...slugSegments.slice(0, -1), fileName);
     const cacheKey = `${kind}:${slug}:${mediaName}`;
     let mediaBytes: Buffer | undefined;
     const isMapboxMap = !entry.backgroundImage && !!entry.mapLocation && !!options.mapboxToken;

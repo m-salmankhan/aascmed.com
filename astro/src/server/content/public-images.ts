@@ -15,7 +15,13 @@ export interface PublishedImageBuildResult {
   mediaByRoute: Record<string, MediaDescriptor>;
 }
 
-const routeSlug = (pathname: string | null): string | null => pathname?.split('/').filter(Boolean).at(-1) ?? null;
+function routeSlug(pathname: string | null, family: 'blog' | 'conditions' | 'clinics'): string | null {
+  if (!pathname) return null;
+  const prefix = `/${family}/`;
+  if (!pathname.startsWith(prefix)) return null;
+  const slug = pathname.slice(prefix.length).replace(/\/$/, '');
+  return slug && !slug.split('/').some((segment) => !segment || segment === '.' || segment === '..') ? slug : null;
+}
 
 /** Convert an already-loaded published snapshot to public cards; this adapter never requests CMS data. */
 export function publishedSocialCardEntries(
@@ -24,15 +30,15 @@ export function publishedSocialCardEntries(
 ): SocialCardEntry[] {
   const entries: SocialCardEntry[] = [];
   for (const blog of collections.blogs) {
-    const slug = routeSlug(blogPath(blog.slug));
+    const slug = routeSlug(blogPath(blog.slug), 'blog');
     if (slug) entries.push({ kind: 'blog', slug, title: blog.heading || blog.title, backgroundImage: blog.thumbnail?.src });
   }
   for (const condition of collections.conditions) {
-    const slug = routeSlug(conditionPath(condition.slug));
+    const slug = routeSlug(conditionPath(condition.slug), 'conditions');
     if (slug) entries.push({ kind: 'conditions', slug, title: condition.heading || condition.title, backgroundImage: condition.thumbnail?.src });
   }
   for (const clinic of collections.clinics) {
-    const slug = routeSlug(clinicPath(clinic));
+    const slug = routeSlug(clinicPath(clinic), 'clinics');
     if (!slug) continue;
     const latitude = clinic.location?.latitude;
     const longitude = clinic.location?.longitude;
@@ -57,7 +63,7 @@ export async function buildPublishedSocialCards(
   const mediaByRoute: Record<string, MediaDescriptor> = {};
   const buildResponsive = async (kind: 'blog' | 'condition', record: BlogRecord | ConditionRecord) => {
     const route = kind === 'blog' ? blogPath(record.slug) : conditionPath(record.slug);
-    const slug = routeSlug(route);
+    const slug = routeSlug(route, kind === 'blog' ? 'blog' : 'conditions');
     const media = record.thumbnail;
     if (!slug || !media?.src) return;
     mediaByRoute[`${kind}:${slug}`] = await buildResponsiveImage({
