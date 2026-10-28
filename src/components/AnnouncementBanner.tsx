@@ -1,54 +1,10 @@
 import React from 'react';
-import { useStaticQuery, graphql } from 'gatsby';
 import { ErrorNotice } from './forms/notices';
 import { SuccessNotice } from './forms/notices';
 import { InfoNotice } from './forms/notices';
 import { css } from '@emotion/react';
 import { StrapiBlocksRenderer } from './strapi/blocks-renderer';
-
-type NoticeType = 'error' | 'info' | 'success';
-
-interface Notice {
-    enabled: boolean;
-    type: NoticeType;
-    message: any[] | null;
-}
-
-
-function validateNoticeType(noticeTypeStr: string | null): NoticeType {
-    if (noticeTypeStr === 'error' || noticeTypeStr === 'info' || noticeTypeStr === 'success') {
-        return noticeTypeStr;
-    }
-    return 'info';
-}
-
-function parseAnnouncementQueryResponse(response: Queries.AnnouncementQuery): Notice {
-    const announcement = response.strapiAnnouncement;
-    
-    if (!announcement) {
-        return {
-            enabled: false,
-            type: "info",
-            message: null,
-        }
-    }
-
-    const enabled = !!announcement.enabled;
-    const type = validateNoticeType(announcement.type);
-    
-    // Parse the message from internal.content
-    const rawContent = announcement.internal?.content;
-    const parsedData = rawContent ? JSON.parse(rawContent) : null;
-    const message = parsedData?.message as any[] | null;
-
-    return {
-        enabled,
-        type,
-        message,
-    }
-}
-
-
+import type { AnnouncementSettings } from '../shared/content/models';
 
 const dismissKey = "announcementDismissed"
 const onDismiss = () => {
@@ -66,24 +22,12 @@ const announcementStyles = css`
     border-radius: 0;
 `;
 
-interface AnnnouncementProps {
-  className?: string
+interface AnnouncementBannerProps {
+  announcement: AnnouncementSettings;
+  className?: string;
 }
 
-const AnnouncementBanner = ({className}: AnnnouncementProps) => {
-    const data: Queries.AnnouncementQuery = useStaticQuery(graphql`
-        query Announcement {
-            strapiAnnouncement {
-                enabled
-                type
-                internal {
-                    content
-                }
-            }
-        }
-    `);
-    const announcement: Notice = parseAnnouncementQueryResponse(data);
-    
+const AnnouncementBanner = ({ announcement, className }: AnnouncementBannerProps) => {
     if (!announcement.enabled || wasDismissed()) {
         return <></>;
     }

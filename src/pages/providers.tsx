@@ -7,7 +7,7 @@ import { css } from "@emotion/react";
 import { SectionHeader, stylesBigH1 } from "../components/headings";
 import { ProviderArchive, ProviderSummary } from "../components/providers";
 import { gridSpacing } from "../styles/theme";
-import { SEO } from "../components/seo";
+import { GatsbySEO as SEO } from "../adapters/gatsby/seo";
 import { createExcerpt } from "../utils/strapi-excerpt";
 import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 

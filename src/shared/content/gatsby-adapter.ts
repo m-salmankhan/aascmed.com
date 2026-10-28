@@ -7,6 +7,8 @@ import type {
   ProviderRecord,
   SiteSettings,
   ServiceUpdateRecord,
+  AnnouncementSettings,
+  TrackingSettings,
 } from "./models";
 
 /** Gatsby image plugin output fields used to extract a plain media source. */
@@ -46,7 +48,12 @@ interface GatsbyNode {
   clinic_name?: string | null;
   thumbnail?: GatsbyMedia | null;
   image?: GatsbyMedia | null;
-  internal?: { content?: string | null } | null;
+  internal?: GatsbyInternalContent | null;
+}
+
+/** Serialized internal field attached to Gatsby's queried content node. */
+interface GatsbyInternalContent {
+  content?: string | null;
 }
 
 /** Nullable Gatsby provider-name fields normalized into the shared provider record. */
@@ -82,6 +89,22 @@ interface GatsbyClinicHour {
 type GatsbySiteMetadata = {
   title?: string | null;
   siteUrl?: string | null;
+  twitterHandle?: string | null;
+};
+
+/** Optional analytics identifiers selected from Gatsby site tracking settings. */
+type GatsbyTrackingInfo = {
+  googleAnalyticsId?: string | null;
+  googleTagManagerId?: string | null;
+  pixelId?: string | null;
+};
+
+/** Banner enablement, style, and serialized message selected from Gatsby. */
+type GatsbyAnnouncementNode = {
+  enabled?: boolean | null;
+  /** Raw CMS style value; unsupported values normalize to the informational style. */
+  type?: string | null;
+  internal?: GatsbyInternalContent | null;
 };
 
 /** Nullable Gatsby provider query fields normalized into the shared provider record. */
@@ -196,13 +219,42 @@ export function mapGatsbyMedia(media: GatsbyMedia | null | undefined): MediaDesc
 }
 
 /** Normalize queried Gatsby metadata into public site settings.
- * @param metadata Nullable title/site URL values selected by the Gatsby query.
- * @returns Site settings with an empty title when no title is available.
+ * @param metadata Site title, canonical URL, and optional social account handle.
+ * @returns Settings with a default title when absent and optional URL/handle fields.
  */
 export function mapGatsbySiteSettings(metadata: GatsbySiteMetadata): SiteSettings {
-  const settings: SiteSettings = { title: metadata.title || "" };
+  const settings: SiteSettings = { title: metadata.title || "Untitled Site" };
   if (metadata.siteUrl) settings.url = metadata.siteUrl;
+  if (metadata.twitterHandle) settings.twitterHandle = metadata.twitterHandle;
   return settings;
+}
+
+/** Map optional Gatsby analytics IDs to public tracking settings.
+ * @param tracking Site query result containing any configured analytics identifiers.
+ * @returns All three public IDs, with empty values for missing configuration.
+ */
+export function mapGatsbyTrackingSettings(tracking?: GatsbyTrackingInfo | null): TrackingSettings {
+  return {
+    googleAnalyticsId: tracking?.googleAnalyticsId || "",
+    googleTagManagerId: tracking?.googleTagManagerId || "",
+    pixelId: tracking?.pixelId || "",
+  };
+}
+
+/** Map CMS announcement content to the banner's shared state.
+ * @param node Optional announcement query result and serialized message content.
+ * @returns Normalized banner state; unrecognized types use the informational style.
+ */
+export function mapGatsbyAnnouncement(node?: GatsbyAnnouncementNode | null): AnnouncementSettings {
+  const type = node?.type === "error" || node?.type === "success" ? node.type : "info";
+  const source = readInternalContent(node?.internal?.content);
+  const message = jsonArray(source?.message);
+
+  return omitUndefined({
+    enabled: node?.enabled === true,
+    type,
+    message,
+  }) as AnnouncementSettings;
 }
 
 /** Map a Gatsby blog query node to the shared content contract.

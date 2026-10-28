@@ -6,7 +6,7 @@ import { Container } from "../components/containers";
 import { gridSpacing } from "../styles/theme";
 import { PracticeArchive, PracticeSummary } from "../components/practices/practice-archive";
 import { ContactSection } from "../components/contact/full-form";
-import { SEO } from "../components/seo";
+import { GatsbySEO as SEO } from "../adapters/gatsby/seo";
 import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 
 const ContactPage = ({ data }: PageProps<Queries.ContactPageQuery>) => {
@@ -27,6 +27,7 @@ const ContactPage = ({ data }: PageProps<Queries.ContactPageQuery>) => {
     phone: clinic.contact?.phone || "",
     fax: clinic.contact?.fax || "",
   }));
+  const clinicOptions = data.practices.nodes.flatMap((clinic) => clinic?.clinic_name ? [clinic.clinic_name] : []);
 
   return (
     <Layout>
@@ -39,6 +40,7 @@ const ContactPage = ({ data }: PageProps<Queries.ContactPageQuery>) => {
           <ContactSection
             title={heading}
             textContent={textBlocks ? <StrapiBlocksRenderer content={textBlocks} /> : undefined}
+            clinicOptions={clinicOptions}
             css={css`margin: 0 -${gridSpacing / 2}rem`}
           />
           <PracticeArchive

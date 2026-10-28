@@ -1,5 +1,5 @@
 import { Checkbox, DropdownInput, TextArea, TextInput } from "../forms";
-import { Script, graphql, useStaticQuery } from "gatsby";
+import { Script } from "gatsby";
 import React, { FormEventHandler, useEffect, useRef, useState } from "react";
 import { PrimaryButton } from "../buttons";
 import { css } from "@emotion/react";
@@ -18,11 +18,17 @@ enum FormState {
     ERROR
 }
 
-interface ContactFormProps {
-    className?: string,
-    clinic?: string
-}
-export const ContactForm: React.FC<ContactFormProps> = (props) => {
+/** Contact form data; a selector needs clinic options unless one clinic is fixed. */
+type ContactFormProps = { className?: string } & (
+    | { clinicOptions: readonly string[]; clinic?: undefined }
+    | { clinic: string; clinicOptions?: never }
+);
+
+/** Render the contact form from explicit clinic-selection data.
+ * @param props Available clinic labels or a fixed clinic, with optional class styling.
+ * @returns The form with its current submission-status notices.
+ */
+export function ContactForm(props: ContactFormProps): React.ReactElement {
     const [formState, setFormState] = useState(FormState.DEFAULT);
     const [formData, setFormData] = useState<FormData | undefined>(undefined);
     const [fieldErrors, setFieldErrors] = useState<ContactFormFieldErrors | undefined>();
@@ -30,15 +36,6 @@ export const ContactForm: React.FC<ContactFormProps> = (props) => {
     const formRef = useRef<HTMLFormElement>(null);
 
     const gtag = useGTag();
-
-    const data: Queries.ClinicNamesQuery = useStaticQuery(graphql`
-    query ClinicNames {
-      allStrapiClinic {
-        clinics: nodes {
-          clinic_name
-        }
-      }
-    }`);
 
     // update state variables. actual api call happens on rerender
     const formSubmisisonHandler: FormEventHandler<HTMLFormElement> = (event) => {
@@ -163,8 +160,8 @@ export const ContactForm: React.FC<ContactFormProps> = (props) => {
                     props.clinic === undefined ?
                         <DropdownInput label={"Preferred Location"} name="clinic" defaultValue={"none"} error={fieldErrors?.clinic?.join(". ")}>
                             <option value={"none"} disabled={true}>Select a clinic</option>
-                            {data.allStrapiClinic.clinics.map((clinic, idx) =>
-                                <option key={idx} value={clinic.clinic_name || idx}>{clinic.clinic_name}</option>
+                            {props.clinicOptions.map((clinic) =>
+                                <option key={clinic} value={clinic}>{clinic}</option>
                             )}
                         </DropdownInput> :
                         <input type="hidden" name="clinic" value={props.clinic} />

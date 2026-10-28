@@ -5,7 +5,7 @@ import { Breadcrumbs } from "../components/breadcrumbs";
 import { css } from "@emotion/react";
 import { Container } from "../components/containers";
 import { gridSpacing } from "../styles/theme";
-import { SEO } from "../components/seo";
+import { GatsbySEO as SEO } from "../adapters/gatsby/seo";
 import { BlogArchive, BlogSummary } from "../components/blog-posts";
 import { GatsbyImage, getImage } from "gatsby-plugin-image";
 import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";

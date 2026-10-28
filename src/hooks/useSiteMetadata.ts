@@ -1,21 +1,11 @@
-import {graphql, useStaticQuery} from "gatsby";
+import { useSiteData } from "../shared/data/site-data";
 
 export const useSiteMetadata = () => {
-    const data: Queries.SiteTitleQuery = useStaticQuery(graphql`
-        query SiteTitle {
-          site {
-            siteMetadata {
-              title
-              siteUrl
-              twitterHandle
-            }
-          }
-        }
-      `);
+    const { siteSettings } = useSiteData();
 
     return {
-        title: data.site?.siteMetadata?.title || "Untitled Site",
-        url: data.site?.siteMetadata?.siteUrl || "",
-        twitter: data.site?.siteMetadata?.twitterHandle,
+        title: siteSettings.title || "Untitled Site",
+        url: siteSettings.url || "",
+        twitter: siteSettings.twitterHandle,
     };
 }

@@ -2,7 +2,7 @@ import { HeadProps, Link, PageProps } from "gatsby"
 import { Layout } from "../components/layouts/default";
 import { css } from "@emotion/react";
 import { Container } from "../components/containers";
-import { SEO } from "../components/seo";
+import { GatsbySEO as SEO } from "../adapters/gatsby/seo";
 import { stylesBigH1 } from "../components/headings";
 import { Logo } from "../components/logo";
 import { colours } from "../styles/theme";

@@ -4,7 +4,7 @@ import { Breadcrumbs } from "../components/breadcrumbs";
 import { Columns, MainCol, PrimarySecondaryColumnsLayout, SideCol } from "../components/layouts/main-side-column";
 import { Article } from "../components/posts/article";
 import { H1 } from "../components/headings";
-import { SEO } from "../components/seo";
+import { GatsbySEO as SEO } from "../adapters/gatsby/seo";
 import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 
 const PrivacyPage = ({ data, location, children }: PageProps<Queries.PrivacyPageQuery>) => {

@@ -8,7 +8,7 @@ import { MapBox } from "../components/mapbox/dynamic";
 import { PrimaryAnchor } from "../components/buttons";
 import { Table } from "../components/tables";
 import { ContactForm } from "../components/contact";
-import { SEO } from "../components/seo";
+import { GatsbySEO as SEO } from "../adapters/gatsby/seo";
 import { Article } from "../components/posts/article";
 import { useSiteMetadata } from "../hooks/useSiteMetadata";
 import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
