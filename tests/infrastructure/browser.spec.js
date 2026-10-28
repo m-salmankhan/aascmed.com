@@ -144,14 +144,17 @@ test("invalid structured data fails rather than disappearing from the contract",
   await expect(pageContract(page)).rejects.toThrow(/JSON/);
 });
 
-test("JavaScript-enabled contracts ignore noscript fallback markup in content and link labels", async ({ page }) => {
+test("contracts ignore non-rendered asset and fallback markup in content and link labels", async ({ page }) => {
   const body = fixture.replace('<a href="/contact/">Contact</a>',
-    '<a href="/clinics/test/">Clinic<noscript><img src="/fallback-one.png" alt="Fallback one"></noscript></a>');
+    '<a href="/clinics/test/">Clinic<script type="application/json">{"loader":"one"}</script><style>.unused { color: red }</style><noscript><img src="/fallback-one.png" alt="Fallback one"></noscript></a>');
   await page.route(url, route => route.fulfill({ contentType: "text/html", body }));
   await preparePage(page, url);
   const original = await pageContract(page);
   await page.locator("#main noscript").evaluate(element => {
     element.textContent = '<picture><img src="/fallback-two.png" alt="Fallback two"></picture>';
+  });
+  await page.locator('#main script[type="application/json"]').evaluate(element => {
+    element.textContent = '{"loader":"two"}';
   });
   const updated = await pageContract(page);
   expect(updated.content).toBe(original.content);
