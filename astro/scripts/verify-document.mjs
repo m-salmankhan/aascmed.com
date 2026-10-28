@@ -16,7 +16,7 @@ const cmsUrl = `http://127.0.0.1:${cms.address().port}`;
 async function runBuild(config) {
   await new Promise((resolve, reject) => {
     const child = spawn(process.execPath, ['node_modules/astro/bin/astro.mjs', 'build', '--config', config], {
-      env: { ...process.env, ASTRO_STRAPI_API_URL: cmsUrl },
+      env: { ...process.env, GATSBY_STRAPI_API_URL: cmsUrl },
       stdio: 'inherit',
     });
     child.once('error', reject);
@@ -78,7 +78,7 @@ try {
     });
   });
   app = spawn(process.execPath, ['dist-ssr/server/entry.mjs'], {
-    env: { ...process.env, HOST: '127.0.0.1', PORT: String(portProbe), ASTRO_STRAPI_API_URL: cmsUrl },
+    env: { ...process.env, HOST: '127.0.0.1', PORT: String(portProbe), GATSBY_STRAPI_API_URL: cmsUrl },
     stdio: 'ignore',
   });
   const base = `http://127.0.0.1:${portProbe}`;
