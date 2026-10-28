@@ -59,6 +59,22 @@ try {
   assert.match(media.formats?.[1]?.srcSet || '', /\.webp 640w/);
   assert.equal(media.sources?.length, 3, 'candidate widths include the original image width');
 
+  let allowedRemoteFetch = false;
+  const remoteMedia = await buildResponsiveImage({
+    source: 'https://media.example.test/cover.svg',
+    alt: 'Approved remote fixture',
+    outputDir: path.join(publicDir, 'remote-media'),
+    publicUrlPrefix: '/remote-media',
+    widths: [320],
+    allowedMediaHosts: ['media.example.test'],
+    fetch: async (_url, init) => {
+      allowedRemoteFetch = init?.redirect === 'error';
+      return new Response(await readFile(sourcePath), { headers: { 'content-type': 'image/svg+xml' } });
+    },
+  });
+  assert.equal(allowedRemoteFetch, true, 'approved remote hosts are fetched without following redirects');
+  assert.equal(remoteMedia.width, 900);
+
   let blockedRemoteFetch = false;
   await assert.rejects(buildResponsiveImage({
     source: 'https://127.0.0.1/private.jpg',
@@ -72,7 +88,7 @@ try {
   const gatsbyOutput = path.join(root, 'gatsby-adapter.jpg');
   await gatsbyGenerator.generateOGImage({ title: 'Gatsby adapter fixture', backgroundImagePath: sourcePath, outputPath: gatsbyOutput });
   assert.deepEqual(await sharp(gatsbyOutput).metadata().then(({ width, height }) => [width, height]), [1200, 630]);
-  console.log('Public image fixtures passed: deterministic bytes, cache hit, same-path media change, absent thumbnail, blocked remote hosts, and responsive AVIF/WebP/JPEG output.');
+  console.log('Public image fixtures passed: deterministic bytes, cache hit, same-path media change, absent thumbnail, approved and blocked remote hosts, and responsive AVIF/WebP/JPEG output.');
 } finally {
   await rm(root, { recursive: true, force: true });
 }
