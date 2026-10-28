@@ -1,7 +1,7 @@
 import { createCanvas, GlobalFonts, loadImage } from '@napi-rs/canvas';
 import sharp from 'sharp';
 import { createHash } from 'node:crypto';
-import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { MediaDescriptor } from '../../../src/shared/content/models';
@@ -87,11 +87,26 @@ async function fetchImage(source: string, fetcher: typeof fetch, allowedMediaHos
     }
     const response = await fetcher(url, { signal: AbortSignal.timeout(12_000), redirect: 'error' });
     if (!response.ok) throw new Error(`Image request returned HTTP ${response.status}`);
+    const maxBytes = 20 * 1024 * 1024;
     const contentLength = Number(response.headers.get('content-length') || 0);
-    if (contentLength > 20 * 1024 * 1024) throw new Error('Image exceeds the 20 MB build limit');
-    const arrayBuffer = await response.arrayBuffer();
-    if (arrayBuffer.byteLength > 20 * 1024 * 1024) throw new Error('Image exceeds the 20 MB build limit');
-    bytes = Buffer.from(arrayBuffer);
+    if (contentLength > maxBytes) throw new Error('Image exceeds the 20 MB build limit');
+    if (!response.body) throw new Error('Image response has no body');
+    const reader = response.body.getReader();
+    const chunks: Uint8Array[] = [];
+    let totalBytes = 0;
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        totalBytes += value.byteLength;
+        if (totalBytes > maxBytes) throw new Error('Image exceeds the 20 MB build limit');
+        chunks.push(value);
+      }
+    } catch (error) {
+      await reader.cancel().catch(() => undefined);
+      throw error;
+    }
+    bytes = Buffer.concat(chunks.map((chunk) => Buffer.from(chunk)), totalBytes);
   } else {
     bytes = await readFile(source);
   }
@@ -222,7 +237,7 @@ export async function buildSocialCards(entries: SocialCardEntry[], options: Publ
       ? mapboxStaticUrl(entry.mapLocation.latitude, entry.mapLocation.longitude, options.mapboxToken)
       : undefined);
     if (backgroundImage) {
-      try { mediaBytes = await fetchImage(backgroundImage, fetcher, allowedMediaHosts); } catch { /* Missing media uses the branded fallback. */ }
+      try { mediaBytes = await fetchImage(backgroundImage, fetcher, options.allowedMediaHosts); } catch { /* Missing media uses the branded fallback. */ }
     }
     const contentHash = sha256(Buffer.concat([
       Buffer.from(CACHE_VERSION), Buffer.from(entry.title || 'Untitled'), fontBytes, logoBytes,
@@ -237,7 +252,9 @@ export async function buildSocialCards(entries: SocialCardEntry[], options: Publ
     }
     results.push({ kind, slug: entry.slug, imagePath, outputPath, wasCached });
   }
-  await writeFile(cacheFile, `${JSON.stringify(cache, null, 2)}\n`);
+  const temporaryCacheFile = `${cacheFile}.${process.pid}.tmp`;
+  await writeFile(temporaryCacheFile, `${JSON.stringify(cache, null, 2)}\n`);
+  await rename(temporaryCacheFile, cacheFile);
   return results;
 }
 
