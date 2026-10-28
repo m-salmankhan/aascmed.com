@@ -8,6 +8,7 @@ const repositoryDir = fileURLToPath(new URL('../../', import.meta.url));
 const rootRequire = createRequire(`${repositoryDir}package.json`);
 const astroRequire = createRequire(`${astroDir}package.json`);
 
+/** Resolve a dependency to its installed entry point, following package links. */
 function realDependency(resolver, name) {
   return realpathSync(resolver.resolve(name));
 }
