@@ -17,6 +17,9 @@ const stylesThumbnail = (iconSize: number, showOverlay: boolean, elipse: boolean
         height: 100%;
         object-fit: cover;
     }
+    img {
+        display: block;
+    }
     
     .overlay {
         display: flex;
