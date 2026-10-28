@@ -110,7 +110,7 @@ type GatsbyClinicContact = { phone?: string | null; fax?: string | null };
 type GatsbyClinicNode = GatsbyNode & {
   location?: GatsbyClinicLocation | null;
   contact?: GatsbyClinicContact | null;
-  hours?: Array<GatsbyClinicHour | null> | null;
+  hours?: ReadonlyArray<GatsbyClinicHour | null> | null;
 };
 
 /** Normalize optional Gatsby text for required shared fields.
