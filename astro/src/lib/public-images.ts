@@ -54,6 +54,13 @@ export interface SocialCardResult {
 
 const sha256 = (value: Buffer | string) => createHash('sha256').update(value).digest('hex');
 
+function assertPrivateCacheDir(publicDir: string, cacheDir: string): void {
+  const relative = path.relative(path.resolve(publicDir), path.resolve(cacheDir));
+  if (relative === '' || (!relative.startsWith(`..${path.sep}`) && relative !== '..' && !path.isAbsolute(relative))) {
+    throw new Error('Public image cache must be outside the public output directory');
+  }
+}
+
 function safeSegment(value: string): string {
   const normalized = value.normalize('NFKD').replace(/[\\/]/g, '-').replace(/[^\p{L}\p{N}._-]+/gu, '-').replace(/^-+|-+$/g, '');
   if (!normalized || normalized === '.' || normalized === '..') throw new Error(`Invalid public image path segment: ${value}`);
@@ -214,6 +221,7 @@ export async function buildSocialCards(entries: SocialCardEntry[], options: Publ
   const fetcher = options.fetch || fetch;
   const cardsDir = path.join(options.publicDir, 'og-images');
   const cacheFile = path.join(options.cacheDir, 'social-cards.json');
+  assertPrivateCacheDir(options.publicDir, options.cacheDir);
   await mkdir(cardsDir, { recursive: true });
   await mkdir(options.cacheDir, { recursive: true });
   let cache: Record<string, string> = {};

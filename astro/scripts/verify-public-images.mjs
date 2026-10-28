@@ -17,6 +17,10 @@ const missingPath = path.join(root, 'missing.jpg');
 const svg = (color) => `<svg xmlns="http://www.w3.org/2000/svg" width="900" height="600"><rect width="900" height="600" fill="${color}"/></svg>`;
 
 try {
+  await assert.rejects(buildSocialCards([], {
+    publicDir,
+    cacheDir: path.join(publicDir, 'unsafe-cache'),
+  }), /cache must be outside the public output directory/);
   await mkdir(publicDir, { recursive: true });
   await writeFile(sourcePath, svg('#e94b35'));
   const entry = { kind: 'blog', slug: 'fixture-post', title: 'Fixture social card', backgroundImage: sourcePath };
@@ -88,7 +92,7 @@ try {
   const gatsbyOutput = path.join(root, 'gatsby-adapter.jpg');
   await gatsbyGenerator.generateOGImage({ title: 'Gatsby adapter fixture', backgroundImagePath: sourcePath, outputPath: gatsbyOutput });
   assert.deepEqual(await sharp(gatsbyOutput).metadata().then(({ width, height }) => [width, height]), [1200, 630]);
-  console.log('Public image fixtures passed: deterministic bytes, cache hit, same-path media change, absent thumbnail, approved and blocked remote hosts, and responsive AVIF/WebP/JPEG output.');
+  console.log('Public image fixtures passed: deterministic bytes, cache hit, same-path media change, absent thumbnail, private cache placement, approved and blocked remote hosts, and responsive AVIF/WebP/JPEG output.');
 } finally {
   await rm(root, { recursive: true, force: true });
 }
