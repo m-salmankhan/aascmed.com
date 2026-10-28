@@ -54,7 +54,8 @@ export function mapStrapiMedia(value: unknown, baseUrl?: string): MediaDescripto
   const formats = attrs.formats && typeof attrs.formats === "object" ? attrs.formats as Record<string, unknown> : undefined;
   if (formats) {
     const sources: Array<{ src: string; width: number }> = [];
-    for (const [name, value] of Object.entries(formats)) {
+    const alternatives = new Map<string, Array<{ src: string; width: number }>>();
+    for (const value of Object.values(formats)) {
       const format = record(value);
       const formatUrl = string(format?.url);
       if (!formatUrl) continue;
@@ -63,13 +64,18 @@ export function mapStrapiMedia(value: unknown, baseUrl?: string): MediaDescripto
         try { formatSrc = new URL(formatUrl, baseUrl).toString(); } catch { /* Keep the original CMS URL. */ }
       }
       const formatWidth = number(format?.width);
-      if (formatWidth) sources.push({ src: formatSrc, width: formatWidth });
-      if (["avif", "webp"].includes(string(format?.ext)?.slice(1) ?? name)) {
-        // Strapi media format objects don't include srcSet; a single URL remains a valid source.
-        descriptor.formats = [...(descriptor.formats ?? []), { type: `image/${string(format?.ext)?.slice(1) ?? name}`, srcSet: formatSrc }];
-      }
+      if (!formatWidth) continue;
+      const type = string(format?.mime) ?? (string(format?.ext) ? `image/${string(format?.ext)!.slice(1)}` : mimeType);
+      if (!type || type === mimeType) sources.push({ src: formatSrc, width: formatWidth });
+      else if (type === "image/avif" || type === "image/webp") alternatives.set(type, [...(alternatives.get(type) ?? []), { src: formatSrc, width: formatWidth }]);
     }
-    if (sources.length) descriptor.sources = sources.sort((a, b) => a.width - b.width);
+    if (sources.length) {
+      if (width) sources.push({ src, width });
+      descriptor.sources = sources.sort((a, b) => a.width - b.width);
+    }
+    if (alternatives.size) descriptor.formats = [...alternatives].map(([type, items]) => ({
+      type, srcSet: items.sort((a, b) => a.width - b.width).map(item => `${item.src} ${item.width}w`).join(", "),
+    }));
   }
   return descriptor;
 }
@@ -108,7 +114,7 @@ export function mapStrapiProvider(entity: StrapiEntity, mediaBaseUrl?: string): 
   const source = entity as Entity;
   const name = record(source.name); const review = record(source.review); const retirement = record(source.retirementNotice);
   const provider: ProviderRecord = {
-    ...common(source), order: number(source.order) ?? null,
+    ...common(source, string(name?.fullName) ?? ""), order: number(source.order) ?? null,
     image: mapStrapiMedia(source.image, mediaBaseUrl),
     body: optionalJson(source.body),
   };
@@ -135,7 +141,7 @@ export function mapStrapiClinic(entity: StrapiEntity): ClinicRecord {
     };
   });
   const mapped: ClinicRecord = {
-    ...common(source), clinicName: string(source.clinic_name) ?? null, body: optionalJson(source.body),
+    ...common(source, string(source.clinic_name) ?? ""), clinicName: string(source.clinic_name) ?? null, body: optionalJson(source.body),
   };
   if (location) mapped.location = {
     address: string(location.address), latitude: number(location.lat) ?? null,
@@ -173,7 +179,7 @@ export function mapStrapiHomePage(entity: StrapiEntity, mediaBaseUrl?: string): 
   const source = entity as Entity;
   const mapped: HomePageRecord = { documentId: source.documentId, id: source.documentId, metaDescription: string(source.metaDescription) };
   for (const key of ["hero", "genericBelowHero", "conditions", "serviceUpdates", "blog", "providers", "feedback", "locations", "contact"] as const) {
-    const raw = source[key];
+    const normalizeSection = (raw: unknown): JsonValue | undefined => {
     const section = record(raw);
     let value: JsonValue | undefined;
     if (section && "media" in section) {
@@ -189,6 +195,10 @@ export function mapStrapiHomePage(entity: StrapiEntity, mediaBaseUrl?: string): 
       }
       value = normalized;
     } else value = jsonValue(raw);
+    return value;
+    };
+    const raw = source[key];
+    const value = Array.isArray(raw) ? raw.map(normalizeSection).filter((item): item is JsonValue => item !== undefined) : normalizeSection(raw);
     if (value !== undefined) mapped[key] = value;
   }
   return compact(mapped);

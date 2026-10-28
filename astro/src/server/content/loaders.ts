@@ -5,16 +5,16 @@ import type {
 import { sortByDateDescending, sortByOrder } from "../../../../src/shared/content/urls.ts";
 import { validateContentRecord, type ContentMode } from "../../../../src/shared/content/validation.ts";
 import { getAstroServerConfig } from "../config.ts";
-import { getByIdentifier, getCollection, getSingle, type StrapiEntity, type StrapiRequestOptions } from "./strapi.ts";
+import { createStrapiRequestScope, getByIdentifier, getCollection, getSingle, type StrapiEntity, type StrapiRequestOptions, type StrapiRequestScope } from "./strapi.ts";
 import {
   mapStrapiAnnouncement, mapStrapiBlog, mapStrapiClinic, mapStrapiCondition,
   mapStrapiHomePage, mapStrapiPage, mapStrapiProvider, mapStrapiReview,
   mapStrapiServiceUpdate, mapStrapiTrackingInfo,
 } from "./mapping.ts";
 
-function options(mode: ContentMode): StrapiRequestOptions { return { mode }; }
-function mediaBaseUrl(mode: ContentMode): string | undefined {
-  const base = mode === "draft" ? getAstroServerConfig().draftApiUrl : getAstroServerConfig().strapiApiUrl;
+function options(mode: ContentMode, scope?: StrapiRequestScope): StrapiRequestOptions { return { mode, scope }; }
+function mediaBaseUrl(): string | undefined {
+  const base = getAstroServerConfig().strapiApiUrl;
   try { return base ? new URL(base).origin : undefined; } catch { return undefined; }
 }
 function check<T extends BlogRecord | ConditionRecord | ProviderRecord | ClinicRecord | ServiceUpdateRecord>(records: T[], family: "blog" | "condition" | "provider" | "clinic" | "serviceUpdate", mode: ContentMode): T[] {
@@ -26,62 +26,62 @@ function check<T extends BlogRecord | ConditionRecord | ProviderRecord | ClinicR
   return records;
 }
 
-export async function getBlogs(mode: ContentMode): Promise<BlogRecord[]> {
-  const entities = await getCollection("blog", options(mode));
-  return check(entities.map((entity) => mapStrapiBlog(entity, mediaBaseUrl(mode))), "blog", mode);
+export async function getBlogs(mode: ContentMode, scope?: StrapiRequestScope): Promise<BlogRecord[]> {
+  const entities = await getCollection("blog", options(mode, scope));
+  return check(entities.map((entity) => mapStrapiBlog(entity, mediaBaseUrl())), "blog", mode);
 }
-export async function getClinics(mode: ContentMode): Promise<ClinicRecord[]> {
-  const entities = await getCollection("clinic", options(mode));
+export async function getClinics(mode: ContentMode, scope?: StrapiRequestScope): Promise<ClinicRecord[]> {
+  const entities = await getCollection("clinic", options(mode, scope));
   return check(entities.map(mapStrapiClinic), "clinic", mode);
 }
-export async function getConditions(mode: ContentMode): Promise<ConditionRecord[]> {
-  const entities = await getCollection("condition", options(mode));
-  return check(sortByOrder(entities.map((entity) => mapStrapiCondition(entity, mediaBaseUrl(mode)))), "condition", mode);
+export async function getConditions(mode: ContentMode, scope?: StrapiRequestScope): Promise<ConditionRecord[]> {
+  const entities = await getCollection("condition", options(mode, scope));
+  return check(sortByOrder(entities.map((entity) => mapStrapiCondition(entity, mediaBaseUrl()))), "condition", mode);
 }
-export async function getProviders(mode: ContentMode): Promise<ProviderRecord[]> {
-  const entities = await getCollection("provider", options(mode));
-  return check(sortByOrder(entities.map((entity) => mapStrapiProvider(entity, mediaBaseUrl(mode)))), "provider", mode);
+export async function getProviders(mode: ContentMode, scope?: StrapiRequestScope): Promise<ProviderRecord[]> {
+  const entities = await getCollection("provider", options(mode, scope));
+  return check(sortByOrder(entities.map((entity) => mapStrapiProvider(entity, mediaBaseUrl()))), "provider", mode);
 }
-export async function getServiceUpdates(mode: ContentMode): Promise<ServiceUpdateRecord[]> {
-  const entities = await getCollection("service-update", options(mode));
+export async function getServiceUpdates(mode: ContentMode, scope?: StrapiRequestScope): Promise<ServiceUpdateRecord[]> {
+  const entities = await getCollection("service-update", options(mode, scope));
   return check(sortByDateDescending(entities.map(mapStrapiServiceUpdate)), "serviceUpdate", mode);
 }
-export async function getReviews(mode: ContentMode): Promise<ReviewRecord[]> {
-  return (await getCollection("review", options(mode))).map(mapStrapiReview);
+export async function getReviews(mode: ContentMode, scope?: StrapiRequestScope): Promise<ReviewRecord[]> {
+  return (await getCollection("review", options(mode, scope))).map(mapStrapiReview);
 }
 
 async function byIdentifier<T extends BlogRecord | ConditionRecord | ProviderRecord | ClinicRecord | ServiceUpdateRecord>(
   kind: "blog" | "condition" | "provider" | "clinic" | "service-update", field: "slug" | "documentId", identifier: string,
   family: "blog" | "condition" | "provider" | "clinic" | "serviceUpdate", mode: ContentMode,
-  map: (entity: StrapiEntity) => T,
+  map: (entity: StrapiEntity) => T, scope?: StrapiRequestScope,
 ): Promise<T | null> {
-  const entity = await getByIdentifier(kind, field, identifier, options(mode));
+  const entity = await getByIdentifier(kind, field, identifier, options(mode, scope));
   if (!entity) return null;
   const record = map(entity);
   const issues = validateContentRecord(record, family, mode);
   if (issues.length) throw new Error(`Published ${family} record failed validation: ${issues.join(", ")}`);
   return record;
 }
-export const getBlogBySlug = (slug: string, mode: ContentMode): Promise<BlogRecord | null> => byIdentifier("blog", "slug", slug, "blog", mode, (entity) => mapStrapiBlog(entity, mediaBaseUrl(mode)));
-export const getConditionBySlug = (slug: string, mode: ContentMode): Promise<ConditionRecord | null> => byIdentifier("condition", "slug", slug, "condition", mode, (entity) => mapStrapiCondition(entity, mediaBaseUrl(mode)));
-export const getProviderBySlug = (slug: string, mode: ContentMode): Promise<ProviderRecord | null> => byIdentifier("provider", "slug", slug, "provider", mode, (entity) => mapStrapiProvider(entity, mediaBaseUrl(mode)));
-export const getClinicBySlug = (slug: string, mode: ContentMode): Promise<ClinicRecord | null> => byIdentifier("clinic", "slug", slug, "clinic", mode, mapStrapiClinic);
-export const getServiceUpdateBySlug = (slug: string, mode: ContentMode): Promise<ServiceUpdateRecord | null> => byIdentifier("service-update", "slug", slug, "serviceUpdate", mode, mapStrapiServiceUpdate);
+export const getBlogBySlug = (slug: string, mode: ContentMode, scope?: StrapiRequestScope): Promise<BlogRecord | null> => byIdentifier("blog", "slug", slug, "blog", mode, (entity) => mapStrapiBlog(entity, mediaBaseUrl()), scope);
+export const getConditionBySlug = (slug: string, mode: ContentMode, scope?: StrapiRequestScope): Promise<ConditionRecord | null> => byIdentifier("condition", "slug", slug, "condition", mode, (entity) => mapStrapiCondition(entity, mediaBaseUrl()), scope);
+export const getProviderBySlug = (slug: string, mode: ContentMode, scope?: StrapiRequestScope): Promise<ProviderRecord | null> => byIdentifier("provider", "slug", slug, "provider", mode, (entity) => mapStrapiProvider(entity, mediaBaseUrl()), scope);
+export const getClinicBySlug = (slug: string, mode: ContentMode, scope?: StrapiRequestScope): Promise<ClinicRecord | null> => byIdentifier("clinic", "slug", slug, "clinic", mode, mapStrapiClinic, scope);
+export const getServiceUpdateBySlug = (slug: string, mode: ContentMode, scope?: StrapiRequestScope): Promise<ServiceUpdateRecord | null> => byIdentifier("service-update", "slug", slug, "serviceUpdate", mode, mapStrapiServiceUpdate, scope);
 
-async function single<T>(kind: Parameters<typeof getSingle>[0], mode: ContentMode, map: (entity: StrapiEntity) => T): Promise<T | null> {
-  const entity = await getSingle(kind, options(mode));
+async function single<T>(kind: Parameters<typeof getSingle>[0], mode: ContentMode, map: (entity: StrapiEntity) => T, scope?: StrapiRequestScope): Promise<T | null> {
+  const entity = await getSingle(kind, options(mode, scope));
   return entity ? map(entity) : null;
 }
-export const getAnnouncement = (mode: ContentMode): Promise<AnnouncementSettings | null> => single("announcement", mode, mapStrapiAnnouncement);
-export const getBlogArchive = (mode: ContentMode): Promise<ContentPageRecord | null> => single("blog-archive", mode, mapStrapiPage);
-export const getConditionsArchive = (mode: ContentMode): Promise<ContentPageRecord | null> => single("conditions-archive", mode, mapStrapiPage);
-export const getClinicsArchive = (mode: ContentMode): Promise<ContentPageRecord | null> => single("clinics-archive", mode, mapStrapiPage);
-export const getContact = (mode: ContentMode): Promise<ContentPageRecord | null> => single("contact", mode, mapStrapiPage);
-export const getProvidersPage = (mode: ContentMode): Promise<ContentPageRecord | null> => single("providers-page", mode, mapStrapiPage);
-export const getServiceUpdatePage = (mode: ContentMode): Promise<ContentPageRecord | null> => single("service-update-page", mode, mapStrapiPage);
-export const getPrivacyPolicy = (mode: ContentMode): Promise<ContentPageRecord | null> => single("privacy-policy", mode, mapStrapiPage);
-export const getHomePage = (mode: ContentMode): Promise<HomePageRecord | null> => single("home-page", mode, (entity) => mapStrapiHomePage(entity, mediaBaseUrl(mode)));
-export const getTrackingInfo = (mode: ContentMode): Promise<TrackingSettings | null> => single("tracking-info", mode, mapStrapiTrackingInfo);
+export const getAnnouncement = (mode: ContentMode, scope?: StrapiRequestScope): Promise<AnnouncementSettings | null> => single("announcement", mode, mapStrapiAnnouncement, scope);
+export const getBlogArchive = (mode: ContentMode, scope?: StrapiRequestScope): Promise<ContentPageRecord | null> => single("blog-archive", mode, mapStrapiPage, scope);
+export const getConditionsArchive = (mode: ContentMode, scope?: StrapiRequestScope): Promise<ContentPageRecord | null> => single("conditions-archive", mode, mapStrapiPage, scope);
+export const getClinicsArchive = (mode: ContentMode, scope?: StrapiRequestScope): Promise<ContentPageRecord | null> => single("clinics-archive", mode, mapStrapiPage, scope);
+export const getContact = (mode: ContentMode, scope?: StrapiRequestScope): Promise<ContentPageRecord | null> => single("contact", mode, mapStrapiPage, scope);
+export const getProvidersPage = (mode: ContentMode, scope?: StrapiRequestScope): Promise<ContentPageRecord | null> => single("providers-page", mode, mapStrapiPage, scope);
+export const getServiceUpdatePage = (mode: ContentMode, scope?: StrapiRequestScope): Promise<ContentPageRecord | null> => single("service-update-page", mode, mapStrapiPage, scope);
+export const getPrivacyPolicy = (mode: ContentMode, scope?: StrapiRequestScope): Promise<ContentPageRecord | null> => single("privacy-policy", mode, mapStrapiPage, scope);
+export const getHomePage = (mode: ContentMode, scope?: StrapiRequestScope): Promise<HomePageRecord | null> => single("home-page", mode, (entity) => mapStrapiHomePage(entity, mediaBaseUrl()), scope);
+export const getTrackingInfo = (mode: ContentMode, scope?: StrapiRequestScope): Promise<TrackingSettings | null> => single("tracking-info", mode, mapStrapiTrackingInfo, scope);
 
 export interface PublishedContentSnapshot {
   blogs: BlogRecord[];
@@ -92,36 +92,33 @@ export interface PublishedContentSnapshot {
   reviews: ReviewRecord[];
 }
 
-async function loadPublishedBuildSnapshot(): Promise<PublishedContentSnapshot> {
+async function loadPublishedBuildSnapshot(scope: StrapiRequestScope): Promise<PublishedContentSnapshot> {
   const [blogs, clinics, conditions, providers] = await Promise.all([
-    getBlogs("published"), getClinics("published"), getConditions("published"), getProviders("published"),
+    getBlogs("published", scope), getClinics("published", scope), getConditions("published", scope), getProviders("published", scope),
   ]);
-  const serviceUpdates = await getServiceUpdates("published");
-  const reviews = await getReviews("published");
+  const serviceUpdates = await getServiceUpdates("published", scope);
+  const reviews = await getReviews("published", scope);
   return { blogs, clinics, conditions, providers, serviceUpdates, reviews };
 }
 
-let staticBuildSnapshot: Promise<PublishedContentSnapshot> | undefined;
+const buildSnapshots = new WeakMap<StrapiRequestScope, Promise<PublishedContentSnapshot>>();
 
-/** Memoize only within the static-build module instance; draft and SSR reads are always fresh. */
-export async function getPublishedBuildSnapshot(options: { staticBuild?: boolean } = {}): Promise<PublishedContentSnapshot> {
-  const isStaticBuild = options.staticBuild ?? import.meta.env?.PUBLIC_ASTRO_TARGET === "static";
-  if (!isStaticBuild) return loadPublishedBuildSnapshot();
-  if (!staticBuildSnapshot) {
-    staticBuildSnapshot = loadPublishedBuildSnapshot().catch((error) => {
-      staticBuildSnapshot = undefined;
-      throw error;
-    });
+/** A caller-owned scope shares one published snapshot for one build only. */
+export async function getPublishedBuildSnapshot(options: { scope?: StrapiRequestScope } = {}): Promise<PublishedContentSnapshot> {
+  if (!options.scope) return loadPublishedBuildSnapshot(createStrapiRequestScope());
+  let snapshot = buildSnapshots.get(options.scope);
+  if (!snapshot) {
+    snapshot = loadPublishedBuildSnapshot(options.scope).catch(error => { buildSnapshots.delete(options.scope!); throw error; });
+    buildSnapshots.set(options.scope, snapshot);
   }
-  return staticBuildSnapshot;
+  return snapshot;
 }
 
 /** Route collections used by static enumeration; always published. */
-export async function getPublishedRouteCollections() {
-  const { blogs, clinics, conditions, providers, serviceUpdates } = await getPublishedBuildSnapshot();
+export async function getPublishedRouteCollections(scope?: StrapiRequestScope) {
+  const { blogs, clinics, conditions, providers, serviceUpdates } = await getPublishedBuildSnapshot({ scope });
   return { blogs, clinics, conditions, providers, serviceUpdates };
 }
 
-/** Backward-compatible alias for static build consumers needing all six collections. */
+/** Alias for build consumers needing all six collections. */
 export const getPublishedCollections = getPublishedBuildSnapshot;
-

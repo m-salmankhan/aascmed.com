@@ -27,35 +27,54 @@ export interface StrapiRequestOptions {
   mode: ContentMode;
   fetcher?: typeof fetch;
   timeoutMs?: number;
+  scope?: StrapiRequestScope;
 }
 
+/** A request/build-local deduplication scope; never share it between preview requests. */
+export interface StrapiRequestScope { inflight: Map<string, Promise<unknown>> }
+export function createStrapiRequestScope(): StrapiRequestScope { return { inflight: new Map() }; }
+
 const PAGE_SIZE = 100;
-const MAX_PAGES = 10;
+// Defend against a broken upstream that never terminates pagination, not a CMS display limit.
+const MAX_PAGES = 10_000;
 const DEFAULT_TIMEOUT_MS = 5000;
-const inflight = new Map<string, Promise<unknown>>();
+let activeRequests = 0;
+const waiting: Array<() => void> = [];
+async function acquire(): Promise<void> {
+  if (activeRequests >= 4) await new Promise<void>(resolve => waiting.push(resolve));
+  else activeRequests++;
+}
+function release(): void {
+  const next = waiting.shift();
+  if (next) next(); else activeRequests--;
+}
 const COLLECTION_PATH: Record<Extract<StrapiKind, "blog" | "clinic" | "condition" | "provider" | "service-update" | "review">, string> = {
   blog: "blogs", clinic: "clinics", condition: "conditions", provider: "providers",
   "service-update": "service-updates", review: "reviews",
 };
 
 const sectionWithMedia = { populate: { media: true } };
-const conditionContent = { on: { "generic.faq": { populate: { questions: { populate: "*" } } } } };
+const dynamicContent = { on: {
+  "generic.contact-booking-cta": { populate: "*" },
+  "generic.faq-contact-book-buttons": { populate: "*" },
+  "generic.rich-text": { populate: "*" },
+  "generic.faq": { populate: { questions: true } },
+} };
 
 /** Explicitly describe nested fields per CMS type; avoid Strapi's unbounded populate=* expansion. */
 export const POPULATE: Record<StrapiKind, Record<string, unknown>> = {
-  blog: { thumbnail: true, content: { populate: "*" } },
+  blog: { thumbnail: true, content: { on: { "generic.contact-booking-cta": { populate: "*" }, "clinics.map": { populate: "*" }, "generic.rich-text": { populate: "*" } } } },
   clinic: {
     location: true, contact: true,
     hours: { populate: { opening_hours: true, shot_hours: true } },
-    body: { populate: "*" },
   },
-  condition: { thumbnail: true, content: conditionContent },
+  condition: { thumbnail: true, content: dynamicContent },
   provider: {
     image: true, name: true, review: true,
-    retirementNotice: { populate: "*" }, body: { populate: "*" },
+    retirementNotice: true, body: { on: { "generic.rich-text": { populate: "*" }, "generic.contact-booking-cta": { populate: "*" }, "generic.faq-contact-book-buttons": { populate: "*" } } },
   },
-  "service-update": { body: { populate: "*" } },
-  review: { content: { populate: "*" } },
+  "service-update": {},
+  review: {},
   announcement: {},
   "blog-archive": {},
   "conditions-archive": {},
@@ -122,30 +141,35 @@ function validateEntity(value: unknown, kind: StrapiKind): StrapiEntity {
 
 async function requestJson<T>(url: URL, mode: ContentMode, options: StrapiRequestOptions, notFoundIsNull = false): Promise<T> {
   const config = getAstroServerConfig();
-  if (mode === "draft" && import.meta.env?.PUBLIC_ASTRO_TARGET === "static") {
-    throw new StrapiRequestError("configuration", "Draft content is unavailable in static builds");
+  if (mode === "draft" && (config.contentMode !== "draft" || import.meta.env?.PUBLIC_ASTRO_TARGET === "static")) {
+    throw new StrapiRequestError("configuration", "Draft content is unavailable in this deployment");
   }
+  if (mode !== "draft" && mode !== "published") throw new StrapiRequestError("configuration", "Invalid content mode");
+  const inflight = options.scope?.inflight;
   const key = `${mode}:${url.toString()}`;
-  const existing = inflight.get(key) as Promise<T> | undefined;
+  const existing = inflight?.get(key) as Promise<T> | undefined;
   if (existing) return existing;
 
   const work = (async () => {
+    await acquire();
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? DEFAULT_TIMEOUT_MS);
     try {
       const headers = new Headers({ Accept: "application/json", "Cache-Control": "no-store" });
-      // Credentials are restricted to the server-only draft request path.
-      if (mode === "draft" && config.strapiToken) headers.set("Authorization", `Bearer ${config.strapiToken}`);
+      if (config.strapiToken) headers.set("Authorization", `Bearer ${config.strapiToken}`);
       const response = await (options.fetcher ?? fetch)(url, {
         method: "GET", headers, signal: controller.signal, cache: "no-store", redirect: "error",
       });
-      if (response.status === 404 && notFoundIsNull) return null as T;
+      if (response.status === 404 && notFoundIsNull) {
+        await response.body?.cancel().catch(() => undefined);
+        return null as T;
+      }
       if (!response.ok) {
         await response.body?.cancel().catch(() => undefined);
         throw new StrapiRequestError("upstream", `Strapi request failed (${response.status})`, response.status);
       }
       try { return await response.json() as T; }
-      catch { throw new StrapiRequestError("invalid-response", "Strapi returned malformed JSON"); }
+      catch (error) { if (controller.signal.aborted) throw error; throw new StrapiRequestError("invalid-response", "Strapi returned malformed JSON"); }
     } catch (error) {
       if (error instanceof StrapiRequestError) throw error;
       // Never include the URL, headers, token, or upstream body in the surfaced error.
@@ -153,10 +177,11 @@ async function requestJson<T>(url: URL, mode: ContentMode, options: StrapiReques
     } finally {
       clearTimeout(timeout);
       controller.abort();
+      release();
     }
   })();
-  inflight.set(key, work);
-  try { return await work; } finally { if (inflight.get(key) === work) inflight.delete(key); }
+  inflight?.set(key, work);
+  try { return await work; } finally { if (inflight?.get(key) === work) inflight.delete(key); }
 }
 
 export async function getCollection<T extends StrapiEntity>(
@@ -164,7 +189,7 @@ export async function getCollection<T extends StrapiEntity>(
   options: StrapiRequestOptions,
 ): Promise<T[]> {
   const config = getAstroServerConfig();
-  const base = options.mode === "draft" ? config.draftApiUrl : config.strapiApiUrl;
+  const base = config.strapiApiUrl;
   const endpoint = safeEndpoint(base);
   endpoint.pathname = `${endpoint.pathname.replace(/\/$/, "")}/${COLLECTION_PATH[kind]}`;
   endpoint.search = "";
@@ -174,7 +199,7 @@ export async function getCollection<T extends StrapiEntity>(
     url.search = serializeQuery({
       status: options.mode,
       populate: POPULATE[kind],
-      sort: kind === "blog" || kind === "service-update" ? ["date:desc"] : kind === "provider" || kind === "condition" ? ["order:asc"] : [],
+      sort: kind === "blog" || kind === "service-update" ? ["date:desc", "documentId:asc"] : kind === "provider" || kind === "condition" ? ["order:asc", "documentId:asc"] : ["documentId:asc"],
       pagination: { page, pageSize: PAGE_SIZE, withCount: true },
     });
     const payload = await requestJson<{ data?: unknown; meta?: { pagination?: { pageCount?: number; total?: number } } }>(url, options.mode, options);
@@ -203,11 +228,11 @@ export async function getByIdentifier<T extends StrapiEntity>(
 ): Promise<T | null> {
   if (!identifier.trim()) return null;
   const config = getAstroServerConfig();
-  const base = options.mode === "draft" ? config.draftApiUrl : config.strapiApiUrl;
+  const base = config.strapiApiUrl;
   const endpoint = safeEndpoint(base);
   endpoint.pathname = `${endpoint.pathname.replace(/\/$/, "")}/${COLLECTION_PATH[kind]}`;
   const filters = kind === "clinic" && field === "slug"
-    ? { $or: [{ slug: { $eq: identifier } }, { clinic_name: { $eqi: identifier.replace(/-/g, " ") } }] }
+    ? { $or: [{ slug: { $eq: identifier } }, { $and: [{ $or: [{ slug: { $null: true } }, { slug: { $eq: "" } }] }, { clinic_name: { $eqi: identifier.replace(/-/g, " ") } }] }] }
     : { [field]: { $eq: identifier } };
   endpoint.search = serializeQuery({
     status: options.mode,
@@ -222,12 +247,14 @@ export async function getByIdentifier<T extends StrapiEntity>(
 
 export async function getSingle<T extends StrapiEntity>(kind: Exclude<StrapiKind, "blog" | "clinic" | "condition" | "provider" | "service-update" | "review">, options: StrapiRequestOptions): Promise<T | null> {
   const config = getAstroServerConfig();
-  const base = options.mode === "draft" ? config.draftApiUrl : config.strapiApiUrl;
+  const base = config.strapiApiUrl;
   const endpoint = safeEndpoint(base);
   endpoint.pathname = `${endpoint.pathname.replace(/\/$/, "")}/${kind}`;
   endpoint.search = serializeQuery({ status: options.mode, populate: POPULATE[kind] });
   const payload = await requestJson<{ data?: unknown }>(endpoint, options.mode, options, true);
-  if (!payload || payload.data == null) return null;
+  if (!payload) return null;
+  if (!Object.hasOwn(payload, "data")) throw new StrapiRequestError("invalid-response", `Strapi returned an invalid ${kind} singleton`);
+  if (payload.data == null) return null;
   return validateEntity(payload.data, kind) as T;
 }
 
