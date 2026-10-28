@@ -10,7 +10,8 @@ export default defineConfig({
     react({ jsxImportSource: '@emotion/react' }),
     publicImagesIntegration({
       loadPublishedSnapshot: async () => {
-        const { createStrapiRequestScope, getPublishedBuildSnapshot } = await import('./src/server/content/loaders.ts');
+        const { getPublishedBuildSnapshot } = await import('./src/server/content/loaders.ts');
+        const { createStrapiRequestScope } = await import('./src/server/content/strapi.ts');
         return getPublishedBuildSnapshot({ scope: createStrapiRequestScope() });
       },
       mapboxToken: process.env.PUBLIC_MAPBOX_API_KEY || process.env.GATSBY_MAPBOX_API_KEY,

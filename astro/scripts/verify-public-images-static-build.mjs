@@ -86,7 +86,8 @@ import { publicImagesIntegration } from './src/integrations/public-images.ts';
 import path from 'node:path';
 const integration = publicImagesIntegration({
   loadPublishedSnapshot: async () => {
-    const { createStrapiRequestScope, getPublishedBuildSnapshot } = await import('./src/server/content/loaders.ts');
+    const { getPublishedBuildSnapshot } = await import('./src/server/content/loaders.ts');
+    const { createStrapiRequestScope } = await import('./src/server/content/strapi.ts');
     return getPublishedBuildSnapshot({ scope: createStrapiRequestScope() });
   },
   stagingDir: path.resolve('.astro/public-images-fixture'),
