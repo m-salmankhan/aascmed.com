@@ -3,6 +3,7 @@ import { spawn } from 'node:child_process';
 import { createServer } from 'node:http';
 import { readFile, stat, writeFile, unlink } from 'node:fs/promises';
 import { renderSitemapXml } from '../src/server/sitemap.ts';
+import { chromium } from '@playwright/test';
 
 const observedCmsRequests = [];
 const cms = createServer((request, response) => {
@@ -59,6 +60,23 @@ import SiteDocument from '../layouts/SiteDocument.astro';
   assert.ok(!fixtureHtml.includes('<script>untrusted</script>'), 'authored JSON-LD cannot create executable markup');
   const fixtureJson = fixtureHtml.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)?.[1];
   assert.equal(JSON.parse(fixtureJson).name, '</script><script>untrusted</script>');
+  const browser = await chromium.launch();
+  try {
+    const context = await browser.newContext();
+    // Run real inline tracking code, but intercept every external request.
+    await context.route('**/*', route => route.fulfill({ status: 200, contentType: 'application/javascript', body: '' }));
+    const page = await context.newPage();
+    const errors = [];
+    page.on('pageerror', error => errors.push(error.message));
+    await page.setContent(fixtureHtml, { waitUntil: 'load' });
+    const tracking = await page.evaluate(() => ({
+      tagManager: window.dataLayer.some(item => item['gtm.start']),
+      pixel: window.fbq.queue.map(item => [...item]),
+    }));
+    assert.ok(tracking.tagManager, 'GTM initialization executes');
+    assert.deepEqual(tracking.pixel, [['init', 'TEST-PIXEL'], ['track', 'PageView']]);
+    assert.deepEqual(errors, [], 'enabled tracking scripts execute together without lexical collisions');
+  } finally { await browser.close(); }
   const notFoundHtml = await readFile('dist-static/404.html', 'utf8');
   assert.ok(notFoundHtml.includes('name="robots" content="noindex, nofollow"'));
   assert.ok(notFoundHtml.includes('<h1>Page not found</h1>'));
@@ -71,9 +89,13 @@ import SiteDocument from '../layouts/SiteDocument.astro';
     '_redirects',
     '_headers',
     'sitemap.xml',
+    'sitemap-index.xml',
+    'sitemap-0.xml',
   ]) await stat(`dist-static/${asset}`);
   const staticSitemap = await readFile('dist-static/sitemap.xml', 'utf8');
   assert.ok(staticSitemap.includes('https://www.aascmed.com/'));
+  const indexXml = await readFile('dist-static/sitemap-index.xml', 'utf8');
+  assert.ok(indexXml.includes('<sitemapindex') && indexXml.includes('https://www.aascmed.com/sitemap.xml'));
 
   const sitemap = renderSitemapXml([
     { pathname: '/clinics/published-clinic/' },
@@ -135,6 +157,11 @@ import SiteDocument from '../layouts/SiteDocument.astro';
   assert.equal(dynamicSitemap.status, 200);
   assert.match(dynamicSitemap.headers.get('content-type') || '', /application\/xml/);
   assert.ok((await dynamicSitemap.text()).includes('https://www.aascmed.com/'));
+  for (const path of ['/sitemap-index.xml', '/sitemap-0.xml']) {
+    const sitemapResponse = await fetch(`${base}${path}`);
+    assert.equal(sitemapResponse.status, 200, `${path} remains reachable`);
+    assert.match(sitemapResponse.headers.get('content-type') || '', /application\/xml/);
+  }
   assert.ok(observedCmsRequests.slice(beforeSsrRequests).every((url) => url.searchParams.get('status') === 'published'), 'SSR sitemap requests published content only');
   console.log(JSON.stringify({ static: 'metadata, JSON-LD, assets, headers, redirects and published sitemap verified', ssr: 'noindex, no-store, tracking suppressed, metadata before hydration, redirect and PDF verified', cms: 'local mock only; all manifest requests use published status' }));
 } finally {
