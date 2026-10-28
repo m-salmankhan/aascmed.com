@@ -8,7 +8,7 @@ import { ContactBanner } from "../components/posts/shortcode-components";
 import { Contents } from "../components/posts/contents";
 import { ShareButtons } from "../components/social-media/share";
 import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
-import { HeroImage } from "../components/media/image";
+import { Image } from "../components/media/image";
 import type { BlogRecord } from "../shared/content/models";
 import { extractTableOfContents } from "../utils/strapi-toc";
 
@@ -46,7 +46,7 @@ export function BlogPostView({ blog, pathname }: BlogPostViewProps) {
               .gatsby-image-wrapper, picture { width: 100%; height: 20em; }
               img { width: 100%; height: 20em; }
               .gatsby-image-wrapper img, picture img { height: 100%; }
-            `}><HeroImage image={blog.thumbnail} alt="" /></div>}
+            `}><Image image={blog.thumbnail} alt="" fit="cover" /></div>}
             {content && <BlogContent content={content as any[]} />}
             <footer><ShareButtons pageTitle={title} path={pathname} /></footer>
           </MainCol>
