@@ -3,15 +3,17 @@ import type { GatsbySSR } from "gatsby";
 import GatsbySiteDataAdapter from "./src/adapters/gatsby/site-data";
 import GatsbyAnnouncementAdapter from "./src/adapters/gatsby/announcement";
 import { CurrentPathProvider } from "./src/shared/navigation/current-path";
+import { PublicConfigProvider } from "./src/shared/config/public-context";
+import { gatsbyPublicConfig } from "./src/config/gatsby-public";
 
 /** Mount site settings and announcement data while Gatsby renders pages on the server.
  * @param props Gatsby page element supplied by the SSR API.
  * @returns The announcement banner and page element inside the site-data provider.
  */
 export const wrapRootElement: GatsbySSR["wrapRootElement"] = ({ element }) => (
-  <GatsbySiteDataAdapter>
+  <PublicConfigProvider value={gatsbyPublicConfig}><GatsbySiteDataAdapter>
     <><GatsbyAnnouncementAdapter />{element}</>
-  </GatsbySiteDataAdapter>
+  </GatsbySiteDataAdapter></PublicConfigProvider>
 );
 
 /** Provide the current route during SSR so active links match hydrated markup.

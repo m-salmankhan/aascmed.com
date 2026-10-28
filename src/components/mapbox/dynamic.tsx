@@ -8,9 +8,7 @@ import { colours } from "../../styles/theme";
 import { stylesH5 } from "../headings";
 import { Logo } from "../logo";
 import { StaticMap } from "./static";
-import { gatsbyPublicConfig } from "../../config/gatsby-public";
-
-mapboxgl.accessToken = gatsbyPublicConfig.mapboxAccessToken;
+import { usePublicConfig } from "../../shared/config/public-context";
 
 const stylesMapPopUp = css`
   text-align: center;
@@ -48,6 +46,7 @@ function addPopup(
 }
 
 export const MapBox: React.FC<MapBoxProps> = (props) => {
+    const { mapboxAccessToken } = usePublicConfig();
     const [jsEnabled, setJsEnabled] = useState(false);
     useEffect(() => {
         setJsEnabled(true);
@@ -68,6 +67,7 @@ export const MapBox: React.FC<MapBoxProps> = (props) => {
         const popupRoots = new Set<ReturnType<typeof createRoot>>();
         const mapboxMap = new mapboxgl.Map({
             container: mapContainer.current as HTMLElement,
+            accessToken: mapboxAccessToken,
             style: 'mapbox://styles/mapbox/streets-v12',
             center: [lng, lat],
             zoom: zoom
@@ -91,7 +91,7 @@ export const MapBox: React.FC<MapBoxProps> = (props) => {
             popupRoots.clear();
             map.current = null;
         };
-    }, [map, mapContainer, setLng, setLat, setZoom, jsEnabled]);
+    }, [map, mapContainer, setLng, setLat, setZoom, jsEnabled, mapboxAccessToken]);
 
     if (jsEnabled) {
         return (

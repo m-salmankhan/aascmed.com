@@ -2,7 +2,7 @@ const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const ts = require("typescript");
 
-require.extensions[".tsx"] = (module, filename) => {
+const compileTs = (module, filename) => {
   const source = require("node:fs").readFileSync(filename, "utf8");
   const { outputText } = ts.transpileModule(source, {
     compilerOptions: {
@@ -15,11 +15,15 @@ require.extensions[".tsx"] = (module, filename) => {
   });
   module._compile(outputText, filename);
 };
+require.extensions[".tsx"] = compileTs;
+require.extensions[".ts"] = compileTs;
 
 const React = require("react");
 const { renderToStaticMarkup } = require("react-dom/server");
 const { CurrentPathProvider } = require("../../src/shared/navigation/current-path.tsx");
 const { SiteLink } = require("../../src/shared/navigation/link.tsx");
+const { usePublicConfig } = require("../../src/shared/config/public-context.tsx");
+const { gatsbyPublicConfig } = require("../../src/config/gatsby-public.ts");
 const Module = require("node:module");
 const originalLoad = Module._load;
 Module._load = function (request, parent, isMain) {
@@ -73,4 +77,17 @@ test("Gatsby browser and SSR wrappers inject identical active-link markup", () =
   const browserMarkup = renderWrapped(gatsbyBrowser.wrapPageElement);
   assert.equal(ssrMarkup, browserMarkup);
   assert.match(ssrMarkup, /class="active" aria-current="page"/);
+});
+
+test("Gatsby root wrappers provide the same public settings on server and browser", () => {
+  function Consumer() {
+    const config = usePublicConfig();
+    return React.createElement("span", null, `${config.runtimeApiBaseUrl}|${config.mapboxAccessToken}`);
+  }
+  const element = React.createElement(Consumer);
+  const ssr = renderToStaticMarkup(gatsbySsr.wrapRootElement({ element }));
+  const browser = renderToStaticMarkup(gatsbyBrowser.wrapRootElement({ element }));
+  assert.equal(ssr, browser);
+  assert.equal(ssr, renderToStaticMarkup(React.createElement("span", null,
+    `${gatsbyPublicConfig.runtimeApiBaseUrl}|${gatsbyPublicConfig.mapboxAccessToken}`)));
 });

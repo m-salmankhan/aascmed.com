@@ -9,6 +9,7 @@ import { ErrorNotice, SuccessNotice } from "../forms/notices";
 import { Loading } from "../loading";
 import { stylesH4 } from "../headings";
 import {useGTag} from "../../hooks/useGTag";
+import { usePublicConfig } from "../../shared/config/public-context";
 
 
 enum FormState {
@@ -29,6 +30,7 @@ type ContactFormProps = { className?: string } & (
  * @returns The form with its current submission-status notices.
  */
 export function ContactForm(props: ContactFormProps): React.ReactElement {
+    const { runtimeApiBaseUrl } = usePublicConfig();
     const [formState, setFormState] = useState(FormState.DEFAULT);
     const [formData, setFormData] = useState<FormData | undefined>(undefined);
     const [fieldErrors, setFieldErrors] = useState<ContactFormFieldErrors | undefined>();
@@ -54,7 +56,7 @@ export function ContactForm(props: ContactFormProps): React.ReactElement {
         if (formData === undefined) return;
         if (formState !== FormState.SUBMITTING) return;
 
-        const api = new API();
+        const api = new API(runtimeApiBaseUrl);
 
         api.contact({
             subject: (formData.get("subject")?.toString() || ""),
@@ -92,7 +94,7 @@ export function ContactForm(props: ContactFormProps): React.ReactElement {
             console.error(e);
             setFormState(FormState.ERROR);
         })
-    }, [formState, formData]);
+    }, [formState, formData, runtimeApiBaseUrl]);
 
     return (
         <>
