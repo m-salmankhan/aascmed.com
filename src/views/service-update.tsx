@@ -43,7 +43,7 @@ export function ServiceUpdateView({ serviceUpdate, pathname }: ServiceUpdateView
             {jsEnabled
               ? <PrimaryButton onClick={() => { history.back(); return false; }} css={{ marginRight: gridSpacing / 2 + "em" }}>Go back</PrimaryButton>
               : <PrimaryAnchor css={{ marginRight: gridSpacing / 2 + "em" }} href="/">Return to home</PrimaryAnchor>}
-            <SiteLink href="/contact" css={[stylesButton, stylesBtnSecondary]}>Get in touch</SiteLink>
+            <SiteLink href="/contact/" css={[stylesButton, stylesBtnSecondary]}>Get in touch</SiteLink>
           </footer>
         </MainCol></Columns>
       </Article>
