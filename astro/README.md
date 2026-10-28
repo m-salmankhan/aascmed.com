@@ -46,3 +46,7 @@ The official `@astrojs/sitemap` integration discovers Astro pages and adds publi
 From the repository root, run `yarn test:unit` for source contracts and `yarn test:astro` for Astro integration tests. Both root and Astro dependencies must be installed. Install the browser once with `yarn playwright install chromium`.
 
 The document integration test builds the real static/SSR layouts and checks metadata, JSON-LD, tracking, headers, sitemaps and static assets. Its fixture route is created only during the test and removed afterward. No POC route or interactive demo is included in the app. The runtime test checks that Astro and shared UI dependencies resolve one React/Emotion installation.
+
+## Social cards
+
+The shared Node renderer composes branded Open Graph cards using the maintained font and logo. Gatsby retains its existing public card filenames through a compatibility adapter. Install root dependencies first; canvas and sharp are root-provided peers. Keep generated cache files outside public output.
