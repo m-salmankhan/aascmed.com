@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:http';
-import { readFile, stat } from 'node:fs/promises';
+import { readFile, stat, writeFile, unlink } from 'node:fs/promises';
 import { renderSitemapXml } from '../src/server/sitemap.ts';
 
 const observedCmsRequests = [];
@@ -25,7 +25,18 @@ async function runBuild(config) {
 }
 
 let app;
+const fixturePath = new URL('../src/pages/verification-document-fixture.astro', import.meta.url);
+let fixtureCreated = false;
 try {
+  await writeFile(fixturePath, `---
+import SiteDocument from '../layouts/SiteDocument.astro';
+---
+<SiteDocument title="Metadata fixture" description="Fixture description" pathname="/verification-document-fixture/"
+  useTracking={true} trackingSettings={{ googleAnalyticsId: 'G-TEST', googleTagManagerId: 'GTM-TEST', pixelId: 'TEST-PIXEL' }}
+  socialImagePath="/og-images/fixture.jpg" structuredData={{ '@type': 'MedicalClinic', name: '</script><script>untrusted</script>' }}>
+  <main>Document fixture</main>
+</SiteDocument>`, { flag: 'wx' });
+  fixtureCreated = true;
   await runBuild('astro.config.static.mjs');
   assert.ok(observedCmsRequests.length >= 5, 'static sitemap loads its published route collections');
   assert.ok(observedCmsRequests.every((url) => url.searchParams.get('status') === 'published'), 'static build requests published content only');
@@ -41,6 +52,13 @@ try {
     'https://fonts.googleapis.com/css2?family=Poppins:wght@300;800&display=swap',
   ]) assert.ok(staticHtml.includes(expected), `static HTML missing ${expected}`);
   assert.ok(!staticHtml.includes('name="robots"'), 'public static page must remain indexable');
+  const fixtureHtml = await readFile('dist-static/verification-document-fixture/index.html', 'utf8');
+  assert.ok(fixtureHtml.includes('gtag/js?id=G-TEST') && fixtureHtml.includes('GTM-TEST') && fixtureHtml.includes('TEST-PIXEL'), 'public tracking is rendered when explicitly enabled');
+  assert.ok(fixtureHtml.includes("window.gtag('consent', 'default'"), 'existing consent initialization is preserved');
+  assert.ok(fixtureHtml.includes('summary_large_image') && fixtureHtml.includes('https://www.aascmed.com/og-images/fixture.jpg'));
+  assert.ok(!fixtureHtml.includes('<script>untrusted</script>'), 'authored JSON-LD cannot create executable markup');
+  const fixtureJson = fixtureHtml.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)?.[1];
+  assert.equal(JSON.parse(fixtureJson).name, '</script><script>untrusted</script>');
   const notFoundHtml = await readFile('dist-static/404.html', 'utf8');
   assert.ok(notFoundHtml.includes('name="robots" content="noindex, nofollow"'));
   assert.ok(notFoundHtml.includes('<h1>Page not found</h1>'));
@@ -98,6 +116,11 @@ try {
   assert.ok(response.headers.get('cache-control')?.includes('no-store'));
   assert.ok(response.headers.get('content-security-policy')?.includes('frame-ancestors'));
   assert.ok(!ssrHtml.includes('googletagmanager.com') && !ssrHtml.includes('connect.facebook.net'), 'preview omits tracking');
+  const previewFixture = await fetch(`${base}/verification-document-fixture/`);
+  assert.equal(previewFixture.status, 200);
+  const previewFixtureHtml = await previewFixture.text();
+  assert.ok(!/G-TEST|GTM-TEST|TEST-PIXEL|googletagmanager\.com|facebook\.net/.test(previewFixtureHtml), 'preview suppresses tracking even when the route enables it');
+  assert.ok(previewFixtureHtml.includes('name="robots" content="noindex, nofollow"'));
   assert.ok(ssrHtml.includes('type="application/ld+json"') && ssrHtml.indexOf('application/ld+json') < ssrHtml.indexOf('<astro-island'), 'head metadata is emitted before hydration');
 
   const legacy = await fetch(`${base}/contact/index.php?source=legacy`, { redirect: 'manual' });
@@ -115,10 +138,11 @@ try {
   assert.ok(observedCmsRequests.slice(beforeSsrRequests).every((url) => url.searchParams.get('status') === 'published'), 'SSR sitemap requests published content only');
   console.log(JSON.stringify({ static: 'metadata, JSON-LD, assets, headers, redirects and published sitemap verified', ssr: 'noindex, no-store, tracking suppressed, metadata before hydration, redirect and PDF verified', cms: 'local mock only; all manifest requests use published status' }));
 } finally {
-  if (app?.exitCode === null) {
+  if (app?.exitCode === null && app.signalCode === null) {
     const exited = new Promise((resolve) => app.once('exit', resolve));
     app.kill();
     await exited;
   }
   await new Promise((resolve) => cms.close(resolve));
+  if (fixtureCreated) await unlink(fixturePath);
 }
