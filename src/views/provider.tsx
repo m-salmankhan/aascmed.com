@@ -17,7 +17,7 @@ export interface ProviderViewProps { provider: ProviderRecord; pathname: string 
 /** Provider retirement state and optional notice content shown to readers. */
 type RetirementNoticeProps = { retired: boolean; noticeBlocks?: any[] };
 
-const stylesImage = css({ width: "70%", height: "auto", borderRadius: "50%", overflow: "hidden" });
+const stylesImage = css({ display: "block", width: "70%", height: "auto", borderRadius: "50%", overflow: "hidden" });
 
 /** Render provider profile details from a shared provider record.
  * @param props Provider record and current browser pathname.
