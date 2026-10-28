@@ -118,7 +118,7 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
   }));
 
   const practices = data.practices.nodes.map((clinic) => ({
-    slug: "/clinics/" + (clinic.slug || `${(clinic.clinic_name || "").toLowerCase().replace(/\s+/g, "-")}/`),
+    slug: `/clinics/${(clinic.slug || (clinic.clinic_name || "").toLowerCase().replace(/\s+/g, "-")).replace(/\/+$/, "")}/`,
     clinic_name: clinic.clinic_name || "Untitled Clinic",
     longitude: clinic.location?.long || 0,
     latitude: clinic.location?.lat || 0,
