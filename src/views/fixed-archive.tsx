@@ -1,0 +1,180 @@
+import React from "react";
+import { css } from "@emotion/react";
+import { SiteLink } from "../shared/navigation/link";
+import type { JsonValue, MediaDescriptor, ProviderRecord } from "../shared/content/models";
+import { Layout } from "../components/layouts/default";
+import { Container } from "../components/containers";
+import { Breadcrumbs } from "../components/breadcrumbs";
+import { Article } from "../components/posts/article";
+import { Columns, MainCol, PrimarySecondaryColumnsLayout } from "../components/layouts/main-side-column";
+import { H1, SectionHeader } from "../components/headings";
+import { Logo } from "../components/logo";
+import { colours, gridSpacing } from "../styles/theme";
+import { stylesBigH1 as bigHeadingStyles } from "../components/headings";
+import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
+import { ContactSection } from "../components/contact/full-form";
+import { PracticeArchive, type PracticeSummary } from "../components/practices/practice-archive";
+import { BlogArchive, type BlogSummary } from "../components/blog-posts";
+import { ConditionsArchive } from "../components/conditions";
+import { ProviderArchive } from "../components/providers";
+import { ServiceUpdateArchive } from "../components/service-updates";
+import { Image } from "../components/media/image";
+
+/** Shared heading and serializable rich-text inputs for fixed and archive views. */
+export interface FixedViewProps {
+  heading?: string;
+  blocks?: JsonValue[];
+}
+
+/** Privacy page copy with an optional date displayed beneath the policy. */
+type PrivacyViewProps = FixedViewProps & { lastUpdated?: string };
+
+/** Contact page content, clinic archive summaries, and preferred-location choices. */
+export interface ContactViewProps extends FixedViewProps {
+  /** Normalized clinic cards shown in the practice archive. */
+  practices: PracticeSummary[];
+  /** Non-empty clinic names from the page query, before display-label fallbacks. */
+  clinicOptions: readonly string[];
+}
+
+/** Render the site-wide not-found page.
+ * @returns The not-found layout with a contact link.
+ */
+export function NotFoundView() {
+  return <Layout><main><Container css={css({ minHeight: "50vh", textAlign: "center", marginTop: "5em" })}>
+    <Logo css={{ fill: colours.brandPrimary }} />
+    <h1 css={bigHeadingStyles}>Page Not Found!</h1>
+    <p>The URL you have entered may be incorrect, or this page has been removed.</p>
+    <p>If this appears to be a mistake, please <SiteLink href="/contact/">contact us</SiteLink></p>
+  </Container></main></Layout>;
+}
+
+/** Render the privacy page from its heading, content blocks, and optional update date.
+ * @param props Privacy copy and optional last-updated display value.
+ * @returns The privacy page layout.
+ */
+export function PrivacyView({ heading = "Privacy Policy", blocks, lastUpdated }: PrivacyViewProps) {
+  return <PrimarySecondaryColumnsLayout><main>
+    <Breadcrumbs path={[["/", "Home"], ["/privacy/", heading]]} css={css({ marginTop: "3em" })} />
+    <Article><Columns><MainCol>
+      <H1>{heading}</H1>
+      {blocks && <StrapiBlocksRenderer content={blocks} />}
+      {lastUpdated && <p>Last Updated: {lastUpdated}</p>}
+      <p>We may change this privacy policy. If we change this policy, the above date will be amended to reflect the update.</p>
+    </MainCol></Columns></Article>
+  </main></PrimarySecondaryColumnsLayout>;
+}
+
+/** Render contact content, a clinic-aware form, and the supplied clinic archive.
+ * @param props Page copy, clinic summaries, and preferred-location choices.
+ * @returns The contact page layout with its form and practice archive.
+ */
+export function ContactView({ heading = "Contact Us", blocks, practices, clinicOptions }: ContactViewProps) {
+  return <Layout><main><Container>
+    <Breadcrumbs path={[["/", "Home"], ["/contact/", "Contact Us"]]} css={css({ marginTop: "3em" })} />
+    <ContactSection title={heading} textContent={blocks ? <StrapiBlocksRenderer content={blocks} /> : undefined}
+      clinicOptions={clinicOptions} css={css`margin: 0 -${gridSpacing / 2}rem`} />
+    <PracticeArchive practices={practices} heading="Practice Locations" isHomePage={true}
+      css={css({ margin: `0 -${gridSpacing / 2}em` })} />
+  </Container></main></Layout>;
+}
+
+/** Blog archive card data with thumbnail metadata instead of a Gatsby image node. */
+export interface BlogViewItem extends Omit<BlogSummary, "thumbnail"> { thumbnail?: MediaDescriptor }
+/** Blog archive heading, intro blocks, and serializable card data. */
+type BlogArchiveViewProps = FixedViewProps & { blogs: BlogViewItem[] };
+/** Render blog archive cards using plain summary and media data.
+ * @param props Archive heading, rich-text blocks, and ordered blog items.
+ * @returns The blog archive page layout.
+ */
+export function BlogArchiveView({ heading = "Blog", blocks, blogs }: BlogArchiveViewProps) {
+  return <Layout><Container>
+    <Breadcrumbs path={[["/", "Home"], ["/blog/", "Blog"]]} css={css({ marginTop: "3em" })} />
+    <BlogArchive heading={heading} textContent={blocks ? <StrapiBlocksRenderer content={blocks} /> : undefined}
+      blogPosts={blogs.map(({ thumbnail, ...blog }) => ({ ...blog, thumbnail: thumbnail ? <Image image={thumbnail} fit="cover" /> : undefined }))}
+      frontPage={false} css={css({ margin: `0 -${gridSpacing / 2}em` })} />
+  </Container></Layout>;
+}
+
+/** Condition archive card data with optional plain media metadata. */
+export interface ConditionViewItem { slug: string; title: string; thumbnail?: MediaDescriptor }
+/** Conditions archive heading, intro blocks, and serializable card data. */
+type ConditionsArchiveViewProps = FixedViewProps & { conditions: ConditionViewItem[] };
+/** Render condition cards from serializable summaries.
+ * @param props Archive heading, rich-text blocks, and ordered condition items.
+ * @returns The conditions archive page layout.
+ */
+export function ConditionsArchiveView({ heading = "Conditions", blocks, conditions }: ConditionsArchiveViewProps) {
+  return <Layout><main><Container>
+    <Breadcrumbs path={[["/", "Home"], ["/conditions/", "Conditions"]]} css={css({ marginTop: "3em" })} />
+    <ConditionsArchive heading={heading} textContent={blocks ? <StrapiBlocksRenderer content={blocks} /> : undefined}
+      frontPage={false} showViewAll={false} conditionsList={conditions.map(({ thumbnail, ...item }) => ({ ...item, thumbnail: thumbnail ? <Image alt="" image={thumbnail} /> : undefined }))}
+      css={{ margin: `2em -${gridSpacing / 2}rem` }} />
+  </Container></main></Layout>;
+}
+
+/** Provider archive card data with serializable name, retirement, and media fields. */
+export interface ProviderViewItem {
+  slug: string;
+  name?: ProviderRecord["name"];
+  retired: boolean;
+  image?: MediaDescriptor;
+  excerpt: string;
+}
+/** Providers archive heading, intro blocks, and serializable card data. */
+type ProvidersArchiveViewProps = FixedViewProps & { providers: ProviderViewItem[] };
+/** Render provider cards from shared provider summaries.
+ * @param props Archive heading, rich-text blocks, and ordered provider items.
+ * @returns The providers archive page layout.
+ */
+export function ProvidersArchiveView({ heading = "Meet the team", blocks, providers }: ProvidersArchiveViewProps) {
+  const stylesExpandGridPadding = css`margin: 0 ${-gridSpacing / 2}em;`;
+  return <Layout><Container>
+    <Breadcrumbs path={[["/", "Home"], ["/providers/", "Providers"]]} css={css({ marginTop: "3em" })} />
+    <div css={stylesExpandGridPadding}>
+      <SectionHeader heading={<h1 css={bigHeadingStyles}>{heading}</h1>} bodyContent={blocks ? <StrapiBlocksRenderer content={blocks} /> : undefined} />
+      <ProviderArchive providers={providers.map((provider) => ({
+        slug: provider.slug || "", excerpt: provider.excerpt,
+        name: { fullName: provider.name?.fullName || "", title: provider.name?.honorific && provider.name.honorific !== "None" ? provider.name.honorific : "", degreeAbbr: provider.name?.qualificationAbbr || "" },
+        retired: provider.retired,
+        image: provider.image ? <Image image={provider.image} alt={`An image of ${provider.name?.honorific && provider.name.honorific !== "None" ? `${provider.name.honorific} ` : ""}${provider.name?.fullName || ""}`} /> : undefined,
+      }))} />
+    </div>
+  </Container></Layout>;
+}
+
+/** Clinics archive heading, intro blocks, and clinic summaries. */
+type ClinicsArchiveViewProps = FixedViewProps & { practices: PracticeSummary[] };
+/** Render clinic cards using the supplied plain clinic summaries.
+ * @param props Archive heading, rich-text blocks, and ordered clinic summaries.
+ * @returns The clinics archive page layout.
+ */
+export function ClinicsArchiveView({ heading = "Clinics", blocks, practices }: ClinicsArchiveViewProps) {
+  return <Layout><main><Container>
+    <Breadcrumbs path={[["/", "Home"], ["/clinics/", "Clinics"]]} css={css({ marginTop: "3em" })} />
+    <PracticeArchive practices={practices} heading={heading} textContent={blocks ? <StrapiBlocksRenderer content={blocks} /> : undefined}
+      isHomePage={false} lazyLoad={false} css={css({ margin: `0 -${gridSpacing / 2}em` })} />
+  </Container></main></Layout>;
+}
+
+/** Serializable fields shown for one dated service update in the archive. */
+export interface ServiceUpdateViewItem {
+  slug: string;
+  date: string;
+  title: string;
+  description: string;
+}
+
+/** Service-updates archive heading, intro blocks, and dated update cards. */
+type ServiceUpdatesArchiveViewProps = FixedViewProps & { serviceUpdates: ServiceUpdateViewItem[] };
+/** Render service-update cards from dated, serializable summaries.
+ * @param props Archive heading, rich-text blocks, and ordered update summaries.
+ * @returns The service-updates archive page layout.
+ */
+export function ServiceUpdatesArchiveView({ heading = "Service Updates", blocks, serviceUpdates }: ServiceUpdatesArchiveViewProps) {
+  return <Layout><Container>
+    <Breadcrumbs path={[["/", "Home"], ["/service-updates/", "Service Updates"]]} css={css({ marginTop: "3em" })} />
+    <ServiceUpdateArchive heading={heading} textContent={blocks ? <StrapiBlocksRenderer content={blocks} /> : undefined}
+      serviceUpdates={serviceUpdates} frontPage={false} css={css({ margin: `0 -${gridSpacing / 2}em` })} />
+  </Container></Layout>;
+}

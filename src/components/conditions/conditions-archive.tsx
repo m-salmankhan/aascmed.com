@@ -4,7 +4,7 @@ import { css } from "@emotion/react";
 import { cols, gridContainer } from "../../styles/grid";
 import { mediaBreakpoints } from "../../styles/breakpoints";
 import { IconStyles } from "../font-awesome";
-import { Link } from "gatsby";
+import { SiteLink } from "../../shared/navigation/link";
 import { gridSpacing } from "../../styles/theme";
 import { Thumbnail } from "../thumbnails";
 
@@ -67,7 +67,7 @@ export const ConditionList: React.FC<ConditionListProps> = ({ className, conditi
             conditions.map(
                 (condition, idx) =>
                     <li key={idx} css={stylesLi}>
-                        <Link to={condition.slug}>
+                        <SiteLink href={condition.slug}>
                             <Thumbnail
                                 css={stylesThumbnail}
                                 overlayIconStyle={IconStyles.SOLID}
@@ -75,14 +75,14 @@ export const ConditionList: React.FC<ConditionListProps> = ({ className, conditi
                                 image={condition.thumbnail}
                             />
                             <H2 css={stylesH5} className={"heading"}>{condition.title}</H2>
-                        </Link>
+                        </SiteLink>
                     </li>
             )
         }
         {
             showViewAll &&
             <li css={css(stylesLi)}>
-                <Link to={"/conditions/"}>
+                <SiteLink href={"/conditions/"}>
                     <Thumbnail
                         css={css(stylesThumbnail)}
                         overlayIcon={"plus"}
@@ -90,7 +90,7 @@ export const ConditionList: React.FC<ConditionListProps> = ({ className, conditi
                         showOverlay={true}
                     />
                     <H2 css={stylesH5} className={"heading"}>View All</H2>
-                </Link>
+                </SiteLink>
             </li>
         }
     </ul>

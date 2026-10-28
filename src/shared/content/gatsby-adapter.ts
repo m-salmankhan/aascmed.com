@@ -13,7 +13,10 @@ import type {
 
 /** Gatsby image plugin output fields used to extract a plain media source. */
 interface GatsbyImageData {
-  images?: { fallback?: { src?: string; width?: number; height?: number; srcSet?: string } };
+  images?: {
+    fallback?: { src?: string; width?: number; height?: number; srcSet?: string; sizes?: string };
+    sources?: Array<{ srcSet?: string; sizes?: string; type?: string }>;
+  };
   width?: number;
   height?: number;
   src?: string;
@@ -193,6 +196,15 @@ export function mapGatsbyBlocks(node: GatsbyNode, key: "body" | "content"): Json
   return jsonArray(source?.[key]);
 }
 
+/** Convert Gatsby archive/singleton serialized content to shared rich-text blocks.
+ * @param node Gatsby page result containing serialized internal content.
+ * @returns JSON-safe text blocks, or undefined when no content is available.
+ */
+export function mapGatsbyText(node: { internal?: { content?: string | null } | null }): JsonValue[] | undefined {
+  const source = readInternalContent(node.internal?.content);
+  return jsonArray(source?.text);
+}
+
 /** Convert nullable Gatsby image metadata to plain shared media data.
  * @param media Nullable Gatsby or Strapi media query result.
  * @returns A descriptor using Gatsby's fallback `src` as the default and `srcSet` only as responsive candidates, or undefined without a source.
@@ -207,14 +219,28 @@ export function mapGatsbyMedia(media: GatsbyMedia | null | undefined): MediaDesc
   const srcSet = fallback?.srcSet || image?.srcSet;
   const descriptor: MediaDescriptor = {
     src,
-    alt: media.altText || media.alternativeText || "",
+    alt: media.altText || media.alternativeText || (media as GatsbyMedia & { name?: string | null }).name || "",
   };
   const width = fallback?.width || image?.width || media.width;
   const height = fallback?.height || image?.height || media.height;
   if (width != null) descriptor.width = width;
   if (height != null) descriptor.height = height;
-  if (media.mime) descriptor.mimeType = media.mime;
   if (srcSet) descriptor.srcSet = srcSet;
+  if (fallback?.sizes) descriptor.sizes = fallback.sizes;
+  const formats = image?.images?.sources?.filter((source) => source.type && source.srcSet).map((source) => ({
+    type: source.type!,
+    srcSet: source.srcSet!,
+    sizes: source.sizes,
+  }));
+  if (formats?.length) descriptor.formats = formats;
+  const mimeType = media.mime || (media as GatsbyMedia & { mimeType?: string | null }).mimeType;
+  if (mimeType) descriptor.mimeType = mimeType;
+  const candidates = (fallback?.srcSet || image?.srcSet || "").split(",").map((candidate) => {
+    const match = candidate.trim().match(/^(\S+)\s+(\d+)w$/);
+    return match ? { src: match[1], width: Number(match[2]) } : undefined;
+  }).filter((candidate): candidate is { src: string; width: number } => !!candidate);
+  if (candidates.length) descriptor.sources = candidates;
+  if (width && height) descriptor.aspectRatio = width / height;
   return descriptor;
 }
 

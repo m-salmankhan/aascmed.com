@@ -1,91 +1,46 @@
 import { graphql, HeadProps, PageProps } from "gatsby";
-import React from "react";
-import { Layout } from "../components/layouts/default";
-import { Breadcrumbs } from "../components/breadcrumbs";
-import { css } from "@emotion/react";
-import { Container } from "../components/containers";
-import { gridSpacing } from "../styles/theme";
 import { GatsbySEO as SEO } from "../adapters/gatsby/seo";
-import { BlogArchive, BlogSummary } from "../components/blog-posts";
-import { GatsbyImage, getImage } from "gatsby-plugin-image";
-import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
+import { mapGatsbyBlog, mapGatsbyText } from "../shared/content/gatsby-adapter";
+import { blogPath } from "../shared/content/urls";
+import { BlogArchiveView } from "../views/fixed-archive";
 
-const BlogPage: React.FC<PageProps<Queries.BlogsQuery>> = ({ data }) => {
-  const archiveCopy = data.strapiBlogArchive;
-  const blogsTitle = archiveCopy?.heading || "Blog";
-  
-  // Parse text blocks from internal.content
-  const rawContent = archiveCopy?.internal?.content;
-  const parsedData = rawContent ? JSON.parse(rawContent) : null;
-  const textBlocks = parsedData?.text as any[] | null;
-
-  const blogs: BlogSummary[] = data.blogs.nodes.map(node => ({
-    slug: `/blog/${node.slug}/`,
-    title: node.title || "Untitled",
-    date: node.date || "",
-    description: node.description || "",
-    thumbnail: (() => {
-      const image = getImage(node.thumbnail?.localFile?.childImageSharp?.gatsbyImageData ?? null);
-      return image ? <GatsbyImage alt={node.title || "Untitled"} image={image} /> : undefined;
-    })(),
-  }));
-  return (
-    <Layout>
-      <Container>
-        <Breadcrumbs path={[
-          ["/", "Home"],
-          ["/blog/", "Blog"]
-        ]} css={css({ marginTop: "3em" })} />
-        <BlogArchive
-          heading={blogsTitle}
-          textContent={textBlocks ? <StrapiBlocksRenderer content={textBlocks} /> : undefined}
-          blogPosts={blogs}
-          frontPage={false}
-          css={css({
-            margin: `0 -${gridSpacing / 2}em`,
-          })}
-        />
-      </Container>
-    </Layout>
-  )
-}
+const BlogPage = ({ data }: PageProps<Queries.BlogsQuery>) => {
+  const archive = data.strapiBlogArchive;
+  const blogs = data.blogs.nodes.map((node) => {
+    const blog = mapGatsbyBlog({ ...node, id: node.id });
+    return {
+      slug: blogPath(blog.slug) || "/blog/",
+      title: blog.title || "Untitled",
+      date: node.date || "",
+      description: blog.description || "",
+      thumbnail: blog.thumbnail ? { ...blog.thumbnail, alt: blog.title || "Untitled" } : undefined,
+    };
+  });
+  return <BlogArchiveView heading={archive?.heading || "Blog"} blocks={mapGatsbyText(archive || {})} blogs={blogs} />;
+};
 
 export const Head = (props: HeadProps<Queries.BlogsQuery>) => {
   const description = props.data.strapiBlogArchive?.metaDescription || "";
   const heading = props.data.strapiBlogArchive?.heading || "";
-
-  return (
-    <SEO description={description} slug={props.location.pathname} title={heading} useTracking={true}>
-      <meta name={"og:type"} content={"website"} />
-    </SEO>
-  )
-}
-
-export default BlogPage;
+  return <SEO description={description} slug={props.location.pathname} title={heading} useTracking={true}>
+    <meta name="og:type" content="website" />
+  </SEO>;
+};
 
 export const query = graphql`
   query Blogs {
-    strapiBlogArchive {
-      heading
-      metaDescription
-      internal {
-        content
-      }
-    }
+    strapiBlogArchive { heading metaDescription internal { content } }
     blogs: allStrapiBlog(sort: {date: DESC}) {
       nodes {
+        id
         slug
         title
         description
         date(formatString: "Do MMMM YYYY")
-        thumbnail {
-          localFile {
-            childImageSharp {
-              gatsbyImageData(width: 400, height: 250, transformOptions: { cropFocus: CENTER })
-            }
-          }
-        }
+        thumbnail { localFile { childImageSharp { gatsbyImageData(width: 400, height: 250, transformOptions: { cropFocus: CENTER }) } } }
       }
     }
   }
-`
+`;
+
+export default BlogPage;

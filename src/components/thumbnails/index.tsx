@@ -13,7 +13,12 @@ const stylesThumbnail = (iconSize: number, showOverlay: boolean, elipse: boolean
     transition: transform .25s ease 0s;
 
     .gatsby-image-wrapper, img {
+        width: 100%;
         height: 100%;
+        object-fit: cover;
+    }
+    img {
+        display: block;
     }
     
     .overlay {

@@ -3,7 +3,7 @@ import { H2, H3, SectionHeader, stylesBigH1 } from "../headings";
 import { css } from "@emotion/react";
 import { cols, gridContainer } from "../../styles/grid";
 import { mediaBreakpoints } from "../../styles/breakpoints";
-import { Link } from "gatsby";
+import { SiteLink } from "../../shared/navigation/link";
 import { Thumbnail } from "../thumbnails";
 import { IconStyles } from "../font-awesome";
 import { MapBoxProps } from "../mapbox";
@@ -57,13 +57,13 @@ const PracticeArchiveListItem: React.FC<PracticeListItemProps> = ({ className, p
     }
     return (
         <li className={className} css={stylesPracticeArchiveListItem}>
-            <Link to={practice.slug}>
+            <SiteLink href={practice.slug}>
                 <Thumbnail overlayIcon={"house-medical"}
                     overlayIconStyle={IconStyles.SOLID}
                     mapboxStaticMap={staticMapProps}
                     css={css`height: 15rem`}
                 />
-            </Link>
+            </SiteLink>
             {
                 isFrontPage ?
                     <H3>{practice.clinic_name}</H3> :
@@ -76,7 +76,7 @@ const PracticeArchiveListItem: React.FC<PracticeListItemProps> = ({ className, p
                 <p>Fax: <a href={`fax:${practice.fax}`}>{practice.fax}</a></p>
             </address>
             <p className={"more"}>
-                <Link to={practice.slug}>View opening times</Link>
+            <SiteLink href={practice.slug}>View opening times</SiteLink>
             </p>
         </li>
     )

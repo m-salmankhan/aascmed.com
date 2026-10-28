@@ -1,5 +1,5 @@
 import React from "react";
-import {Link} from "gatsby";
+import {SiteLink} from "../shared/navigation/link";
 import {css} from "@emotion/react";
 import Color from "color";
 import {colours, gridSpacing} from "../styles/theme";
@@ -59,7 +59,7 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({path, className=''}) =>
         <ol>
             {path.map(
                 (item, key) =>
-                    <li key={key}><Link to={item[0]}>{item[1]}</Link></li>
+                    <li key={key}><SiteLink href={item[0]}>{item[1]}</SiteLink></li>
             )}
         </ol>
     </div>

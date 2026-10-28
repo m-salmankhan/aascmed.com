@@ -15,7 +15,7 @@
     "clean": "gatsby clean",
     "typecheck": "tsc --noEmit",
     "test:ui": "playwright test",
-    "test:unit": "node --test tests/unit/content-contracts.test.mjs",
+    "test:unit": "node --test tests/unit/content-contracts.test.mjs tests/unit/navigation.test.js tests/unit/public-config.test.mjs tests/unit/public-config-consumers.test.js",
     "test:infrastructure:node": "node --test tests/infrastructure/contracts.test.js tests/infrastructure/review.test.js tests/infrastructure/targets.test.js",
     "test:infrastructure:browser": "playwright test --config playwright.infrastructure.config.js",
     "test:infrastructure": "yarn test:infrastructure:node && yarn test:infrastructure:browser",

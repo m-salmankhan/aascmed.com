@@ -1,128 +1,103 @@
 import React from "react";
 import { graphql, HeadProps, PageProps, Script } from "gatsby";
-import { GatsbyImage } from "gatsby-plugin-image";
-import { Hero } from "../components/header";
-import { css } from "@emotion/react";
-import { ConditionsArchive } from "../components/conditions/";
-import { ConditionSummary } from "../components/conditions/conditions-archive";
-import { ServiceUpdateArchive } from "../components/service-updates";
-import { ServiceUpdateSummary } from "../components/service-updates/service-update-archive";
-import { App } from "../components/layouts/app";
-import { ProvidersArchiveHomePageLayout, ProviderSummary } from "../components/providers";
-import { PatientFeedback } from "../components/patient-feedback";
-import { Review } from "../components/patient-feedback/reviews";
-import { Container } from "../components/containers";
-import { PracticeArchive, PracticeSummary } from "../components/practices/practice-archive";
-import { ContactSection } from "../components/contact/full-form";
+import { isJsonValue, mapGatsbyMedia } from "../shared/content/gatsby-adapter";
+import type { JsonValue } from "../shared/content/models";
 import { GatsbySEO as SEO } from "../adapters/gatsby/seo";
-import { Footer } from "../components/footer";
-import { BlogArchive } from "../components/blog-posts";
-import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
-import { SectionMedia, SectionMediaItem, filterValidMedia } from "../components/strapi/section-media";
-import { SectionHeader, stylesBigH1 } from "../components/headings";
-import { PatientFormsBanner } from "../components/patient-forms/cta-banner";
-import { HorizontalCalloutBanner } from "../components/cta/horizontal-banner";
+import { App } from "../components/layouts/app";
+import { HomeView, type HomeMediaItem, type HomeSection, type HomeViewProps } from "../views/home";
 
-// Helper to parse text blocks from a section in internal.content
-const parseTextBlocks = (parsedData: any, sectionName: string): any[] | null => {
-  if (!parsedData || !parsedData[sectionName]?.text) return null;
-  return parsedData[sectionName].text;
-};
+/** Parse CMS internal content for the homepage data adapter.
+ * @param value Optional serialized CMS content.
+ * @returns A content object, or null when absent or not a JSON object.
+ */
+function readContent(value?: string | null): Record<string, any> | null {
+  if (!value) return null;
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed as Record<string, any> : null;
+  } catch {
+    return null;
+  }
+}
 
-// Helper to extract media items from a homepage section
-const parseSectionMedia = (section: any): SectionMediaItem[] | null => {
-  if (!section?.media || !Array.isArray(section.media) || section.media.length === 0) return null;
+/** Keep a CMS field only when it contains JSON-safe rich-text blocks.
+ * @param value Untrusted parsed CMS field.
+ * @returns A serializable block array, or undefined when it has another shape.
+ */
+function jsonBlocks(value: unknown): JsonValue[] | undefined {
+  return Array.isArray(value) && value.every(isJsonValue) ? value : undefined;
+}
+
+/** Convert a CMS section's media entries to framework-neutral homepage data.
+ * @param section CMS section query result with optional media entries.
+ * @returns Media summaries with public URLs/descriptors, or undefined when empty.
+ */
+function mapSectionMedia(section: any): HomeMediaItem[] | undefined {
+  if (!Array.isArray(section?.media) || section.media.length === 0) return undefined;
   return section.media.map((item: any) => ({
     mime: item.mime,
     name: item.name,
     url: item.localFile?.publicURL || item.url,
-    image: item.mime?.startsWith("image/") && item.localFile?.childImageSharp?.gatsbyImageData
-      ? <GatsbyImage alt={item.name || ""} image={item.localFile.childImageSharp.gatsbyImageData} />
-      : undefined,
+    descriptor: mapGatsbyMedia({ ...item, publicURL: item.localFile?.publicURL, localFile: item.localFile }),
   }));
-};
+}
 
-// Helper to render SectionMedia if valid media items exist
-const renderMedia = (media: SectionMediaItem[] | null | undefined): React.ReactNode | undefined => {
-  const valid = filterValidMedia(media);
-  if (valid.length === 0) return undefined;
-  return <SectionMedia media={valid} />;
-};
+/** Normalize one homepage section's heading, rich text, and media.
+ * @param section CMS section query result.
+ * @param content Parsed homepage internal content, when available.
+ * @param key Rich-text property name associated with this section.
+ * @param fallback Display heading used when the CMS heading is absent.
+ * @returns A serializable shared-view section model.
+ */
+function mapSection(section: any, content: Record<string, any> | null, key: string, fallback: string): HomeSection {
+  return {
+    heading: section?.heading || fallback,
+    text: jsonBlocks(content?.[key]?.text),
+    media: mapSectionMedia(section),
+  };
+}
 
 const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
-  const heroImage = data.heroImage?.childImageSharp?.gatsbyImageData;
-  const siteTitle = data.siteTitle?.siteMetadata?.title || "Allergy Asthma and Sinus Centres";
   const homePage = data.strapiHomePage;
+  const content = readContent(homePage?.internal?.content);
+  const siteTitle = data.siteTitle?.siteMetadata?.title || "Allergy Asthma and Sinus Centres";
 
-  // Parse the full internal.content JSON once
-  const rawContent = homePage?.internal?.content;
-  const parsedData = rawContent ? JSON.parse(rawContent) : null;
+  const genericSections: HomeSection[] = ((homePage as any)?.genericBelowHero || []).map((section: any, idx: number) => ({
+    heading: section?.heading || "",
+    text: jsonBlocks(content?.genericBelowHero?.[idx]?.text),
+    media: mapSectionMedia(section),
+  })).filter((section: HomeSection) => section.heading || section.text?.length || section.media?.length);
 
-  // Hero section
-  const heroTitle = homePage?.hero?.heading || siteTitle;
-  const heroTextBlocks = parseTextBlocks(parsedData, 'hero');
-  const heroMedia = parseSectionMedia(homePage?.hero);
-
-  // Generic below-hero sections
-  const genericBelowHeroSections = ((homePage as any)?.genericBelowHero || []).map((section: any, idx: number) => {
-    const textBlocks = parsedData?.genericBelowHero?.[idx]?.text || null;
-    return {
-      heading: section?.heading || "",
-      textBlocks,
-      media: parseSectionMedia(section),
-    };
-  }).filter((s: any) => s.heading || s.textBlocks || s.media);
-
-  // Conditions section
-  const conditionsTitle = homePage?.conditions?.heading || "Learn more about the conditions we treat.";
-  const conditionsTextBlocks = parseTextBlocks(parsedData, 'conditions');
-  const conditionsMedia = parseSectionMedia(homePage?.conditions);
-  const conditions: ConditionSummary[] = data.conditions.nodes.map(node => ({
+  const conditions = data.conditions.nodes.map((node) => ({
     slug: `/conditions/${node.slug}/`,
     title: node.heading || node.title || "",
     thumbnail: node.thumbnail?.localFile?.childImageSharp?.gatsbyImageData
-      ? <GatsbyImage alt="" image={node.thumbnail.localFile.childImageSharp.gatsbyImageData} />
+      ? mapGatsbyMedia({ localFile: node.thumbnail.localFile })
       : undefined,
   }));
 
-  // Service updates section
-  const serviceUpdatesTitle = homePage?.serviceUpdates?.heading || "Service Updates";
-  const serviceUpdatesTextBlocks = parseTextBlocks(parsedData, 'serviceUpdates');
-  const serviceUpdatesMedia = parseSectionMedia(homePage?.serviceUpdates);
-  const serviceUpdates: ServiceUpdateSummary[] = data.serviceUpdates.nodes.map(node => {
+  const serviceUpdates = data.serviceUpdates.nodes.map((node) => {
     const date = node.date ? new Date(node.date) : null;
-    const year = date ? date.getFullYear() : '';
-    const month = date ? String(date.getMonth() + 1).padStart(2, '0') : '';
-    const slug = date 
-      ? `/service-updates/${year}/${month}/${node.slug}/`
-      : `/service-updates/${node.slug}/`;
-    
+    const year = date ? date.getFullYear() : "";
+    const month = date ? String(date.getMonth() + 1).padStart(2, "0") : "";
     return {
-      slug,
+      slug: date ? `/service-updates/${year}/${month}/${node.slug}/` : `/service-updates/${node.slug}/`,
       title: node.title || "",
       date: node.formattedDate || "",
       description: node.description || "",
     };
   });
 
-  // Blog section
-  const blogsTitle = homePage?.blog?.heading || "Blog";
-  const blogsTextBlocks = parseTextBlocks(parsedData, 'blog');
-  const blogsMedia = parseSectionMedia(homePage?.blog);
-  const blogs: ServiceUpdateSummary[] = data.blogs.nodes.map(node => ({
+  const blogs = data.blogs.nodes.map((node) => ({
     slug: `/blog/${node.slug}/`,
     title: node.title || "",
     date: node.date || "",
     description: node.description || "",
   }));
 
-  // Providers section
-  const providersTitle = homePage?.providers?.heading || "Meet the team";
-  const providersTextBlocks = parseTextBlocks(parsedData, 'providers');
-  const providersMedia = parseSectionMedia(homePage?.providers);
-  const providers: ProviderSummary[] = data.providers.nodes
-    .filter(node => !node.retirementNotice?.retired) // Exclude retired providers
-    .map(node => ({
+  const providers = data.providers.nodes
+    .filter((node) => !node.retirementNotice?.retired)
+    .map((node) => ({
       slug: `/providers/${node.slug}/`,
       name: {
         fullName: node.name?.fullName || "",
@@ -131,43 +106,19 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
       },
       retired: false,
       image: node.image?.localFile?.childImageSharp?.gatsbyImageData
-        ? <GatsbyImage alt={`An image of ${node.name?.honorific && node.name.honorific !== "None" ? node.name.honorific : ""} ${node.name?.fullName || ""}`} image={node.image.localFile.childImageSharp.gatsbyImageData} />
+        ? mapGatsbyMedia({ localFile: node.image.localFile })
         : undefined,
     }));
 
-  // Feedback section
-  const avgRating = {
-    rating: homePage?.feedback?.rating || 0,
-    source: {
-      name: homePage?.feedback?.sourceName || "",
-      url: homePage?.feedback?.sourceUrl || "",
-    },
-    date: homePage?.feedback?.accessDate || "",
-  };
+  const reviews = data.reviews.nodes.map((node) => ({
+    stars: node.stars || 0,
+    body: jsonBlocks(readContent(node.internal?.content)?.content) || null,
+    source: { url: node.sourceUrl || "", name: node.sourceName || "" },
+    reviewerName: node.name || "",
+  }));
 
-  const reviews: Review[] = data.reviews.nodes.map(node => {
-    // Parse the content blocks from internal.content
-    const rawContent = node.internal?.content;
-    const parsedContent = rawContent ? JSON.parse(rawContent) : null;
-    const contentBlocks = parsedContent?.content as any[] | null;
-    
-    return {
-      stars: node.stars || 0,
-      body: contentBlocks,
-      source: {
-        url: node.sourceUrl || "",
-        name: node.sourceName || "",
-      },
-      reviewerName: node.name || "",
-    };
-  });
-
-  // Locations/Practices section
-  const practicesTitle = homePage?.locations?.heading || "Practices";
-  const practicesTextBlocks = parseTextBlocks(parsedData, 'locations');
-  const locationsMedia = parseSectionMedia(homePage?.locations);
-  const practices: PracticeSummary[] = data.practices.nodes.map(clinic => ({
-    slug: '/clinics/' + (clinic.slug || `${(clinic.clinic_name || "").toLowerCase().replace(/\s+/g, '-')}/`),
+  const practices = data.practices.nodes.map((clinic) => ({
+    slug: `/clinics/${(clinic.slug || (clinic.clinic_name || "").toLowerCase().replace(/\s+/g, "-")).replace(/\/+$/, "")}/`,
     clinic_name: clinic.clinic_name || "Untitled Clinic",
     longitude: clinic.location?.long || 0,
     latitude: clinic.location?.lat || 0,
@@ -177,114 +128,46 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data }) => {
   }));
   const clinicOptions = data.practices.nodes.flatMap((clinic) => clinic?.clinic_name ? [clinic.clinic_name] : []);
 
-  // Contact section
-  const contactTitle = homePage?.contact?.heading || "Contact Us";
-  const contactTextBlocks = parseTextBlocks(parsedData, 'contact');
-  const contactMedia = parseSectionMedia(homePage?.contact);
+  const viewProps: HomeViewProps = {
+    siteTitle,
+    hero: {
+      heading: homePage?.hero?.heading || siteTitle,
+      text: jsonBlocks(content?.hero?.text),
+      media: mapSectionMedia(homePage?.hero),
+      image: mapGatsbyMedia({ localFile: { publicURL: data.heroImage?.publicURL, childImageSharp: { gatsbyImageData: data.heroImage?.childImageSharp?.gatsbyImageData } } }),
+    },
+    genericSections,
+    conditions: { ...mapSection(homePage?.conditions, content, "conditions", "Learn more about the conditions we treat."), items: conditions },
+    blogs: { ...mapSection(homePage?.blog, content, "blog", "Blog"), items: blogs },
+    providers: { ...mapSection(homePage?.providers, content, "providers", "Meet the team"), items: providers },
+    serviceUpdates: { ...mapSection(homePage?.serviceUpdates, content, "serviceUpdates", "Service Updates"), items: serviceUpdates },
+    feedback: {
+      averageRating: {
+        rating: homePage?.feedback?.rating || 0,
+        source: { name: homePage?.feedback?.sourceName || "", url: homePage?.feedback?.sourceUrl || "" },
+        date: homePage?.feedback?.accessDate || "",
+      },
+      reviews,
+    },
+    contact: mapSection(homePage?.contact, content, "contact", "Contact Us"),
+    clinicOptions,
+    locations: { ...mapSection(homePage?.locations, content, "locations", "Practices"), practices },
+  };
 
-  return (
-    <App>
-      <Hero 
-        image={heroImage ? <GatsbyImage alt="" image={heroImage} loading="eager" draggable={false} /> : undefined}
-        heading={heroTitle} 
-        textContent={heroTextBlocks ? <StrapiBlocksRenderer content={heroTextBlocks} /> : undefined}
-        media={renderMedia(heroMedia)}
-      />
-      <PatientFormsBanner
-        registrationFormUrl={"https://form-aasc-allergy.raga.ai/forms/patient-registration-form"}
-        healthHistoryFormUrl={"https://form-aasc-allergy.raga.ai/forms/patient-health-history-form"}
-      />
-      <main id={"main"}>
-        {genericBelowHeroSections.length > 0 && (
-          <Container>
-            {genericBelowHeroSections.map((section: any, idx: number) => (
-              <section key={idx} css={css({ marginTop: "4em" })}>
-                <SectionHeader
-                  heading={<h2 css={stylesBigH1}>{section.heading}</h2>}
-                  bodyContent={section.textBlocks ? <StrapiBlocksRenderer content={section.textBlocks} /> : undefined}
-                  media={renderMedia(section.media)}
-                />
-              </section>
-            ))}
-          </Container>
-        )}
-        <Container>
-          <ConditionsArchive 
-              showViewAll={true} 
-              heading={conditionsTitle} 
-              textContent={conditionsTextBlocks ? <StrapiBlocksRenderer content={conditionsTextBlocks} /> : undefined}
-              media={renderMedia(conditionsMedia)}
-              frontPage={true} 
-              conditionsList={conditions} 
-              css={css({ marginTop: "5em", })} 
-            />
-          <BlogArchive 
-              blogPosts={blogs} 
-              frontPage={true} 
-              heading={blogsTitle} 
-              textContent={blogsTextBlocks ? <StrapiBlocksRenderer content={blogsTextBlocks} /> : undefined}
-              media={renderMedia(blogsMedia)}
-              css={css({ marginTop: "4em", })} 
-            />
-          <ProvidersArchiveHomePageLayout 
-              providers={providers} 
-              heading={providersTitle} 
-              textContent={providersTextBlocks ? <StrapiBlocksRenderer content={providersTextBlocks} /> : undefined}
-              media={renderMedia(providersMedia)}
-              css={css({ marginTop: "4em", })} 
-            />
-          <ServiceUpdateArchive 
-              serviceUpdates={serviceUpdates} 
-              frontPage={true} 
-              heading={serviceUpdatesTitle} 
-              textContent={serviceUpdatesTextBlocks ? <StrapiBlocksRenderer content={serviceUpdatesTextBlocks} /> : undefined}
-              media={renderMedia(serviceUpdatesMedia)}
-              css={css({ marginTop: "4em", })} 
-            />
-        </Container>
-        <PatientFeedback css={css({ marginTop: "5em", })} averageRating={avgRating} reviews={reviews} />
-        <Container>
-          <ContactSection 
-              css={css({ marginTop: "5em", })} 
-              title={contactTitle} 
-              textContent={contactTextBlocks ? <StrapiBlocksRenderer content={contactTextBlocks} /> : undefined}
-              clinicOptions={clinicOptions}
-            />
-          <PracticeArchive 
-              css={css({ marginTop: "5em", })} 
-              practices={practices} 
-              heading={practicesTitle} 
-              textContent={practicesTextBlocks ? <StrapiBlocksRenderer content={practicesTextBlocks} /> : undefined}
-              media={renderMedia(locationsMedia)}
-              isHomePage={true} 
-            />
-        </Container>
-      </main>
-      <HorizontalCalloutBanner
-        title="New patient? Save time at your first visit."
-        description="Complete both forms online before you arrive."
-        primaryButtonLabel="Registration Form"
-        primaryButtonUrl="https://form-aasc-allergy.raga.ai/forms/patient-registration-form"
-        secondaryButtonLabel="Health History Form"
-        secondaryButtonUrl="https://form-aasc-allergy.raga.ai/forms/patient-health-history-form"
-      />
-      <Footer />
-      <Script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></Script>
-      <script dangerouslySetInnerHTML={{
-        __html: `
-        if (window.netlifyIdentity) {
-          window.netlifyIdentity.on('init', user => {
-            if (!user) {
-              window.netlifyIdentity.on('login', () => {
-                document.location.href = '/admin/';
-              });
-            }
-          });
-        }
-      `}} />
-    </App>
-  );
-}
+  return <App>
+    <HomeView {...viewProps} />
+    <Script src="https://identity.netlify.com/v1/netlify-identity-widget.js" />
+    <script dangerouslySetInnerHTML={{ __html: `
+      if (window.netlifyIdentity) {
+        window.netlifyIdentity.on('init', user => {
+          if (!user) {
+            window.netlifyIdentity.on('login', () => { document.location.href = '/admin/'; });
+          }
+        });
+      }
+    ` }} />
+  </App>;
+};
 
 export const Head = (props: HeadProps<Queries.IndexPageQuery>) => {
   const description = props.data.strapiHomePage?.metaDescription || "";
@@ -429,6 +312,7 @@ export const query = graphql`
       childImageSharp {
         gatsbyImageData
       }
+      publicURL
     }
     siteTitle: site(siteMetadata: {}) {
       siteMetadata {

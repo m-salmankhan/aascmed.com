@@ -121,6 +121,17 @@ test("responsive menu opens, closes and supports keyboard navigation", async ({ 
   await expect(page).toHaveURL(baseURL);
 });
 
+test("navigation marks the current page accessibly and keeps external links separate", async ({ page, baseURL }) => {
+  await preparePage(page, new URL("/blog/", baseURL).href);
+  const blogLink = page.locator('nav a[href="/blog/"]').first();
+  await expect(blogLink).toHaveClass(/\bactive\b/);
+  await expect(blogLink).toHaveAttribute("aria-current", "page");
+
+  const patientPortal = page.locator('nav a[href="https://login.patientfusion.com"]').first();
+  await expect(patientPortal).toHaveAttribute("target", "_BLANK");
+  await expect(patientPortal).toHaveAttribute("rel", "noreferrer");
+});
+
 for (const family of ["blog", "conditions", "providers", "clinics", "service-updates"]) {
   test(`${family} archive opens a detail page and preserves browser back navigation`, async ({ page, baseURL }) => {
     const archive = new URL(`/${family}/`, baseURL).href;

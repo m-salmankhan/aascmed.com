@@ -46,6 +46,7 @@ async function preparePage(page, url) {
     await image.scrollIntoViewIfNeeded();
     await expect.poll(() => image.evaluate(element => element.complete && element.naturalWidth > 0),
       { message: `Image failed to load on ${url}: ${await image.getAttribute("alt")}` }).toBe(true);
+    await image.evaluate(element => element.decode());
   }
   await expect.poll(() => page.locator("img.lazy-preview").evaluateAll(images =>
     images.every(image => getComputedStyle(image).opacity === "0")
@@ -99,7 +100,7 @@ async function pageContract(page) {
         .filter(element => !element.closest("noscript, .map-container, .mapboxgl-map"))
         .map(element => {
           const anchor = element.cloneNode(true);
-          anchor.querySelectorAll("noscript").forEach(fallback => fallback.remove());
+          anchor.querySelectorAll("script, style, noscript").forEach(fallback => fallback.remove());
           return { text: text(anchor.textContent), href: localURL(element.getAttribute("href")) };
         }),
       forms: [...document.querySelectorAll("#main input, #main select, #main textarea, #main button[type=submit]")]

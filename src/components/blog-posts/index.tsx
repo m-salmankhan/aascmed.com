@@ -3,7 +3,7 @@ import { css } from "@emotion/react";
 import React from "react";
 import { cols, gridContainer } from "../../styles/grid";
 import { mediaBreakpoints } from "../../styles/breakpoints";
-import { Link } from "gatsby";
+import { SiteLink } from "../../shared/navigation/link";
 import { bounceTransition, colours, gridSpacing } from "../../styles/theme";
 import Color from "color";
 
@@ -114,22 +114,22 @@ export const BlogList: React.FC<BlogListProps> = ({ className, Blogs, frontPage 
                     <li key={idx} css={stylesLi}>
                         <article>
                             {post.thumbnail && (
-                                <Link to={post.slug} className="thumbnail">
+                                <SiteLink href={post.slug} className="thumbnail">
                                     {post.thumbnail}
-                                </Link>
+                                </SiteLink>
                             )}
                             <header>
-                                <Link to={post.slug}>
+                                <SiteLink href={post.slug}>
                                     <div className={"date"}>{post.date}</div>
                                     {
                                         frontPage ? <H3 css={stylesH4} className={"title"}>{post.title}</H3> :
                                             <H2 css={stylesH4} className={"title"}>{post.title}</H2>
                                     }
-                                </Link>
+                                </SiteLink>
                             </header>
                             {post.description}
                             <footer>
-                                <Link to={post.slug}>Read more&hellip;</Link>
+                                <SiteLink href={post.slug}>Read more&hellip;</SiteLink>
                             </footer>
                         </article>
                     </li>
@@ -168,7 +168,7 @@ export const BlogArchive: React.FC<BlogArchiveProps> =
                 <BlogList Blogs={blogPosts as [BlogSummary]} frontPage={frontPage} />
                 {
                     frontPage &&
-                    <Link to={"/blog/"} css={css(cols(12), { color: "inherit" })}>(View All)</Link>
+                    <SiteLink href={"/blog/"} css={css(cols(12), { color: "inherit" })}>(View All)</SiteLink>
                 }
             </section>
         );

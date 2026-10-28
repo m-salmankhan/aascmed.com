@@ -1,0 +1,77 @@
+{
+  "date": "2026-10-28",
+  "ticket": "WEB-15",
+  "scope": "Stage 2 reusable components; no Stage 3 production routes or hosting cutover",
+  "baseline_commit": "ffe28eac3bab0ead07eeef3b4c2db889e4fc11a8",
+  "candidate_code_tree": "8cbc3f40fb072a2e601cf005ff771bc9b2c27212",
+  "gatsby": {
+    "environment": "Development settings, isolated localhost Strapi copy, published records selected identically for both builds",
+    "cms_snapshot_sha256": "f871e3d9eef3f087c4f602da572547348b5a085621c0e3f2a7f1021c267074e3",
+    "snapshot_adjustment": "Added the current optional genericBelowHero schema field to the disposable CMS copy; value remained empty",
+    "builds": "Baseline and candidate passed locally",
+    "typecheck": "Full generated Gatsby Queries typecheck passed",
+    "sitemap_routes": 55,
+    "compared_routes_including_404_html": 56,
+    "browser_tests_passed": 158,
+    "unexpected_query_data_differences": 0,
+    "query_data_exceptions": [
+      "46 build-path-dependent File identifiers",
+      "49 candidate-added record IDs",
+      "one candidate-added homepage image publicURL"
+    ],
+    "semantic_or_dimension_advisories": 0,
+    "pixel_review": "Two full-page capture paint omissions were rerun against unchanged frozen artifacts: both cleared, with 0 and 14 changed pixels respectively"
+  },
+  "supplementary_published_deployment_check": {
+    "routes": 65,
+    "browser_tests_passed": 176,
+    "candidate": "https://6adfe39f2829b61fe6aff6d9--aascmed.netlify.app",
+    "reference": "https://main--aascmed.netlify.app",
+    "reference_provenance": "Mutable alias; all 65 page-data ETags remained unchanged during capture",
+    "advisories": "Reviewed; spacing, image-loading and trailing-slash regressions corrected and validated in the final local builds"
+  },
+  "checks": {
+    "unit_tests_passed": 17,
+    "infrastructure_node_assertions_passed": 37,
+    "infrastructure_browser_checks_passed": 22,
+    "adjacent_forms_api_tests_passed": 17,
+    "astro_runtime_identity": "Passed for React, ReactDOM, Emotion, Astro renderer, Strapi Blocks and carousel",
+    "astro_static_and_compiled_ssr": "Passed with the shared homepage fixture as well as the maintained proof",
+    "astro_shared_home_ssr_hydration": "HTTP 200; island hydrated; mobile menu opened; no page errors"
+  },
+  "screenshots": {
+    "runtime": "Local compiled Astro static output; shared HomeView with a temporary adapter using captured public published homepage data",
+    "fixture": "Temporary review entry point, removed from committed application routes",
+    "content_source": "PR129 published page-data from immutable deployment above; media retained at their public URLs",
+    "desktop_viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "mobile_viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "files": [
+      {
+        "path": "docs/screenshots/astro-stage2-home-desktop-full.png",
+        "sha256": "76bcbbfd0e0fbdbacf0a07d2be66816c8b084c11e22cdadc964f3e1af1323b51"
+      },
+      {
+        "path": "docs/screenshots/astro-stage2-home-desktop.png",
+        "sha256": "6bcadf71a1e4a24cd9986bf3c089ad62cd775fce3b0af6debd72911dd272c9b4"
+      },
+      {
+        "path": "docs/screenshots/astro-stage2-home-mobile-full.png",
+        "sha256": "1c554eb3b2b1e366b09adfd73633ea30b7d3e4a1f7427046ad8f29c1f4beed14"
+      },
+      {
+        "path": "docs/screenshots/astro-stage2-home-mobile.png",
+        "sha256": "872b473eb3b5a2510a6ea5e316855f8063d275a7a054d4f6bcaf909bc185e699"
+      }
+    ]
+  },
+  "limitations": [
+    "The older development snapshot has fewer routes and lacks published announcement, blog-archive and tracking singletons; full published-route coverage is supplementary",
+    "Astro production route/content parity remains Stage 3; these screenshots demonstrate the actual shared homepage rendered by Astro"
+  ]
+}

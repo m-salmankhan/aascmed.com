@@ -1,6 +1,7 @@
 import { css, Global } from "@emotion/react"
 import { useState, useId, useRef, useEffect } from "react"
 import { MapBoxProps } from "."
+import { usePublicConfig } from "../../shared/config/public-context";
 
 interface StaticMapBoxParameters {
     label: string
@@ -10,9 +11,10 @@ interface StaticMapBoxParameters {
     height: number
     retina: boolean
     zoom: number
+    accessToken: string
 }
-const mapSrc = ({ label, latitude, longitude, width, height, retina, zoom }: StaticMapBoxParameters) =>
-    `https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/pin-l-${label}+1C5E38(${longitude},${latitude})/${longitude},${latitude},${zoom},0/${width}x${height}${retina ? "@2x" : ""}?access_token=${process.env.GATSBY_MAPBOX_API_KEY}`;
+const mapSrc = ({ label, latitude, longitude, width, height, retina, zoom, accessToken }: StaticMapBoxParameters) =>
+    `https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/pin-l-${label}+1C5E38(${longitude},${latitude})/${longitude},${latitude},${zoom},0/${width}x${height}${retina ? "@2x" : ""}?access_token=${accessToken}`;
 
 enum ImageState {
     INITIAL = "init",
@@ -65,6 +67,7 @@ const stylesStaticMap = css`
 `;
 
 export const StaticMap: React.FC<MapBoxProps> = (props) => {
+    const { mapboxAccessToken } = usePublicConfig();
     const [loaded, setLoaded] = useState(ImageState.INITIAL);
     const id = useId();
 
@@ -96,6 +99,7 @@ export const StaticMap: React.FC<MapBoxProps> = (props) => {
         latitude: props.latitude,
         retina: false,
         zoom: props.zoom,
+        accessToken: mapboxAccessToken,
     }
 
     const image = {

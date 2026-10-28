@@ -2,13 +2,24 @@ import React from "react";
 import type { GatsbyBrowser } from "gatsby";
 import GatsbySiteDataAdapter from "./src/adapters/gatsby/site-data";
 import GatsbyAnnouncementAdapter from "./src/adapters/gatsby/announcement";
+import { CurrentPathProvider } from "./src/shared/navigation/current-path";
+import { PublicConfigProvider } from "./src/shared/config/public-context";
+import { gatsbyPublicConfig } from "./src/config/gatsby-public";
 
 /** Mount site settings and announcement data at the Gatsby browser boundary.
  * @param props Gatsby page element supplied by the browser API.
  * @returns The announcement banner and page element inside the site-data provider.
  */
 export const wrapRootElement: GatsbyBrowser["wrapRootElement"] = ({ element }) => (
-  <GatsbySiteDataAdapter>
+  <PublicConfigProvider value={gatsbyPublicConfig}><GatsbySiteDataAdapter>
     <><GatsbyAnnouncementAdapter />{element}</>
-  </GatsbySiteDataAdapter>
+  </GatsbySiteDataAdapter></PublicConfigProvider>
+);
+
+/** Provide the current browser route to shared page links.
+ * @param props Gatsby page element and location pathname.
+ * @returns The page element wrapped in the current-path provider.
+ */
+export const wrapPageElement: GatsbyBrowser["wrapPageElement"] = ({ element, props }) => (
+  <CurrentPathProvider path={props.location.pathname}>{element}</CurrentPathProvider>
 );

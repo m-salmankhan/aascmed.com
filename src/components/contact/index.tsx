@@ -1,5 +1,4 @@
 import { Checkbox, DropdownInput, TextArea, TextInput } from "../forms";
-import { Script } from "gatsby";
 import React, { FormEventHandler, useEffect, useRef, useState } from "react";
 import { PrimaryButton } from "../buttons";
 import { css } from "@emotion/react";
@@ -9,6 +8,7 @@ import { ErrorNotice, SuccessNotice } from "../forms/notices";
 import { Loading } from "../loading";
 import { stylesH4 } from "../headings";
 import {useGTag} from "../../hooks/useGTag";
+import { usePublicConfig } from "../../shared/config/public-context";
 
 
 enum FormState {
@@ -29,6 +29,7 @@ type ContactFormProps = { className?: string } & (
  * @returns The form with its current submission-status notices.
  */
 export function ContactForm(props: ContactFormProps): React.ReactElement {
+    const { runtimeApiBaseUrl } = usePublicConfig();
     const [formState, setFormState] = useState(FormState.DEFAULT);
     const [formData, setFormData] = useState<FormData | undefined>(undefined);
     const [fieldErrors, setFieldErrors] = useState<ContactFormFieldErrors | undefined>();
@@ -37,6 +38,11 @@ export function ContactForm(props: ContactFormProps): React.ReactElement {
 
     const gtag = useGTag();
 
+    useEffect(() => {
+        if (formState !== FormState.SUCCESS) return;
+        const fbq = (window as typeof window & { fbq?: (...args: string[]) => void }).fbq;
+        fbq?.("track", "Contact");
+    }, [formState]);
     // update state variables. actual api call happens on rerender
     const formSubmisisonHandler: FormEventHandler<HTMLFormElement> = (event) => {
         event.preventDefault();
@@ -54,7 +60,7 @@ export function ContactForm(props: ContactFormProps): React.ReactElement {
         if (formData === undefined) return;
         if (formState !== FormState.SUBMITTING) return;
 
-        const api = new API();
+        const api = new API(runtimeApiBaseUrl);
 
         api.contact({
             subject: (formData.get("subject")?.toString() || ""),
@@ -92,7 +98,7 @@ export function ContactForm(props: ContactFormProps): React.ReactElement {
             console.error(e);
             setFormState(FormState.ERROR);
         })
-    }, [formState, formData]);
+    }, [formState, formData, runtimeApiBaseUrl]);
 
     return (
         <>
@@ -106,8 +112,6 @@ export function ContactForm(props: ContactFormProps): React.ReactElement {
                 formState === FormState.SUCCESS &&
                 <>
                     <SuccessNotice css={css`margin-bottom: 1em;`}>Message successfully sent! If you are a new patient, check your email for the patient registration forms.</SuccessNotice>
-                    {/* Facebook Pixel Code */}
-                    <Script dangerouslySetInnerHTML={{ __html: `fbq('track', 'Contact');` }} />
                 </>
             }
             {

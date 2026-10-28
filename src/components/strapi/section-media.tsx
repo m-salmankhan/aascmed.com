@@ -7,12 +7,15 @@ import { mediaBreakpoints, breakpointStrings } from "../../styles/breakpoints";
 import { colours } from "../../styles/theme";
 import { FaIcons, IconStyles } from "../font-awesome";
 import { stylesScreenReaderText } from "../../styles/accessibility";
+import type { MediaDescriptor } from "../../shared/content/models";
+import { Image } from "../media/image";
 
 export interface SectionMediaItem {
   mime?: string | null;
   name?: string | null;
   url?: string | null;
   image?: React.ReactNode;
+  descriptor?: MediaDescriptor;
 }
 
 /** Filter to only valid image/video items */
@@ -85,6 +88,10 @@ const MediaItem: React.FC<{ item: SectionMediaItem }> = ({ item }) => {
     return <>{item.image}</>;
   }
 
+  if (isImage && item.descriptor) {
+    return <Image image={item.descriptor} css={css({ width: "100%", height: "auto", borderRadius: "8px" })} />;
+  }
+
   if (isVideo) {
     const src = item.url;
     if (!src) return null;
@@ -93,7 +100,7 @@ const MediaItem: React.FC<{ item: SectionMediaItem }> = ({ item }) => {
 
   if (isImage && item.url) {
     const src = item.url;
-    return <img src={src} alt={alt} css={css({ width: "100%", borderRadius: "8px" })} />;
+    return <Image image={{ src, alt }} css={css({ width: "100%", height: "auto", borderRadius: "8px" })} />;
   }
 
   return null;
@@ -118,8 +125,8 @@ export const SectionMedia: React.FC<SectionMediaProps> = ({ media, className }) 
   return (
     <div className={className} css={stylesMediaContainer}>
       <CarouselProvider
-        naturalSlideWidth={600}
-        naturalSlideHeight={400}
+        naturalSlideWidth={media[0].descriptor?.width || 600}
+        naturalSlideHeight={media[0].descriptor?.height || 400}
         totalSlides={media.length}
         isIntrinsicHeight={true} // overrides naturalSlide aspect ratio — slides size to content
         infinite={true}

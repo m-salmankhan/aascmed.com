@@ -7,7 +7,7 @@ import VisitCounter from '../components/VisitCounter';
 const target = import.meta.env.PUBLIC_ASTRO_TARGET;
 const draft = await getDraftPreview();
 if (target === 'compiled Node SSR') Astro.response.headers.set('Cache-Control', 'private, no-store');
-const media = { src: '/assets/hero-bg.png', alt: 'Soft green and blue healthcare themed background' };
+const media = { src: '/assets/hero-bg.png', alt: 'Soft green and blue healthcare themed background', width: 1920, height: 1080 };
 ---
 
 <!doctype html>

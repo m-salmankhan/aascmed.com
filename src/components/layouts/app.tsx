@@ -3,7 +3,6 @@ import { stylesGlobal } from "../../styles/global";
 import React, { ReactNode, useEffect } from "react";
 import { ZocDoc } from "../zocdoc";
 
-
 interface AppProps {
     children?: ReactNode
     useTracking?: boolean
