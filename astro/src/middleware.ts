@@ -16,7 +16,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     response.headers.set('X-Robots-Tag', 'noindex, nofollow');
     response.headers.set(
       'Content-Security-Policy',
-      "frame-ancestors 'self' https://*.aascmed.com https://wise-positivity-21c2bd6b3f.strapiapp.com *aascmed.netlify.app",
+      "frame-ancestors 'self' https://*.aascmed.com https://wise-positivity-21c2bd6b3f.strapiapp.com https://aascmed.netlify.app",
     );
   }
   return response;

@@ -13,7 +13,7 @@ export function parseNetlifyRedirects(text: string): RedirectRule[] {
     .map((line) => {
       const [source, destination, status = '301'] = line.split(/\s+/);
       const code = Number(status);
-      if (!source || !destination || !Number.isInteger(code)) return undefined;
+      if (!source || !destination || ![301, 302, 303, 307, 308].includes(code)) return undefined;
       return { source, destination, status: code };
     })
     .filter((rule): rule is RedirectRule => Boolean(rule));
@@ -30,7 +30,11 @@ export function findRedirect(pathname: string, rules: RedirectRule[], search = '
     if (match) {
       const splat = match[1] || '';
       const destination = rule.destination.replace(/:splat/g, splat);
-      return { location: `${destination}${search}`, status: rule.status };
+      // Netlify serves existing files before non-forced wildcard rules. In SSR,
+      // also avoid redirecting /contact/ back to itself through /contact/*.
+      if (destination === pathname) continue;
+      const separator = destination.includes('?') ? '&' : '?';
+      return { location: search ? `${destination}${separator}${search.slice(1)}` : destination, status: rule.status };
     }
   }
 }

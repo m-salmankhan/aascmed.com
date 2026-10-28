@@ -30,7 +30,7 @@ export function renderSitemapXml(
 ) {
   const origin = canonicalOrigin.replace(/\/+$/, '');
   const paths = [...new Set([...fixedPublicRoutes, ...routes.map(({ pathname }) => pathname)])]
-    .filter((pathname) => pathname.startsWith('/') && !pathname.startsWith('//'))
+    .filter((pathname) => pathname.startsWith('/') && !pathname.startsWith('//') && !/[\\?#\u0000-\u0020]/.test(pathname))
     .sort();
   const urls = paths.map((pathname) => `  <url><loc>${escapeXml(new URL(pathname, `${origin}/`).href)}</loc></url>`);
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>\n`;
