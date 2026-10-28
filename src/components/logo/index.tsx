@@ -1,5 +1,5 @@
 import React, { ComponentPropsWithoutRef } from "react"
-import logos from "./logo-sprites.svg"
+import logos from "./logo-sprites.svg?url"
 
 /** Append a symbol fragment where the SVG `<use>` references the imported sprite.
  * @param url Imported public sprite URL used by Gatsby and Astro.
