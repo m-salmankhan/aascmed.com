@@ -13,7 +13,9 @@
     "verify:proof": "node scripts/verify-proof.mjs",
     "verify:runtime": "node scripts/verify-runtime.mjs",
     "verify:document": "node scripts/verify-document.mjs",
-    "verify:public-images": "node scripts/verify-public-images.mjs"
+    "verify:public-images": "node scripts/verify-public-images.mjs",
+    "verify:public-images-build": "node scripts/verify-public-images-build.mjs",
+    "verify:public-images-static-build": "node scripts/verify-public-images-static-build.mjs"
   },
   "dependencies": {
     "@astrojs/node": "10.1.4",

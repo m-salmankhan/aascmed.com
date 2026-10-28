@@ -5,6 +5,7 @@ import type {
 import { sortByDateDescending, sortByOrder } from "../../../../src/shared/content/urls.ts";
 import { validateContentRecord, type ContentMode } from "../../../../src/shared/content/validation.ts";
 import { getAstroServerConfig } from "../config.ts";
+import { readBuildSnapshotBridge } from "./build-snapshot-bridge.ts";
 import { createStrapiRequestScope, getByIdentifier, getCollection, getSingle, type StrapiEntity, type StrapiRequestOptions, type StrapiRequestScope } from "./strapi.ts";
 import {
   mapStrapiAnnouncement, mapStrapiBlog, mapStrapiClinic, mapStrapiCondition,
@@ -102,16 +103,28 @@ async function loadPublishedBuildSnapshot(scope: StrapiRequestScope): Promise<Pu
 }
 
 const buildSnapshots = new WeakMap<StrapiRequestScope, Promise<PublishedContentSnapshot>>();
+let staticPrerenderSnapshot: Promise<PublishedContentSnapshot> | undefined;
 
 /** A caller-owned scope shares one published snapshot for one build only. */
 export async function getPublishedBuildSnapshot(options: { scope?: StrapiRequestScope } = {}): Promise<PublishedContentSnapshot> {
-  if (!options.scope) return loadPublishedBuildSnapshot(createStrapiRequestScope());
-  let snapshot = buildSnapshots.get(options.scope);
-  if (!snapshot) {
-    snapshot = loadPublishedBuildSnapshot(options.scope).catch(error => { buildSnapshots.delete(options.scope!); throw error; });
-    buildSnapshots.set(options.scope, snapshot);
+  if (options.scope) {
+    let snapshot = buildSnapshots.get(options.scope);
+    if (!snapshot) {
+      snapshot = loadPublishedBuildSnapshot(options.scope).catch(error => { buildSnapshots.delete(options.scope!); throw error; });
+      buildSnapshots.set(options.scope, snapshot);
+    }
+    return snapshot;
   }
-  return snapshot;
+
+  if (import.meta.env?.PUBLIC_ASTRO_TARGET === "static" && getAstroServerConfig().contentMode === "published") {
+    if (!staticPrerenderSnapshot) {
+      staticPrerenderSnapshot = (async () =>
+        (await readBuildSnapshotBridge()) ?? loadPublishedBuildSnapshot(createStrapiRequestScope())
+      )().catch((error) => { staticPrerenderSnapshot = undefined; throw error; });
+    }
+    return staticPrerenderSnapshot;
+  }
+  return loadPublishedBuildSnapshot(createStrapiRequestScope());
 }
 
 /** Route collections used by static enumeration; always published. */

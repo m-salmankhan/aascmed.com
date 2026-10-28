@@ -82,16 +82,16 @@ function mapboxStaticUrl(latitude: number, longitude: number, token: string): st
   return `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/static/${marker}/${longitude},${latitude},18/${WIDTH}x${HEIGHT}@2x?access_token=${encodeURIComponent(token)}`;
 }
 
-async function fetchImage(source: string, fetcher: typeof fetch, allowedMediaHosts: string[] = []): Promise<Buffer> {
+async function fetchImage(source: string, fetcher: typeof fetch, allowedMediaHosts: string[] = [], allowMapbox = false): Promise<Buffer> {
   let bytes: Buffer;
   if (/^[a-z][a-z0-9+.-]*:\/\//i.test(source)) {
     const url = new URL(source);
-    if (url.protocol !== 'https:') throw new Error('Remote images must use HTTPS');
-    if (url.username || url.password || (url.port && url.port !== '443')) throw new Error('Remote image URL credentials and non-standard ports are not allowed');
     const hostname = url.hostname.toLowerCase();
-    if (hostname !== 'api.mapbox.com' && !allowedMediaHosts.some((host) => host.toLowerCase() === hostname)) {
-      throw new Error(`Remote image host is not allowed: ${hostname}`);
-    }
+    const isLoopback = ['localhost', '127.0.0.1', '[::1]'].includes(hostname);
+    const hostIsAllowed = (hostname === 'api.mapbox.com' && allowMapbox) || (hostname !== 'api.mapbox.com' && allowedMediaHosts.some((host) => host.toLowerCase() === hostname));
+    if (!hostIsAllowed) throw new Error(`Remote image host is not allowed: ${hostname}`);
+    if (url.protocol !== 'https:' && !(url.protocol === 'http:' && isLoopback)) throw new Error('Remote images must use HTTPS');
+    if (url.username || url.password || (url.port && url.port !== '443' && !isLoopback)) throw new Error('Remote image URL credentials and non-standard ports are not allowed');
     const response = await fetcher(url, { signal: AbortSignal.timeout(12_000), redirect: 'error' });
     if (!response.ok) throw new Error(`Image request returned HTTP ${response.status}`);
     const maxBytes = 20 * 1024 * 1024;
@@ -241,11 +241,12 @@ export async function buildSocialCards(entries: SocialCardEntry[], options: Publ
     const outputPath = path.join(cardsDir, kind, `${slug}-${mediaName}.jpg`);
     const cacheKey = `${kind}:${slug}:${mediaName}`;
     let mediaBytes: Buffer | undefined;
-    const backgroundImage = entry.backgroundImage || (entry.mapLocation && options.mapboxToken
-      ? mapboxStaticUrl(entry.mapLocation.latitude, entry.mapLocation.longitude, options.mapboxToken)
+    const isMapboxMap = !entry.backgroundImage && !!entry.mapLocation && !!options.mapboxToken;
+    const backgroundImage = entry.backgroundImage || (isMapboxMap
+      ? mapboxStaticUrl(entry.mapLocation!.latitude, entry.mapLocation!.longitude, options.mapboxToken!)
       : undefined);
     if (backgroundImage) {
-      try { mediaBytes = await fetchImage(backgroundImage, fetcher, options.allowedMediaHosts); } catch { /* Missing media uses the branded fallback. */ }
+      try { mediaBytes = await fetchImage(backgroundImage, fetcher, options.allowedMediaHosts, isMapboxMap); } catch { /* Missing media uses the branded fallback. */ }
     }
     const contentHash = sha256(Buffer.concat([
       Buffer.from(CACHE_VERSION), Buffer.from(entry.title || 'Untitled'), fontBytes, logoBytes,

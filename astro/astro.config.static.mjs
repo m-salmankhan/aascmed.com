@@ -1,11 +1,21 @@
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
+import { publicImagesIntegration } from './src/integrations/public-images.ts';
 export default defineConfig({
   root: '.',
   srcDir: './src',
   publicDir: '../static',
   outDir: './dist-static',
-  integrations: [react({ jsxImportSource: '@emotion/react' })],
+  integrations: [
+    react({ jsxImportSource: '@emotion/react' }),
+    publicImagesIntegration({
+      loadPublishedSnapshot: async () => {
+        const { createStrapiRequestScope, getPublishedBuildSnapshot } = await import('./src/server/content/loaders.ts');
+        return getPublishedBuildSnapshot({ scope: createStrapiRequestScope() });
+      },
+      mapboxToken: process.env.PUBLIC_MAPBOX_API_KEY || process.env.GATSBY_MAPBOX_API_KEY,
+    }),
+  ],
   output: 'static',
   build: { format: 'directory' },
   vite: {

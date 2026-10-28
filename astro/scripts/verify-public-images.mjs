@@ -63,6 +63,23 @@ try {
   assert.match(media.formats?.[1]?.srcSet || '', /\.webp 640w/);
   assert.equal(media.sources?.length, 3, 'candidate widths include the original image width');
 
+  const mapboxToken = 'pk-fixture-not-for-output';
+  let mapboxCalledForMap = false;
+  const mapCard = await buildSocialCards([{
+    kind: 'clinics', slug: 'fixture-clinic', title: 'Fixture clinic',
+    mapLocation: { latitude: 42.3, longitude: -71.1 },
+  }], {
+    publicDir, cacheDir, mapboxToken,
+    fetch: async (input) => {
+      const url = new URL(String(input));
+      mapboxCalledForMap = url.hostname === 'api.mapbox.com' && url.searchParams.get('access_token') === mapboxToken;
+      return new Response(await readFile(sourcePath), { headers: { 'content-type': 'image/svg+xml' } });
+    },
+  });
+  assert.equal(mapboxCalledForMap, true, 'only generated clinic map assets may use the fixed Mapbox host');
+  assert.equal((await readFile(mapCard[0].outputPath)).includes(Buffer.from(mapboxToken)), false);
+  assert.equal((await readFile(path.join(cacheDir, 'social-cards.json'), 'utf8')).includes(mapboxToken), false);
+
   let allowedRemoteFetch = false;
   const remoteMedia = await buildResponsiveImage({
     source: 'https://media.example.test/cover.svg',
@@ -80,6 +97,16 @@ try {
   assert.equal(remoteMedia.width, 900);
 
   let blockedRemoteFetch = false;
+  let arbitraryMapboxFetch = false;
+  const arbitraryMapboxCard = await buildSocialCards([{
+    kind: 'clinics', slug: 'arbitrary-mapbox', title: 'Fallback',
+    backgroundImage: 'https://api.mapbox.com/private-resource.png',
+  }], {
+    publicDir, cacheDir,
+    fetch: async () => { arbitraryMapboxFetch = true; throw new Error('unexpected fetch'); },
+  });
+  assert.equal(arbitraryMapboxFetch, false, 'arbitrary CMS URLs cannot use the Mapbox host');
+  assert.equal(arbitraryMapboxCard[0].wasCached, false);
   await assert.rejects(buildResponsiveImage({
     source: 'https://127.0.0.1/private.jpg',
     alt: 'Blocked URL',
@@ -92,7 +119,7 @@ try {
   const gatsbyOutput = path.join(root, 'gatsby-adapter.jpg');
   await gatsbyGenerator.generateOGImage({ title: 'Gatsby adapter fixture', backgroundImagePath: sourcePath, outputPath: gatsbyOutput });
   assert.deepEqual(await sharp(gatsbyOutput).metadata().then(({ width, height }) => [width, height]), [1200, 630]);
-  console.log('Public image fixtures passed: deterministic bytes, cache hit, same-path media change, absent thumbnail, private cache placement, approved and blocked remote hosts, and responsive AVIF/WebP/JPEG output.');
+  console.log('Public image fixtures passed: deterministic bytes, cache hit, same-path media change, absent thumbnail, private cache placement, Mapbox token isolation, approved and blocked remote hosts, and responsive AVIF/WebP/JPEG output.');
 } finally {
   await rm(root, { recursive: true, force: true });
 }

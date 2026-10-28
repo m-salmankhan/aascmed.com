@@ -1,0 +1,85 @@
+import assert from 'node:assert/strict';
+import { access, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { publicImagesIntegration } from '../src/integrations/public-images.ts';
+import { clearBuildSnapshotBridge, readBuildSnapshotBridge, writeBuildSnapshotBridge } from '../src/server/content/build-snapshot-bridge.ts';
+
+const originalCwd = process.cwd();
+const root = await import('node:fs/promises').then(({ mkdtemp }) => mkdtemp(path.join(os.tmpdir(), 'aasc-public-build-')));
+const sourcePath = path.join(root, 'cover.svg');
+const outputDir = path.join(root, 'output');
+const cacheDir = path.join(root, '.astro', 'image-cache');
+const svg = (color) => `<svg xmlns="http://www.w3.org/2000/svg" width="900" height="600"><rect width="900" height="600" fill="${color}"/></svg>`;
+const snapshotFor = (title) => ({
+  blogs: [{ id: 'fixture-blog', documentId: 'fixture-blog', slug: 'fixture-post', title, heading: title, thumbnail: { src: sourcePath, alt: 'Fixture cover' } }],
+  clinics: [], conditions: [], providers: [], serviceUpdates: [], reviews: [],
+});
+
+try {
+  await process.chdir(root);
+  await writeFile(sourcePath, svg('#df4b31'));
+  delete process.env.ASTRO_BUILD_SNAPSHOT_ID;
+  delete process.env.ASTRO_BUILD_SNAPSHOT_PATH;
+  const staleId = '4bd18754-8486-4fa4-9118-8d18bba3536d';
+  const stalePath = await writeBuildSnapshotBridge(staleId, snapshotFor('Stale build'));
+  assert.equal(await readBuildSnapshotBridge(), null, 'a prior snapshot is ignored without this build ID and path');
+
+  let snapshotLoads = 0;
+  let currentTitle = 'Fixture version one';
+  const integration = publicImagesIntegration({
+    loadPublishedSnapshot: async () => { snapshotLoads++; return snapshotFor(currentTitle); },
+    stagingDir: path.join(root, '.astro', 'staging'),
+    cacheDir,
+  });
+  await integration.hooks['astro:config:setup']({ config: { output: 'server' }, command: 'build' });
+  await integration.hooks['astro:build:start']({ logger: { info() {} } });
+  assert.equal(snapshotLoads, 0, 'SSR builds skip public image generation and snapshot loads');
+
+  await integration.hooks['astro:config:setup']({ config: { output: 'static' }, command: 'dev' });
+  await integration.hooks['astro:build:start']({ logger: { info() {} } });
+  assert.equal(snapshotLoads, 0, 'dev does not reuse or generate a static build snapshot');
+
+  await integration.hooks['astro:config:setup']({ config: { output: 'static' }, command: 'build' });
+  const runBuildHook = async () => {
+    await integration.hooks['astro:build:start']({ logger: { info() {} } });
+    const buildId = process.env.ASTRO_BUILD_SNAPSHOT_ID;
+    const snapshotPath = process.env.ASTRO_BUILD_SNAPSHOT_PATH;
+    const manifestPath = process.env.ASTRO_BUILD_IMAGE_MANIFEST_PATH;
+    assert.ok(buildId && snapshotPath && manifestPath, 'static hook sets per-build private paths');
+    assert.deepEqual(await readBuildSnapshotBridge(), snapshotFor(currentTitle));
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8')).result;
+    const image = manifest.cards.find(({ slug }) => slug === 'fixture-post');
+    assert.equal(image.imagePath, '/og-images/blog/fixture-post-cover.jpg');
+    assert.equal(image.wasCached, snapshotLoads === 3, 'only unchanged later builds reuse the generated card');
+    assert.equal(manifest.mediaByRoute['blog:fixture-post'].width, 900);
+    await integration.hooks['astro:build:done']({ dir: pathToFileURL(`${outputDir}${path.sep}`) });
+    assert.equal(await readBuildSnapshotBridge(), null, 'build completion clears the private bridge');
+    assert.equal(process.env.ASTRO_BUILD_SNAPSHOT_ID, undefined);
+    return { imagePath: path.join(outputDir, image.imagePath.slice(1)), buildId };
+  };
+
+  const first = await runBuildHook();
+  const firstBytes = await readFile(first.imagePath);
+  currentTitle = 'Fixture version two';
+  await writeFile(sourcePath, svg('#2b60d4'));
+  const second = await runBuildHook();
+  const secondBytes = await readFile(second.imagePath);
+  assert.notEqual(second.buildId, first.buildId, 'each static build receives a fresh snapshot identity');
+  assert.notDeepEqual(secondBytes, firstBytes, 'changed CMS title and media at the same source URL refresh public cards');
+  assert.equal(snapshotLoads, 2, 'the integration loads exactly one normalized snapshot per build');
+  const stagedCard = path.join(root, '.astro', 'staging', 'og-images', 'blog', 'fixture-post-cover.jpg');
+  const beforeReuse = await stat(stagedCard);
+  await runBuildHook();
+  assert.equal(snapshotLoads, 3);
+  assert.equal((await stat(stagedCard)).mtimeMs, beforeReuse.mtimeMs, 'unchanged card files are reused across static builds');
+  assert.ok(await stat(second.imagePath));
+  console.log('Public image build hook passed: static-only execution, per-build private snapshot identity, stale snapshot isolation, cleanup, and changed-content regeneration, and unchanged-card reuse.');
+} finally {
+  await process.chdir(originalCwd);
+  delete process.env.ASTRO_BUILD_SNAPSHOT_ID;
+  delete process.env.ASTRO_BUILD_SNAPSHOT_PATH;
+  delete process.env.ASTRO_BUILD_IMAGE_MANIFEST_PATH;
+  await rm(root, { recursive: true, force: true });
+}
