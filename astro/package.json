@@ -9,7 +9,8 @@
     "build:static": "astro build --config astro.config.static.mjs",
     "build:ssr": "astro build --config astro.config.ssr.mjs",
     "start:ssr": "node dist-ssr/server/entry.mjs",
-    "typecheck": "astro check --config astro.config.static.mjs"
+    "typecheck": "astro check --config astro.config.static.mjs",
+    "verify:public-images:build": "node scripts/verify-public-images-build.mjs"
   },
   "dependencies": {
     "@astrojs/node": "10.1.4",
