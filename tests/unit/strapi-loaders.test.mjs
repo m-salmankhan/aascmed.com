@@ -327,7 +327,58 @@ test("single and detail managers use SDK filters, return missing records, and pr
   assert.equal(seen[0].searchParams.get("status"), "draft");
   assert.equal(seen[1].searchParams.get("filters[slug][$eq]"), "missing-post");
   assert.equal(seen[1].searchParams.get("pagination[pageSize]"), "1");
-  assert.equal(seen[2].searchParams.has("filters[slug][$eq]"), false);
+  assert.equal(seen[2].searchParams.get("filters[slug][$eq]"), "oak-park");
+  assert.equal(seen[3].searchParams.has("filters[slug][$eq]"), false);
+});
+test("clinic lookup round-trips hyphens and repeated whitespace, prefers explicit slugs, and skips renamed clinics", async () => {
+  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
+  process.env.ASTRO_CONTENT_MODE = "draft";
+  const clinics = [
+    { documentId: "hyphen", slug: null, clinic_name: "Oak-Park" },
+    { documentId: "spaces", slug: "", clinic_name: "Crest  Hill" },
+    { documentId: "explicit", slug: "oak-park", clinic_name: "Different Name" },
+    { documentId: "renamed", slug: "custom", clinic_name: "Ignored Clinic" },
+  ];
+  for (const mode of ["published", "draft"]) {
+    let requests = 0;
+    let includeExplicit = false;
+    await withFetch(async (request) => {
+      requests++;
+      const url = new URL(request.url);
+      const params = url.searchParams;
+      assert.equal(params.get("status"), mode);
+      const available = clinics.filter(
+        (clinic) => includeExplicit || clinic.documentId !== "explicit",
+      );
+      const requestedSlug = params.get("filters[slug][$eq]");
+      const data =
+        requestedSlug === null
+          ? available
+          : available.filter((clinic) => clinic.slug === requestedSlug);
+      return Response.json({
+        data,
+        meta: { pagination: { pageCount: 1, total: data.length } },
+      });
+    }, async () => {
+      for (const clinic of clinics.slice(0, 2)) {
+        const path = clinicPath({ slug: clinic.slug, clinicName: clinic.clinic_name });
+        const slug = path.slice("/clinics/".length, -1);
+        const found = await getByIdentifier("clinic", "slug", slug, { mode });
+        assert.equal(found?.documentId, clinic.documentId);
+      }
+      assert.equal(
+        await getByIdentifier("clinic", "slug", "ignored-clinic", { mode }),
+        null,
+      );
+      includeExplicit = true;
+      requests = 0;
+      assert.equal(
+        (await getByIdentifier("clinic", "slug", "oak-park", { mode }))?.documentId,
+        "explicit",
+      );
+      assert.equal(requests, 1, "an explicit CMS slug takes priority without fallback scanning");
+    });
+  }
 });
 test("malformed SDK payloads and upstream failures use safe project errors", async () => {
   process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
