@@ -1,4 +1,4 @@
-// Requests and validates Strapi REST responses with bounded concurrency and publication guards.
+// Requests and validates Strapi REST responses with timeouts and publication guards.
 import type { paths as StrapiOpenApiPaths } from "./generated/types";
 import { clinicPath } from "../../../../src/shared/content/urls.ts";
 import { getAstroServerConfig } from "../config.ts";
@@ -39,7 +39,6 @@ export interface StrapiEntity {
   documentId: string;
   [field: string]: unknown;
 }
-
 /** Sanitized failure categories reported by the content adapter. */
 export type StrapiRequestFailureKind = "configuration" | "upstream" | "invalid-response";
 export class StrapiRequestError extends Error {
@@ -64,51 +63,13 @@ export interface StrapiRequestOptions {
   fetcher?: typeof fetch;
   /** Maximum time allowed for each upstream request. */
   timeoutMs?: number;
-  /** Optional deduplication scope owned by the current request or build. */
-  scope?: StrapiRequestScope;
-}
-/** A request/build-local deduplication scope; never share it between preview requests. */
-export interface StrapiRequestScope {
-  inflight: Map<string, Promise<unknown>>;
-}
-/** Create an isolated deduplication scope for one request or build.
- * @returns An empty scope that callers must not share between preview requests.
- */
-export function createStrapiRequestScope(): StrapiRequestScope {
-  return { inflight: new Map() };
 }
 const PAGE_SIZE = 100;
 // Defend against a broken upstream that never terminates pagination, not a CMS display limit.
 const MAX_PAGES = 10000;
 const DEFAULT_TIMEOUT_MS = 5000;
-// Shared across overlapping page reads and builds to avoid overwhelming the CMS.
-const MAX_CONCURRENT_REQUESTS = 4;
-let activeRequests = 0;
-const waiting: Array<() => void> = [];
-/** Wait before starting another CMS request when the concurrency limit has been reached.
- * @returns Resolves when the caller may fetch; it must call release after the request finishes.
- */
-async function acquire(): Promise<void> {
-  if (activeRequests >= MAX_CONCURRENT_REQUESTS) {
-    await new Promise<void>((resolve) => waiting.push(resolve));
-  } else {
-    activeRequests++;
-  }
-}
-/** Mark a CMS request finished, allowing the next waiting request to start.
- * @returns Nothing.
- */
-function release(): void {
-  const next = waiting.shift();
-  if (next) {
-    next();
-  } else {
-    activeRequests--;
-  }
-}
 /** URL paths declared by the generated OpenAPI specification. */
 type StrapiApiPath = keyof StrapiOpenApiPaths;
-
 /** REST endpoint for each supported content type; TypeScript checks these paths against OpenAPI. */
 const CONTENT_PATH: Record<StrapiKind, StrapiApiPath> = {
   blog: "/blogs",
@@ -128,7 +89,6 @@ const CONTENT_PATH: Record<StrapiKind, StrapiApiPath> = {
   "home-page": "/home-page",
   "tracking-info": "/tracking-info",
 };
-
 const sectionWithMedia = { populate: { media: true } };
 const dynamicContent = {
   on: {
@@ -299,10 +259,10 @@ function validateEntity(value: unknown, kind: StrapiKind): StrapiEntity {
   }
   return candidate as StrapiEntity;
 }
-/** Fetch and decode one Strapi REST response with bounded concurrency and timeout.
+/** Fetch and decode one Strapi REST response with timeout and publication guards.
  * @param url Server-side CMS URL with its query parameters.
  * @param mode Published or draft status; draft requires a draft-enabled deployment.
- * @param options Fetch override, timeout, and optional request-local scope.
+ * @param options Fetch override and timeout.
  * @param notFoundIsNull Whether an HTTP 404 represents an absent singleton.
  * @returns Decoded JSON or an allowed null; configuration, upstream, and malformed responses throw sanitized errors.
  */
@@ -325,77 +285,59 @@ async function requestJson(
   if (mode !== "draft" && mode !== "published") {
     throw new StrapiRequestError("configuration", "Invalid content mode");
   }
-  const inflight = options.scope?.inflight;
-  const key = `${mode}:${url.toString()}`;
-  const existing = inflight?.get(key);
-  if (existing) {
-    return existing;
-  }
-  const work = (async () => {
-    await acquire();
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? DEFAULT_TIMEOUT_MS);
-    try {
-      const headers = new Headers({ Accept: "application/json", "Cache-Control": "no-store" });
-      if (config.strapiToken) {
-        headers.set("Authorization", `Bearer ${config.strapiToken}`);
-      }
-      const response = await (options.fetcher ?? fetch)(url, {
-        method: "GET",
-        headers,
-        signal: controller.signal,
-        cache: "no-store",
-        redirect: "error",
-      });
-      if (response.status === 404 && notFoundIsNull) {
-        await response.body?.cancel().catch(() => undefined);
-        return null;
-      }
-      if (!response.ok) {
-        await response.body?.cancel().catch(() => undefined);
-        throw new StrapiRequestError(
-          "upstream",
-          `Strapi request failed (${response.status})`,
-          response.status,
-        );
-      }
-      try {
-        return await response.json();
-      } catch (error) {
-        if (controller.signal.aborted) {
-          throw error;
-        }
-        throw new StrapiRequestError("invalid-response", "Strapi returned malformed JSON");
-      }
-    } catch (error) {
-      if (error instanceof StrapiRequestError) {
-        throw error;
-      }
-      // Never include the URL, headers, token, or upstream body in the surfaced error.
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? DEFAULT_TIMEOUT_MS);
+  try {
+    const headers = new Headers({ Accept: "application/json", "Cache-Control": "no-store" });
+    if (config.strapiToken) {
+      headers.set("Authorization", `Bearer ${config.strapiToken}`);
+    }
+    const response = await (options.fetcher ?? fetch)(url, {
+      method: "GET",
+      headers,
+      signal: controller.signal,
+      cache: "no-store",
+      redirect: "error",
+    });
+    if (response.status === 404 && notFoundIsNull) {
+      await response.body?.cancel().catch(() => undefined);
+      return null;
+    }
+    if (!response.ok) {
+      await response.body?.cancel().catch(() => undefined);
       throw new StrapiRequestError(
         "upstream",
-        error instanceof Error && error.name === "AbortError"
-          ? "Strapi request timed out"
-          : "Strapi request could not be completed",
+        `Strapi request failed (${response.status})`,
+        response.status,
       );
-    } finally {
-      clearTimeout(timeout);
-      controller.abort();
-      release();
     }
-  })();
-  inflight?.set(key, work);
-  try {
-    return await work;
+    try {
+      return await response.json();
+    } catch (error) {
+      if (controller.signal.aborted) {
+        throw error;
+      }
+      throw new StrapiRequestError("invalid-response", "Strapi returned malformed JSON");
+    }
+  } catch (error) {
+    if (error instanceof StrapiRequestError) {
+      throw error;
+    }
+    // Never include the URL, headers, token, or upstream body in the surfaced error.
+    throw new StrapiRequestError(
+      "upstream",
+      error instanceof Error && error.name === "AbortError"
+        ? "Strapi request timed out"
+        : "Strapi request could not be completed",
+    );
   } finally {
-    if (inflight?.get(key) === work) {
-      inflight.delete(key);
-    }
+    clearTimeout(timeout);
+    controller.abort();
   }
 }
 /** Fetch every page of a Strapi collection in stable order.
  * @param kind Collection to enumerate.
- * @param options Publication mode, optional timeout, fetch override, and request scope.
+ * @param options Publication mode, optional timeout, and fetch override.
  * @returns Validated Strapi entities; upstream, malformed, and excessive responses throw.
  */
 export async function getCollection(
@@ -458,7 +400,7 @@ export async function getCollection(
  * @param kind Detail collection to query.
  * @param field Identifier field used for the lookup.
  * @param identifier Requested slug or document ID.
- * @param options Publication mode, optional timeout, fetch override, and request scope.
+ * @param options Publication mode, optional timeout, and fetch override.
  * @returns The entity or null if no record matches; upstream failures throw.
  */
 export async function getByIdentifier(
@@ -506,7 +448,7 @@ export async function getByIdentifier(
 }
 /** Fetch one Strapi single type.
  * @param kind Single type to request.
- * @param options Publication mode, optional timeout, fetch override, and request scope.
+ * @param options Publication mode, optional timeout, and fetch override.
  * @returns The entity or null for an absent singleton; upstream failures throw.
  */
 export async function getSingle(

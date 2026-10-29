@@ -16,7 +16,6 @@ import {
   mapStrapiTrackingInfo,
 } from "../../astro/src/server/content/mapping.ts";
 import {
-  createStrapiRequestScope,
   getByIdentifier,
   getCollection,
   getSingle,
@@ -24,7 +23,7 @@ import {
   serializeQuery,
   StrapiRequestError,
 } from "../../astro/src/server/content/strapi.ts";
-import { getPublishedBuildSnapshot } from "../../astro/src/server/content/loaders.ts";
+import { getPublishedCollections } from "../../astro/src/server/content/loaders.ts";
 /** Load a representative Strapi fixture by its filename stem.
  * @param {string} name Fixture filename without the JSON extension.
  * @returns {Promise<object>} Parsed fixture data.
@@ -180,7 +179,7 @@ test("all six collection requests use their Strapi plural API paths", async () =
     assert.equal(paths.at(-1), path);
   }
 });
-test("static build snapshot is memoized, publishes only published mode, and keeps at most four reads active", async () => {
+test("published collection reads are fresh, published-only, and fetch independent collections concurrently", async () => {
   process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
   const originalFetch = globalThis.fetch;
   let requests = 0;
@@ -197,22 +196,32 @@ test("static build snapshot is memoized, publishes only published mode, and keep
     return Response.json({ data: [], meta: { pagination: { pageCount: 1, total: 0 } } });
   };
   try {
-    const scope = createStrapiRequestScope();
-    const [first, second] = await Promise.all([
-      getPublishedBuildSnapshot({ scope }),
-      getPublishedBuildSnapshot({ scope }),
-    ]);
-    assert.deepEqual(first, second);
+    await getPublishedCollections();
     assert.equal(requests, 6);
-    assert.ok(maxActive <= 4);
     assert.ok(maxActive > 1);
     requests = 0;
-    await getPublishedBuildSnapshot();
-    await getPublishedBuildSnapshot();
+    await getPublishedCollections();
+    await getPublishedCollections();
     assert.equal(requests, 12);
   } finally {
     globalThis.fetch = originalFetch;
   }
+});
+test("independent CMS reads are not throttled by a shared concurrency limit", async () => {
+  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
+  let active = 0;
+  let maxActive = 0;
+  const fetcher = async () => {
+    active++;
+    maxActive = Math.max(maxActive, active);
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    active--;
+    return Response.json({ data: { documentId: "home" } });
+  };
+  await Promise.all(
+    Array.from({ length: 8 }, () => getSingle("home-page", { mode: "published", fetcher })),
+  );
+  assert.equal(maxActive, 8);
 });
 test("collection pagination fails loudly when content exceeds the safety limit", async () => {
   process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
@@ -235,7 +244,7 @@ test("collection pagination fails loudly when content exceeds the safety limit",
   );
   assert.equal(requests, 1);
 });
-test("draft access requires deployment configuration and independent request scopes do not share data", async () => {
+test("draft access requires deployment configuration and independent requests do not share data", async () => {
   process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
   delete process.env.ASTRO_CONTENT_MODE;
   await assert.rejects(
@@ -254,32 +263,15 @@ test("draft access requires deployment configuration and independent request sco
   const [first, second] = await Promise.all([
     getCollection("blog", {
       mode: "published",
-      scope: createStrapiRequestScope(),
       fetcher: fetcher("first"),
     }),
     getCollection("blog", {
       mode: "published",
-      scope: createStrapiRequestScope(),
       fetcher: fetcher("second"),
     }),
   ]);
   assert.equal(first[0].documentId, "first");
   assert.equal(second[0].documentId, "second");
-});
-test("a request scope deduplicates concurrent reads but does not cache later reads", async () => {
-  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
-  const scope = createStrapiRequestScope();
-  let calls = 0;
-  const fetcher = async () => {
-    calls++;
-    await new Promise((resolve) => setTimeout(resolve, 5));
-    return Response.json({ data: { documentId: "home" } });
-  };
-  const options = { mode: "published", scope, fetcher };
-  await Promise.all([getSingle("home-page", options), getSingle("home-page", options)]);
-  assert.equal(calls, 1);
-  await getSingle("home-page", options);
-  assert.equal(calls, 2);
 });
 test("dynamic-zone population covers FAQ, rich text and both CTA variants", () => {
   const on = POPULATE.condition.content.on;

@@ -7,20 +7,16 @@ import {
   serviceUpdatePath,
 } from "../../../../src/shared/content/urls.ts";
 import { getPublishedRouteCollections } from "./loaders.ts";
-import type { StrapiRequestScope } from "./strapi.ts";
 export type PublishedRouteKind = "blog" | "condition" | "provider" | "clinic" | "service-update";
 export interface PublishedRouteManifestEntry {
   pathname: string;
   kind: PublishedRouteKind;
 }
 /** Enumerate valid public detail paths from the published collections.
- * @param scope Optional build-local scope for reusing a published snapshot.
  * @returns Route paths and families; duplicate paths or upstream failures throw.
  */
-export async function getPublishedRouteManifest(
-  scope?: StrapiRequestScope,
-): Promise<PublishedRouteManifestEntry[]> {
-  const content = await getPublishedRouteCollections(scope);
+export async function getPublishedRouteManifest(): Promise<PublishedRouteManifestEntry[]> {
+  const content = await getPublishedRouteCollections();
   const routes: PublishedRouteManifestEntry[] = [];
   for (const item of content.blogs) {
     const pathname = blogPath(item.slug);
