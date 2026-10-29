@@ -9,6 +9,10 @@ import {
 import { createStrapiRequestScope, getByIdentifier, getCollection, getSingle, POPULATE, serializeQuery, StrapiRequestError } from "../../astro/src/server/content/strapi.ts";
 import { getPublishedBuildSnapshot } from "../../astro/src/server/content/loaders.ts";
 
+/** Load a representative Strapi fixture by its filename stem.
+ * @param {string} name Fixture filename without the JSON extension.
+ * @returns {Promise<object>} Parsed fixture data.
+ */
 const fixture = async (name) => JSON.parse(await readFile(new URL(`../fixtures/strapi-v5/${name}.json`, import.meta.url), "utf8"));
 
 test("Strapi v5 clinic mapper retains documentId and deeply nested opening and shot hours", async () => {

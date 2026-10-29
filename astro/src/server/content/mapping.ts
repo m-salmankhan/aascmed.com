@@ -5,11 +5,32 @@ import type {
 } from "../../../../src/shared/content/models.ts";
 import { jsonValue, type StrapiEntity } from "./strapi.ts";
 
+/** Flattened Strapi entity with fields awaiting normalization. */
 type Entity = StrapiEntity & Record<string, unknown>;
+/** Fields common to normalized route-bearing CMS records. */
+type CommonContentFields = { documentId: string; id: string; slug: string | null; title: string; description?: string; date: string | null };
+/** One responsive image URL and its intrinsic pixel width. */
+type MediaCandidate = { src: string; width: number };
 
+/** Read a string value from a CMS field.
+ * @param value Untrusted field value.
+ * @returns The string or undefined for a non-string.
+ */
 function string(value: unknown): string | undefined { return typeof value === "string" ? value : undefined; }
+/** Read a finite numeric value from a CMS field.
+ * @param value Untrusted field value.
+ * @returns The finite number or undefined.
+ */
 function number(value: unknown): number | undefined { return typeof value === "number" && Number.isFinite(value) ? value : undefined; }
+/** Read a boolean value from a CMS field.
+ * @param value Untrusted field value.
+ * @returns The boolean or undefined.
+ */
 function bool(value: unknown): boolean | undefined { return typeof value === "boolean" ? value : undefined; }
+/** Remove undefined object fields recursively while keeping arrays serializable.
+ * @param value Mapped CMS value.
+ * @returns A copy without undefined object properties.
+ */
 function compact<T>(value: T): T {
   if (Array.isArray(value)) return value.map((child) => child === undefined ? null : compact(child)) as T;
   if (value && typeof value === "object") return Object.fromEntries(Object.entries(value as Record<string, unknown>)
@@ -17,19 +38,36 @@ function compact<T>(value: T): T {
     .map(([key, child]) => [key, compact(child)])) as T;
   return value;
 }
+/** Read an object from a Strapi value or data envelope.
+ * @param value Raw CMS value.
+ * @returns The object, or undefined when absent or not an object.
+ */
 function record(value: unknown): Record<string, unknown> | undefined {
   const unwrapped = value && typeof value === "object" && "data" in value ? (value as { data: unknown }).data : value;
   return unwrapped && typeof unwrapped === "object" && !Array.isArray(unwrapped) ? unwrapped as Record<string, unknown> : undefined;
 }
+/** Read an array from a Strapi value or data envelope.
+ * @param value Raw CMS value.
+ * @returns The array, or undefined when absent or not an array.
+ */
 function list(value: unknown): unknown[] | undefined {
   const unwrapped = value && typeof value === "object" && "data" in value ? (value as { data: unknown }).data : value;
   return Array.isArray(unwrapped) ? unwrapped : undefined;
 }
+/** Normalize an optional rich-text or dynamic-zone array.
+ * @param value Raw CMS blocks.
+ * @returns JSON-safe blocks, or undefined when the input is not an array.
+ */
 function optionalJson(value: unknown): JsonValue[] | undefined {
   const normalized = jsonValue(value);
   return Array.isArray(normalized) ? normalized : undefined;
 }
 
+/** Map Strapi media into a serializable responsive descriptor.
+ * @param value Strapi media object or data envelope.
+ * @param baseUrl CMS origin for relative media URLs.
+ * @returns The descriptor, or undefined if the media has no URL.
+ */
 export function mapStrapiMedia(value: unknown, baseUrl?: string): MediaDescriptor | undefined {
   const media = record(value);
   if (!media) return undefined;
@@ -53,8 +91,8 @@ export function mapStrapiMedia(value: unknown, baseUrl?: string): MediaDescripto
 
   const formats = attrs.formats && typeof attrs.formats === "object" ? attrs.formats as Record<string, unknown> : undefined;
   if (formats) {
-    const sources: Array<{ src: string; width: number }> = [];
-    const alternatives = new Map<string, Array<{ src: string; width: number }>>();
+    const sources: MediaCandidate[] = [];
+    const alternatives = new Map<string, MediaCandidate[]>();
     for (const value of Object.values(formats)) {
       const format = record(value);
       const formatUrl = string(format?.url);
@@ -80,7 +118,12 @@ export function mapStrapiMedia(value: unknown, baseUrl?: string): MediaDescripto
   return descriptor;
 }
 
-function common(entity: Entity, fallbackTitle = ""): { documentId: string; id: string; slug: string | null; title: string; description?: string; date: string | null } {
+/** Map identity and common route-bearing content fields.
+ * @param entity Flattened Strapi entity.
+ * @param fallbackTitle Title to use when neither title nor heading is present.
+ * @returns Shared identity, route, title, description, and date fields.
+ */
+function common(entity: Entity, fallbackTitle = ""): CommonContentFields {
   const title = string(entity.title) ?? string(entity.heading) ?? fallbackTitle;
   return {
     documentId: entity.documentId,
@@ -92,6 +135,11 @@ function common(entity: Entity, fallbackTitle = ""): { documentId: string; id: s
   };
 }
 
+/** Normalize a Strapi blog into the shared content contract.
+ * @param entity Flattened Strapi entity.
+ * @param mediaBaseUrl CMS origin used to resolve relative media URLs.
+ * @returns The serializable blog values.
+ */
 export function mapStrapiBlog(entity: StrapiEntity, mediaBaseUrl?: string): BlogRecord {
   const source = entity as Entity;
   return compact({
@@ -102,6 +150,11 @@ export function mapStrapiBlog(entity: StrapiEntity, mediaBaseUrl?: string): Blog
   });
 }
 
+/** Normalize a Strapi condition into the shared content contract.
+ * @param entity Flattened Strapi entity.
+ * @param mediaBaseUrl CMS origin used to resolve relative media URLs.
+ * @returns The serializable condition values.
+ */
 export function mapStrapiCondition(entity: StrapiEntity, mediaBaseUrl?: string): ConditionRecord {
   const source = entity as Entity;
   return compact({
@@ -110,6 +163,11 @@ export function mapStrapiCondition(entity: StrapiEntity, mediaBaseUrl?: string):
   });
 }
 
+/** Normalize a Strapi provider into the shared content contract.
+ * @param entity Flattened Strapi entity.
+ * @param mediaBaseUrl CMS origin used to resolve relative media URLs.
+ * @returns The serializable provider values.
+ */
 export function mapStrapiProvider(entity: StrapiEntity, mediaBaseUrl?: string): ProviderRecord {
   const source = entity as Entity;
   const name = record(source.name); const review = record(source.review); const retirement = record(source.retirementNotice);
@@ -129,6 +187,10 @@ export function mapStrapiProvider(entity: StrapiEntity, mediaBaseUrl?: string): 
   return compact(provider);
 }
 
+/** Normalize a Strapi clinic into the shared content contract.
+ * @param entity Flattened Strapi entity.
+ * @returns The serializable clinic values.
+ */
 export function mapStrapiClinic(entity: StrapiEntity): ClinicRecord {
   const source = entity as Entity;
   const location = record(source.location); const contact = record(source.contact);
@@ -152,11 +214,19 @@ export function mapStrapiClinic(entity: StrapiEntity): ClinicRecord {
   return compact(mapped);
 }
 
+/** Normalize a Strapi service update into the shared content contract.
+ * @param entity Flattened Strapi entity.
+ * @returns The serializable service update values.
+ */
 export function mapStrapiServiceUpdate(entity: StrapiEntity): ServiceUpdateRecord {
   const source = entity as Entity;
   return compact({ ...common(source), date: string(source.date) ?? null, body: optionalJson(source.body) });
 }
 
+/** Normalize a Strapi patient review into the shared content contract.
+ * @param entity Flattened Strapi entity.
+ * @returns The serializable patient review values.
+ */
 export function mapStrapiReview(entity: StrapiEntity): ReviewRecord {
   const source = entity as Entity;
   return compact({
@@ -166,6 +236,10 @@ export function mapStrapiReview(entity: StrapiEntity): ReviewRecord {
   });
 }
 
+/** Normalize a Strapi fixed or archive page into the shared content contract.
+ * @param entity Flattened Strapi entity.
+ * @returns The serializable fixed or archive page values.
+ */
 export function mapStrapiPage(entity: StrapiEntity): ContentPageRecord {
   const source = entity as Entity;
   return compact({
@@ -175,10 +249,19 @@ export function mapStrapiPage(entity: StrapiEntity): ContentPageRecord {
   });
 }
 
+/** Normalize a Strapi homepage into the shared content contract.
+ * @param entity Flattened Strapi entity.
+ * @param mediaBaseUrl CMS origin used to resolve relative media URLs.
+ * @returns The serializable homepage values.
+ */
 export function mapStrapiHomePage(entity: StrapiEntity, mediaBaseUrl?: string): HomePageRecord {
   const source = entity as Entity;
   const mapped: HomePageRecord = { documentId: source.documentId, id: source.documentId, metaDescription: string(source.metaDescription) };
   for (const key of ["hero", "genericBelowHero", "conditions", "serviceUpdates", "blog", "providers", "feedback", "locations", "contact"] as const) {
+    /** Normalize one homepage section and resolve its media URLs.
+     * @param raw Section data from Strapi.
+     * @returns Serializable section data, or undefined if unsupported.
+     */
     const normalizeSection = (raw: unknown): JsonValue | undefined => {
     const section = record(raw);
     let value: JsonValue | undefined;
@@ -204,12 +287,20 @@ export function mapStrapiHomePage(entity: StrapiEntity, mediaBaseUrl?: string): 
   return compact(mapped);
 }
 
+/** Normalize a Strapi announcement into the shared content contract.
+ * @param entity Flattened Strapi entity.
+ * @returns The serializable announcement values.
+ */
 export function mapStrapiAnnouncement(entity: StrapiEntity): AnnouncementSettings {
   const source = entity as Entity;
   const type = source.type === "error" || source.type === "success" ? source.type : "info";
   return compact({ enabled: source.enabled === true, type, message: optionalJson(source.message) });
 }
 
+/** Normalize a Strapi tracking settings into the shared content contract.
+ * @param entity Flattened Strapi entity.
+ * @returns The serializable tracking settings values.
+ */
 export function mapStrapiTrackingInfo(entity: StrapiEntity): TrackingSettings {
   const source = entity as Entity;
   return {
@@ -219,4 +310,8 @@ export function mapStrapiTrackingInfo(entity: StrapiEntity): TrackingSettings {
   };
 }
 
+/** Normalize Strapi blocks into JSON-safe content.
+ * @param value Raw block array from the CMS.
+ * @returns Normalized blocks, or undefined when the input is not an array.
+ */
 export function mapStrapiBlocks(value: unknown): JsonValue[] | undefined { return optionalJson(value); }

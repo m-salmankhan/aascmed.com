@@ -1,5 +1,16 @@
-/** Server-only settings. Do not import this module from a page or client component. */
-export function getAstroServerConfig() {
+import type { ContentMode } from "../../../src/shared/content/validation.ts";
+
+/** Server-only CMS origin, credentials, and permitted publication mode. */
+type AstroServerConfig = {
+  strapiApiUrl: string | undefined;
+  strapiToken: string | undefined;
+  contentMode: ContentMode;
+};
+
+/** Read server-only Strapi settings from the deployment environment.
+ * @returns The CMS origin, optional token, and published or draft deployment mode.
+ */
+export function getAstroServerConfig(): AstroServerConfig {
   return {
     strapiApiUrl: process.env.GATSBY_STRAPI_API_URL,
     strapiToken: process.env.STRAPI_TOKEN,

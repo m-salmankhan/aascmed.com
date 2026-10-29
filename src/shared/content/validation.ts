@@ -9,7 +9,7 @@ import {
 
 /** Content family whose route convention is used when validating published records. */
 export type ContentFamily = "blog" | "condition" | "provider" | "clinic" | "serviceUpdate";
-/** Validation strictness: drafts may be incomplete, while published records must be routable. */
+/** CMS publication state: published records must be routable; saved drafts may be incomplete. */
 export type ContentMode = "draft" | "published";
 
 /** Minimal common record fields; clinics may also provide a nullable `clinicName` fallback. */
