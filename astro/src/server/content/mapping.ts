@@ -14,8 +14,6 @@ import type {
   TrackingSettings,
 } from "../../../../src/shared/content/models.ts";
 import { jsonValue, type StrapiEntity } from "./strapi.ts";
-/** Flattened Strapi entity with fields awaiting normalization. */
-type Entity = StrapiEntity & Record<string, unknown>;
 /** Fields common to normalized route-bearing CMS records. */
 type CommonContentFields = {
   documentId: string;
@@ -212,7 +210,7 @@ export function mapStrapiMedia(value: unknown, baseUrl?: string): MediaDescripto
  * @param fallbackTitle Title to use when neither title nor heading is present.
  * @returns Shared identity, route, title, description, and date fields.
  */
-function common(entity: Entity, fallbackTitle = ""): CommonContentFields {
+function common(entity: StrapiEntity, fallbackTitle = ""): CommonContentFields {
   const title = string(entity.title) ?? string(entity.heading) ?? fallbackTitle;
   return {
     documentId: entity.documentId,
@@ -229,7 +227,7 @@ function common(entity: Entity, fallbackTitle = ""): CommonContentFields {
  * @returns The serializable blog values.
  */
 export function mapStrapiBlog(entity: StrapiEntity, mediaBaseUrl?: string): BlogRecord {
-  const source = entity as Entity;
+  const source = entity;
   return compact({
     ...common(source),
     heading: string(source.heading) ?? undefined,
@@ -243,7 +241,7 @@ export function mapStrapiBlog(entity: StrapiEntity, mediaBaseUrl?: string): Blog
  * @returns The serializable condition values.
  */
 export function mapStrapiCondition(entity: StrapiEntity, mediaBaseUrl?: string): ConditionRecord {
-  const source = entity as Entity;
+  const source = entity;
   return compact({
     ...common(source),
     heading: string(source.heading) ?? undefined,
@@ -258,7 +256,7 @@ export function mapStrapiCondition(entity: StrapiEntity, mediaBaseUrl?: string):
  * @returns The serializable provider values.
  */
 export function mapStrapiProvider(entity: StrapiEntity, mediaBaseUrl?: string): ProviderRecord {
-  const source = entity as Entity;
+  const source = entity;
   const name = record(source.name);
   const review = record(source.review);
   const retirement = record(source.retirementNotice);
@@ -297,7 +295,7 @@ export function mapStrapiProvider(entity: StrapiEntity, mediaBaseUrl?: string): 
  * @returns The serializable clinic values.
  */
 export function mapStrapiClinic(entity: StrapiEntity): ClinicRecord {
-  const source = entity as Entity;
+  const source = entity;
   const location = record(source.location);
   const contact = record(source.contact);
   const hours = list(source.hours)
@@ -344,7 +342,7 @@ export function mapStrapiClinic(entity: StrapiEntity): ClinicRecord {
  * @returns The serializable service update values.
  */
 export function mapStrapiServiceUpdate(entity: StrapiEntity): ServiceUpdateRecord {
-  const source = entity as Entity;
+  const source = entity;
   return compact({
     ...common(source),
     date: string(source.date) ?? null,
@@ -356,7 +354,7 @@ export function mapStrapiServiceUpdate(entity: StrapiEntity): ServiceUpdateRecor
  * @returns The serializable patient review values.
  */
 export function mapStrapiReview(entity: StrapiEntity): ReviewRecord {
-  const source = entity as Entity;
+  const source = entity;
   return compact({
     documentId: source.documentId,
     id: source.documentId,
@@ -372,7 +370,7 @@ export function mapStrapiReview(entity: StrapiEntity): ReviewRecord {
  * @returns The serializable fixed or archive page values.
  */
 export function mapStrapiPage(entity: StrapiEntity): ContentPageRecord {
-  const source = entity as Entity;
+  const source = entity;
   return compact({
     documentId: source.documentId,
     id: source.documentId,
@@ -389,7 +387,7 @@ export function mapStrapiPage(entity: StrapiEntity): ContentPageRecord {
  * @returns The serializable homepage values.
  */
 export function mapStrapiHomePage(entity: StrapiEntity, mediaBaseUrl?: string): HomePageRecord {
-  const source = entity as Entity;
+  const source = entity;
   const mapped: HomePageRecord = {
     documentId: source.documentId,
     id: source.documentId,
@@ -451,7 +449,7 @@ export function mapStrapiHomePage(entity: StrapiEntity, mediaBaseUrl?: string): 
  * @returns The serializable announcement values.
  */
 export function mapStrapiAnnouncement(entity: StrapiEntity): AnnouncementSettings {
-  const source = entity as Entity;
+  const source = entity;
   const type = source.type === "error" || source.type === "success" ? source.type : "info";
   return compact({ enabled: source.enabled === true, type, message: optionalJson(source.message) });
 }
@@ -460,7 +458,7 @@ export function mapStrapiAnnouncement(entity: StrapiEntity): AnnouncementSetting
  * @returns The serializable tracking settings values.
  */
 export function mapStrapiTrackingInfo(entity: StrapiEntity): TrackingSettings {
-  const source = entity as Entity;
+  const source = entity;
   return {
     googleAnalyticsId: string(source.googleAnalyticsId) ?? "",
     googleTagManagerId: string(source.googleTagManagerId) ?? "",

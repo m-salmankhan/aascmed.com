@@ -32,51 +32,14 @@ export type StrapiSingleKind =
 export type StrapiKind = StrapiCollectionKind | StrapiSingleKind;
 /** The stable document identity or route slug used for a detail lookup. */
 export type StrapiIdentifierField = "slug" | "documentId";
-/** OpenAPI endpoint for each CMS type used by the content adapter. */
-type StrapiPathByKind = {
-  blog: "/blogs";
-  clinic: "/clinics";
-  condition: "/conditions";
-  provider: "/providers";
-  "service-update": "/service-updates";
-  review: "/reviews";
-  announcement: "/announcement";
-  "blog-archive": "/blog-archive";
-  "conditions-archive": "/conditions-archive";
-  "clinics-archive": "/clinics-archive";
-  contact: "/contact";
-  "providers-page": "/providers-page";
-  "service-update-page": "/service-update-page";
-  "privacy-policy": "/privacy-policy";
-  "home-page": "/home-page";
-  "tracking-info": "/tracking-info";
-};
-/** Entity shape described by the generated GET response for a CMS type. */
-type OpenApiEntity<K extends StrapiKind> = StrapiOpenApiPaths[StrapiPathByKind[K]] extends {
-  get: {
-    responses: {
-      200: {
-        content: {
-          "application/json": {
-            data: infer Data;
-          };
-        };
-      };
-    };
-  };
-}
-  ? Data extends readonly (infer Item)[]
-    ? Item
-    : Data
-  : never;
-/** Field names from all generated entity variants for a particular CMS type. */
-type OpenApiEntityField<K extends StrapiKind> = K extends StrapiKind
-  ? keyof OpenApiEntity<K>
-  : never;
-/** A CMS entity with validated identity; other fields remain untrusted until mapped. */
-export type StrapiEntity<K extends StrapiKind = StrapiKind> = {
+/** Raw CMS record after its documentId has been checked.
+ * Other fields remain unknown until the mapping functions inspect their values.
+ */
+export interface StrapiEntity {
   documentId: string;
-} & Partial<Record<OpenApiEntityField<K>, unknown>>;
+  [field: string]: unknown;
+}
+
 /** Sanitized failure categories reported by the content adapter. */
 export type StrapiRequestFailureKind = "configuration" | "upstream" | "invalid-response";
 export class StrapiRequestError extends Error {
@@ -143,14 +106,29 @@ function release(): void {
     activeRequests--;
   }
 }
-const COLLECTION_PATH: Record<StrapiCollectionKind, string> = {
-  blog: "blogs",
-  clinic: "clinics",
-  condition: "conditions",
-  provider: "providers",
-  "service-update": "service-updates",
-  review: "reviews",
+/** URL paths declared by the generated OpenAPI specification. */
+type StrapiApiPath = keyof StrapiOpenApiPaths;
+
+/** REST endpoint for each supported content type; TypeScript checks these paths against OpenAPI. */
+const CONTENT_PATH: Record<StrapiKind, StrapiApiPath> = {
+  blog: "/blogs",
+  clinic: "/clinics",
+  condition: "/conditions",
+  provider: "/providers",
+  "service-update": "/service-updates",
+  review: "/reviews",
+  announcement: "/announcement",
+  "blog-archive": "/blog-archive",
+  "conditions-archive": "/conditions-archive",
+  "clinics-archive": "/clinics-archive",
+  contact: "/contact",
+  "providers-page": "/providers-page",
+  "service-update-page": "/service-update-page",
+  "privacy-policy": "/privacy-policy",
+  "home-page": "/home-page",
+  "tracking-info": "/tracking-info",
 };
+
 const sectionWithMedia = { populate: { media: true } };
 const dynamicContent = {
   on: {
@@ -309,7 +287,7 @@ function isObject(value: unknown): value is Record<string, unknown> {
  * @param kind Content type used in error messages.
  * @returns The entity with a nonempty stable document ID; throws on invalid data.
  */
-function validateEntity<K extends StrapiKind>(value: unknown, kind: K): StrapiEntity<K> {
+function validateEntity(value: unknown, kind: StrapiKind): StrapiEntity {
   const entity = unwrapData(value);
   if (!entity || typeof entity !== "object" || Array.isArray(entity)) {
     throw new StrapiRequestError("invalid-response", `Strapi returned an invalid ${kind} record`);
@@ -319,7 +297,7 @@ function validateEntity<K extends StrapiKind>(value: unknown, kind: K): StrapiEn
   if (typeof documentId !== "string" || !documentId.trim()) {
     throw new StrapiRequestError("invalid-response", `Strapi ${kind} record is missing documentId`);
   }
-  return candidate as StrapiEntity<K>;
+  return candidate as StrapiEntity;
 }
 /** Fetch and decode one Strapi REST response with bounded concurrency and timeout.
  * @param url Server-side CMS URL with its query parameters.
@@ -420,16 +398,16 @@ async function requestJson(
  * @param options Publication mode, optional timeout, fetch override, and request scope.
  * @returns Validated Strapi entities; upstream, malformed, and excessive responses throw.
  */
-export async function getCollection<K extends StrapiCollectionKind>(
-  kind: K,
+export async function getCollection(
+  kind: StrapiCollectionKind,
   options: StrapiRequestOptions,
-): Promise<StrapiEntity<K>[]> {
+): Promise<StrapiEntity[]> {
   const config = getAstroServerConfig();
   const base = config.strapiApiUrl;
   const endpoint = safeEndpoint(base);
-  endpoint.pathname = `${endpoint.pathname.replace(/\/$/, "")}/${COLLECTION_PATH[kind]}`;
+  endpoint.pathname = `${endpoint.pathname.replace(/\/$/, "")}${CONTENT_PATH[kind]}`;
   endpoint.search = "";
-  const all: StrapiEntity<K>[] = [];
+  const all: StrapiEntity[] = [];
   for (let page = 1; page <= MAX_PAGES; page++) {
     const url = new URL(endpoint);
     url.search = serializeQuery({
@@ -483,19 +461,19 @@ export async function getCollection<K extends StrapiCollectionKind>(
  * @param options Publication mode, optional timeout, fetch override, and request scope.
  * @returns The entity or null if no record matches; upstream failures throw.
  */
-export async function getByIdentifier<K extends StrapiDetailKind>(
-  kind: K,
+export async function getByIdentifier(
+  kind: StrapiDetailKind,
   field: StrapiIdentifierField,
   identifier: string,
   options: StrapiRequestOptions,
-): Promise<StrapiEntity<K> | null> {
+): Promise<StrapiEntity | null> {
   if (!identifier.trim()) {
     return null;
   }
   const config = getAstroServerConfig();
   const base = config.strapiApiUrl;
   const endpoint = safeEndpoint(base);
-  endpoint.pathname = `${endpoint.pathname.replace(/\/$/, "")}/${COLLECTION_PATH[kind]}`;
+  endpoint.pathname = `${endpoint.pathname.replace(/\/$/, "")}${CONTENT_PATH[kind]}`;
   const filters = { [field]: { $eq: identifier } };
   endpoint.search = serializeQuery({
     status: options.mode,
@@ -531,14 +509,14 @@ export async function getByIdentifier<K extends StrapiDetailKind>(
  * @param options Publication mode, optional timeout, fetch override, and request scope.
  * @returns The entity or null for an absent singleton; upstream failures throw.
  */
-export async function getSingle<K extends StrapiSingleKind>(
-  kind: K,
+export async function getSingle(
+  kind: StrapiSingleKind,
   options: StrapiRequestOptions,
-): Promise<StrapiEntity<K> | null> {
+): Promise<StrapiEntity | null> {
   const config = getAstroServerConfig();
   const base = config.strapiApiUrl;
   const endpoint = safeEndpoint(base);
-  endpoint.pathname = `${endpoint.pathname.replace(/\/$/, "")}/${kind}`;
+  endpoint.pathname = `${endpoint.pathname.replace(/\/$/, "")}${CONTENT_PATH[kind]}`;
   endpoint.search = serializeQuery({ status: options.mode, populate: POPULATE[kind] });
   const payload = await requestJson(endpoint, options.mode, options, true);
   if (payload === null) {
