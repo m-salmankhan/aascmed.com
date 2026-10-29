@@ -14,6 +14,10 @@ const cms = createServer((request, response) => {
 await new Promise((resolve) => cms.listen(0, '127.0.0.1', resolve));
 const cmsUrl = `http://127.0.0.1:${cms.address().port}`;
 
+/** Build one Astro target against the verifier's local CMS fixture.
+ * @param config Static or SSR Astro configuration filename, relative to the Astro package.
+ * @returns A promise that resolves when the child build succeeds; rejects on spawn or build failure.
+ */
 async function runBuild(config) {
   await new Promise((resolve, reject) => {
     const child = spawn(process.execPath, ['node_modules/astro/bin/astro.mjs', 'build', '--config', config], {

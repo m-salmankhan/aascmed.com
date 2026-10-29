@@ -1,6 +1,7 @@
 ---
 import type { SiteSettings, TrackingSettings } from '../../../src/shared/content/models';
 import { canonicalPathUrl, socialImageUrl, serializeStructuredData } from '../server/document-metadata';
+import type { OpenGraphType, StructuredData } from '../server/document-metadata';
 
 interface Props {
   title?: string;
@@ -11,9 +12,9 @@ interface Props {
   useTracking?: boolean;
   appendBusinessNameToTitle?: boolean;
   socialImagePath?: string;
-  ogType?: 'website' | 'article' | 'profile';
+  ogType?: OpenGraphType;
   noIndex?: boolean;
-  structuredData?: Record<string, unknown> | Record<string, unknown>[];
+  structuredData?: StructuredData;
 }
 
 const {

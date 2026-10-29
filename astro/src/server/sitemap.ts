@@ -13,6 +13,10 @@ export const fixedPublicRoutes = [
   '/privacy/',
 ] as const;
 
+/** Escape text before placing a canonical URL inside an XML element.
+ * @param value Unescaped URL text.
+ * @returns Text with XML-sensitive characters replaced by entity references.
+ */
 function escapeXml(value: string) {
   return value.replace(/[&<>"']/g, (character) => ({
     '&': '&amp;',
@@ -23,7 +27,11 @@ function escapeXml(value: string) {
   })[character]!);
 }
 
-/** Build a deterministic sitemap from public fixed routes and a published-only manifest. */
+/** Build a deterministic sitemap from fixed pages and published content routes.
+ * @param routes Published detail-route pathnames; external URLs and invalid paths are excluded.
+ * @param canonicalOrigin Public website origin used to turn route paths into absolute URLs.
+ * @returns XML URL set with escaped, sorted, deduplicated canonical URLs, including fixed pages.
+ */
 export function renderSitemapXml(
   routes: SitemapRoute[],
   canonicalOrigin = 'https://www.aascmed.com',

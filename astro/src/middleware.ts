@@ -4,6 +4,11 @@ import { findRedirect, parseNetlifyRedirects } from './server/netlify-redirects'
 
 const redirectRules = parseNetlifyRedirects(redirectRulesText);
 
+/** Apply legacy redirects and preview response policy at the Astro request boundary.
+ * @param context Astro request context containing the requested pathname and query string.
+ * @param next Continuation that renders the route when no legacy redirect applies.
+ * @returns Route or redirect response; compiled preview additionally forbids caching/indexing and limits framing.
+ */
 export const onRequest = defineMiddleware(async (context, next) => {
   const isPreview = import.meta.env.PUBLIC_ASTRO_TARGET !== 'static';
   const redirect = findRedirect(context.url.pathname, redirectRules, context.url.search);

@@ -4,7 +4,16 @@ export interface RedirectRule {
   status: number;
 }
 
-/** Parse the existing static/_redirects file so preview and static hosting share rules. */
+/** Resolved HTTP redirect target after wildcard and query-string substitution. */
+export interface RedirectMatch {
+  location: string;
+  status: number;
+}
+
+/** Parse the existing Netlify redirect file for use by the SSR application.
+ * @param text Contents of static/_redirects, including comments and blank lines.
+ * @returns Valid redirect rules in file order; unsupported status codes and malformed lines are ignored.
+ */
 export function parseNetlifyRedirects(text: string): RedirectRule[] {
   return text
     .split(/\r?\n/)
@@ -19,7 +28,13 @@ export function parseNetlifyRedirects(text: string): RedirectRule[] {
     .filter((rule): rule is RedirectRule => Boolean(rule));
 }
 
-export function findRedirect(pathname: string, rules: RedirectRule[], search = '') {
+/** Find the first legacy redirect that does not point back to the requested path.
+ * @param pathname Requested URL path, without its query string.
+ * @param rules Parsed rules in precedence order, with optional wildcard sources.
+ * @param search Original query string, including its leading question mark, or an empty string.
+ * @returns Destination and HTTP status with the original query preserved, or undefined when no rule applies.
+ */
+export function findRedirect(pathname: string, rules: RedirectRule[], search = ''): RedirectMatch | undefined {
   for (const rule of rules) {
     const escaped = rule.source
       .split('*')
