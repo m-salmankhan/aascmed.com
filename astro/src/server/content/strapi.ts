@@ -51,15 +51,17 @@ export interface StrapiEntity {
   documentId: string;
   [field: string]: unknown;
 }
+/** Sanitized failure categories reported by the content adapter. */
+export type StrapiRequestFailureKind = "configuration" | "upstream" | "invalid-response";
 export class StrapiRequestError extends Error {
-  readonly kind: "configuration" | "upstream" | "invalid-response";
+  readonly kind: StrapiRequestFailureKind;
   readonly status?: number;
   /** Describe a sanitized content request failure.
    * @param kind Failure category.
    * @param message Safe explanation without credentials or upstream content.
    * @param status Optional HTTP status from Strapi.
    */
-  constructor(kind: StrapiRequestError["kind"], message: string, status?: number) {
+  constructor(kind: StrapiRequestFailureKind, message: string, status?: number) {
     super(message);
     this.name = "StrapiRequestError";
     this.kind = kind;
@@ -130,8 +132,12 @@ const dynamicContent = {
     "generic.faq": { populate: { questions: true } },
   },
 };
+/** Nested population fields requested for one CMS content type. */
+type StrapiPopulation = Record<string, unknown>;
+/** Population query definitions indexed by supported CMS type. */
+type StrapiPopulationByKind = Record<StrapiKind, StrapiPopulation>;
 /** Explicitly describe nested fields per CMS type; avoid Strapi's unbounded populate=* expansion. */
-export const POPULATE: Record<StrapiKind, Record<string, unknown>> = {
+export const POPULATE: StrapiPopulationByKind = {
   blog: {
     thumbnail: true,
     content: {
