@@ -27,12 +27,12 @@ try {
   delete process.env.ASTRO_BUILD_CONTENT_CACHE_ID;
   delete process.env.ASTRO_BUILD_CONTENT_CACHE_PATH;
   /** Return versioned published content for the fixture's six collection requests.
-   * @param {string | URL} url Strapi collection URL requested by the loader.
+   * @param {RequestInfo | URL} url Strapi collection request sent by the SDK.
    * @returns {Promise<Response>} A page containing the current blog version or an empty collection.
    */
   globalThis.fetch = async (url) => {
     requests++;
-    const request = new URL(url);
+    const request = new URL(new Request(url).url);
     assert.equal(request.searchParams.get('status'), 'published');
     return Response.json({
       data: request.pathname.endsWith('/blogs')
