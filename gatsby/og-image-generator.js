@@ -14,7 +14,7 @@ function downloadToBuffer(url) {
   return new Promise((resolve, reject) => {
     /** Fetch a redirect target, recursively following HTTPS image redirects.
      * @param {string} target Current absolute image URL.
-     * @returns Nothing; resolves or rejects the outer buffer promise through the response events.
+     * @returns {import("node:http").ClientRequest} Active request; response events settle the outer buffer promise.
      */
     const request = (target) => {
       return https
