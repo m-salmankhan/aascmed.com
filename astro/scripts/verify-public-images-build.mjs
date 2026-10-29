@@ -82,25 +82,17 @@ try {
     '/og-images/blog/guides/spring-cover.jpg',
     '/og-images/blog/news/spring-cover.jpg',
   ]);
-  assert.notEqual(
-    nestedBuild.cards[0].outputPath,
-    nestedBuild.cards[1].outputPath,
-  );
+  assert.notEqual(nestedBuild.cards[0].outputPath, nestedBuild.cards[1].outputPath);
   for (const card of nestedBuild.cards) {
     assert.ok(await stat(card.outputPath));
   }
   for (const media of Object.values(nestedBuild.mediaByRoute)) {
-    assert.ok(
-      await stat(path.join(nestedPublicDir, 'media', path.basename(media.src))),
-    );
+    assert.ok(await stat(path.join(nestedPublicDir, 'media', path.basename(media.src))));
   }
   delete process.env.ASTRO_BUILD_SNAPSHOT_ID;
   delete process.env.ASTRO_BUILD_SNAPSHOT_PATH;
   const staleId = '4bd18754-8486-4fa4-9118-8d18bba3536d';
-  const stalePath = await writeBuildSnapshotBridge(
-    staleId,
-    snapshotFor('Stale build'),
-  );
+  const stalePath = await writeBuildSnapshotBridge(staleId, snapshotFor('Stale build'));
   assert.equal(
     await readBuildSnapshotBridge(),
     null,
@@ -121,21 +113,13 @@ try {
     command: 'build',
   });
   await integration.hooks['astro:build:start']({ logger: { info() {} } });
-  assert.equal(
-    snapshotLoads,
-    0,
-    'SSR builds skip public image generation and snapshot loads',
-  );
+  assert.equal(snapshotLoads, 0, 'SSR builds skip public image generation and snapshot loads');
   await integration.hooks['astro:config:setup']({
     config: { output: 'static' },
     command: 'dev',
   });
   await integration.hooks['astro:build:start']({ logger: { info() {} } });
-  assert.equal(
-    snapshotLoads,
-    0,
-    'dev does not reuse or generate a static build snapshot',
-  );
+  assert.equal(snapshotLoads, 0, 'dev does not reuse or generate a static build snapshot');
   await integration.hooks['astro:config:setup']({
     config: { output: 'static' },
     command: 'build',
@@ -148,14 +132,8 @@ try {
     const buildId = process.env.ASTRO_BUILD_SNAPSHOT_ID;
     const snapshotPath = process.env.ASTRO_BUILD_SNAPSHOT_PATH;
     const manifestPath = process.env.ASTRO_BUILD_IMAGE_MANIFEST_PATH;
-    assert.ok(
-      buildId && snapshotPath && manifestPath,
-      'static hook sets per-build private paths',
-    );
-    assert.deepEqual(
-      await readBuildSnapshotBridge(),
-      snapshotFor(currentTitle),
-    );
+    assert.ok(buildId && snapshotPath && manifestPath, 'static hook sets per-build private paths');
+    assert.deepEqual(await readBuildSnapshotBridge(), snapshotFor(currentTitle));
     const manifest = JSON.parse(await readFile(manifestPath, 'utf8')).result;
     const image = manifest.cards.find(({ slug }) => slug === 'fixture-post');
     assert.equal(image.imagePath, '/og-images/blog/fixture-post-cover.jpg');
@@ -195,11 +173,7 @@ try {
     firstBytes,
     'changed CMS title and media at the same source URL refresh public cards',
   );
-  assert.equal(
-    snapshotLoads,
-    2,
-    'the integration loads exactly one normalized snapshot per build',
-  );
+  assert.equal(snapshotLoads, 2, 'the integration loads exactly one normalized snapshot per build');
   const stagedCard = path.join(
     root,
     '.astro',
@@ -217,6 +191,60 @@ try {
     'unchanged card files are reused across static builds',
   );
   assert.ok(await stat(second.imagePath));
+  const originalFetch = globalThis.fetch;
+  const originalApiUrl = process.env.GATSBY_STRAPI_API_URL;
+  const originalMediaHosts = process.env.STRAPI_MEDIA_HOSTS;
+  let cdnReads = 0;
+  try {
+    process.env.GATSBY_STRAPI_API_URL = 'https://admin.aascmed.com';
+    delete process.env.STRAPI_MEDIA_HOSTS;
+    /** Serve the project's separate public media CDN without making network requests.
+     * @param {string | URL} url Approved CDN image URL requested by the integration.
+     * @returns {Promise<Response>} Deterministic source image bytes.
+     */
+    globalThis.fetch = async (url) => {
+      assert.equal(new URL(url).hostname, 'wise-positivity-21c2bd6b3f.media.strapiapp.com');
+      cdnReads++;
+      return new Response(svg('#2b60d4'), { headers: { 'content-type': 'image/svg+xml' } });
+    };
+    const cdnSnapshot = snapshotFor('Published CDN image');
+    cdnSnapshot.blogs[0].thumbnail.src =
+      'https://wise-positivity-21c2bd6b3f.media.strapiapp.com/cover.svg';
+    const cdnIntegration = publicImagesIntegration({
+      /** Supply published content whose media uses the separate project CDN.
+       * @returns {Promise<PublishedContentSnapshot>} The CDN-backed fixture snapshot.
+       */
+      loadPublishedSnapshot: async () => {
+        return cdnSnapshot;
+      },
+      stagingDir: path.join(root, '.astro', 'cdn-staging'),
+      cacheDir: path.join(root, '.astro', 'cdn-cache'),
+    });
+    await cdnIntegration.hooks['astro:config:setup']({
+      config: { output: 'static' },
+      command: 'build',
+    });
+    await cdnIntegration.hooks['astro:build:start']({ logger: { info() {} } });
+    assert.ok(
+      cdnReads > 0,
+      'the separate project CDN is allowed without extra environment configuration',
+    );
+    await cdnIntegration.hooks['astro:build:done']({
+      dir: pathToFileURL(`${outputDir}${path.sep}`),
+    });
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (originalApiUrl === undefined) {
+      delete process.env.GATSBY_STRAPI_API_URL;
+    } else {
+      process.env.GATSBY_STRAPI_API_URL = originalApiUrl;
+    }
+    if (originalMediaHosts === undefined) {
+      delete process.env.STRAPI_MEDIA_HOSTS;
+    } else {
+      process.env.STRAPI_MEDIA_HOSTS = originalMediaHosts;
+    }
+  }
   console.log(
     'Public image build hook passed: static-only execution, per-build private snapshot identity, stale snapshot isolation, nested route/card preservation, cleanup, changed-content regeneration, and unchanged-card reuse.',
   );

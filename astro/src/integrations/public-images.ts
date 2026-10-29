@@ -42,7 +42,8 @@ export interface PublicImagesIntegrationOptions {
  * @returns Unique lowercase hostnames that can supply build-time media bytes.
  */
 function mediaHostAllowlist(): string[] {
-  const hosts = new Set<string>();
+  // Published uploads from this CMS project use a separate CDN hostname.
+  const hosts = new Set<string>(['wise-positivity-21c2bd6b3f.media.strapiapp.com']);
   const strapiApiUrl = process.env.GATSBY_STRAPI_API_URL;
   if (strapiApiUrl) {
     try {
