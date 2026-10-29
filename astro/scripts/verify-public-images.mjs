@@ -1,3 +1,4 @@
+// Deterministic fixtures for shared social-card rendering and responsive public image outputs.
 import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
@@ -14,6 +15,10 @@ const publicDir = path.join(root, 'public');
 const cacheDir = path.join(root, 'cache');
 const sourcePath = path.join(root, 'cover.svg');
 const missingPath = path.join(root, 'missing.jpg');
+/** Create a small deterministic SVG fixture with the requested fill color.
+ * @param {string} color CSS fill color used by the fixture rectangle.
+ * @returns {string} SVG document source for image-generation fixtures.
+ */
 const svg = (color) => `<svg xmlns="http://www.w3.org/2000/svg" width="900" height="600"><rect width="900" height="600" fill="${color}"/></svg>`;
 
 try {

@@ -10,6 +10,12 @@ const fs = require('node:fs');
 const moment = require('moment');
 const { downloadMapboxImage } = require('./og-image-generator');
 
+/** @typedef {{ panicOnBuild: Function, info: Function, warn: Function }} GatsbyPageReporter Reporter methods used by page generation. */
+/** @typedef {{ createPage: Function }} GatsbyPageActions Gatsby page-registration actions. */
+/** @typedef {{ graphql: Function, actions: GatsbyPageActions, reporter: GatsbyPageReporter }} GatsbyPageCreationContext Gatsby createPages hook inputs. */
+/** @typedef {{ slug: string, title: string, thumbnailPath?: string, outputDir: 'blog'|'conditions'|'clinics' }} OGImageRequest Social-card input for one Gatsby record. */
+/** @typedef {{ imagePath: string, wasCached: boolean }} OGImageResult Public card URL and cache-reuse result. */
+
 /**
  * GraphQL query to fetch all content for page creation
  */
@@ -71,8 +77,9 @@ const PAGE_QUERY = `
   }
 `;
 
-/**
- * Main createPages function
+/** Run Gatsby's page-creation query and dispatch records to their page builders.
+ * @param {GatsbyPageCreationContext} context Gatsby hook inputs for querying records, registering pages, and reporting build issues.
+ * @returns Promise<void> after every dynamic page has been created.
  */
 async function createPages({ graphql, actions, reporter }) {
   const { createPage } = actions;
@@ -97,15 +104,9 @@ async function createPages({ graphql, actions, reporter }) {
   reporter.info(`Created pages: ${data.strapiBlogPosts.nodes.length} blogs, ${data.strapiConditions.nodes.length} conditions, ${data.strapiProviders.nodes.length} providers, ${data.strapiServiceUpdates.nodes.length} service updates, ${data.clinics.nodes.length} clinics`);
 }
 
-/**
- * Get or generate an OG image with caching
- * 
- * @param {Object} options
- * @param {string} options.slug - Unique identifier for the image
- * @param {string} options.title - Title text for the image
- * @param {string} options.thumbnailPath - Path to background image (optional)
- * @param {string} options.outputDir - Directory to save the image
- * @returns {Promise<{ imagePath: string, wasCached: boolean }>}
+/** Reuse or create one social card through the shared renderer and private content-aware cache.
+ * @param {OGImageRequest} options Record slug, card title, optional local thumbnail, and public card family.
+ * @returns {Promise<OGImageResult>} Compatible public image URL and whether the existing output was reused.
  */
 async function getOGImage({ slug, title, thumbnailPath, outputDir }) {
   const { buildSocialCards } = await import('../astro/src/lib/public-images.ts');
@@ -123,8 +124,11 @@ async function getOGImage({ slug, title, thumbnailPath, outputDir }) {
   return { imagePath: card.imagePath, wasCached: card.wasCached };
 }
 
-/**
- * Create blog post pages and generate OG images (with caching)
+/** Create each blog detail page and attach its shared social-card path to Gatsby page context.
+ * @param {Function} createPage Gatsby page creation action.
+ * @param {Array<Object>} posts Blog nodes returned by PAGE_QUERY.
+ * @param {GatsbyPageReporter} reporter Gatsby build reporter for generation counts and recoverable failures.
+ * @returns Promise<void> after all blog pages are registered.
  */
 async function createBlogPages(createPage, posts, reporter) {
   const blogTemplate = path.resolve('./src/templates/blog-post.tsx');
@@ -170,8 +174,11 @@ async function createBlogPages(createPage, posts, reporter) {
   reporter.info(`OG images: ${generated} generated, ${cached} cached (${posts.length} total)`);
 }
 
-/**
- * Create condition pages and generate OG images (with caching)
+/** Create condition detail pages and attach their shared social-card paths.
+ * @param {Function} createPage Gatsby page creation action.
+ * @param {Array<Object>} conditions Condition nodes returned by PAGE_QUERY.
+ * @param {GatsbyPageReporter} reporter Gatsby build reporter for generation counts and recoverable failures.
+ * @returns Promise<void> after all condition pages are registered.
  */
 async function createConditionPages(createPage, conditions, reporter) {
   const conditionTemplate = path.resolve('./src/templates/condition.tsx');
@@ -216,8 +223,10 @@ async function createConditionPages(createPage, conditions, reporter) {
   reporter.info(`Condition OG images: ${generated} generated, ${cached} cached (${conditions.length} total)`);
 }
 
-/**
- * Create provider pages
+/** Register provider detail pages using their existing template and content IDs.
+ * @param {Function} createPage Gatsby page creation action.
+ * @param {Array<Object>} providers Provider nodes returned by PAGE_QUERY.
+ * @returns Nothing; pages are registered through `createPage`.
  */
 function createProviderPages(createPage, providers) {
   providers.forEach((node) => {
@@ -232,8 +241,10 @@ function createProviderPages(createPage, providers) {
   });
 }
 
-/**
- * Create service update pages with date-based URLs
+/** Register dated service-update pages using each record's stored date and slug.
+ * @param {Function} createPage Gatsby page creation action.
+ * @param {Array<Object>} updates Service-update nodes returned by PAGE_QUERY.
+ * @returns Nothing; pages are registered through `createPage`.
  */
 function createServiceUpdatePages(createPage, updates) {
   updates.forEach((node) => {
@@ -251,8 +262,12 @@ function createServiceUpdatePages(createPage, updates) {
   });
 }
 
-/**
- * Create clinic pages with OG images using Mapbox static maps
+/** Create clinic pages and use cached Mapbox imagery as their social-card background.
+ * @param {Function} createPage Gatsby page creation action.
+ * @param {Array<Object>} clinics Clinic nodes with optional coordinates.
+ * @param {GatsbyPageReporter} reporter Gatsby build reporter for generation counts and recoverable failures.
+ * @param {string} siteTitle Site title prepended to each clinic name in its card.
+ * @returns Promise<void> after every clinic page is registered.
  */
 async function createClinicPages(createPage, clinics, reporter, siteTitle) {
   const clinicTemplate = path.resolve('./src/templates/clinic.tsx');
