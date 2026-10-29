@@ -1,7 +1,6 @@
 // Serves the published route sitemap for static output and SSR.
 import { getPublishedRouteManifest } from '../server/content/routes';
 import { renderSitemapXml } from '../server/sitemap';
-
 /** Serve the public route inventory in both static output and compiled SSR.
  * @returns XML response built exclusively from published records, even on draft-preview deployments.
  */

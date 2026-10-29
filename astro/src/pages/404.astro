@@ -1,10 +1,15 @@
 ---
 // Renders the temporary infrastructure 404 document before fixed-page view integration.
-import SiteDocument from '../layouts/SiteDocument.astro';
+import SiteDocument from "../layouts/SiteDocument.astro";
 // WEB-32 replaces this infrastructure placeholder with the shared NotFoundView.
 ---
 
-<SiteDocument title="Page not found" description="The requested page could not be found." pathname="/404.html" noIndex>
+<SiteDocument
+  title="Page not found"
+  description="The requested page could not be found."
+  pathname="/404.html"
+  noIndex
+>
   <main>
     <h1>Page not found</h1>
     <p>The page you requested could not be found.</p>

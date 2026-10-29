@@ -2,9 +2,7 @@
 import { defineMiddleware } from 'astro:middleware';
 import redirectRulesText from '../../static/_redirects?raw';
 import { findRedirect, parseNetlifyRedirects } from './server/netlify-redirects';
-
 const redirectRules = parseNetlifyRedirects(redirectRulesText);
-
 /** Apply legacy redirects and preview response policy at the Astro request boundary.
  * @param context Astro request context containing the requested pathname and query string.
  * @param next Continuation that renders the route when no legacy redirect applies.
@@ -16,7 +14,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const response = redirect
     ? new Response(null, { status: redirect.status, headers: { Location: redirect.location } })
     : await next();
-
   if (isPreview) {
     response.headers.set('Cache-Control', 'private, no-store');
     response.headers.set('X-Robots-Tag', 'noindex, nofollow');
