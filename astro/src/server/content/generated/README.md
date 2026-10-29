@@ -6,12 +6,12 @@
 
 CI runs `yarn strapi:types:check` against the committed specification without a CMS or credentials. Run `yarn strapi:types` to regenerate the declarations from it. The generator removes only Strapi's volatile timestamp defaults on `publishedAt` schema fields before generating; all paths and type information are retained. The exact generator version and its dependencies are pinned in the root package and Yarn lockfile.
 
-Once the separate CMS change is reviewed and deployed, refresh both committed files from Strapi's native live Content API endpoint with:
+Refresh both committed files from Strapi's live Content API endpoint:
 
 ```sh
 yarn strapi:types --refresh https://admin.aascmed.com/api/openapi.json
 ```
 
-The endpoint currently returns 404 until that CMS change is deployed. A refresh downloads the schema and regenerates the declarations; review and commit both files together. Add `--check` to compare against the live export without writing files. Ordinary generation and CI remain offline.
+A refresh downloads the schema and regenerates the declarations; review and commit both files together. Add `--check` to compare against the live export without writing files. Ordinary generation and CI remain offline.
 
-Until the endpoint is available, export a fresh specification from a disposable CMS copy using `npm run strapi openapi generate -- --output /tmp/strapi-specification.json`. Review the export and replace `specification.json`, then run `yarn strapi:types`. To generate from another local export, pass its path to `node scripts/generate-strapi-openapi.mjs /tmp/strapi-specification.json` (add `--check` to compare). The Strapi CLI initializes a database, so use an isolated development copy for local exports.
+To export a specification from a local CMS copy instead, use `npm run strapi openapi generate -- --output /tmp/strapi-specification.json`. Review the export and replace `specification.json`, then run `yarn strapi:types`. To generate from another local export, pass its path to `node scripts/generate-strapi-openapi.mjs /tmp/strapi-specification.json` (add `--check` to compare). The Strapi CLI initializes a database, so use an isolated development copy for local exports.
