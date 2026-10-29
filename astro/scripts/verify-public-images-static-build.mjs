@@ -82,7 +82,13 @@ const mockApi = createServer(async (request, response) => {
     return;
   }
   const page = Number(url.searchParams.get('pagination[page]') || 1);
-  requests.push({ kind, page, status: url.searchParams.get('status') });
+  const field = kind === 'service-updates' ? 'date' : 'order';
+  const partition = url.searchParams.has(`filters[${field}][$notNull]`)
+    ? 'present'
+    : url.searchParams.has(`filters[${field}][$null]`)
+      ? 'missing'
+      : 'all';
+  requests.push({ kind, page, partition, status: url.searchParams.get('status') });
   if (kind === 'blogs' && page === 2) {
     assert.ok(
       await stat(path.join(stagingDir, 'og-images/blog/fixture-post-cover.jpg')),
@@ -190,9 +196,19 @@ const runStaticBuild = async () => {
   for (const kind of expectedKinds) {
     assert.equal(
       buildRequests.filter((request) => request.kind === kind).length,
-      kind === 'blogs' ? 2 : 1,
+      kind === 'clinics' ? 1 : 2,
       `${kind} is read once, page by page, across image and sitemap builds`,
     );
+    if (['conditions', 'providers', 'service-updates'].includes(kind)) {
+      assert.deepEqual(
+        buildRequests
+          .filter((request) => request.kind === kind)
+          .map(({ partition }) => partition)
+          .sort(),
+        ['missing', 'present'],
+        `${kind} partitions are distinct queries preserving null-last order`,
+      );
+    }
   }
   return buildRequests.length;
 };
@@ -208,7 +224,7 @@ try {
   );
   await writeFile(configPath, fixtureConfig, 'utf8');
   await writeFile(routePath, fixtureRoute, 'utf8');
-  assert.equal(await runStaticBuild(), 6);
+  assert.equal(await runStaticBuild(), 9);
   const routeHtml = path.join(outputDir, 'public-image-fixture', 'index.html');
   const htmlFirst = await readFile(routeHtml, 'utf8');
   assert.match(htmlFirst, /data-image-path="\/og-images\/blog\/fixture-post-cover\.jpg"/);
@@ -222,7 +238,7 @@ try {
   assert.ok(await stat(path.join(outputDir, mediaSrc.slice(1))));
   blogTitle = 'Fixture version two';
   imageColor = '#2b60d4';
-  assert.equal(await runStaticBuild(), 6);
+  assert.equal(await runStaticBuild(), 9);
   const htmlSecond = await readFile(routeHtml, 'utf8');
   const cardSecond = await readFile(cardPath);
   assert.match(htmlSecond, /data-cached="false"/);
@@ -231,7 +247,7 @@ try {
     cardFirst,
     'changed published content and media refresh the card at its stable URL',
   );
-  assert.equal(await runStaticBuild(), 6);
+  assert.equal(await runStaticBuild(), 9);
   const htmlThird = await readFile(routeHtml, 'utf8');
   const cardThird = await readFile(cardPath);
   assert.match(htmlThird, /data-cached="true"/);
