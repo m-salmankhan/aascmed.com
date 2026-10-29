@@ -108,6 +108,7 @@ export function publishedSocialCardEntries(
     if (!slug) {
       continue;
     }
+    const lastSlugSegment = slug.split('/').at(-1);
     const latitude = clinic.location?.latitude;
     const longitude = clinic.location?.longitude;
     const mapLocation: MapLocation | undefined =
@@ -119,9 +120,10 @@ export function publishedSocialCardEntries(
       slug,
       title: `${siteTitle} ${clinic.clinicName || clinic.title}`,
       mapLocation,
-      mediaName: mapLocation
-        ? `${slug}-${latitude}-${longitude}-map`
-        : undefined,
+      mediaName:
+        mapLocation && lastSlugSegment
+          ? `${lastSlugSegment}-${latitude}-${longitude}-map`
+          : undefined,
     });
   }
   return entries;

@@ -69,7 +69,14 @@ try {
           thumbnail: { src: sourcePath, alt: 'Guide thumbnail' },
         },
       ],
-      clinics: [],
+      clinics: [
+        {
+          id: 'clinic-one',
+          slug: 'district/aurora',
+          clinicName: 'Aurora',
+          location: { latitude: 42.3, longitude: -71.1 },
+        },
+      ],
       conditions: [],
     },
     { publicDir: nestedPublicDir, cacheDir: path.join(root, 'nested-cache') },
@@ -81,8 +88,18 @@ try {
   assert.deepEqual(nestedBuild.cards.map(({ imagePath }) => imagePath).sort(), [
     '/og-images/blog/guides/spring-cover.jpg',
     '/og-images/blog/news/spring-cover.jpg',
+    '/og-images/clinics/district/aurora-aurora-42.3--71.1-map.jpg',
   ]);
-  assert.notEqual(nestedBuild.cards[0].outputPath, nestedBuild.cards[1].outputPath);
+  assert.equal(
+    nestedBuild.cards.find(({ kind }) => kind === 'clinics')?.imagePath,
+    '/og-images/clinics/district/aurora-aurora-42.3--71.1-map.jpg',
+    'nested clinic filenames keep Gatsby legacy basename parity',
+  );
+  assert.equal(
+    new Set(nestedBuild.cards.map(({ outputPath }) => outputPath)).size,
+    nestedBuild.cards.length,
+    'nested route families write distinct image files',
+  );
   for (const card of nestedBuild.cards) {
     assert.ok(await stat(card.outputPath));
   }
