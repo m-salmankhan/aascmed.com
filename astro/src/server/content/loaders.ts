@@ -1,32 +1,24 @@
-// Loads CMS content into shared view records and returns published collections for builds.
+// Loads Strapi collection and single records into the shared content view models.
 import type {
   AnnouncementSettings,
   BlogRecord,
   ClinicRecord,
   ConditionRecord,
   ContentPageRecord,
+  ContentRecord,
   HomePageRecord,
   ProviderRecord,
   ReviewRecord,
   ServiceUpdateRecord,
   TrackingSettings,
 } from "../../../../src/shared/content/models.ts";
-import { sortByDateDescending, sortByOrder } from "../../../../src/shared/content/urls.ts";
+import { clinicPath, sortByDateDescending, sortByOrder } from "../../../../src/shared/content/urls.ts";
 import {
   validateContentRecord,
   type ContentFamily,
   type ContentMode,
 } from "../../../../src/shared/content/validation.ts";
-import { getAstroServerConfig } from "../config.ts";
-import {
-  getByIdentifier,
-  getCollection,
-  getSingle,
-  type StrapiEntity,
-  type StrapiDetailKind,
-  type StrapiIdentifierField,
-  type StrapiSingleKind,
-} from "./strapi.ts";
+import { createClient, readAllPages, readFirst, readSingle } from "./strapi.ts";
 import {
   mapStrapiAnnouncement,
   mapStrapiBlog,
@@ -39,39 +31,19 @@ import {
   mapStrapiServiceUpdate,
   mapStrapiTrackingInfo,
 } from "./mapping.ts";
-/** Shared records that require a valid public detail route. */
-type RoutedContentRecord =
-  | BlogRecord
-  | ConditionRecord
-  | ProviderRecord
-  | ClinicRecord
-  | ServiceUpdateRecord;
-/** Function that converts one raw CMS record into the shared view record returned by a loader. */
-type StrapiRecordMapper<TRecord> = (entity: StrapiEntity) => TRecord;
-/** Find the CMS origin used to resolve relative media URLs.
- * @returns The configured origin, or undefined when missing or invalid.
+/** Validate route-bearing records at the published-content boundary.
+ * @param records Normalized content records to validate.
+ * @param family Route convention used for the records.
+ * @param mode Draft records may be incomplete; published records must have public routes.
+ * @returns Nothing; throws if a published record is invalid.
  */
-function mediaBaseUrl(): string | undefined {
-  const base = getAstroServerConfig().strapiApiUrl;
-  try {
-    return base ? new URL(base).origin : undefined;
-  } catch {
-    return undefined;
-  }
-}
-/** Validate route-bearing content before it reaches a public build.
- * @param records Normalized records to validate.
- * @param family Route family used to validate each record URL.
- * @param mode Published records are validated strictly; drafts may be incomplete.
- * @returns The original records; throws when a published record is invalid.
- */
-function check<T extends RoutedContentRecord>(
-  records: T[],
+function validateRouteRecords(
+  records: readonly ContentRecord[],
   family: ContentFamily,
   mode: ContentMode,
-): T[] {
+): void {
   if (mode === "draft") {
-    return records;
+    return;
   }
   for (const record of records) {
     const issues = validateContentRecord(record, family, mode);
@@ -79,241 +51,391 @@ function check<T extends RoutedContentRecord>(
       throw new Error(`Published ${family} record failed validation: ${issues.join(", ")}`);
     }
   }
-  return records;
 }
-/** Load and normalize blogs in CMS date order.
- * @param mode Published content or saved drafts; draft reads require a draft-enabled deployment.
- * @returns The matching records; invalid published route records or upstream failures throw.
+/** Relations requested when loading blog cards and detail pages. */
+const blogPopulate = {
+  thumbnail: true,
+  content: {
+    on: {
+      "generic.contact-booking-cta": { populate: "*" },
+      "clinics.map": { populate: "*" },
+      "generic.rich-text": { populate: "*" },
+    },
+  },
+};
+/** Clinic relations needed by location and contact views. */
+const clinicPopulate = {
+  location: true,
+  contact: true,
+  hours: { populate: { opening_hours: true, shot_hours: true } },
+};
+/** Dynamic-zone relations rendered by condition views. */
+const conditionPopulate = {
+  thumbnail: true,
+  content: {
+    on: {
+      "generic.contact-booking-cta": { populate: "*" },
+      "generic.faq-contact-book-buttons": { populate: "*" },
+      "generic.rich-text": { populate: "*" },
+      "generic.faq": { populate: { questions: true } },
+    },
+  },
+};
+/** Profile relations and blocks rendered by provider views. */
+const providerPopulate = {
+  image: true,
+  name: true,
+  review: true,
+  retirementNotice: true,
+  body: {
+    on: {
+      "generic.rich-text": { populate: "*" },
+      "generic.contact-booking-cta": { populate: "*" },
+      "generic.faq-contact-book-buttons": { populate: "*" },
+    },
+  },
+};
+/** Homepage sections and their media used by the shared home view. */
+const homePagePopulate = {
+  hero: { populate: { media: true } },
+  genericBelowHero: { populate: { media: true } },
+  conditions: { populate: { media: true } },
+  serviceUpdates: { populate: { media: true } },
+  blog: { populate: { media: true } },
+  providers: { populate: { media: true } },
+  feedback: true,
+  locations: { populate: { media: true } },
+  contact: { populate: { media: true } },
+};
+/** Load and normalize published or draft blogs, ordered by date.
+ * @param mode Content state requested from Strapi.
+ * @returns Mapped blogs; invalid published routes or upstream failures throw.
  */
 export async function getBlogs(mode: ContentMode): Promise<BlogRecord[]> {
-  const entities = await getCollection("blog", { mode });
-  return check(
-    entities.map((entity) => mapStrapiBlog(entity, mediaBaseUrl())),
-    "blog",
-    mode,
-  );
+  const client = createClient(mode);
+  const rawRecords = await readAllPages(client.collection("blogs"), {
+    status: mode,
+    sort: ["date:desc", "documentId:asc"],
+    populate: blogPopulate,
+  });
+  const mediaOrigin = new URL(client.baseURL).origin;
+  const records = rawRecords.map((entity) => mapStrapiBlog(entity, mediaOrigin));
+  validateRouteRecords(records, "blog", mode);
+  return records;
 }
-/** Load and normalize clinics.
- * @param mode Published content or saved drafts; draft reads require a draft-enabled deployment.
- * @returns The matching records; invalid published route records or upstream failures throw.
+/** Load and normalize clinics with locations, contacts, and hours populated.
+ * @param mode Content state requested from Strapi.
+ * @returns Mapped clinics; invalid published routes or upstream failures throw.
  */
 export async function getClinics(mode: ContentMode): Promise<ClinicRecord[]> {
-  const entities = await getCollection("clinic", { mode });
-  return check(entities.map(mapStrapiClinic), "clinic", mode);
+  const client = createClient(mode);
+  const rawRecords = await readAllPages(client.collection("clinics"), {
+    status: mode,
+    sort: ["documentId:asc"],
+    populate: clinicPopulate,
+  });
+  const records = rawRecords.map(mapStrapiClinic);
+  validateRouteRecords(records, "clinic", mode);
+  return records;
 }
-/** Load and normalize conditions ordered for display.
- * @param mode Published content or saved drafts; draft reads require a draft-enabled deployment.
- * @returns The matching records; invalid published route records or upstream failures throw.
+/** Load and normalize conditions in display order with their content blocks populated.
+ * @param mode Content state requested from Strapi.
+ * @returns Mapped conditions; invalid published routes or upstream failures throw.
  */
 export async function getConditions(mode: ContentMode): Promise<ConditionRecord[]> {
-  const entities = await getCollection("condition", { mode });
-  return check(
-    sortByOrder(entities.map((entity) => mapStrapiCondition(entity, mediaBaseUrl()))),
-    "condition",
-    mode,
-  );
+  const client = createClient(mode);
+  const rawRecords = await readAllPages(client.collection("conditions"), {
+    status: mode,
+    sort: ["order:asc", "documentId:asc"],
+    populate: conditionPopulate,
+  });
+  const mediaOrigin = new URL(client.baseURL).origin;
+  const mappedRecords = rawRecords.map((entity) => mapStrapiCondition(entity, mediaOrigin));
+  const records = sortByOrder(mappedRecords);
+  validateRouteRecords(records, "condition", mode);
+  return records;
 }
-/** Load and normalize providers ordered for display.
- * @param mode Published content or saved drafts; draft reads require a draft-enabled deployment.
- * @returns The matching records; invalid published route records or upstream failures throw.
+/** Load and normalize providers in display order with profile blocks populated.
+ * @param mode Content state requested from Strapi.
+ * @returns Mapped providers; invalid published routes or upstream failures throw.
  */
 export async function getProviders(mode: ContentMode): Promise<ProviderRecord[]> {
-  const entities = await getCollection("provider", { mode });
-  return check(
-    sortByOrder(entities.map((entity) => mapStrapiProvider(entity, mediaBaseUrl()))),
-    "provider",
-    mode,
-  );
+  const client = createClient(mode);
+  const rawRecords = await readAllPages(client.collection("providers"), {
+    status: mode,
+    sort: ["order:asc", "documentId:asc"],
+    populate: providerPopulate,
+  });
+  const mediaOrigin = new URL(client.baseURL).origin;
+  const mappedRecords = rawRecords.map((entity) => mapStrapiProvider(entity, mediaOrigin));
+  const records = sortByOrder(mappedRecords);
+  validateRouteRecords(records, "provider", mode);
+  return records;
 }
-/** Load and normalize service updates ordered newest first.
- * @param mode Published content or saved drafts; draft reads require a draft-enabled deployment.
- * @returns The matching records; invalid published route records or upstream failures throw.
+/** Load and normalize service updates, newest first.
+ * @param mode Content state requested from Strapi.
+ * @returns Mapped updates; invalid published routes or upstream failures throw.
  */
 export async function getServiceUpdates(mode: ContentMode): Promise<ServiceUpdateRecord[]> {
-  const entities = await getCollection("service-update", { mode });
-  return check(sortByDateDescending(entities.map(mapStrapiServiceUpdate)), "serviceUpdate", mode);
+  const client = createClient(mode);
+  const rawRecords = await readAllPages(client.collection("service-updates"), {
+    status: mode,
+    sort: ["date:desc", "documentId:asc"],
+  });
+  const records = sortByDateDescending(rawRecords.map(mapStrapiServiceUpdate));
+  validateRouteRecords(records, "serviceUpdate", mode);
+  return records;
 }
 /** Load and normalize patient reviews.
- * @param mode Published content or saved drafts; draft reads require a draft-enabled deployment.
- * @returns The matching review records; upstream failures throw.
+ * @param mode Content state requested from Strapi.
+ * @returns Mapped reviews; upstream failures throw.
  */
 export async function getReviews(mode: ContentMode): Promise<ReviewRecord[]> {
-  return (await getCollection("review", { mode })).map(mapStrapiReview);
+  const client = createClient(mode);
+  const rawRecords = await readAllPages(client.collection("reviews"), {
+    status: mode,
+    sort: ["documentId:asc"],
+  });
+  return rawRecords.map(mapStrapiReview);
 }
-/** Load and normalize one detail record.
- * @param kind Strapi collection that owns the record.
- * @param field Whether the identifier is a slug or document ID.
- * @param identifier Requested slug or stable document ID.
- * @param family Route family used for published validation.
- * @param mode Published or saved draft content; draft reads require a draft-enabled deployment.
- * @param map Mapper from a Strapi entity to the shared record.
- * @returns The normalized record, or null if no matching document exists; upstream failures throw.
+/** Find one blog by its route slug using the published/draft collection query.
+ * @param slug Requested blog slug.
+ * @param mode Content state requested from Strapi.
+ * @returns The mapped blog or null when missing; invalid routes and upstream failures throw.
  */
-async function byIdentifier<T extends RoutedContentRecord>(
-  kind: StrapiDetailKind,
-  field: StrapiIdentifierField,
-  identifier: string,
-  family: ContentFamily,
+export async function getBlogBySlug(
+  slug: string,
   mode: ContentMode,
-  map: StrapiRecordMapper<T>,
-): Promise<T | null> {
-  const entity = await getByIdentifier(kind, field, identifier, { mode });
+): Promise<BlogRecord | null> {
+  if (!slug.trim()) {
+    return null;
+  }
+  const client = createClient(mode);
+  const entity = await readFirst(client.collection("blogs"), {
+    status: mode,
+    filters: { slug: { $eq: slug } },
+    populate: blogPopulate,
+    pagination: { page: 1, pageSize: 1 },
+  });
   if (!entity) {
     return null;
   }
-  const record = map(entity);
-  const issues = validateContentRecord(record, family, mode);
-  if (issues.length) {
-    throw new Error(`Published ${family} record failed validation: ${issues.join(", ")}`);
-  }
+  const record = mapStrapiBlog(entity, new URL(client.baseURL).origin);
+  validateRouteRecords([record], "blog", mode);
   return record;
 }
-/** Find one blog by its route slug.
- * @param slug Requested route slug.
- * @param mode Published content or saved drafts; draft reads require a draft-enabled deployment.
- * @returns The normalized blog, or null if missing; upstream failures throw.
- */
-export const getBlogBySlug = (slug: string, mode: ContentMode): Promise<BlogRecord | null> => {
-  return byIdentifier("blog", "slug", slug, "blog", mode, (entity) =>
-    mapStrapiBlog(entity, mediaBaseUrl()),
-  );
-};
 /** Find one condition by its route slug.
- * @param slug Requested route slug.
- * @param mode Published content or saved drafts; draft reads require a draft-enabled deployment.
- * @returns The normalized condition, or null if missing; upstream failures throw.
+ * @param slug Requested condition slug.
+ * @param mode Content state requested from Strapi.
+ * @returns The mapped condition or null when missing; invalid routes and upstream failures throw.
  */
-export const getConditionBySlug = (
+export async function getConditionBySlug(
   slug: string,
   mode: ContentMode,
-): Promise<ConditionRecord | null> => {
-  return byIdentifier("condition", "slug", slug, "condition", mode, (entity) =>
-    mapStrapiCondition(entity, mediaBaseUrl()),
-  );
-};
-/** Find one provider by its route slug.
- * @param slug Requested route slug.
- * @param mode Published content or saved drafts; draft reads require a draft-enabled deployment.
- * @returns The normalized provider, or null if missing; upstream failures throw.
- */
-export const getProviderBySlug = (
-  slug: string,
-  mode: ContentMode,
-): Promise<ProviderRecord | null> => {
-  return byIdentifier("provider", "slug", slug, "provider", mode, (entity) =>
-    mapStrapiProvider(entity, mediaBaseUrl()),
-  );
-};
-/** Find one clinic by its route slug.
- * @param slug Requested route slug.
- * @param mode Published content or saved drafts; draft reads require a draft-enabled deployment.
- * @returns The normalized clinic, or null if missing; upstream failures throw.
- */
-export const getClinicBySlug = (slug: string, mode: ContentMode): Promise<ClinicRecord | null> => {
-  return byIdentifier("clinic", "slug", slug, "clinic", mode, mapStrapiClinic);
-};
-/** Find one service update by its route slug.
- * @param slug Requested route slug.
- * @param mode Published content or saved drafts; draft reads require a draft-enabled deployment.
- * @returns The normalized service update, or null if missing; upstream failures throw.
- */
-export const getServiceUpdateBySlug = (
-  slug: string,
-  mode: ContentMode,
-): Promise<ServiceUpdateRecord | null> => {
-  return byIdentifier(
-    "service-update",
-    "slug",
-    slug,
-    "serviceUpdate",
-    mode,
-    mapStrapiServiceUpdate,
-  );
-};
-/** Load and normalize one single-instance CMS type.
- * @param kind Single type to request.
- * @param mode Published or saved draft content; draft reads require a draft-enabled deployment.
- * @param map Mapper from a Strapi entity to the shared value.
- * @returns The mapped value, or null when no document exists; upstream failures throw.
- */
-async function single<T>(
-  kind: StrapiSingleKind,
-  mode: ContentMode,
-  map: StrapiRecordMapper<T>,
-): Promise<T | null> {
-  const entity = await getSingle(kind, { mode });
-  return entity ? map(entity) : null;
+): Promise<ConditionRecord | null> {
+  if (!slug.trim()) {
+    return null;
+  }
+  const client = createClient(mode);
+  const entity = await readFirst(client.collection("conditions"), {
+    status: mode,
+    filters: { slug: { $eq: slug } },
+    populate: conditionPopulate,
+    pagination: { page: 1, pageSize: 1 },
+  });
+  if (!entity) {
+    return null;
+  }
+  const record = mapStrapiCondition(entity, new URL(client.baseURL).origin);
+  validateRouteRecords([record], "condition", mode);
+  return record;
 }
-/** Load the announcement single type.
- * @param mode Published content or saved drafts; draft reads require a draft-enabled deployment.
- * @returns The normalized announcement, or null if missing; upstream failures throw.
+/** Find one provider by its route slug.
+ * @param slug Requested provider slug.
+ * @param mode Content state requested from Strapi.
+ * @returns The mapped provider or null when missing; invalid routes and upstream failures throw.
  */
-export const getAnnouncement = (mode: ContentMode): Promise<AnnouncementSettings | null> => {
-  return single("announcement", mode, mapStrapiAnnouncement);
-};
-/** Load the blog archive single type.
- * @param mode Published content or saved drafts; draft reads require a draft-enabled deployment.
- * @returns The normalized blog archive, or null if missing; upstream failures throw.
+export async function getProviderBySlug(
+  slug: string,
+  mode: ContentMode,
+): Promise<ProviderRecord | null> {
+  if (!slug.trim()) {
+    return null;
+  }
+  const client = createClient(mode);
+  const entity = await readFirst(client.collection("providers"), {
+    status: mode,
+    filters: { slug: { $eq: slug } },
+    populate: providerPopulate,
+    pagination: { page: 1, pageSize: 1 },
+  });
+  if (!entity) {
+    return null;
+  }
+  const record = mapStrapiProvider(entity, new URL(client.baseURL).origin);
+  validateRouteRecords([record], "provider", mode);
+  return record;
+}
+/** Find a clinic by slug and fall back to its name-derived route when no explicit slug matches.
+ * @param slug Requested clinic route slug.
+ * @param mode Content state requested from Strapi.
+ * @returns The mapped clinic or null when missing; invalid routes and upstream failures throw.
  */
-export const getBlogArchive = (mode: ContentMode): Promise<ContentPageRecord | null> => {
-  return single("blog-archive", mode, mapStrapiPage);
-};
-/** Load the conditions archive single type.
- * @param mode Published content or saved drafts; draft reads require a draft-enabled deployment.
- * @returns The normalized conditions archive, or null if missing; upstream failures throw.
+export async function getClinicBySlug(
+  slug: string,
+  mode: ContentMode,
+): Promise<ClinicRecord | null> {
+  if (!slug.trim()) {
+    return null;
+  }
+  const client = createClient(mode);
+  const entity = await readFirst(client.collection("clinics"), {
+    status: mode,
+    filters: { slug: { $eq: slug } },
+    populate: clinicPopulate,
+    pagination: { page: 1, pageSize: 1 },
+  });
+  if (entity) {
+    const record = mapStrapiClinic(entity);
+    validateRouteRecords([record], "clinic", mode);
+    return record;
+  }
+  const rawClinics = await readAllPages(client.collection("clinics"), {
+    status: mode,
+    sort: ["documentId:asc"],
+    populate: clinicPopulate,
+  });
+  const clinics = rawClinics.map(mapStrapiClinic);
+  const fallback = clinics.find(
+    (clinic) =>
+      !clinic.slug &&
+      clinic.clinicName &&
+      clinicPath({ slug: null, clinicName: clinic.clinicName }) === `/clinics/${slug}/`,
+  );
+  if (fallback) {
+    validateRouteRecords([fallback], "clinic", mode);
+  }
+  return fallback ?? null;
+}
+/** Find one service update by its route slug.
+ * @param slug Requested service update slug.
+ * @param mode Content state requested from Strapi.
+ * @returns The mapped update or null when missing; invalid routes and upstream failures throw.
  */
-export const getConditionsArchive = (mode: ContentMode): Promise<ContentPageRecord | null> => {
-  return single("conditions-archive", mode, mapStrapiPage);
-};
-/** Load the clinics archive single type.
- * @param mode Published content or saved drafts; draft reads require a draft-enabled deployment.
- * @returns The normalized clinics archive, or null if missing; upstream failures throw.
+export async function getServiceUpdateBySlug(
+  slug: string,
+  mode: ContentMode,
+): Promise<ServiceUpdateRecord | null> {
+  if (!slug.trim()) {
+    return null;
+  }
+  const client = createClient(mode);
+  const entity = await readFirst(client.collection("service-updates"), {
+    status: mode,
+    filters: { slug: { $eq: slug } },
+    pagination: { page: 1, pageSize: 1 },
+  });
+  if (!entity) {
+    return null;
+  }
+  const record = mapStrapiServiceUpdate(entity);
+  validateRouteRecords([record], "serviceUpdate", mode);
+  return record;
+}
+/** Load and normalize the announcement single type.
+ * @param mode Content state requested from Strapi.
+ * @returns Mapped announcement or null when missing; upstream failures throw.
  */
-export const getClinicsArchive = (mode: ContentMode): Promise<ContentPageRecord | null> => {
-  return single("clinics-archive", mode, mapStrapiPage);
-};
-/** Load the contact page single type.
- * @param mode Published content or saved drafts; draft reads require a draft-enabled deployment.
- * @returns The normalized contact page, or null if missing; upstream failures throw.
+export async function getAnnouncement(mode: ContentMode): Promise<AnnouncementSettings | null> {
+  const client = createClient(mode);
+  const entity = await readSingle(client.single("announcement"), { status: mode });
+  return entity ? mapStrapiAnnouncement(entity) : null;
+}
+/** Load and normalize the blog archive page.
+ * @param mode Content state requested from Strapi.
+ * @returns Mapped page or null when missing; upstream failures throw.
  */
-export const getContact = (mode: ContentMode): Promise<ContentPageRecord | null> => {
-  return single("contact", mode, mapStrapiPage);
-};
-/** Load the providers page single type.
- * @param mode Published content or saved drafts; draft reads require a draft-enabled deployment.
- * @returns The normalized providers page, or null if missing; upstream failures throw.
+export async function getBlogArchive(mode: ContentMode): Promise<ContentPageRecord | null> {
+  const client = createClient(mode);
+  const entity = await readSingle(client.single("blog-archive"), { status: mode });
+  return entity ? mapStrapiPage(entity) : null;
+}
+/** Load and normalize the conditions archive page.
+ * @param mode Content state requested from Strapi.
+ * @returns Mapped page or null when missing; upstream failures throw.
  */
-export const getProvidersPage = (mode: ContentMode): Promise<ContentPageRecord | null> => {
-  return single("providers-page", mode, mapStrapiPage);
-};
-/** Load the service updates page single type.
- * @param mode Published content or saved drafts; draft reads require a draft-enabled deployment.
- * @returns The normalized service updates page, or null if missing; upstream failures throw.
+export async function getConditionsArchive(mode: ContentMode): Promise<ContentPageRecord | null> {
+  const client = createClient(mode);
+  const entity = await readSingle(client.single("conditions-archive"), { status: mode });
+  return entity ? mapStrapiPage(entity) : null;
+}
+/** Load and normalize the clinics archive page.
+ * @param mode Content state requested from Strapi.
+ * @returns Mapped page or null when missing; upstream failures throw.
  */
-export const getServiceUpdatePage = (mode: ContentMode): Promise<ContentPageRecord | null> => {
-  return single("service-update-page", mode, mapStrapiPage);
-};
-/** Load the privacy policy single type.
- * @param mode Published content or saved drafts; draft reads require a draft-enabled deployment.
- * @returns The normalized privacy policy, or null if missing; upstream failures throw.
+export async function getClinicsArchive(mode: ContentMode): Promise<ContentPageRecord | null> {
+  const client = createClient(mode);
+  const entity = await readSingle(client.single("clinics-archive"), { status: mode });
+  return entity ? mapStrapiPage(entity) : null;
+}
+/** Load and normalize the contact page.
+ * @param mode Content state requested from Strapi.
+ * @returns Mapped page or null when missing; upstream failures throw.
  */
-export const getPrivacyPolicy = (mode: ContentMode): Promise<ContentPageRecord | null> => {
-  return single("privacy-policy", mode, mapStrapiPage);
-};
-/** Load the homepage single type.
- * @param mode Published content or saved drafts; draft reads require a draft-enabled deployment.
- * @returns The normalized homepage, or null if missing; upstream failures throw.
+export async function getContact(mode: ContentMode): Promise<ContentPageRecord | null> {
+  const client = createClient(mode);
+  const entity = await readSingle(client.single("contact"), { status: mode });
+  return entity ? mapStrapiPage(entity) : null;
+}
+/** Load and normalize the providers page.
+ * @param mode Content state requested from Strapi.
+ * @returns Mapped page or null when missing; upstream failures throw.
  */
-export const getHomePage = (mode: ContentMode): Promise<HomePageRecord | null> => {
-  return single("home-page", mode, (entity) => mapStrapiHomePage(entity, mediaBaseUrl()));
-};
-/** Load the tracking settings single type.
- * @param mode Published content or saved drafts; draft reads require a draft-enabled deployment.
- * @returns The normalized tracking settings, or null if missing; upstream failures throw.
+export async function getProvidersPage(mode: ContentMode): Promise<ContentPageRecord | null> {
+  const client = createClient(mode);
+  const entity = await readSingle(client.single("providers-page"), { status: mode });
+  return entity ? mapStrapiPage(entity) : null;
+}
+/** Load and normalize the service updates page.
+ * @param mode Content state requested from Strapi.
+ * @returns Mapped page or null when missing; upstream failures throw.
  */
-export const getTrackingInfo = (mode: ContentMode): Promise<TrackingSettings | null> => {
-  return single("tracking-info", mode, mapStrapiTrackingInfo);
-};
+export async function getServiceUpdatePage(mode: ContentMode): Promise<ContentPageRecord | null> {
+  const client = createClient(mode);
+  const entity = await readSingle(client.single("service-update-page"), { status: mode });
+  return entity ? mapStrapiPage(entity) : null;
+}
+/** Load and normalize the privacy policy page.
+ * @param mode Content state requested from Strapi.
+ * @returns Mapped page or null when missing; upstream failures throw.
+ */
+export async function getPrivacyPolicy(mode: ContentMode): Promise<ContentPageRecord | null> {
+  const client = createClient(mode);
+  const entity = await readSingle(client.single("privacy-policy"), { status: mode });
+  return entity ? mapStrapiPage(entity) : null;
+}
+/** Load the homepage with its display sections and their media populated.
+ * @param mode Content state requested from Strapi.
+ * @returns Mapped homepage or null when missing; upstream failures throw.
+ */
+export async function getHomePage(mode: ContentMode): Promise<HomePageRecord | null> {
+  const client = createClient(mode);
+  const entity = await readSingle(client.single("home-page"), {
+    status: mode,
+    populate: homePagePopulate,
+  });
+  return entity ? mapStrapiHomePage(entity, new URL(client.baseURL).origin) : null;
+}
+/** Load and normalize the tracking settings single type.
+ * @param mode Content state requested from Strapi.
+ * @returns Mapped settings or null when missing; upstream failures throw.
+ */
+export async function getTrackingInfo(mode: ContentMode): Promise<TrackingSettings | null> {
+  const client = createClient(mode);
+  const entity = await readSingle(client.single("tracking-info"), { status: mode });
+  return entity ? mapStrapiTrackingInfo(entity) : null;
+}
+/** Published collection records used by static builds and the public route manifest. */
 export interface PublishedCollections {
   blogs: BlogRecord[];
   clinics: ClinicRecord[];
@@ -322,8 +444,8 @@ export interface PublishedCollections {
   serviceUpdates: ServiceUpdateRecord[];
   reviews: ReviewRecord[];
 }
-/** Fetch the six published content collections for a static build or server request.
- * @returns Normalized published records; fetch and validation failures throw.
+/** Fetch all six published collection resources concurrently.
+ * @returns Normalized published records; upstream and validation failures throw.
  */
 export async function getPublishedCollections(): Promise<PublishedCollections> {
   const [blogs, clinics, conditions, providers, serviceUpdates, reviews] = await Promise.all([
@@ -336,7 +458,7 @@ export async function getPublishedCollections(): Promise<PublishedCollections> {
   ]);
   return { blogs, clinics, conditions, providers, serviceUpdates, reviews };
 }
-/** Select the published collections used to enumerate public detail routes.
+/** Select published records that have public detail routes.
  * @returns Published blogs, clinics, conditions, providers, and service updates.
  */
 export async function getPublishedRouteCollections() {

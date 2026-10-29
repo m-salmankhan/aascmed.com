@@ -13,7 +13,7 @@ import type {
   ServiceUpdateRecord,
   TrackingSettings,
 } from "../../../../src/shared/content/models.ts";
-import { jsonValue, type StrapiEntity } from "./strapi.ts";
+import type { StrapiEntity } from "./strapi.ts";
 /** Fields common to normalized route-bearing CMS records. */
 type CommonContentFields = {
   documentId: string;
@@ -97,6 +97,44 @@ function list(value: unknown): unknown[] | undefined {
         ).data
       : value;
   return Array.isArray(unwrapped) ? unwrapped : undefined;
+}
+/** Normalize CMS values to JSON-safe output while removing Strapi bookkeeping fields.
+ * @param value Raw scalar, array, or object from the CMS.
+ * @returns Serializable content, or undefined for unsupported values.
+ */
+function jsonValue(value: unknown): JsonValue | undefined {
+  if (
+    value === null ||
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
+  ) {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    const output = value.map(jsonValue);
+    return output.every((item) => item !== undefined) ? (output as JsonValue[]) : undefined;
+  }
+  if (value && typeof value === "object") {
+    const output: Record<string, JsonValue> = {};
+    for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
+      if (
+        key === "id" ||
+        key === "createdAt" ||
+        key === "updatedAt" ||
+        key === "publishedAt" ||
+        key === "documentId"
+      ) {
+        continue;
+      }
+      const normalized = jsonValue(child);
+      if (normalized !== undefined) {
+        output[key] = normalized;
+      }
+    }
+    return output;
+  }
+  return undefined;
 }
 /** Normalize an optional rich-text or dynamic-zone array.
  * @param value Raw CMS blocks.
