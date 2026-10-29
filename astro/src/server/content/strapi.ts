@@ -33,19 +33,45 @@ export type StrapiKind = StrapiCollectionKind | StrapiSingleKind;
 export type StrapiIdentifierField = "slug" | "documentId";
 /** OpenAPI endpoint for each CMS type used by the content adapter. */
 type StrapiPathByKind = {
-  blog: "/blogs"; clinic: "/clinics"; condition: "/conditions"; provider: "/providers";
-  "service-update": "/service-updates"; review: "/reviews"; announcement: "/announcement";
-  "blog-archive": "/blog-archive"; "conditions-archive": "/conditions-archive";
-  "clinics-archive": "/clinics-archive"; contact: "/contact"; "providers-page": "/providers-page";
-  "service-update-page": "/service-update-page"; "privacy-policy": "/privacy-policy";
-  "home-page": "/home-page"; "tracking-info": "/tracking-info";
+  blog: "/blogs";
+  clinic: "/clinics";
+  condition: "/conditions";
+  provider: "/providers";
+  "service-update": "/service-updates";
+  review: "/reviews";
+  announcement: "/announcement";
+  "blog-archive": "/blog-archive";
+  "conditions-archive": "/conditions-archive";
+  "clinics-archive": "/clinics-archive";
+  contact: "/contact";
+  "providers-page": "/providers-page";
+  "service-update-page": "/service-update-page";
+  "privacy-policy": "/privacy-policy";
+  "home-page": "/home-page";
+  "tracking-info": "/tracking-info";
 };
 /** Entity shape described by the generated GET response for a CMS type. */
 type OpenApiEntity<K extends StrapiKind> = StrapiOpenApiPaths[StrapiPathByKind[K]] extends {
-  get: { responses: { 200: { content: { "application/json": { data: infer Data } } } } };
-} ? Data extends readonly (infer Item)[] ? Item : Data : never;
+  get: {
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            data: infer Data;
+          };
+        };
+      };
+    };
+  };
+}
+  ? Data extends readonly (infer Item)[]
+    ? Item
+    : Data
+  : never;
 /** Field names from all generated entity variants for a particular CMS type. */
-type OpenApiEntityField<K extends StrapiKind> = K extends StrapiKind ? keyof OpenApiEntity<K> : never;
+type OpenApiEntityField<K extends StrapiKind> = K extends StrapiKind
+  ? keyof OpenApiEntity<K>
+  : never;
 /** A CMS entity with validated identity; other fields remain untrusted until mapped. */
 export type StrapiEntity<K extends StrapiKind = StrapiKind> = {
   documentId: string;
