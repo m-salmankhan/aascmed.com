@@ -18,7 +18,7 @@ import {
 } from "../../astro/src/server/content/mapping.ts";
 import {
   createClient,
-  readAllPages,
+  readRecords,
   StrapiRequestError,
 } from "../../astro/src/server/content/strapi.ts";
 import {
@@ -28,6 +28,8 @@ import {
   getBlogs,
   getClinicBySlug,
   getClinicsArchive,
+  getConditions,
+  getProviders,
   getConditionsArchive,
   getContact,
   getHomePage,
@@ -36,6 +38,7 @@ import {
   getPublishedCollections,
   getServiceUpdateBySlug,
   getServiceUpdatePage,
+  getServiceUpdates,
   getTrackingInfo,
 } from "../../astro/src/server/content/loaders.ts";
 /** Load a representative Strapi fixture by its filename stem.
@@ -156,7 +159,16 @@ async function withFetch(fetcher, operation) {
     globalThis.fetch = originalFetch;
   }
 }
-test("blog loader exposes its SDK resource, nested query and full pagination", async () => {
+/** Collect a lazy loader only in assertions that explicitly cover full iteration.
+ * @param {AsyncIterable<unknown>} records Loader iterable under test.
+ * @returns {Promise<unknown[]>} All records yielded by the fixture.
+ */
+async function collect(records) {
+  const result = [];
+  for await (const record of records) result.push(record);
+  return result;
+}
+test("blog loader exposes its SDK resource, nested query and bounded pagination", async () => {
   process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
   const requests = [];
   const blogs = await withFetch(async (request) => {
@@ -171,7 +183,7 @@ test("blog loader exposes its SDK resource, nested query and full pagination", a
       date: "2026-01-01",
     }));
     return Response.json({ data, meta: { pagination: { pageCount: 2, total: 101 } } });
-  }, () => getBlogs("published"));
+  }, () => collect(getBlogs("published")));
   assert.equal(blogs.length, 101);
   assert.equal(requests.length, 2);
   for (const request of requests) {
@@ -192,22 +204,48 @@ test("blog loader exposes its SDK resource, nested query and full pagination", a
     ["1", "2"],
   );
 });
-test("published collections use their explicit SDK resources, query population, and parallel reads", async () => {
-  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test/custom/api";
+test("collection iterators fetch the next bounded page only when advanced", async () => {
+  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
   const requests = [];
-  let active = 0;
-  let maxActive = 0;
   await withFetch(async (request) => {
     requests.push(request);
-    active++;
-    maxActive = Math.max(maxActive, active);
-    await new Promise((resolve) => setTimeout(resolve, 5));
-    active--;
+    const url = new URL(request.url);
+    const page = Number(url.searchParams.get("pagination[page]"));
+    const pageSize = Number(url.searchParams.get("pagination[pageSize]"));
+    const data = Array.from({ length: page === 1 ? pageSize : 1 }, (_, index) => ({
+      documentId: `doc-${page}-${index}`,
+      slug: `post-${page}-${index}`,
+      title: "Test post",
+      heading: "Test post",
+      date: "2026-01-01",
+    }));
+    return Response.json({ data, meta: { pagination: { pageCount: 3 } } });
+  }, async () => {
+    const blogs = getBlogs("published", { pageSize: 2 });
+    const iterator = blogs[Symbol.asyncIterator]();
+    assert.equal(requests.length, 0, "constructing the loader does not request page one");
+    assert.equal((await iterator.next()).value.documentId, "doc-1-0");
+    assert.equal(requests.length, 1);
+    assert.equal(new URL(requests[0].url).searchParams.get("pagination[pageSize]"), "2");
+    assert.equal((await iterator.next()).value.documentId, "doc-1-1");
+    assert.equal(requests.length, 1, "the current page is buffered without prefetching");
+    await iterator.return();
+    assert.equal(requests.length, 1, "closing early never requests later pages");
+  });
+});
+test("published collections stay lazy and expose SDK resources and population as consumed", async () => {
+  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test/custom/api";
+  const requests = [];
+  await withFetch(async (request) => {
+    requests.push(request);
     return Response.json({ data: [], meta: { pagination: { pageCount: 1, total: 0 } } });
   }, async () => {
-    await getPublishedCollections();
+    const collections = await getPublishedCollections();
+    assert.equal(requests.length, 0, "creating iterators does not fetch any collection");
+    for (const collection of Object.values(collections)) {
+      for await (const _record of collection) break;
+    }
   });
-  assert.ok(maxActive > 1, "the six published collections load concurrently");
   const byPath = new Map(requests.map((request) => [new URL(request.url).pathname, request]));
   assert.deepEqual([...byPath.keys()].sort(), [
     "/custom/api/blogs",
@@ -236,6 +274,72 @@ test("published collections use their explicit SDK resources, query population, 
       "populate[body][on][generic.rich-text][populate]",
     ),
     true,
+  );
+});
+test("ordered collections preserve missing values last through explicit SDK filters", async () => {
+  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
+  process.env.ASTRO_CONTENT_MODE = "draft";
+  const requests = [];
+  const respond = async (request) => {
+    requests.push(request);
+    const params = new URL(request.url).searchParams;
+    const path = new URL(request.url).pathname;
+    if (path.endsWith("/service-updates")) {
+      const dated = params.get("filters[date][$notNull]") === "true";
+      return Response.json({
+        data: [{
+          documentId: dated ? "dated" : "undated",
+          slug: "update",
+          title: "Update",
+          date: dated ? "2026-04-01" : null,
+        }],
+        meta: { pagination: { pageCount: 1 } },
+      });
+    }
+    const ordered = params.get("filters[order][$notNull]") === "true";
+    return Response.json({
+      data: [{
+        documentId: ordered ? "ordered" : "unordered",
+        slug: ordered ? "ordered" : "unordered",
+        title: "Record",
+        order: ordered ? 1 : null,
+      }],
+      meta: { pagination: { pageCount: 1 } },
+    });
+  };
+  const { conditions, providers, updates } = await withFetch(respond, async () => ({
+    conditions: await collect(getConditions("draft")),
+    providers: await collect(getProviders("draft")),
+    updates: await collect(getServiceUpdates("draft")),
+  }));
+  assert.deepEqual(conditions.map((record) => record.documentId), ["ordered", "unordered"]);
+  assert.deepEqual(providers.map((record) => record.documentId), ["ordered", "unordered"]);
+  assert.deepEqual(updates.map((record) => record.documentId), ["dated", "undated"]);
+  for (const path of ["/api/conditions", "/api/providers"]) {
+    const familyRequests = requests.filter(
+      (request) => new URL(request.url).pathname === path,
+    );
+    assert.equal(familyRequests.length, 2);
+    assert.equal(
+      new URL(familyRequests[0].url).searchParams.get("filters[order][$notNull]"),
+      "true",
+    );
+    assert.equal(
+      new URL(familyRequests[1].url).searchParams.get("filters[order][$null]"),
+      "true",
+    );
+  }
+  const updateRequests = requests.filter(
+    (request) => new URL(request.url).pathname === "/api/service-updates",
+  );
+  assert.equal(updateRequests.length, 2);
+  assert.equal(
+    new URL(updateRequests[0].url).searchParams.get("filters[date][$notNull]"),
+    "true",
+  );
+  assert.equal(
+    new URL(updateRequests[1].url).searchParams.get("filters[date][$null]"),
+    "true",
   );
 });
 test("all CMS single loaders address their explicit SDK single resources", async () => {
@@ -291,26 +395,29 @@ test("detail loaders put status, slug filter, and population beside their SDK re
   assert.equal(new URL(requests[1].url).pathname, "/api/service-updates");
   assert.equal(new URL(requests[1].url).searchParams.get("filters[slug][$eq]"), "update");
 });
-test("published reads are fresh and independent, and draft mode is denied outside preview", async () => {
+test("published collection reads start only when consumed, and draft mode is denied outside preview", async () => {
   process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
   delete process.env.ASTRO_CONTENT_MODE;
   let requests = 0;
   await assert.rejects(
-    getBlogs("draft"),
+    collect(getBlogs("draft")),
     (error) => error instanceof StrapiRequestError && error.kind === "configuration",
   );
   await withFetch(async () => {
     requests++;
     return Response.json({ data: [], meta: { pagination: { pageCount: 1, total: 0 } } });
   }, async () => {
-    await getPublishedCollections();
-    assert.equal(requests, 6);
-    await getPublishedCollections();
-    await getPublishedCollections();
-    assert.equal(requests, 18);
+    const first = await getPublishedCollections();
+    assert.equal(requests, 0);
+    await collect(first.blogs);
+    assert.equal(requests, 1);
+    const second = await getPublishedCollections();
+    assert.equal(requests, 1);
+    await collect(second.blogs);
+    assert.equal(requests, 2);
   });
 });
-test("collection page helper stops at the safety cap", async () => {
+test("collection iterator stops at the safety cap and supports a configured batch size", async () => {
   process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
   let requests = 0;
   const client = createClient("published");
@@ -322,7 +429,7 @@ test("collection page helper stops at the safety cap", async () => {
     });
   }, async () => {
     await assert.rejects(
-      readAllPages(client.collection("reviews"), { status: "published" }),
+      collect(readRecords(client.collection("reviews"), { status: "published" })),
       (error) =>
         error instanceof StrapiRequestError &&
         error.kind === "upstream" &&
@@ -330,6 +437,10 @@ test("collection page helper stops at the safety cap", async () => {
     );
   });
   assert.equal(requests, 1);
+  await assert.rejects(
+    collect(readRecords(client.collection("reviews"), { status: "published" }, 101)),
+    (error) => error instanceof StrapiRequestError && error.kind === "configuration",
+  );
 });
 test("clinic slug fallback handles hyphens and whitespace, prioritizes explicit slugs, and ignores renamed clinics", async () => {
   process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
@@ -364,6 +475,25 @@ test("clinic slug fallback handles hyphens and whitespace, prioritizes explicit 
     });
   }
 });
+test("clinic fallback stops after the page containing its route match", async () => {
+  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
+  process.env.ASTRO_CONTENT_MODE = "draft";
+  const requests = [];
+  const clinic = await withFetch(async (request) => {
+    requests.push(request);
+    const params = new URL(request.url).searchParams;
+    if (params.has("filters[slug][$eq]")) {
+      return Response.json({ data: [], meta: { pagination: { pageCount: 1 } } });
+    }
+    const page = params.get("pagination[page]");
+    return Response.json({
+      data: page === "1" ? [{ documentId: "oak", clinic_name: "Oak Park" }] : [],
+      meta: { pagination: { pageCount: 3 } },
+    });
+  }, () => getClinicBySlug("oak-park", "draft"));
+  assert.equal(clinic?.documentId, "oak");
+  assert.equal(requests.length, 2, "the second fallback page is never requested");
+});
 test("published validation rejects unroutable content while draft records remain previewable", async () => {
   process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
   const respond = async () => Response.json({
@@ -371,10 +501,13 @@ test("published validation rejects unroutable content while draft records remain
     meta: { pagination: { pageCount: 1 } },
   });
   await withFetch(respond, async () => {
-    await assert.rejects(getBlogs("published"), /Published blog record failed validation/);
+    await assert.rejects(
+      collect(getBlogs("published")),
+      /Published blog record failed validation/,
+    );
   });
   process.env.ASTRO_CONTENT_MODE = "draft";
-  const drafts = await withFetch(respond, () => getBlogs("draft"));
+  const drafts = await withFetch(respond, () => collect(getBlogs("draft")));
   assert.equal(drafts[0].documentId, "unroutable");
 });
 test("single 404, malformed response and upstream errors retain distinct safe outcomes", async () => {

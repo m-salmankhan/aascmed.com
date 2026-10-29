@@ -34,7 +34,8 @@ export class StrapiRequestError extends Error {
     this.status = status;
   }
 }
-const PAGE_SIZE = 100;
+const DEFAULT_PAGE_SIZE = 100;
+const MAX_PAGE_SIZE = 100;
 // Protect against a broken upstream that never terminates pagination, not a CMS display limit.
 const MAX_PAGES = 10000;
 /** Validate the configured CMS origin and locate its REST API root.
@@ -147,16 +148,24 @@ function validateEntity(value: unknown): StrapiEntity {
   }
   return entity as StrapiEntity;
 }
-/** Read all pages from one SDK collection manager while enforcing the shared page cap.
+/** Yield records from an SDK collection one bounded page at a time.
  * @param manager Official Strapi SDK manager for a specific collection resource.
  * @param query Publication status, sort, filters, and population for this collection.
- * @returns Validated collection records in the order returned by Strapi.
+ * @param pageSize Requested batch size, from 1 through the Strapi maximum of 100.
+ * @returns Validated records in server order; later pages are fetched only when requested.
  */
-export async function readAllPages(
+export async function* readRecords(
   manager: CollectionTypeManager,
   query: API.BaseQueryParams,
-): Promise<StrapiEntity[]> {
-  const records: StrapiEntity[] = [];
+  pageSize = DEFAULT_PAGE_SIZE,
+): AsyncGenerator<StrapiEntity> {
+  if (!Number.isInteger(pageSize) || pageSize < 1 || pageSize > MAX_PAGE_SIZE) {
+    throw new StrapiRequestError(
+      "configuration",
+      `Strapi page size must be between 1 and ${MAX_PAGE_SIZE}`,
+    );
+  }
+  let totalRead = 0;
   for (let page = 1; page <= MAX_PAGES; page++) {
     let response: API.DocumentResponseCollection;
     try {
@@ -165,7 +174,7 @@ export async function readAllPages(
         pagination: {
           ...query.pagination,
           page,
-          pageSize: PAGE_SIZE,
+          pageSize,
           withCount: true,
         },
       });
@@ -180,25 +189,33 @@ export async function readAllPages(
     const total = response.meta?.pagination?.total;
     if (
       (typeof pageCount === "number" && pageCount > MAX_PAGES) ||
-      (typeof total === "number" && total > PAGE_SIZE * MAX_PAGES)
+      (typeof total === "number" && total > MAX_PAGE_SIZE * MAX_PAGES)
     ) {
       throw new StrapiRequestError(
         "upstream",
-        `Strapi collection exceeds the ${PAGE_SIZE * MAX_PAGES} record safety limit`,
+        `Strapi collection exceeds the ${MAX_PAGE_SIZE * MAX_PAGES} record safety limit`,
       );
     }
-    records.push(...response.data.map(validateEntity));
-    if (typeof pageCount === "number" ? page >= pageCount : response.data.length < PAGE_SIZE) {
+    totalRead += response.data.length;
+    if (totalRead > MAX_PAGE_SIZE * MAX_PAGES) {
+      throw new StrapiRequestError(
+        "upstream",
+        `Strapi collection exceeds the ${MAX_PAGE_SIZE * MAX_PAGES} record safety limit`,
+      );
+    }
+    for (const value of response.data) {
+      yield validateEntity(value);
+    }
+    if (typeof pageCount === "number" ? page >= pageCount : response.data.length < pageSize) {
       break;
     }
     if (page === MAX_PAGES) {
       throw new StrapiRequestError(
         "upstream",
-        `Strapi collection may exceed the ${PAGE_SIZE * MAX_PAGES} record safety limit`,
+        `Strapi collection may exceed the ${MAX_PAGE_SIZE * MAX_PAGES} record safety limit`,
       );
     }
   }
-  return records;
 }
 /** Read the first matching record from a filtered SDK collection query.
  * @param manager Official Strapi SDK manager for the requested collection.

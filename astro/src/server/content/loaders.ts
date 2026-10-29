@@ -12,13 +12,13 @@ import type {
   ServiceUpdateRecord,
   TrackingSettings,
 } from "../../../../src/shared/content/models.ts";
-import { clinicPath, sortByDateDescending, sortByOrder } from "../../../../src/shared/content/urls.ts";
+import { clinicPath } from "../../../../src/shared/content/urls.ts";
 import {
   validateContentRecord,
   type ContentFamily,
   type ContentMode,
 } from "../../../../src/shared/content/validation.ts";
-import { createClient, readAllPages, readFirst, readSingle } from "./strapi.ts";
+import { createClient, readFirst, readRecords, readSingle } from "./strapi.ts";
 import {
   mapStrapiAnnouncement,
   mapStrapiBlog,
@@ -31,26 +31,28 @@ import {
   mapStrapiServiceUpdate,
   mapStrapiTrackingInfo,
 } from "./mapping.ts";
-/** Validate route-bearing records at the published-content boundary.
- * @param records Normalized content records to validate.
+/** Validate one route-bearing record at the published-content boundary.
+ * @param record Normalized content record to validate.
  * @param family Route convention used for the records.
  * @param mode Draft records may be incomplete; published records must have public routes.
  * @returns Nothing; throws if a published record is invalid.
  */
-function validateRouteRecords(
-  records: readonly ContentRecord[],
+function validateRouteRecord(
+  record: ContentRecord,
   family: ContentFamily,
   mode: ContentMode,
 ): void {
   if (mode === "draft") {
     return;
   }
-  for (const record of records) {
-    const issues = validateContentRecord(record, family, mode);
-    if (issues.length) {
-      throw new Error(`Published ${family} record failed validation: ${issues.join(", ")}`);
-    }
+  const issues = validateContentRecord(record, family, mode);
+  if (issues.length) {
+    throw new Error(`Published ${family} record failed validation: ${issues.join(", ")}`);
   }
+}
+/** Optional batch size for collection loaders; accepted values range from 1 through 100. */
+export interface CollectionReadOptions {
+  pageSize?: number;
 }
 /** Relations requested when loading blog cards and detail pages. */
 const blogPopulate = {
@@ -109,94 +111,140 @@ const homePagePopulate = {
 };
 /** Load and normalize published or draft blogs, ordered by date.
  * @param mode Content state requested from Strapi.
- * @returns Mapped blogs; invalid published routes or upstream failures throw.
+ * @param options Optional bounded page size for the CMS requests.
+ * @returns Blogs in CMS order, fetched one page at a time.
  */
-export async function getBlogs(mode: ContentMode): Promise<BlogRecord[]> {
+export async function* getBlogs(
+  mode: ContentMode,
+  options: CollectionReadOptions = {},
+): AsyncGenerator<BlogRecord> {
   const client = createClient(mode);
-  const rawRecords = await readAllPages(client.collection("blogs"), {
+  const mediaOrigin = new URL(client.baseURL).origin;
+  for await (const entity of readRecords(client.collection("blogs"), {
     status: mode,
     sort: ["date:desc", "documentId:asc"],
     populate: blogPopulate,
-  });
-  const mediaOrigin = new URL(client.baseURL).origin;
-  const records = rawRecords.map((entity) => mapStrapiBlog(entity, mediaOrigin));
-  validateRouteRecords(records, "blog", mode);
-  return records;
+  }, options.pageSize)) {
+    const record = mapStrapiBlog(entity, mediaOrigin);
+    validateRouteRecord(record, "blog", mode);
+    yield record;
+  }
 }
 /** Load and normalize clinics with locations, contacts, and hours populated.
  * @param mode Content state requested from Strapi.
- * @returns Mapped clinics; invalid published routes or upstream failures throw.
+ * @param options Optional bounded page size for the CMS requests.
+ * @returns Clinics in CMS order, fetched one page at a time.
  */
-export async function getClinics(mode: ContentMode): Promise<ClinicRecord[]> {
+export async function* getClinics(
+  mode: ContentMode,
+  options: CollectionReadOptions = {},
+): AsyncGenerator<ClinicRecord> {
   const client = createClient(mode);
-  const rawRecords = await readAllPages(client.collection("clinics"), {
+  for await (const entity of readRecords(client.collection("clinics"), {
     status: mode,
     sort: ["documentId:asc"],
     populate: clinicPopulate,
-  });
-  const records = rawRecords.map(mapStrapiClinic);
-  validateRouteRecords(records, "clinic", mode);
-  return records;
+  }, options.pageSize)) {
+    const record = mapStrapiClinic(entity);
+    validateRouteRecord(record, "clinic", mode);
+    yield record;
+  }
 }
 /** Load and normalize conditions in display order with their content blocks populated.
  * @param mode Content state requested from Strapi.
- * @returns Mapped conditions; invalid published routes or upstream failures throw.
+ * @param options Optional bounded page size for the CMS requests.
+ * @returns Conditions ordered by display order, fetched one page at a time.
  */
-export async function getConditions(mode: ContentMode): Promise<ConditionRecord[]> {
+export async function* getConditions(
+  mode: ContentMode,
+  options: CollectionReadOptions = {},
+): AsyncGenerator<ConditionRecord> {
   const client = createClient(mode);
-  const rawRecords = await readAllPages(client.collection("conditions"), {
-    status: mode,
-    sort: ["order:asc", "documentId:asc"],
-    populate: conditionPopulate,
-  });
   const mediaOrigin = new URL(client.baseURL).origin;
-  const mappedRecords = rawRecords.map((entity) => mapStrapiCondition(entity, mediaOrigin));
-  const records = sortByOrder(mappedRecords);
-  validateRouteRecords(records, "condition", mode);
-  return records;
+  // Query present orders first, then missing orders, to keep nulls last without materializing.
+  for (const orderedQuery of [
+    { filters: { order: { $notNull: true } }, sort: ["order:asc", "documentId:asc"] },
+    { filters: { order: { $null: true } }, sort: ["documentId:asc"] },
+  ]) {
+    for await (const entity of readRecords(client.collection("conditions"), {
+      status: mode,
+      ...orderedQuery,
+      populate: conditionPopulate,
+    }, options.pageSize)) {
+      const record = mapStrapiCondition(entity, mediaOrigin);
+      validateRouteRecord(record, "condition", mode);
+      yield record;
+    }
+  }
 }
 /** Load and normalize providers in display order with profile blocks populated.
  * @param mode Content state requested from Strapi.
- * @returns Mapped providers; invalid published routes or upstream failures throw.
+ * @param options Optional bounded page size for the CMS requests.
+ * @returns Providers ordered by display order, fetched one page at a time.
  */
-export async function getProviders(mode: ContentMode): Promise<ProviderRecord[]> {
+export async function* getProviders(
+  mode: ContentMode,
+  options: CollectionReadOptions = {},
+): AsyncGenerator<ProviderRecord> {
   const client = createClient(mode);
-  const rawRecords = await readAllPages(client.collection("providers"), {
-    status: mode,
-    sort: ["order:asc", "documentId:asc"],
-    populate: providerPopulate,
-  });
   const mediaOrigin = new URL(client.baseURL).origin;
-  const mappedRecords = rawRecords.map((entity) => mapStrapiProvider(entity, mediaOrigin));
-  const records = sortByOrder(mappedRecords);
-  validateRouteRecords(records, "provider", mode);
-  return records;
+  // Query present orders first, then missing orders, to keep nulls last without materializing.
+  for (const orderedQuery of [
+    { filters: { order: { $notNull: true } }, sort: ["order:asc", "documentId:asc"] },
+    { filters: { order: { $null: true } }, sort: ["documentId:asc"] },
+  ]) {
+    for await (const entity of readRecords(client.collection("providers"), {
+      status: mode,
+      ...orderedQuery,
+      populate: providerPopulate,
+    }, options.pageSize)) {
+      const record = mapStrapiProvider(entity, mediaOrigin);
+      validateRouteRecord(record, "provider", mode);
+      yield record;
+    }
+  }
 }
 /** Load and normalize service updates, newest first.
  * @param mode Content state requested from Strapi.
- * @returns Mapped updates; invalid published routes or upstream failures throw.
+ * @param options Optional bounded page size for the CMS requests.
+ * @returns Updates newest first, with undated records last, fetched one page at a time.
  */
-export async function getServiceUpdates(mode: ContentMode): Promise<ServiceUpdateRecord[]> {
+export async function* getServiceUpdates(
+  mode: ContentMode,
+  options: CollectionReadOptions = {},
+): AsyncGenerator<ServiceUpdateRecord> {
   const client = createClient(mode);
-  const rawRecords = await readAllPages(client.collection("service-updates"), {
-    status: mode,
-    sort: ["date:desc", "documentId:asc"],
-  });
-  const records = sortByDateDescending(rawRecords.map(mapStrapiServiceUpdate));
-  validateRouteRecords(records, "serviceUpdate", mode);
-  return records;
+  // Query dated updates first, then undated updates, to keep nulls last without materializing.
+  for (const orderedQuery of [
+    { filters: { date: { $notNull: true } }, sort: ["date:desc", "documentId:asc"] },
+    { filters: { date: { $null: true } }, sort: ["documentId:asc"] },
+  ]) {
+    for await (const entity of readRecords(client.collection("service-updates"), {
+      status: mode,
+      ...orderedQuery,
+    }, options.pageSize)) {
+      const record = mapStrapiServiceUpdate(entity);
+      validateRouteRecord(record, "serviceUpdate", mode);
+      yield record;
+    }
+  }
 }
 /** Load and normalize patient reviews.
  * @param mode Content state requested from Strapi.
- * @returns Mapped reviews; upstream failures throw.
+ * @param options Optional bounded page size for the CMS requests.
+ * @returns Reviews in document ID order, fetched one page at a time.
  */
-export async function getReviews(mode: ContentMode): Promise<ReviewRecord[]> {
+export async function* getReviews(
+  mode: ContentMode,
+  options: CollectionReadOptions = {},
+): AsyncGenerator<ReviewRecord> {
   const client = createClient(mode);
-  const rawRecords = await readAllPages(client.collection("reviews"), {
+  for await (const entity of readRecords(client.collection("reviews"), {
     status: mode,
     sort: ["documentId:asc"],
-  });
-  return rawRecords.map(mapStrapiReview);
+  }, options.pageSize)) {
+    yield mapStrapiReview(entity);
+  }
 }
 /** Find one blog by its route slug using the published/draft collection query.
  * @param slug Requested blog slug.
@@ -221,7 +269,7 @@ export async function getBlogBySlug(
     return null;
   }
   const record = mapStrapiBlog(entity, new URL(client.baseURL).origin);
-  validateRouteRecords([record], "blog", mode);
+  validateRouteRecord(record, "blog", mode);
   return record;
 }
 /** Find one condition by its route slug.
@@ -247,7 +295,7 @@ export async function getConditionBySlug(
     return null;
   }
   const record = mapStrapiCondition(entity, new URL(client.baseURL).origin);
-  validateRouteRecords([record], "condition", mode);
+  validateRouteRecord(record, "condition", mode);
   return record;
 }
 /** Find one provider by its route slug.
@@ -273,7 +321,7 @@ export async function getProviderBySlug(
     return null;
   }
   const record = mapStrapiProvider(entity, new URL(client.baseURL).origin);
-  validateRouteRecords([record], "provider", mode);
+  validateRouteRecord(record, "provider", mode);
   return record;
 }
 /** Find a clinic by slug and fall back to its name-derived route when no explicit slug matches.
@@ -297,25 +345,25 @@ export async function getClinicBySlug(
   });
   if (entity) {
     const record = mapStrapiClinic(entity);
-    validateRouteRecords([record], "clinic", mode);
+    validateRouteRecord(record, "clinic", mode);
     return record;
   }
-  const rawClinics = await readAllPages(client.collection("clinics"), {
+  for await (const entity of readRecords(client.collection("clinics"), {
     status: mode,
     sort: ["documentId:asc"],
     populate: clinicPopulate,
-  });
-  const clinics = rawClinics.map(mapStrapiClinic);
-  const fallback = clinics.find(
-    (clinic) =>
+  })) {
+    const clinic = mapStrapiClinic(entity);
+    if (
       !clinic.slug &&
       clinic.clinicName &&
-      clinicPath({ slug: null, clinicName: clinic.clinicName }) === `/clinics/${slug}/`,
-  );
-  if (fallback) {
-    validateRouteRecords([fallback], "clinic", mode);
+      clinicPath({ slug: null, clinicName: clinic.clinicName }) === `/clinics/${slug}/`
+    ) {
+      validateRouteRecord(clinic, "clinic", mode);
+      return clinic;
+    }
   }
-  return fallback ?? null;
+  return null;
 }
 /** Find one service update by its route slug.
  * @param slug Requested service update slug.
@@ -339,7 +387,7 @@ export async function getServiceUpdateBySlug(
     return null;
   }
   const record = mapStrapiServiceUpdate(entity);
-  validateRouteRecords([record], "serviceUpdate", mode);
+  validateRouteRecord(record, "serviceUpdate", mode);
   return record;
 }
 /** Load and normalize the announcement single type.
@@ -437,31 +485,26 @@ export async function getTrackingInfo(mode: ContentMode): Promise<TrackingSettin
 }
 /** Published collection records used by static builds and the public route manifest. */
 export interface PublishedCollections {
-  blogs: BlogRecord[];
-  clinics: ClinicRecord[];
-  conditions: ConditionRecord[];
-  providers: ProviderRecord[];
-  serviceUpdates: ServiceUpdateRecord[];
-  reviews: ReviewRecord[];
+  blogs: AsyncIterable<BlogRecord>;
+  clinics: AsyncIterable<ClinicRecord>;
+  conditions: AsyncIterable<ConditionRecord>;
+  providers: AsyncIterable<ProviderRecord>;
+  serviceUpdates: AsyncIterable<ServiceUpdateRecord>;
+  reviews: AsyncIterable<ReviewRecord>;
 }
-/** Fetch all six published collection resources concurrently.
- * @returns Normalized published records; upstream and validation failures throw.
+/** Create lazy iterators for the published collections without starting CMS requests.
+ * @param options Optional bounded CMS page size shared by every collection iterator.
+ * @returns Collection iterators that fetch and map records only as consumers advance them.
  */
-export async function getPublishedCollections(): Promise<PublishedCollections> {
-  const [blogs, clinics, conditions, providers, serviceUpdates, reviews] = await Promise.all([
-    getBlogs("published"),
-    getClinics("published"),
-    getConditions("published"),
-    getProviders("published"),
-    getServiceUpdates("published"),
-    getReviews("published"),
-  ]);
-  return { blogs, clinics, conditions, providers, serviceUpdates, reviews };
-}
-/** Select published records that have public detail routes.
- * @returns Published blogs, clinics, conditions, providers, and service updates.
- */
-export async function getPublishedRouteCollections() {
-  const { blogs, clinics, conditions, providers, serviceUpdates } = await getPublishedCollections();
-  return { blogs, clinics, conditions, providers, serviceUpdates };
+export async function getPublishedCollections(
+  options: CollectionReadOptions = {},
+): Promise<PublishedCollections> {
+  return {
+    blogs: getBlogs("published", options),
+    clinics: getClinics("published", options),
+    conditions: getConditions("published", options),
+    providers: getProviders("published", options),
+    serviceUpdates: getServiceUpdates("published", options),
+    reviews: getReviews("published", options),
+  };
 }
