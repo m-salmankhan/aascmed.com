@@ -1,4 +1,4 @@
-// Fixtures for static image hooks, private snapshot bridging, and nested-route mapping.
+// Fixtures for static image hooks, private content caching, and nested-route mapping.
 import assert from 'node:assert/strict';
 import { access, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
@@ -7,11 +7,11 @@ import { pathToFileURL } from 'node:url';
 import { publicImagesIntegration } from '../src/integrations/public-images.ts';
 import { buildPublishedSocialCards } from '../src/server/content/public-images.ts';
 import {
-  clearBuildSnapshotBridge,
-  readBuildSnapshotBridge,
-  writeBuildSnapshotBridge,
-} from '../src/server/content/build-snapshot-bridge.ts';
-/** @typedef {import('../src/server/content/loaders.ts').PublishedContentSnapshot} PublishedContentSnapshot */
+  clearBuildContentCache,
+  readBuildContentCache,
+  writeBuildContentCache,
+} from '../src/server/content/build-content-cache.ts';
+/** @typedef {import('../src/server/content/loaders.ts').PublishedCollections} PublishedCollections */
 const originalCwd = process.cwd();
 const root = await import('node:fs/promises').then(({ mkdtemp }) =>
   mkdtemp(path.join(os.tmpdir(), 'aasc-public-build-')),
@@ -26,11 +26,11 @@ const cacheDir = path.join(root, '.astro', 'image-cache');
 const svg = (color) => {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="900" height="600"><rect width="900" height="600" fill="${color}"/></svg>`;
 };
-/** Create one published-snapshot fixture containing a blog with a local thumbnail.
+/** Create one published-collections fixture containing a blog with a local thumbnail.
  * @param {string} title Blog title used to trigger content-aware regeneration between builds.
- * @returns {PublishedContentSnapshot} Six-collection snapshot accepted by the static image integration.
+ * @returns {PublishedCollections} Six published collection arrays accepted by the static image integration.
  */
-const snapshotFor = (title) => {
+const collectionsFor = (title) => {
   return {
     blogs: [
       {
@@ -106,21 +106,21 @@ try {
   for (const media of Object.values(nestedBuild.mediaByRoute)) {
     assert.ok(await stat(path.join(nestedPublicDir, 'media', path.basename(media.src))));
   }
-  delete process.env.ASTRO_BUILD_SNAPSHOT_ID;
-  delete process.env.ASTRO_BUILD_SNAPSHOT_PATH;
+  delete process.env.ASTRO_BUILD_CONTENT_CACHE_ID;
+  delete process.env.ASTRO_BUILD_CONTENT_CACHE_PATH;
   const staleId = '4bd18754-8486-4fa4-9118-8d18bba3536d';
-  const stalePath = await writeBuildSnapshotBridge(staleId, snapshotFor('Stale build'));
+  const stalePath = await writeBuildContentCache(staleId, collectionsFor('Stale build'));
   assert.equal(
-    await readBuildSnapshotBridge(),
+    await readBuildContentCache(),
     null,
-    'a prior snapshot is ignored without this build ID and path',
+    'a previous build cache is ignored without this build ID and path',
   );
-  let snapshotLoads = 0;
+  let collectionLoads = 0;
   let currentTitle = 'Fixture version one';
   const integration = publicImagesIntegration({
-    loadPublishedSnapshot: async () => {
-      snapshotLoads++;
-      return snapshotFor(currentTitle);
+    loadPublishedCollections: async () => {
+      collectionLoads++;
+      return collectionsFor(currentTitle);
     },
     stagingDir: path.join(root, '.astro', 'staging'),
     cacheDir,
@@ -130,33 +130,33 @@ try {
     command: 'build',
   });
   await integration.hooks['astro:build:start']({ logger: { info() {} } });
-  assert.equal(snapshotLoads, 0, 'SSR builds skip public image generation and snapshot loads');
+  assert.equal(collectionLoads, 0, 'SSR builds skip public image generation and collection loads');
   await integration.hooks['astro:config:setup']({
     config: { output: 'static' },
     command: 'dev',
   });
   await integration.hooks['astro:build:start']({ logger: { info() {} } });
-  assert.equal(snapshotLoads, 0, 'dev does not reuse or generate a static build snapshot');
+  assert.equal(collectionLoads, 0, 'dev does not reuse or generate a static build collections');
   await integration.hooks['astro:config:setup']({
     config: { output: 'static' },
     command: 'build',
   });
   /** Execute one static integration lifecycle and return the copied card path plus its build ID.
-   * @returns Promise of the emitted card path and the per-build private snapshot ID.
+   * @returns Promise of the emitted card path and the per-build private content-cache ID.
    */
   const runBuildHook = async () => {
     await integration.hooks['astro:build:start']({ logger: { info() {} } });
-    const buildId = process.env.ASTRO_BUILD_SNAPSHOT_ID;
-    const snapshotPath = process.env.ASTRO_BUILD_SNAPSHOT_PATH;
+    const buildId = process.env.ASTRO_BUILD_CONTENT_CACHE_ID;
+    const contentCachePath = process.env.ASTRO_BUILD_CONTENT_CACHE_PATH;
     const manifestPath = process.env.ASTRO_BUILD_IMAGE_MANIFEST_PATH;
-    assert.ok(buildId && snapshotPath && manifestPath, 'static hook sets per-build private paths');
-    assert.deepEqual(await readBuildSnapshotBridge(), snapshotFor(currentTitle));
+    assert.ok(buildId && contentCachePath && manifestPath, 'static hook sets per-build private paths');
+    assert.deepEqual(await readBuildContentCache(), collectionsFor(currentTitle));
     const manifest = JSON.parse(await readFile(manifestPath, 'utf8')).result;
     const image = manifest.cards.find(({ slug }) => slug === 'fixture-post');
     assert.equal(image.imagePath, '/og-images/blog/fixture-post-cover.jpg');
     assert.equal(
       image.wasCached,
-      snapshotLoads === 3,
+      collectionLoads === 3,
       'only unchanged later builds reuse the generated card',
     );
     assert.equal(manifest.mediaByRoute['blog:fixture-post'].width, 900);
@@ -164,11 +164,11 @@ try {
       dir: pathToFileURL(`${outputDir}${path.sep}`),
     });
     assert.equal(
-      await readBuildSnapshotBridge(),
+      await readBuildContentCache(),
       null,
-      'build completion clears the private bridge',
+      'build completion clears the private cache',
     );
-    assert.equal(process.env.ASTRO_BUILD_SNAPSHOT_ID, undefined);
+    assert.equal(process.env.ASTRO_BUILD_CONTENT_CACHE_ID, undefined);
     return {
       imagePath: path.join(outputDir, image.imagePath.slice(1)),
       buildId,
@@ -183,14 +183,14 @@ try {
   assert.notEqual(
     second.buildId,
     first.buildId,
-    'each static build receives a fresh snapshot identity',
+    'each static build receives a fresh cache identity',
   );
   assert.notDeepEqual(
     secondBytes,
     firstBytes,
     'changed CMS title and media at the same source URL refresh public cards',
   );
-  assert.equal(snapshotLoads, 2, 'the integration loads exactly one normalized snapshot per build');
+  assert.equal(collectionLoads, 2, 'the integration loads exactly one normalized collection set per build');
   const stagedCard = path.join(
     root,
     '.astro',
@@ -201,7 +201,7 @@ try {
   );
   const beforeReuse = await stat(stagedCard);
   await runBuildHook();
-  assert.equal(snapshotLoads, 3);
+  assert.equal(collectionLoads, 3);
   assert.equal(
     (await stat(stagedCard)).mtimeMs,
     beforeReuse.mtimeMs,
@@ -224,15 +224,15 @@ try {
       cdnReads++;
       return new Response(svg('#2b60d4'), { headers: { 'content-type': 'image/svg+xml' } });
     };
-    const cdnSnapshot = snapshotFor('Published CDN image');
-    cdnSnapshot.blogs[0].thumbnail.src =
+    const cdnCollections = collectionsFor('Published CDN image');
+    cdnCollections.blogs[0].thumbnail.src =
       'https://wise-positivity-21c2bd6b3f.media.strapiapp.com/cover.svg';
     const cdnIntegration = publicImagesIntegration({
       /** Supply published content whose media uses the separate project CDN.
-       * @returns {Promise<PublishedContentSnapshot>} The CDN-backed fixture snapshot.
+       * @returns {Promise<PublishedCollections>} The CDN-backed fixture collections.
        */
-      loadPublishedSnapshot: async () => {
-        return cdnSnapshot;
+      loadPublishedCollections: async () => {
+        return cdnCollections;
       },
       stagingDir: path.join(root, '.astro', 'cdn-staging'),
       cacheDir: path.join(root, '.astro', 'cdn-cache'),
@@ -263,12 +263,12 @@ try {
     }
   }
   console.log(
-    'Public image build hook passed: static-only execution, per-build private snapshot identity, stale snapshot isolation, nested route/card preservation, cleanup, changed-content regeneration, and unchanged-card reuse.',
+    'Public image build hook passed: static-only execution, per-build private cache identity, stale-cache isolation, nested route/card preservation, cleanup, changed-content regeneration, and unchanged-card reuse.',
   );
 } finally {
   await process.chdir(originalCwd);
-  delete process.env.ASTRO_BUILD_SNAPSHOT_ID;
-  delete process.env.ASTRO_BUILD_SNAPSHOT_PATH;
+  delete process.env.ASTRO_BUILD_CONTENT_CACHE_ID;
+  delete process.env.ASTRO_BUILD_CONTENT_CACHE_PATH;
   delete process.env.ASTRO_BUILD_IMAGE_MANIFEST_PATH;
   await rm(root, { recursive: true, force: true });
 }

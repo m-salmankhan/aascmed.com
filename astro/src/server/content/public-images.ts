@@ -1,4 +1,4 @@
-// Maps one published content snapshot to social cards and responsive image descriptors.
+// Maps published content collections to social cards and responsive image descriptors.
 import type {
   BlogRecord,
   ConditionRecord,
@@ -18,11 +18,11 @@ import {
   type SocialCardKind,
   type SocialCardResult,
 } from '../../lib/public-images.mjs';
-import type { PublishedContentSnapshot } from './loaders.ts';
+import type { PublishedCollections } from './loaders.ts';
 import path from 'node:path';
 /** Published collections that contribute social cards or responsive public media. */
 export type PublishedImageCollections = Pick<
-  PublishedContentSnapshot,
+  PublishedCollections,
   'blogs' | 'clinics' | 'conditions'
 >;
 /** Published record shape accepted by the responsive thumbnail adapter. */
@@ -71,7 +71,7 @@ function routeSlug(
     ? slug
     : null;
 }
-/** Convert an already-loaded published snapshot to public card inputs without making CMS requests.
+/** Convert already-loaded published collection data to public card inputs without making CMS requests.
  * @param collections Already-mapped published blogs, clinics, and conditions.
  * @param siteTitle Brand title used as the prefix for clinic-card titles.
  * @returns Social-card entries in blog, condition, then clinic collection order.
@@ -128,7 +128,7 @@ export function publishedSocialCardEntries(
   }
   return entries;
 }
-/** Build social cards and responsive thumbnails from one normalized published snapshot.
+/** Build social cards and responsive thumbnails from normalized published collection data.
  * @param collections Already-loaded blog, clinic, and condition records for this build.
  * @param options Public output and private cache locations, allowed media hosts, map token, and brand title.
  * @returns Card results and responsive descriptors keyed by complete relative route slug.
@@ -182,7 +182,7 @@ export async function getPublishedImageManifest(): Promise<PublishedImageBuildRe
   if (import.meta.env?.PUBLIC_ASTRO_TARGET !== 'static') {
     return null;
   }
-  const buildId = process.env.ASTRO_BUILD_SNAPSHOT_ID;
+  const buildId = process.env.ASTRO_BUILD_CONTENT_CACHE_ID;
   const configuredPath = process.env.ASTRO_BUILD_IMAGE_MANIFEST_PATH;
   if (
     !buildId ||

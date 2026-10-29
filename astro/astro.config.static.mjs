@@ -14,12 +14,11 @@ export default defineConfig({
     publishedSitemap(),
     publicImagesIntegration({
       /** Read the published collections once for this build's images and prerendered routes.
-       * @returns A normalized snapshot shared through the private build bridge.
+       * @returns The published collections shared by image generation and static routes for this build.
        */
-      loadPublishedSnapshot: async () => {
-        const { getPublishedBuildSnapshot } = await import('./src/server/content/loaders.ts');
-        const { createStrapiRequestScope } = await import('./src/server/content/strapi.ts');
-        return getPublishedBuildSnapshot({ scope: createStrapiRequestScope() });
+      loadPublishedCollections: async () => {
+        const { getPublishedCollections } = await import('./src/server/content/loaders.ts');
+        return getPublishedCollections();
       },
       mapboxToken: process.env.PUBLIC_MAPBOX_API_KEY || process.env.GATSBY_MAPBOX_API_KEY,
     }),

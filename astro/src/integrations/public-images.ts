@@ -12,11 +12,11 @@ import {
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { MediaDescriptor } from '../../../src/shared/content/models.ts';
-import type { PublishedContentSnapshot } from '../server/content/loaders.ts';
+import type { PublishedCollections } from '../server/content/loaders.ts';
 import {
-  clearBuildSnapshotBridge,
-  writeBuildSnapshotBridge,
-} from '../server/content/build-snapshot-bridge.ts';
+  clearBuildContentCache,
+  writeBuildContentCache,
+} from '../server/content/build-content-cache.ts';
 import {
   buildPublishedSocialCards,
   type PublishedImageManifestEnvelope,
@@ -27,8 +27,8 @@ type ResponsiveMediaDescriptor = Pick<
   'src' | 'sources' | 'srcSet' | 'formats'
 >;
 export interface PublicImagesIntegrationOptions {
-  /** Load normalized published records using a fresh caller-owned scope for each build. */
-  loadPublishedSnapshot: () => Promise<PublishedContentSnapshot>;
+  /** Load the current published collections once for this static build. */
+  loadPublishedCollections: () => Promise<PublishedCollections>;
   /** Public Mapbox token used only to request clinic static maps during this build. */
   mapboxToken?: string;
   /** Brand title prefixed to clinic social-card titles. */
@@ -97,7 +97,7 @@ function imagePathsFromDescriptors(
   return paths;
 }
 /** Register build hooks that create public social cards and responsive media only for static production builds.
- * @param options Published-snapshot loader, optional Mapbox token/site title, and private staging/cache directories.
+ * @param options Published-collections loader, optional Mapbox token/site title, and private staging/cache directories.
  * @returns Astro integration that stages images, exposes a private manifest during prerender, and copies generated assets.
  */
 export function publicImagesIntegration(
@@ -105,17 +105,17 @@ export function publicImagesIntegration(
 ): AstroIntegration {
   let isStaticBuild = false;
   let buildId = '';
-  let snapshotPath = '';
+  let contentCachePath = '';
   let manifestPath = '';
   let stagingPublicDir = '';
   let imageCacheDir = '';
   let generatedPaths: string[] = [];
-  /** Remove current private bridge files, clear process markers, and reset the build's generated path list.
+  /** Remove current private cache files, clear process markers, and reset the build's generated path list.
    * @returns Promise<void> after the active build's private temporary state is removed.
    */
   const cleanup = async () => {
-    if (buildId && snapshotPath) {
-      await clearBuildSnapshotBridge(buildId, snapshotPath);
+    if (buildId && contentCachePath) {
+      await clearBuildContentCache(buildId, contentCachePath);
     }
     if (process.env.ASTRO_BUILD_IMAGE_MANIFEST_PATH === manifestPath) {
       delete process.env.ASTRO_BUILD_IMAGE_MANIFEST_PATH;
@@ -124,7 +124,7 @@ export function publicImagesIntegration(
       await rm(manifestPath, { force: true });
     }
     buildId = '';
-    snapshotPath = '';
+    contentCachePath = '';
     manifestPath = '';
     generatedPaths = [];
   };
@@ -138,17 +138,17 @@ export function publicImagesIntegration(
       'astro:config:setup': async ({ config, command }) => {
         isStaticBuild = command === 'build' && config.output === 'static';
       },
-      /** Generate published images and private snapshot metadata before static route prerendering.
+      /** Generate published images and private collection metadata before static route prerendering.
        * @param context Astro build logger used to report generated image counts.
-       * @returns Promise<void> after the build snapshot, image outputs, and private manifest are ready.
+       * @returns Promise<void> after the build collections, image outputs, and private manifest are ready.
        */
       'astro:build:start': async ({ logger }) => {
         if (!isStaticBuild) {
           return;
         }
         await cleanup();
-        delete process.env.ASTRO_BUILD_SNAPSHOT_ID;
-        delete process.env.ASTRO_BUILD_SNAPSHOT_PATH;
+        delete process.env.ASTRO_BUILD_CONTENT_CACHE_ID;
+        delete process.env.ASTRO_BUILD_CONTENT_CACHE_PATH;
         delete process.env.ASTRO_BUILD_IMAGE_MANIFEST_PATH;
         buildId = randomUUID();
         stagingPublicDir =
@@ -164,15 +164,15 @@ export function publicImagesIntegration(
           `${buildId}.json`,
         );
         try {
-          const snapshot = await options.loadPublishedSnapshot();
-          snapshotPath = await writeBuildSnapshotBridge(buildId, snapshot);
-          process.env.ASTRO_BUILD_SNAPSHOT_ID = buildId;
-          process.env.ASTRO_BUILD_SNAPSHOT_PATH = snapshotPath;
+          const collections = await options.loadPublishedCollections();
+          contentCachePath = await writeBuildContentCache(buildId, collections);
+          process.env.ASTRO_BUILD_CONTENT_CACHE_ID = buildId;
+          process.env.ASTRO_BUILD_CONTENT_CACHE_PATH = contentCachePath;
           const imageBuild = await buildPublishedSocialCards(
             {
-              blogs: snapshot.blogs,
-              clinics: snapshot.clinics,
-              conditions: snapshot.conditions,
+              blogs: collections.blogs,
+              clinics: collections.clinics,
+              conditions: collections.conditions,
             },
             {
               publicDir: stagingPublicDir,

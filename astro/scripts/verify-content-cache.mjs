@@ -1,31 +1,31 @@
-// Checks that static development reads stay fresh and only reuse the currently active build bridge.
+// Checks that static development reads stay fresh and only reuse the currently active build cache.
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createServer } from 'vite';
 import {
-  clearBuildSnapshotBridge,
-  writeBuildSnapshotBridge,
-} from '../src/server/content/build-snapshot-bridge.ts';
+  clearBuildContentCache,
+  writeBuildContentCache,
+} from '../src/server/content/build-content-cache.ts';
 const astroRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const environmentKeys = [
   'GATSBY_STRAPI_API_URL',
   'ASTRO_CONTENT_MODE',
-  'ASTRO_BUILD_SNAPSHOT_ID',
-  'ASTRO_BUILD_SNAPSHOT_PATH',
+  'ASTRO_BUILD_CONTENT_CACHE_ID',
+  'ASTRO_BUILD_CONTENT_CACHE_PATH',
 ];
 const previousEnvironment = new Map(environmentKeys.map((key) => [key, process.env[key]]));
 const previousFetch = globalThis.fetch;
-const bridges = [];
+const buildCaches = [];
 let server;
 let version = 1;
 let requests = 0;
 try {
   process.env.GATSBY_STRAPI_API_URL = 'https://cms.example.test/api';
   process.env.ASTRO_CONTENT_MODE = 'published';
-  delete process.env.ASTRO_BUILD_SNAPSHOT_ID;
-  delete process.env.ASTRO_BUILD_SNAPSHOT_PATH;
+  delete process.env.ASTRO_BUILD_CONTENT_CACHE_ID;
+  delete process.env.ASTRO_BUILD_CONTENT_CACHE_PATH;
   /** Return versioned published content for the fixture's six collection requests.
    * @param {string | URL} url Strapi collection URL requested by the loader.
    * @returns {Promise<Response>} A page containing the current blog version or an empty collection.
@@ -47,43 +47,43 @@ try {
     server: { middlewareMode: true },
     define: { 'import.meta.env.PUBLIC_ASTRO_TARGET': JSON.stringify('static') },
   });
-  const { getPublishedBuildSnapshot } = await server.ssrLoadModule(
+  const { getPublishedCollections } = await server.ssrLoadModule(
     '/src/server/content/loaders.ts',
   );
-  const first = await getPublishedBuildSnapshot();
+  const first = await getPublishedCollections();
   version = 2;
-  const second = await getPublishedBuildSnapshot();
+  const second = await getPublishedCollections();
   assert.equal(first.blogs[0].title, 'Version 1');
   assert.equal(second.blogs[0].title, 'Version 2');
-  assert.equal(requests, 12, 'development without a build bridge reads the CMS again');
+  assert.equal(requests, 12, 'development without a build cache reads the CMS again');
   for (const title of ['Build A', 'Build B']) {
     const buildId = randomUUID();
-    const snapshot = { ...second, blogs: [{ ...second.blogs[0], title }] };
-    const snapshotPath = await writeBuildSnapshotBridge(buildId, snapshot);
-    bridges.push({ buildId, snapshotPath });
-    process.env.ASTRO_BUILD_SNAPSHOT_ID = buildId;
-    process.env.ASTRO_BUILD_SNAPSHOT_PATH = snapshotPath;
-    assert.equal((await getPublishedBuildSnapshot()).blogs[0].title, title);
+    const collections = { ...second, blogs: [{ ...second.blogs[0], title }] };
+    const contentCachePath = await writeBuildContentCache(buildId, collections);
+    buildCaches.push({ buildId, contentCachePath });
+    process.env.ASTRO_BUILD_CONTENT_CACHE_ID = buildId;
+    process.env.ASTRO_BUILD_CONTENT_CACHE_PATH = contentCachePath;
+    assert.equal((await getPublishedCollections()).blogs[0].title, title);
   }
   assert.equal(
     requests,
     12,
-    'each active build bridge supplies its own snapshot without CMS reads',
+    'each active build cache supplies its own collections without CMS reads',
   );
-  for (const { buildId, snapshotPath } of bridges) {
-    await clearBuildSnapshotBridge(buildId, snapshotPath);
+  for (const { buildId, contentCachePath } of buildCaches) {
+    await clearBuildContentCache(buildId, contentCachePath);
   }
   version = 3;
-  assert.equal((await getPublishedBuildSnapshot()).blogs[0].title, 'Version 3');
-  assert.equal(requests, 18, 'clearing the bridge restores fresh development reads');
+  assert.equal((await getPublishedCollections()).blogs[0].title, 'Version 3');
+  assert.equal(requests, 18, 'clearing the cache restores fresh development reads');
   console.log(
-    'Content snapshots passed: development freshness, current build identity and bridge cleanup.',
+    'Content cache passed: development freshness, current build identity and cache cleanup.',
   );
 } finally {
   globalThis.fetch = previousFetch;
   await server?.close();
-  for (const { buildId, snapshotPath } of bridges) {
-    await clearBuildSnapshotBridge(buildId, snapshotPath);
+  for (const { buildId, contentCachePath } of buildCaches) {
+    await clearBuildContentCache(buildId, contentCachePath);
   }
   for (const [key, value] of previousEnvironment) {
     if (value === undefined) {

@@ -1,5 +1,5 @@
-// Mocked Strapi static-build fixture for image output, sitemap snapshot reuse, and secret isolation.
-import './verify-content-snapshots.mjs';
+// Mocked Strapi static-build fixture for image output, sitemap collection reuse, and secret isolation.
+import './verify-content-cache.mjs';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { access, readFile, rm, stat, writeFile } from 'node:fs/promises';
@@ -7,8 +7,8 @@ import { spawn } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
-import { writeBuildSnapshotBridge } from '../src/server/content/build-snapshot-bridge.ts';
-/** @typedef {import('../src/server/content/loaders.ts').PublishedContentSnapshot} PublishedContentSnapshot */
+import { writeBuildContentCache } from '../src/server/content/build-content-cache.ts';
+/** @typedef {import('../src/server/content/loaders.ts').PublishedCollections} PublishedCollections */
 const astroRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   '..',
@@ -27,8 +27,8 @@ const outputDir = path.join(astroRoot, 'dist-public-images-fixture');
 const stagingDir = path.join(astroRoot, '.astro', 'public-images-fixture');
 const cacheDir = path.join(astroRoot, '.astro', 'public-image-cache-fixture');
 const staleId = randomUUID();
-/** @type {PublishedContentSnapshot} */
-const staleSnapshot = {
+/** @type {PublishedCollections} */
+const staleCollections = {
   blogs: [],
   clinics: [],
   conditions: [],
@@ -39,7 +39,7 @@ const staleSnapshot = {
 const stalePath = path.join(
   astroRoot,
   '.astro',
-  'public-image-snapshots',
+  'build-content-cache',
   `${staleId}.json`,
 );
 /** Create the mock CMS image body for the current public-build fixture.
@@ -79,7 +79,7 @@ async function assertPublicOutputContainsNoBuildSecrets(directory) {
       const body = (await readFile(fullPath)).toString('utf8');
       assert.doesNotMatch(
         body,
-        /fixture-server-secret-never-publish|ASTRO_BUILD_SNAPSHOT_(?:ID|PATH)|ASTRO_BUILD_IMAGE_MANIFEST_PATH/,
+        /fixture-server-secret-never-publish|ASTRO_BUILD_CONTENT_CACHE_(?:ID|PATH)|ASTRO_BUILD_IMAGE_MANIFEST_PATH/,
       );
     }
   }
@@ -171,10 +171,9 @@ import base from './astro.config.static.mjs';
 import { publicImagesIntegration } from './src/integrations/public-images.ts';
 import path from 'node:path';
 const integration = publicImagesIntegration({
-  loadPublishedSnapshot: async () => {
-    const { getPublishedBuildSnapshot } = await import('./src/server/content/loaders.ts');
-    const { createStrapiRequestScope } = await import('./src/server/content/strapi.ts');
-    return getPublishedBuildSnapshot({ scope: createStrapiRequestScope() });
+  loadPublishedCollections: async () => {
+    const { getPublishedCollections } = await import('./src/server/content/loaders.ts');
+    return getPublishedCollections();
   },
   stagingDir: path.resolve('.astro/public-images-fixture'),
   cacheDir: path.resolve('.astro/public-image-cache-fixture'),
@@ -234,7 +233,7 @@ const runStaticBuild = async () => {
   return buildRequests.length;
 };
 try {
-  await writeBuildSnapshotBridge(staleId, staleSnapshot);
+  await writeBuildContentCache(staleId, staleCollections);
   await writeFile(configPath, fixtureConfig, 'utf8');
   await writeFile(routePath, fixtureRoute, 'utf8');
   assert.equal(await runStaticBuild(), 6);
@@ -284,7 +283,7 @@ try {
     assert.ok(await exists(path.join(outputDir, route)), `${route} is emitted`);
   }
   console.log(
-    'Astro static integration passed: one published collection read per build across sitemap routes, private per-build bridge isolation, responsive assets, changed-media regeneration, and cache reuse.',
+    'Astro static integration passed: one published collection read per build across sitemap routes, private per-build cache isolation, responsive assets, changed-media regeneration, and cache reuse.',
   );
 } finally {
   await new Promise((resolve) => mockApi.close(resolve));
