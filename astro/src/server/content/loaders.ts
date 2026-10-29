@@ -49,8 +49,8 @@ type RoutedContentRecord =
   | ProviderRecord
   | ClinicRecord
   | ServiceUpdateRecord;
-/** Convert a Strapi entity to the corresponding shared record. */
-type EntityMapper<T> = (entity: StrapiEntity) => T;
+/** Function that converts one raw CMS record into the shared view record returned by a loader. */
+type StrapiRecordMapper<TRecord> = (entity: StrapiEntity) => TRecord;
 /** Optional build-owned scope for sharing the published snapshot. */
 export type PublishedSnapshotOptions = {
   scope?: StrapiRequestScope;
@@ -195,7 +195,7 @@ async function byIdentifier<T extends RoutedContentRecord>(
   identifier: string,
   family: ContentFamily,
   mode: ContentMode,
-  map: EntityMapper<T>,
+  map: StrapiRecordMapper<T>,
   scope?: StrapiRequestScope,
 ): Promise<T | null> {
   const entity = await getByIdentifier(kind, field, identifier, options(mode, scope));
@@ -316,7 +316,7 @@ export const getServiceUpdateBySlug = (
 async function single<T>(
   kind: StrapiSingleKind,
   mode: ContentMode,
-  map: EntityMapper<T>,
+  map: StrapiRecordMapper<T>,
   scope?: StrapiRequestScope,
 ): Promise<T | null> {
   const entity = await getSingle(kind, options(mode, scope));

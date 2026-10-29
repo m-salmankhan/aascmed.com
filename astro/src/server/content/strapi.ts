@@ -1,5 +1,6 @@
 // Requests and validates Strapi REST responses with bounded concurrency and publication guards.
 import type { paths as StrapiOpenApiPaths } from "./generated/types";
+import { clinicPath } from "../../../../src/shared/content/urls.ts";
 import { getAstroServerConfig } from "../config.ts";
 import type { JsonValue } from "../../../../src/shared/content/models.ts";
 import type { ContentMode as ValidationContentMode } from "../../../../src/shared/content/validation.ts";
@@ -117,19 +118,21 @@ const PAGE_SIZE = 100;
 // Defend against a broken upstream that never terminates pagination, not a CMS display limit.
 const MAX_PAGES = 10000;
 const DEFAULT_TIMEOUT_MS = 5000;
+// Shared across overlapping page reads and builds to avoid overwhelming the CMS.
+const MAX_CONCURRENT_REQUESTS = 4;
 let activeRequests = 0;
 const waiting: Array<() => void> = [];
-/** Wait for a slot in the bounded upstream request pool.
- * @returns Once a request slot is available.
+/** Wait before starting another CMS request when the concurrency limit has been reached.
+ * @returns Resolves when the caller may fetch; it must call release after the request finishes.
  */
 async function acquire(): Promise<void> {
-  if (activeRequests >= 4) {
+  if (activeRequests >= MAX_CONCURRENT_REQUESTS) {
     await new Promise<void>((resolve) => waiting.push(resolve));
   } else {
     activeRequests++;
   }
 }
-/** Release an upstream request slot or hand it to a waiting request.
+/** Mark a CMS request finished, allowing the next waiting request to start.
  * @returns Nothing.
  */
 function release(): void {
@@ -493,20 +496,7 @@ export async function getByIdentifier<K extends StrapiDetailKind>(
   const base = config.strapiApiUrl;
   const endpoint = safeEndpoint(base);
   endpoint.pathname = `${endpoint.pathname.replace(/\/$/, "")}/${COLLECTION_PATH[kind]}`;
-  const filters =
-    kind === "clinic" && field === "slug"
-      ? {
-          $or: [
-            { slug: { $eq: identifier } },
-            {
-              $and: [
-                { $or: [{ slug: { $null: true } }, { slug: { $eq: "" } }] },
-                { clinic_name: { $eqi: identifier.replace(/-/g, " ") } },
-              ],
-            },
-          ],
-        }
-      : { [field]: { $eq: identifier } };
+  const filters = { [field]: { $eq: identifier } };
   endpoint.search = serializeQuery({
     status: options.mode,
     filters,
@@ -517,7 +507,24 @@ export async function getByIdentifier<K extends StrapiDetailKind>(
   if (!isObject(payload) || !Array.isArray(payload.data)) {
     throw new StrapiRequestError("invalid-response", `Strapi returned an invalid ${kind} lookup`);
   }
-  return payload.data.length ? validateEntity(payload.data[0], kind) : null;
+  if (payload.data.length) {
+    return validateEntity(payload.data[0], kind);
+  }
+  if (kind === "clinic" && field === "slug") {
+    // Name-derived URLs cannot be reversed: both spaces and existing hyphens become '-'.
+    // Match using the same route helper that publishes the clinic URL instead.
+    const clinics = await getCollection("clinic", options);
+    const fallback = clinics.find((clinic) => {
+      if (clinic.slug || typeof clinic.clinic_name !== "string") {
+        return false;
+      }
+      return (
+        clinicPath({ slug: null, clinicName: clinic.clinic_name }) === `/clinics/${identifier}/`
+      );
+    });
+    return fallback ? validateEntity(fallback, kind) : null;
+  }
+  return null;
 }
 /** Fetch one Strapi single type.
  * @param kind Single type to request.

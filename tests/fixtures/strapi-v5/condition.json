@@ -6,7 +6,7 @@
   "order": 4,
   "thumbnail": { "url": "/uploads/food-allergy.jpg", "alternativeText": "Foods" , "width": 800, "height": 500, "mime": "image/jpeg", "formats": { "small": { "url": "/uploads/small_food.jpg", "width": 500, "height": 312 }, "webp": { "url": "/uploads/food.webp", "ext": ".webp", "width": 800, "height": 500 } } },
   "content": [
-    { "__component": "condition.description", "text": [{ "type": "paragraph", "children": [{ "type": "text", "text": "An example condition." }] }] },
-    { "__component": "condition.faq", "questions": [{ "question": "What is it?", "answer": [{ "type": "paragraph", "children": [{ "type": "text", "text": "A response." }] }] }] }
+    { "__component": "generic.rich-text", "text": [{ "type": "paragraph", "children": [{ "type": "text", "text": "An example condition." }] }] },
+    { "__component": "generic.faq", "questions": [{ "question": "What is it?", "answer": [{ "type": "paragraph", "children": [{ "type": "text", "text": "A response." }] }] }] }
   ]
 }

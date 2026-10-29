@@ -1,3 +1,4 @@
+// Defines normalized content and media records consumed by the shared website views.
 /** JSON scalar values used for serializable CMS data. */
 export type JsonPrimitive = string | number | boolean | null;
 /** Recursively JSON-safe data used for CMS rich text and dynamic-zone content. */

@@ -2,6 +2,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { clinicPath } from "../../src/shared/content/urls.ts";
 import {
   mapStrapiAnnouncement,
   mapStrapiBlog,
@@ -57,7 +58,7 @@ test("Strapi v5 condition mapper keeps FAQ blocks and normalized media descripto
     { src: "https://cms.example.test/uploads/food-allergy.jpg", width: 800 },
   ]);
   assert.equal(condition.thumbnail?.formats?.[0].type, "image/webp");
-  assert.equal(condition.content?.[1]?.__component, "condition.faq");
+  assert.equal(condition.content?.[1]?.__component, "generic.faq");
   assert.equal(condition.content?.[1]?.questions instanceof Array, true);
 });
 test("collection mappers normalize blog, provider, service update and review records", async () => {
@@ -332,6 +333,49 @@ test("individual draft route lookup filters by slug and returns null when absent
   assert.equal(parsed[0].searchParams.get("status"), "draft");
   assert.equal(parsed[0].searchParams.get("filters[slug][$eq]"), "new-draft");
   assert.equal(parsed[0].searchParams.get("pagination[pageSize]"), "1");
+});
+test("clinic lookup round-trips fallback URLs and prefers explicit slugs in both content modes", async () => {
+  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
+  process.env.ASTRO_CONTENT_MODE = "draft";
+  const clinics = [
+    { documentId: "hyphen", slug: null, clinic_name: "Oak-Park" },
+    { documentId: "spaces", slug: "", clinic_name: "Crest  Hill" },
+    { documentId: "explicit", slug: "oak-park", clinic_name: "Different Name" },
+    { documentId: "renamed", slug: "custom", clinic_name: "Ignored Clinic" },
+  ];
+  for (const mode of ["published", "draft"]) {
+    let requests = 0;
+    let includeExplicit = false;
+    const fetcher = async (url) => {
+      requests++;
+      const params = new URL(url).searchParams;
+      assert.equal(params.get("status"), mode);
+      const available = clinics.filter(
+        (clinic) => includeExplicit || clinic.documentId !== "explicit",
+      );
+      const slug = params.get("filters[slug][$eq]");
+      return Response.json({
+        data: slug === null ? available : available.filter((clinic) => clinic.slug === slug),
+      });
+    };
+    for (const clinic of clinics.slice(0, 2)) {
+      const path = clinicPath({ slug: clinic.slug, clinicName: clinic.clinic_name });
+      const slug = path.slice("/clinics/".length, -1);
+      const found = await getByIdentifier("clinic", "slug", slug, { mode, fetcher });
+      assert.equal(found?.documentId, clinic.documentId);
+    }
+    assert.equal(
+      await getByIdentifier("clinic", "slug", "ignored-clinic", { mode, fetcher }),
+      null,
+    );
+    includeExplicit = true;
+    requests = 0;
+    assert.equal(
+      (await getByIdentifier("clinic", "slug", "oak-park", { mode, fetcher }))?.documentId,
+      "explicit",
+    );
+    assert.equal(requests, 1);
+  }
 });
 test("draft requests use the draft status and keep the bearer token server-side for both modes", async () => {
   process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
