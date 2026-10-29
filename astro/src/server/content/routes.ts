@@ -1,3 +1,4 @@
+// Builds the published detail-route inventory from normalized content records.
 import { blogPath, clinicPath, conditionPath, providerPath, serviceUpdatePath } from "../../../../src/shared/content/urls.ts";
 import { getPublishedRouteCollections } from "./loaders.ts";
 import type { StrapiRequestScope } from "./strapi.ts";

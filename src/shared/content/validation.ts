@@ -1,3 +1,4 @@
+// Validates whether normalized content records can be shown as public pages or incomplete previews.
 import type { ContentRecord, ServiceUpdateRecord } from "./models.ts";
 import {
   blogPath,

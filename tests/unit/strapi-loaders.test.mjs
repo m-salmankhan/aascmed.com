@@ -1,3 +1,4 @@
+// Checks Strapi request, mapping, pagination and publication contracts using isolated fixtures.
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";

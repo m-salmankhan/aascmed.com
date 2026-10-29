@@ -1,3 +1,4 @@
+// Converts raw Strapi records into the framework-neutral data shapes consumed by shared views.
 import type {
   AnnouncementSettings, BlogRecord, ClinicRecord, ConditionRecord, ContentPageRecord,
   HomePageRecord, JsonValue, MediaDescriptor, ProviderRecord, ReviewRecord,

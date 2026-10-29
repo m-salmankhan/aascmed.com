@@ -1,3 +1,4 @@
+// Requests and validates Strapi REST responses with bounded concurrency and publication guards.
 import { getAstroServerConfig } from "../config.ts";
 import type { JsonValue } from "../../../../src/shared/content/models.ts";
 import type { ContentMode as ValidationContentMode } from "../../../../src/shared/content/validation.ts";
