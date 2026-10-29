@@ -1,3 +1,4 @@
+// Validates canonical/social URLs and serializes JSON-LD for Astro documents.
 /** The public canonical host stays fixed when a page is rendered in preview. */
 export const canonicalOrigin = 'https://www.aascmed.com';
 

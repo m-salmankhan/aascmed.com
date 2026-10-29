@@ -1,3 +1,4 @@
+// Checks document metadata safety and legacy redirect/sitemap compatibility.
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFile } from 'node:fs/promises';

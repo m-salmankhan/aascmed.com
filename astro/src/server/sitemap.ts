@@ -1,3 +1,4 @@
+// Converts fixed and published content routes into the public sitemap XML.
 export interface SitemapRoute {
   pathname: string;
 }

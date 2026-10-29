@@ -1,3 +1,4 @@
+// Preserves the Gatsby sitemap index URL for existing search-engine crawlers.
 import { canonicalOrigin } from '../server/document-metadata';
 
 /** Preserve Gatsby's sitemap index URL for existing crawlers.

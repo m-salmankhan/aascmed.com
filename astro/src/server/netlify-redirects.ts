@@ -1,3 +1,4 @@
+// Parses legacy Netlify redirects and matches them to Astro request paths.
 export interface RedirectRule {
   source: string;
   destination: string;

@@ -1,3 +1,4 @@
+// Applies legacy redirects and private preview response headers to Astro requests.
 import { defineMiddleware } from 'astro:middleware';
 import redirectRulesText from '../../static/_redirects?raw';
 import { findRedirect, parseNetlifyRedirects } from './server/netlify-redirects';

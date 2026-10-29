@@ -1,3 +1,4 @@
+// Serves the published route sitemap for static output and SSR.
 import { getPublishedRouteManifest } from '../server/content/routes';
 import { renderSitemapXml } from '../server/sitemap';
 
