@@ -1,3 +1,4 @@
+// Configures the static Astro site and published image generation before prerendering.
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import { publishedSitemap } from './src/integrations/sitemap.ts';
@@ -12,6 +13,9 @@ export default defineConfig({
     react({ jsxImportSource: '@emotion/react' }),
     publishedSitemap(),
     publicImagesIntegration({
+      /** Read the published collections once for this build's images and prerendered routes.
+       * @returns A normalized snapshot shared through the private build bridge.
+       */
       loadPublishedSnapshot: async () => {
         const { getPublishedBuildSnapshot } = await import('./src/server/content/loaders.ts');
         const { createStrapiRequestScope } = await import('./src/server/content/strapi.ts');

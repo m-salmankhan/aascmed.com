@@ -1,4 +1,5 @@
 // Mocked Strapi static-build fixture for image output, sitemap snapshot reuse, and secret isolation.
+import './verify-content-snapshots.mjs';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { access, readFile, rm, stat, writeFile } from 'node:fs/promises';
