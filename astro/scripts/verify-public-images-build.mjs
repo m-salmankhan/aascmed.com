@@ -1,4 +1,4 @@
-// Fixtures for static image hooks, private content caching, and nested-route mapping.
+// Fixtures for static image hooks, private compact indexes, and nested-route mapping.
 import assert from 'node:assert/strict';
 import { access, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
@@ -6,11 +6,6 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { publicImagesIntegration } from '../src/integrations/public-images.ts';
 import { buildPublishedSocialCards } from '../src/server/content/public-images.ts';
-import {
-  clearBuildContentCache,
-  readBuildContentCache,
-  writeBuildContentCache,
-} from '../src/server/content/build-content-cache.ts';
 /** @typedef {import('../src/server/content/loaders.ts').PublishedCollections} PublishedCollections */
 const originalCwd = process.cwd();
 const root = await import('node:fs/promises').then(({ mkdtemp }) =>
@@ -28,7 +23,7 @@ const svg = (color) => {
 };
 /** Create one published-collections fixture containing a blog with a local thumbnail.
  * @param {string} title Blog title used to trigger content-aware regeneration between builds.
- * @returns {PublishedCollections} Six published collection arrays accepted by the static image integration.
+ * @returns {PublishedCollections} Small fixture values consumed as iterable collections by the static image integration.
  */
 const collectionsFor = (title) => {
   return {
@@ -78,6 +73,8 @@ try {
         },
       ],
       conditions: [],
+      providers: [],
+      serviceUpdates: [],
     },
     { publicDir: nestedPublicDir, cacheDir: path.join(root, 'nested-cache') },
   );
@@ -106,15 +103,8 @@ try {
   for (const media of Object.values(nestedBuild.mediaByRoute)) {
     assert.ok(await stat(path.join(nestedPublicDir, 'media', path.basename(media.src))));
   }
-  delete process.env.ASTRO_BUILD_CONTENT_CACHE_ID;
-  delete process.env.ASTRO_BUILD_CONTENT_CACHE_PATH;
-  const staleId = '4bd18754-8486-4fa4-9118-8d18bba3536d';
-  const stalePath = await writeBuildContentCache(staleId, collectionsFor('Stale build'));
-  assert.equal(
-    await readBuildContentCache(),
-    null,
-    'a previous build cache is ignored without this build ID and path',
-  );
+  delete process.env.ASTRO_BUILD_IMAGE_MANIFEST_ID;
+  delete process.env.ASTRO_BUILD_IMAGE_MANIFEST_PATH;
   let collectionLoads = 0;
   let currentTitle = 'Fixture version one';
   const integration = publicImagesIntegration({
@@ -142,15 +132,13 @@ try {
     command: 'build',
   });
   /** Execute one static integration lifecycle and return the copied card path plus its build ID.
-   * @returns Promise of the emitted card path and the per-build private content-cache ID.
+   * @returns Promise of the emitted card path and the per-build private index ID.
    */
   const runBuildHook = async () => {
     await integration.hooks['astro:build:start']({ logger: { info() {} } });
-    const buildId = process.env.ASTRO_BUILD_CONTENT_CACHE_ID;
-    const contentCachePath = process.env.ASTRO_BUILD_CONTENT_CACHE_PATH;
+    const buildId = process.env.ASTRO_BUILD_IMAGE_MANIFEST_ID;
     const manifestPath = process.env.ASTRO_BUILD_IMAGE_MANIFEST_PATH;
-    assert.ok(buildId && contentCachePath && manifestPath, 'static hook sets per-build private paths');
-    assert.deepEqual(await readBuildContentCache(), collectionsFor(currentTitle));
+    assert.ok(buildId && manifestPath, 'static hook sets its private compact-index identity');
     const manifest = JSON.parse(await readFile(manifestPath, 'utf8')).result;
     const image = manifest.cards.find(({ slug }) => slug === 'fixture-post');
     assert.equal(image.imagePath, '/og-images/blog/fixture-post-cover.jpg');
@@ -163,12 +151,8 @@ try {
     await integration.hooks['astro:build:done']({
       dir: pathToFileURL(`${outputDir}${path.sep}`),
     });
-    assert.equal(
-      await readBuildContentCache(),
-      null,
-      'build completion clears the private cache',
-    );
-    assert.equal(process.env.ASTRO_BUILD_CONTENT_CACHE_ID, undefined);
+    await assert.rejects(access(manifestPath), { code: 'ENOENT' });
+    assert.equal(process.env.ASTRO_BUILD_IMAGE_MANIFEST_ID, undefined);
     return {
       imagePath: path.join(outputDir, image.imagePath.slice(1)),
       buildId,
@@ -190,7 +174,11 @@ try {
     firstBytes,
     'changed CMS title and media at the same source URL refresh public cards',
   );
-  assert.equal(collectionLoads, 2, 'the integration loads exactly one normalized collection set per build');
+  assert.equal(
+    collectionLoads,
+    2,
+    'the integration loads exactly one normalized collection set per build',
+  );
   const stagedCard = path.join(
     root,
     '.astro',
@@ -208,6 +196,126 @@ try {
     'unchanged card files are reused across static builds',
   );
   assert.ok(await stat(second.imagePath));
+  /** Make fixture record streams fail if a consumer tries to iterate a collection twice.
+   * @param {AsyncIterable<unknown>} records One-shot fixture source.
+   * @returns {AsyncIterable<unknown>} The same source with a repeated-iteration guard.
+   */
+  function oneShot(records) {
+    let started = false;
+    return {
+      /** Open the only permitted iterator for this fixture collection.
+       * @returns {AsyncIterator<unknown>} The underlying record iterator.
+       */
+      [Symbol.asyncIterator]() {
+        assert.equal(started, false, 'each published stream is consumed exactly once');
+        started = true;
+        return records[Symbol.asyncIterator]();
+      },
+    };
+  }
+  /** Yield a small set of fixture values as a lazy collection.
+   * @param {unknown[]} records Explicit fixture values, never production CMS data.
+   * @yields One fixture value per consumer request.
+   */
+  async function* fixtureRecords(records) {
+    yield* records;
+  }
+  const lazyStaging = path.join(root, '.astro', 'lazy-staging');
+  let yieldedBlogs = 0;
+  /** Yield a record only after the preceding record's generated card exists.
+   * @yields One normalized record representing a separately requested CMS page.
+   */
+  async function* lazyBlogs() {
+    for (let index = 0; index < 3; index++) {
+      if (index > 0) {
+        assert.ok(
+          await stat(path.join(lazyStaging, 'og-images/blog', `lazy-${index - 1}-default.jpg`)),
+        );
+      }
+      yieldedBlogs++;
+      yield {
+        id: `lazy-${index}`,
+        slug: `lazy-${index}`,
+        title: `Lazy ${index}`,
+        body: ['rich-text-must-not-be-retained'],
+      };
+    }
+  }
+  /** Fail if image and sitemap preparation request review records.
+   * @yields Nothing; review content is not needed by either consumer.
+   */
+  async function* unusedReviews() {
+    throw new Error('Reviews must not be fetched during image or route preparation');
+  }
+  const lazyIntegration = publicImagesIntegration({
+    /** Create one-shot streams without requesting their records.
+     * @returns Lazy collections whose blog stream proves record-by-record backpressure.
+     */
+    loadPublishedCollections: async () => ({
+      blogs: oneShot(lazyBlogs()),
+      conditions: oneShot(fixtureRecords([])),
+      clinics: oneShot(fixtureRecords([])),
+      providers: oneShot(fixtureRecords([{ id: 'provider-one', slug: 'provider-one' }])),
+      serviceUpdates: oneShot(
+        fixtureRecords([{ id: 'update-one', slug: 'update-one', date: '2026-10-29' }]),
+      ),
+      reviews: oneShot(unusedReviews()),
+    }),
+    stagingDir: lazyStaging,
+    cacheDir: path.join(root, '.astro', 'lazy-cache'),
+  });
+  assert.equal(yieldedBlogs, 0, 'creating collection streams is lazy');
+  await lazyIntegration.hooks['astro:config:setup']({
+    config: { output: 'static' },
+    command: 'build',
+  });
+  await lazyIntegration.hooks['astro:build:start']({ logger: { info() {} } });
+  assert.equal(yieldedBlogs, 3);
+  const indexText = await readFile(process.env.ASTRO_BUILD_IMAGE_MANIFEST_PATH, 'utf8');
+  assert.doesNotMatch(indexText, /rich-text-must-not-be-retained|"body"/);
+  const index = JSON.parse(indexText).result;
+  assert.equal(
+    index.routes.length,
+    5,
+    'provider and service-update routes are indexed without image work',
+  );
+  assert.equal(index.cards.length, 3);
+  await lazyIntegration.hooks['astro:build:done']({
+    dir: pathToFileURL(`${outputDir}${path.sep}`),
+  });
+  const duplicateIntegration = publicImagesIntegration({
+    /** Return two records with a duplicate route in separate lazy iterations.
+     * @returns Published route streams containing a deliberate late duplicate.
+     */
+    loadPublishedCollections: async () => ({
+      blogs: oneShot(
+        fixtureRecords([
+          { id: 'first', slug: 'duplicate', title: 'First' },
+          { id: 'second', slug: 'duplicate', title: 'Second' },
+        ]),
+      ),
+      conditions: [],
+      clinics: [],
+      providers: [],
+      serviceUpdates: [],
+      reviews: unusedReviews(),
+    }),
+    stagingDir: path.join(root, '.astro', 'duplicate-staging'),
+    cacheDir: path.join(root, '.astro', 'duplicate-cache'),
+  });
+  await duplicateIntegration.hooks['astro:config:setup']({
+    config: { output: 'static' },
+    command: 'build',
+  });
+  await assert.rejects(
+    duplicateIntegration.hooks['astro:build:start']({ logger: { info() {} } }),
+    /Published content contains duplicate routes/,
+  );
+  assert.equal(process.env.ASTRO_BUILD_IMAGE_MANIFEST_ID, undefined);
+  assert.equal(process.env.ASTRO_BUILD_IMAGE_MANIFEST_PATH, undefined);
+  await assert.rejects(access(path.join(outputDir, 'og-images/blog/duplicate-default.jpg')), {
+    code: 'ENOENT',
+  });
   const originalFetch = globalThis.fetch;
   const originalApiUrl = process.env.GATSBY_STRAPI_API_URL;
   const originalMediaHosts = process.env.STRAPI_MEDIA_HOSTS;
@@ -263,12 +371,11 @@ try {
     }
   }
   console.log(
-    'Public image build hook passed: static-only execution, per-build private cache identity, stale-cache isolation, nested route/card preservation, cleanup, changed-content regeneration, and unchanged-card reuse.',
+    'Public image build hook passed: static-only execution, per-build private index identity, nested route/card preservation, cleanup, changed-content regeneration, and unchanged-card reuse.',
   );
 } finally {
   await process.chdir(originalCwd);
-  delete process.env.ASTRO_BUILD_CONTENT_CACHE_ID;
-  delete process.env.ASTRO_BUILD_CONTENT_CACHE_PATH;
+  delete process.env.ASTRO_BUILD_IMAGE_MANIFEST_ID;
   delete process.env.ASTRO_BUILD_IMAGE_MANIFEST_PATH;
   await rm(root, { recursive: true, force: true });
 }

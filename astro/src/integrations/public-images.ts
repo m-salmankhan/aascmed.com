@@ -1,33 +1,19 @@
 // Static-build hook for staging social cards and responsive public media.
 import type { AstroIntegration } from 'astro';
 import { randomUUID } from 'node:crypto';
-import {
-  chmod,
-  copyFile,
-  mkdir,
-  rename,
-  rm,
-  writeFile,
-} from 'node:fs/promises';
+import { chmod, copyFile, mkdir, rename, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { MediaDescriptor } from '../../../src/shared/content/models.ts';
 import type { PublishedCollections } from '../server/content/loaders.ts';
 import {
-  clearBuildContentCache,
-  writeBuildContentCache,
-} from '../server/content/build-content-cache.ts';
-import {
   buildPublishedSocialCards,
   type PublishedImageManifestEnvelope,
 } from '../server/content/public-images.ts';
 /** Exact responsive fields copied from the image helper into the static output manifest. */
-type ResponsiveMediaDescriptor = Pick<
-  MediaDescriptor,
-  'src' | 'sources' | 'srcSet' | 'formats'
->;
+type ResponsiveMediaDescriptor = Pick<MediaDescriptor, 'src' | 'sources' | 'srcSet' | 'formats'>;
 export interface PublicImagesIntegrationOptions {
-  /** Load the current published collections once for this static build. */
+  /** Create lazy published streams; the hook consumes one record at a time. */
   loadPublishedCollections: () => Promise<PublishedCollections>;
   /** Public Mapbox token used only to request clinic static maps during this build. */
   mapboxToken?: string;
@@ -49,9 +35,7 @@ function mediaHostAllowlist(): string[] {
     try {
       hosts.add(new URL(strapiApiUrl).hostname.toLowerCase());
     } catch {
-      throw new Error(
-        'GATSBY_STRAPI_API_URL must be an absolute URL to derive media hosts',
-      );
+      throw new Error('GATSBY_STRAPI_API_URL must be an absolute URL to derive media hosts');
     }
   }
   for (const rawHost of (process.env.STRAPI_MEDIA_HOSTS || '').split(',')) {
@@ -60,9 +44,7 @@ function mediaHostAllowlist(): string[] {
       continue;
     }
     if (
-      !/^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)(?:\.(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?))*$/.test(
-        host,
-      )
+      !/^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)(?:\.(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?))*$/.test(host)
     ) {
       throw new Error(
         'STRAPI_MEDIA_HOSTS must be a comma-separated list of hostnames without schemes or ports',
@@ -100,12 +82,9 @@ function imagePathsFromDescriptors(
  * @param options Published-collections loader, optional Mapbox token/site title, and private staging/cache directories.
  * @returns Astro integration that stages images, exposes a private manifest during prerender, and copies generated assets.
  */
-export function publicImagesIntegration(
-  options: PublicImagesIntegrationOptions,
-): AstroIntegration {
+export function publicImagesIntegration(options: PublicImagesIntegrationOptions): AstroIntegration {
   let isStaticBuild = false;
   let buildId = '';
-  let contentCachePath = '';
   let manifestPath = '';
   let stagingPublicDir = '';
   let imageCacheDir = '';
@@ -114,17 +93,17 @@ export function publicImagesIntegration(
    * @returns Promise<void> after the active build's private temporary state is removed.
    */
   const cleanup = async () => {
-    if (buildId && contentCachePath) {
-      await clearBuildContentCache(buildId, contentCachePath);
+    if (process.env.ASTRO_BUILD_IMAGE_MANIFEST_ID === buildId) {
+      delete process.env.ASTRO_BUILD_IMAGE_MANIFEST_ID;
     }
     if (process.env.ASTRO_BUILD_IMAGE_MANIFEST_PATH === manifestPath) {
       delete process.env.ASTRO_BUILD_IMAGE_MANIFEST_PATH;
     }
     if (manifestPath) {
       await rm(manifestPath, { force: true });
+      await rm(`${manifestPath}.${process.pid}.tmp`, { force: true });
     }
     buildId = '';
-    contentCachePath = '';
     manifestPath = '';
     generatedPaths = [];
   };
@@ -138,25 +117,22 @@ export function publicImagesIntegration(
       'astro:config:setup': async ({ config, command }) => {
         isStaticBuild = command === 'build' && config.output === 'static';
       },
-      /** Generate published images and private collection metadata before static route prerendering.
+      /** Stream published content into images and compact private indexes before prerendering.
        * @param context Astro build logger used to report generated image counts.
-       * @returns Promise<void> after the build collections, image outputs, and private manifest are ready.
+       * @returns Promise<void> after image outputs and route/descriptor indexes are ready; full CMS records are not retained.
        */
       'astro:build:start': async ({ logger }) => {
         if (!isStaticBuild) {
           return;
         }
         await cleanup();
-        delete process.env.ASTRO_BUILD_CONTENT_CACHE_ID;
-        delete process.env.ASTRO_BUILD_CONTENT_CACHE_PATH;
+        delete process.env.ASTRO_BUILD_IMAGE_MANIFEST_ID;
         delete process.env.ASTRO_BUILD_IMAGE_MANIFEST_PATH;
         buildId = randomUUID();
         stagingPublicDir =
-          options.stagingDir ||
-          path.resolve(process.cwd(), '.astro', 'public-images');
+          options.stagingDir || path.resolve(process.cwd(), '.astro', 'public-images');
         imageCacheDir =
-          options.cacheDir ||
-          path.resolve(process.cwd(), '.astro', 'public-image-cache');
+          options.cacheDir || path.resolve(process.cwd(), '.astro', 'public-image-cache');
         manifestPath = path.resolve(
           process.cwd(),
           '.astro',
@@ -165,14 +141,13 @@ export function publicImagesIntegration(
         );
         try {
           const collections = await options.loadPublishedCollections();
-          contentCachePath = await writeBuildContentCache(buildId, collections);
-          process.env.ASTRO_BUILD_CONTENT_CACHE_ID = buildId;
-          process.env.ASTRO_BUILD_CONTENT_CACHE_PATH = contentCachePath;
           const imageBuild = await buildPublishedSocialCards(
             {
               blogs: collections.blogs,
               clinics: collections.clinics,
               conditions: collections.conditions,
+              providers: collections.providers,
+              serviceUpdates: collections.serviceUpdates,
             },
             {
               publicDir: stagingPublicDir,
@@ -197,15 +172,12 @@ export function publicImagesIntegration(
             buildId,
             result: imageBuild,
           };
-          await writeFile(
-            temporaryManifest,
-            `${JSON.stringify(manifestEnvelope, null, 2)}\n`,
-            {
-              flag: 'wx',
-              mode: 0o600,
-            },
-          );
+          await writeFile(temporaryManifest, `${JSON.stringify(manifestEnvelope, null, 2)}\n`, {
+            flag: 'wx',
+            mode: 0o600,
+          });
           await rename(temporaryManifest, manifestPath);
+          process.env.ASTRO_BUILD_IMAGE_MANIFEST_ID = buildId;
           process.env.ASTRO_BUILD_IMAGE_MANIFEST_PATH = manifestPath;
           logger.info(
             `Prepared ${imageBuild.cards.length} published social cards and ${Object.keys(imageBuild.mediaByRoute).length} responsive image sets.`,
@@ -223,6 +195,7 @@ export function publicImagesIntegration(
         if (!isStaticBuild) {
           return;
         }
+        const copiedPaths: string[] = [];
         try {
           if (!generatedPaths.length) {
             return;
@@ -233,8 +206,14 @@ export function publicImagesIntegration(
             const source = path.join(stagingPublicDir, relativePath);
             const destination = path.join(outputDir, relativePath);
             await mkdir(path.dirname(destination), { recursive: true });
+            copiedPaths.push(destination);
             await copyFile(source, destination);
           }
+        } catch (error) {
+          for (const destination of copiedPaths) {
+            await rm(destination, { force: true });
+          }
+          throw error;
         } finally {
           await cleanup();
         }

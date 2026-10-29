@@ -2,46 +2,20 @@
 import './verify-content-cache.mjs';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
-import { access, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { access, mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
 import { spawn } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
-import { writeBuildContentCache } from '../src/server/content/build-content-cache.ts';
 /** @typedef {import('../src/server/content/loaders.ts').PublishedCollections} PublishedCollections */
-const astroRoot = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  '..',
-);
-const routePath = path.join(
-  astroRoot,
-  'src',
-  'pages',
-  'public-image-fixture.astro',
-);
-const configPath = path.join(
-  astroRoot,
-  'astro.config.public-images-fixture.mjs',
-);
+const astroRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const routePath = path.join(astroRoot, 'src', 'pages', 'public-image-fixture.astro');
+const configPath = path.join(astroRoot, 'astro.config.public-images-fixture.mjs');
 const outputDir = path.join(astroRoot, 'dist-public-images-fixture');
 const stagingDir = path.join(astroRoot, '.astro', 'public-images-fixture');
 const cacheDir = path.join(astroRoot, '.astro', 'public-image-cache-fixture');
 const staleId = randomUUID();
-/** @type {PublishedCollections} */
-const staleCollections = {
-  blogs: [],
-  clinics: [],
-  conditions: [],
-  providers: [],
-  serviceUpdates: [],
-  reviews: [],
-};
-const stalePath = path.join(
-  astroRoot,
-  '.astro',
-  'build-content-cache',
-  `${staleId}.json`,
-);
+const stalePath = path.join(astroRoot, '.astro', 'public-image-manifests', `${staleId}.json`);
 /** Create the mock CMS image body for the current public-build fixture.
  * @param {string} color CSS rectangle fill returned by the mock media endpoint.
  * @returns {string} Deterministic SVG response text.
@@ -79,19 +53,12 @@ async function assertPublicOutputContainsNoBuildSecrets(directory) {
       const body = (await readFile(fullPath)).toString('utf8');
       assert.doesNotMatch(
         body,
-        /fixture-server-secret-never-publish|ASTRO_BUILD_CONTENT_CACHE_(?:ID|PATH)|ASTRO_BUILD_IMAGE_MANIFEST_PATH/,
+        /fixture-server-secret-never-publish|ASTRO_BUILD_IMAGE_MANIFEST_(?:ID|PATH)|rich-text-must-not-be-retained/,
       );
     }
   }
 }
-for (const target of [
-  routePath,
-  configPath,
-  outputDir,
-  stagingDir,
-  cacheDir,
-  stalePath,
-]) {
+for (const target of [routePath, configPath, outputDir, stagingDir, cacheDir, stalePath]) {
   assert.equal(
     await exists(target),
     false,
@@ -109,22 +76,27 @@ const mockApi = createServer(async (request, response) => {
     return;
   }
   const kind = url.pathname.split('/').filter(Boolean).at(-1);
-  if (
-    ![
-      'blogs',
-      'clinics',
-      'conditions',
-      'providers',
-      'service-updates',
-      'reviews',
-    ].includes(kind)
-  ) {
+  if (!['blogs', 'clinics', 'conditions', 'providers', 'service-updates'].includes(kind)) {
     response.writeHead(404);
     response.end();
     return;
   }
-  requests.push({ kind, status: url.searchParams.get('status') });
-  const data =
+  const page = Number(url.searchParams.get('pagination[page]') || 1);
+  requests.push({ kind, page, status: url.searchParams.get('status') });
+  if (kind === 'blogs' && page === 2) {
+    assert.ok(
+      await stat(path.join(stagingDir, 'og-images/blog/fixture-post-cover.jpg')),
+      'the first CMS page is processed before the next page is requested',
+    );
+    const derivatives = await readdir(path.join(stagingDir, 'media'));
+    for (const extension of ['.avif', '.webp', '.jpg']) {
+      assert.ok(
+        derivatives.some((name) => name.endsWith(extension)),
+        'responsive derivatives exist before the next CMS page is fetched',
+      );
+    }
+  }
+  const records =
     kind === 'blogs'
       ? [
           {
@@ -133,18 +105,24 @@ const mockApi = createServer(async (request, response) => {
             slug: 'fixture-post',
             title: blogTitle,
             heading: blogTitle,
-            thumbnail: {
-              url: '/uploads/cover.svg',
-              alternativeText: 'Fixture cover',
-            },
+            thumbnail: { url: '/uploads/cover.svg', alternativeText: 'Fixture cover' },
+            content: [{ text: 'rich-text-must-not-be-retained' }],
           },
+          { id: 2, documentId: 'fixture-blog-two', slug: 'fixture-second', title: 'Second post' },
+          { id: 3, documentId: 'fixture-blog-three', slug: 'fixture-third', title: 'Third post' },
         ]
       : [];
+  const data = records.slice((page - 1) * 2, page * 2);
   response.writeHead(200, { 'content-type': 'application/json' });
   response.end(
     JSON.stringify({
       data,
-      meta: { pagination: { pageCount: 1, total: data.length } },
+      meta: {
+        pagination: {
+          pageCount: Math.max(1, Math.ceil(records.length / 2)),
+          total: records.length,
+        },
+      },
     }),
   );
 });
@@ -173,7 +151,7 @@ import path from 'node:path';
 const integration = publicImagesIntegration({
   loadPublishedCollections: async () => {
     const { getPublishedCollections } = await import('./src/server/content/loaders.ts');
-    return getPublishedCollections();
+    return getPublishedCollections({ pageSize: 2 });
   },
   stagingDir: path.resolve('.astro/public-images-fixture'),
   cacheDir: path.resolve('.astro/public-image-cache-fixture'),
@@ -187,38 +165,24 @@ export default { ...base, outDir: './dist-public-images-fixture', integrations: 
 const runStaticBuild = async () => {
   const startIndex = requests.length;
   const cli = path.join(astroRoot, 'node_modules', 'astro', 'bin', 'astro.mjs');
-  const build = spawn(
-    process.execPath,
-    [cli, 'build', '--config', path.basename(configPath)],
-    {
-      cwd: astroRoot,
-      stdio: 'inherit',
-      env: {
-        ...process.env,
-        ASTRO_CONTENT_MODE: 'published',
-        GATSBY_STRAPI_API_URL: `http://127.0.0.1:${address.port}/api`,
-        STRAPI_TOKEN: 'fixture-server-secret-never-publish',
-      },
+  const build = spawn(process.execPath, [cli, 'build', '--config', path.basename(configPath)], {
+    cwd: astroRoot,
+    stdio: 'inherit',
+    env: {
+      ...process.env,
+      ASTRO_CONTENT_MODE: 'published',
+      GATSBY_STRAPI_API_URL: `http://127.0.0.1:${address.port}/api`,
+      STRAPI_TOKEN: 'fixture-server-secret-never-publish',
     },
-  );
+  });
   const code = await new Promise((resolve, reject) => {
     build.once('error', reject);
     build.once('close', resolve);
   });
   assert.equal(code, 0, 'Astro static fixture build succeeds');
   const buildRequests = requests.slice(startIndex);
-  const expectedKinds = [
-    'blogs',
-    'clinics',
-    'conditions',
-    'providers',
-    'service-updates',
-    'reviews',
-  ];
-  assert.deepEqual(
-    new Set(buildRequests.map(({ kind }) => kind)),
-    new Set(expectedKinds),
-  );
+  const expectedKinds = ['blogs', 'clinics', 'conditions', 'providers', 'service-updates'];
+  assert.deepEqual(new Set(buildRequests.map(({ kind }) => kind)), new Set(expectedKinds));
   assert.ok(
     buildRequests.every(({ status }) => status === 'published'),
     'build reads only published CMS collections',
@@ -226,34 +190,31 @@ const runStaticBuild = async () => {
   for (const kind of expectedKinds) {
     assert.equal(
       buildRequests.filter((request) => request.kind === kind).length,
-      1,
-      `${kind} has one request across image and sitemap builds`,
+      kind === 'blogs' ? 2 : 1,
+      `${kind} is read once, page by page, across image and sitemap builds`,
     );
   }
   return buildRequests.length;
 };
 try {
-  await writeBuildContentCache(staleId, staleCollections);
+  await mkdir(path.dirname(stalePath), { recursive: true });
+  await writeFile(
+    stalePath,
+    JSON.stringify({
+      version: 1,
+      buildId: staleId,
+      result: { cards: [], mediaByRoute: {}, routes: [{ pathname: '/stale/', kind: 'blog' }] },
+    }),
+  );
   await writeFile(configPath, fixtureConfig, 'utf8');
   await writeFile(routePath, fixtureRoute, 'utf8');
   assert.equal(await runStaticBuild(), 6);
   const routeHtml = path.join(outputDir, 'public-image-fixture', 'index.html');
   const htmlFirst = await readFile(routeHtml, 'utf8');
-  assert.match(
-    htmlFirst,
-    /data-image-path="\/og-images\/blog\/fixture-post-cover\.jpg"/,
-  );
-  assert.match(
-    htmlFirst,
-    /src="\/media\/blog-fixture-post-[a-f0-9]+-\d+\.jpg"/,
-  );
+  assert.match(htmlFirst, /data-image-path="\/og-images\/blog\/fixture-post-cover\.jpg"/);
+  assert.match(htmlFirst, /src="\/media\/blog-fixture-post-[a-f0-9]+-\d+\.jpg"/);
   assert.match(htmlFirst, /srcset="[^"]+\.webp \d+w/);
-  const cardPath = path.join(
-    outputDir,
-    'og-images',
-    'blog',
-    'fixture-post-cover.jpg',
-  );
+  const cardPath = path.join(outputDir, 'og-images', 'blog', 'fixture-post-cover.jpg');
   const cardFirst = await readFile(cardPath);
   await assertPublicOutputContainsNoBuildSecrets(outputDir);
   const mediaSrc = htmlFirst.match(/src="(\/media\/[^\"]+\.jpg)"/)?.[1];
@@ -283,7 +244,7 @@ try {
     assert.ok(await exists(path.join(outputDir, route)), `${route} is emitted`);
   }
   console.log(
-    'Astro static integration passed: one published collection read per build across sitemap routes, private per-build cache isolation, responsive assets, changed-media regeneration, and cache reuse.',
+    'Astro static integration passed: lazy multi-page processing without review fetches, compact route reuse across sitemap routes, responsive assets, changed-media regeneration, and cache reuse.',
   );
 } finally {
   await new Promise((resolve) => mockApi.close(resolve));
