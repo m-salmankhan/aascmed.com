@@ -102,7 +102,7 @@ async function createPages({ graphql, actions, reporter }) {
  */
 async function getOGImage({ slug, title, thumbnailPath, outputDir }) {
   const { buildSocialCards } = await import(
-    '../astro/src/lib/public-images.ts'
+    '../astro/src/lib/public-images.mjs'
   );
   const kind = outputDir === 'conditions' ? 'conditions' : outputDir;
   const [card] = await buildSocialCards(

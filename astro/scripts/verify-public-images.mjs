@@ -8,7 +8,7 @@ import sharp from 'sharp';
 import {
   buildResponsiveImage,
   buildSocialCards,
-} from '../src/lib/public-images.ts';
+} from '../src/lib/public-images.mjs';
 const require = createRequire(import.meta.url);
 const gatsbyGenerator = require('../../gatsby/og-image-generator.js');
 const root = await mkdtemp(path.join(os.tmpdir(), 'aasc-public-images-'));
@@ -168,6 +168,7 @@ try {
   });
   assert.equal(media.width, 900);
   assert.equal(media.height, 600);
+  assert.equal(media.mimeType, 'image/jpeg');
   assert.match(media.formats?.[0]?.srcSet || '', /\.avif 320w/);
   assert.match(media.formats?.[1]?.srcSet || '', /\.webp 640w/);
   assert.equal(

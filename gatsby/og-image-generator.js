@@ -78,7 +78,7 @@ async function downloadMapboxImage(lat, lng, outputPath) {
  */
 async function generateOGImage({ title, backgroundImagePath, outputPath }) {
   const { generateSocialCard } = await import(
-    '../astro/src/lib/public-images.ts'
+    '../astro/src/lib/public-images.mjs'
   );
   return generateSocialCard({
     title: title || 'Untitled',
@@ -91,7 +91,7 @@ async function generateOGImage({ title, backgroundImagePath, outputPath }) {
  */
 async function initOGImageGenerator() {
   const { generateSocialCard } = await import(
-    '../astro/src/lib/public-images.ts'
+    '../astro/src/lib/public-images.mjs'
   );
   // Registration occurs on the first rendering request; this warm-up call is intentionally a no-op.
   return generateSocialCard;
