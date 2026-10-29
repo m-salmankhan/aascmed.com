@@ -429,11 +429,11 @@ test("collection iterator stops at the safety cap and supports a configured batc
     });
   }, async () => {
     await assert.rejects(
-      collect(readRecords(client.collection("reviews"), { status: "published" })),
+      collect(readRecords(client.collection("reviews"), { status: "published" }, 2)),
       (error) =>
         error instanceof StrapiRequestError &&
         error.kind === "upstream" &&
-        error.message.includes("1000000 record"),
+        error.message.includes("10000 page"),
     );
   });
   assert.equal(requests, 1);

@@ -187,10 +187,13 @@ export async function* readRecords(
     }
     const pageCount = response.meta?.pagination?.pageCount;
     const total = response.meta?.pagination?.total;
-    if (
-      (typeof pageCount === "number" && pageCount > MAX_PAGES) ||
-      (typeof total === "number" && total > MAX_PAGE_SIZE * MAX_PAGES)
-    ) {
+    if (typeof pageCount === "number" && pageCount > MAX_PAGES) {
+      throw new StrapiRequestError(
+        "upstream",
+        `Strapi pagination exceeds the ${MAX_PAGES} page safety limit`,
+      );
+    }
+    if (typeof total === "number" && total > MAX_PAGE_SIZE * MAX_PAGES) {
       throw new StrapiRequestError(
         "upstream",
         `Strapi collection exceeds the ${MAX_PAGE_SIZE * MAX_PAGES} record safety limit`,
@@ -212,7 +215,7 @@ export async function* readRecords(
     if (page === MAX_PAGES) {
       throw new StrapiRequestError(
         "upstream",
-        `Strapi collection may exceed the ${MAX_PAGE_SIZE * MAX_PAGES} record safety limit`,
+        `Strapi pagination did not finish within ${MAX_PAGES} pages`,
       );
     }
   }
