@@ -1,3 +1,4 @@
+// Fixtures for static image hooks, private snapshot bridging, and nested-route mapping.
 import assert from 'node:assert/strict';
 import { access, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
@@ -7,12 +8,22 @@ import { publicImagesIntegration } from '../src/integrations/public-images.ts';
 import { buildPublishedSocialCards } from '../src/server/content/public-images.ts';
 import { clearBuildSnapshotBridge, readBuildSnapshotBridge, writeBuildSnapshotBridge } from '../src/server/content/build-snapshot-bridge.ts';
 
+/** @typedef {import('../src/server/content/loaders.ts').PublishedContentSnapshot} PublishedContentSnapshot */
+
 const originalCwd = process.cwd();
 const root = await import('node:fs/promises').then(({ mkdtemp }) => mkdtemp(path.join(os.tmpdir(), 'aasc-public-build-')));
 const sourcePath = path.join(root, 'cover.svg');
 const outputDir = path.join(root, 'output');
 const cacheDir = path.join(root, '.astro', 'image-cache');
+/** Build the small local image used to exercise card rendering without CMS credentials.
+ * @param {string} color Fill color for the fixture image.
+ * @returns {string} SVG bytes as text.
+ */
 const svg = (color) => `<svg xmlns="http://www.w3.org/2000/svg" width="900" height="600"><rect width="900" height="600" fill="${color}"/></svg>`;
+/** Create one published-snapshot fixture containing a blog with a local thumbnail.
+ * @param {string} title Blog title used to trigger content-aware regeneration between builds.
+ * @returns {PublishedContentSnapshot} Six-collection snapshot accepted by the static image integration.
+ */
 const snapshotFor = (title) => ({
   blogs: [{ id: 'fixture-blog', documentId: 'fixture-blog', slug: 'fixture-post', title, heading: title, thumbnail: { src: sourcePath, alt: 'Fixture cover' } }],
   clinics: [], conditions: [], providers: [], serviceUpdates: [], reviews: [],
@@ -59,6 +70,9 @@ try {
   assert.equal(snapshotLoads, 0, 'dev does not reuse or generate a static build snapshot');
 
   await integration.hooks['astro:config:setup']({ config: { output: 'static' }, command: 'build' });
+  /** Execute one static integration lifecycle and return the copied card path plus its build ID.
+   * @returns Promise of the emitted card path and the per-build private snapshot ID.
+   */
   const runBuildHook = async () => {
     await integration.hooks['astro:build:start']({ logger: { info() {} } });
     const buildId = process.env.ASTRO_BUILD_SNAPSHOT_ID;

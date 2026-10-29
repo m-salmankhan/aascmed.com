@@ -1,3 +1,4 @@
+// Mocked Strapi static-build fixture for image output, sitemap snapshot reuse, and secret isolation.
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { access, readFile, rm, stat, writeFile } from 'node:fs/promises';
@@ -7,6 +8,8 @@ import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import { writeBuildSnapshotBridge } from '../src/server/content/build-snapshot-bridge.ts';
 
+/** @typedef {import('../src/server/content/loaders.ts').PublishedContentSnapshot} PublishedContentSnapshot */
+
 const astroRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const routePath = path.join(astroRoot, 'src', 'pages', 'public-image-fixture.astro');
 const configPath = path.join(astroRoot, 'astro.config.public-images-fixture.mjs');
@@ -14,17 +17,30 @@ const outputDir = path.join(astroRoot, 'dist-public-images-fixture');
 const stagingDir = path.join(astroRoot, '.astro', 'public-images-fixture');
 const cacheDir = path.join(astroRoot, '.astro', 'public-image-cache-fixture');
 const staleId = randomUUID();
+/** @type {PublishedContentSnapshot} */
 const staleSnapshot = { blogs: [], clinics: [], conditions: [], providers: [], serviceUpdates: [], reviews: [] };
 const stalePath = path.join(astroRoot, '.astro', 'public-image-snapshots', `${staleId}.json`);
+/** Create the mock CMS image body for the current public-build fixture.
+ * @param {string} color CSS rectangle fill returned by the mock media endpoint.
+ * @returns {string} Deterministic SVG response text.
+ */
 const svg = (color) => `<svg xmlns="http://www.w3.org/2000/svg" width="900" height="600"><rect width="900" height="600" fill="${color}"/></svg>`;
 let imageColor = '#df4b31';
 let blogTitle = 'Fixture version one';
 const requests = [];
 
+/** Check whether a fixture path exists without changing the filesystem.
+ * @param {string} target Absolute path checked before writing test artifacts.
+ * @returns Promise<boolean> True when the target already exists.
+ */
 async function exists(target) {
   try { await access(target); return true; } catch { return false; }
 }
 
+/** Scan the public output recursively for build-only IDs, paths, or the sentinel server token.
+ * @param {string} directory Public build directory to inspect.
+ * @returns Promise<void>; throws at the first public file containing a forbidden build value.
+ */
 async function assertPublicOutputContainsNoBuildSecrets(directory) {
   for (const entry of await import('node:fs/promises').then(({ readdir }) => readdir(directory, { withFileTypes: true }))) {
     const fullPath = path.join(directory, entry.name);
@@ -97,6 +113,9 @@ const integrations = base.integrations.filter((item) => item.name !== 'aasc-publ
 export default { ...base, outDir: './dist-public-images-fixture', integrations: [...integrations, integration] };
 `;
 
+/** Run one isolated Astro static build and assert each published collection is requested once.
+ * @returns Promise<number> Number of CMS collection requests served during the build.
+ */
 const runStaticBuild = async () => {
   const startIndex = requests.length;
   const cli = path.join(astroRoot, 'node_modules', 'astro', 'bin', 'astro.mjs');
