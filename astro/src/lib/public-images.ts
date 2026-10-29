@@ -121,21 +121,28 @@ function safeSegment(value: string): string {
   }
   return normalized;
 }
-/** Validate and normalize a slash-separated relative slug without flattening its hierarchy.
- * @param value Relative slug whose segments will become directories and a filename prefix.
- * @returns Safe path segments in their original hierarchy.
+/** Validate and preserve a shared-route-valid slug's filesystem segments and hierarchy.
+ * @param value Relative slug whose segments must match the public route and filename.
+ * @returns Original safe path segments with only route-accepted leading/trailing slashes removed.
  */
 function safePathSegments(value: string): string[] {
-  if (!value || value.includes('\\')) {
+  const relativeSlug = value.replace(/^\/+|\/+$/g, '');
+  if (!relativeSlug || relativeSlug.includes('\\')) {
     throw new Error(`Invalid public image path: ${value}`);
   }
-  const segments = value.split('/');
+  const segments = relativeSlug.split('/');
   if (
-    segments.some((segment) => !segment || segment === '.' || segment === '..')
+    segments.some(
+      (segment) =>
+        !segment ||
+        segment === '.' ||
+        segment === '..' ||
+        /[\u0000-\u0020\u007F?#\\%]/.test(segment),
+    )
   ) {
     throw new Error(`Invalid public image path: ${value}`);
   }
-  return segments.map(safeSegment);
+  return segments;
 }
 /** Derive a stable media basename from a URL or local source path.
  * @param source Optional media URL or local path.
@@ -436,6 +443,7 @@ export async function buildSocialCards(
   const fontBytes = await readFile(FONT);
   const logoBytes = await readFile(LOGO);
   const results: SocialCardResult[] = [];
+  const outputPaths = new Set<string>();
   for (const entry of entries) {
     if (!['blog', 'conditions', 'clinics'].includes(entry.kind)) {
       throw new Error(`Unsupported social card kind: ${entry.kind}`);
@@ -457,6 +465,11 @@ export async function buildSocialCards(
       ...slugSegments.slice(0, -1),
       fileName,
     );
+    const absoluteOutputPath = path.resolve(outputPath);
+    if (outputPaths.has(absoluteOutputPath)) {
+      throw new Error(`Duplicate public image output path: ${imagePath}`);
+    }
+    outputPaths.add(absoluteOutputPath);
     const cacheKey = `${kind}:${slug}:${mediaName}`;
     let mediaBytes: Buffer | undefined;
     const isMapboxMap =
@@ -529,14 +542,24 @@ export async function buildResponsiveImage({
   if (!metadata.width || !metadata.height) {
     throw new Error('Source image has no dimensions');
   }
+  const orientation = metadata.orientation ?? 1;
+  const swapsDimensions = orientation >= 5 && orientation <= 8;
+  const width = swapsDimensions ? metadata.height : metadata.width;
+  const height = swapsDimensions ? metadata.width : metadata.height;
+  const orientationSuffix =
+    orientation === 1 ? '' : `-orientation-${orientation}`;
   const sourceHash = sha256(input).slice(0, 16);
   const base = safeSegment(filename || basenameFromSource(source));
   await mkdir(outputDir, { recursive: true });
   const candidates = [
-    ...new Set(widths.filter((width) => width > 0 && width <= metadata.width!)),
+    ...new Set(
+      widths.filter(
+        (candidateWidth) => candidateWidth > 0 && candidateWidth <= width,
+      ),
+    ),
   ].sort((a, b) => a - b);
-  if (!candidates.includes(metadata.width)) {
-    candidates.push(metadata.width);
+  if (!candidates.includes(width)) {
+    candidates.push(width);
   }
   const formats: MediaDescriptor['formats'] = [];
   let jpegCandidates: string[] = [];
@@ -547,12 +570,13 @@ export async function buildResponsiveImage({
   ] as const) {
     const urls: string[] = [];
     for (const width of candidates) {
-      const outputName = `${base}-${sourceHash}-${width}.${extension}`;
+      const outputName = `${base}-${sourceHash}${orientationSuffix}-${width}.${extension}`;
       const outputPath = path.join(outputDir, outputName);
       try {
         await stat(outputPath);
       } catch {
         await sharp(input)
+          .rotate()
           .resize({ width, withoutEnlargement: true, fit: 'inside' })
           .toFormat(format)
           .toFile(outputPath);
@@ -567,11 +591,9 @@ export async function buildResponsiveImage({
       formats.push({ type: mimeType, srcSet: urls.join(', ') });
     }
   }
-  const width = metadata.width;
-  const height = metadata.height;
   const largestWidth = candidates[candidates.length - 1];
   return {
-    src: `${publicUrlPrefix.replace(/\/$/, '')}/${base}-${sourceHash}-${largestWidth}.jpg`,
+    src: `${publicUrlPrefix.replace(/\/$/, '')}/${base}-${sourceHash}${orientationSuffix}-${largestWidth}.jpg`,
     alt,
     width,
     height,
@@ -580,7 +602,7 @@ export async function buildResponsiveImage({
       : undefined,
     srcSet: jpegCandidates.join(', '),
     sources: candidates.map((candidate) => ({
-      src: `${publicUrlPrefix.replace(/\/$/, '')}/${base}-${sourceHash}-${candidate}.jpg`,
+      src: `${publicUrlPrefix.replace(/\/$/, '')}/${base}-${sourceHash}${orientationSuffix}-${candidate}.jpg`,
       width: candidate,
     })),
     formats,

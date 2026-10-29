@@ -46,6 +46,24 @@ try {
     ),
     /Invalid public image path/,
   );
+  for (const unsafeSlug of [
+    '../escape',
+    'nested/../../escape',
+    'encoded/%2f/escape',
+    'query?value',
+    'fragment#value',
+    'empty//segment',
+    'backslash\\segment',
+  ]) {
+    await assert.rejects(
+      buildSocialCards(
+        [{ kind: 'blog', slug: unsafeSlug, title: 'Unsafe route' }],
+        { publicDir, cacheDir },
+      ),
+      /Invalid public image path/,
+      `unsafe slug segment is rejected: ${unsafeSlug}`,
+    );
+  }
   const entry = {
     kind: 'blog',
     slug: 'fixture-post',
@@ -66,6 +84,39 @@ try {
     same[0].wasCached,
     true,
     'an unchanged image and title reuse the cached card',
+  );
+  const unicodeSlugCards = await buildSocialCards(
+    [
+      { kind: 'blog', slug: 'cafe', title: 'Cafe' },
+      { kind: 'blog', slug: 'café', title: 'Café' },
+    ],
+    {
+      publicDir: path.join(root, 'unicode-slug-public'),
+      cacheDir: path.join(root, 'unicode-slug-cache'),
+    },
+  );
+  assert.notEqual(
+    unicodeSlugCards[0].imagePath,
+    unicodeSlugCards[1].imagePath,
+    'distinct shared-route-valid slugs keep distinct public image URLs',
+  );
+  assert.notEqual(
+    unicodeSlugCards[0].outputPath,
+    unicodeSlugCards[1].outputPath,
+    'distinct shared-route-valid slugs do not overwrite one another',
+  );
+  await assert.rejects(
+    buildSocialCards(
+      [
+        { kind: 'blog', slug: 'duplicate', title: 'First duplicate' },
+        { kind: 'blog', slug: 'duplicate', title: 'Second duplicate' },
+      ],
+      {
+        publicDir: path.join(root, 'duplicate-public'),
+        cacheDir: path.join(root, 'duplicate-cache'),
+      },
+    ),
+    /Duplicate public image output path/,
   );
   await writeFile(sourcePath, svg('#305de9'));
   const changed = await buildSocialCards([entry], { publicDir, cacheDir });
@@ -123,6 +174,45 @@ try {
     media.sources?.length,
     3,
     'candidate widths include the original image width',
+  );
+  const orientedOutputDir = path.join(publicDir, 'oriented-media');
+  const orientedSource = path.join(root, 'oriented-source.jpg');
+  await sharp({
+    create: {
+      width: 120,
+      height: 80,
+      channels: 3,
+      background: '#f84a26',
+    },
+  })
+    .jpeg()
+    .withMetadata({ orientation: 6 })
+    .toFile(orientedSource);
+  const orientedMedia = await buildResponsiveImage({
+    source: orientedSource,
+    alt: 'Portrait image with EXIF orientation',
+    outputDir: orientedOutputDir,
+    publicUrlPrefix: '/oriented-media',
+    filename: 'oriented',
+    widths: [60],
+  });
+  assert.deepEqual(
+    [orientedMedia.width, orientedMedia.height],
+    [80, 120],
+    'responsive dimensions reflect EXIF display orientation',
+  );
+  const orientedJpeg = await sharp(
+    path.join(orientedOutputDir, path.basename(orientedMedia.src)),
+  ).metadata();
+  assert.deepEqual(
+    [orientedJpeg.width, orientedJpeg.height],
+    [80, 120],
+    'the largest responsive JPEG is auto-oriented before resizing',
+  );
+  assert.equal(
+    orientedJpeg.orientation,
+    undefined,
+    'the generated derivative does not retain stale EXIF orientation metadata',
   );
   const mapboxToken = 'pk-fixture-not-for-output';
   let mapboxCalledForMap = false;
