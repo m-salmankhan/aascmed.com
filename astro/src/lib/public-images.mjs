@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url';
 /** @typedef {'blog' | 'conditions' | 'clinics'} SocialCardKind */
 /** @typedef {{ latitude: number, longitude: number }} MapLocation */
 /** @typedef {Record<string, string>} SocialCardCache */
+/** @typedef {Iterable<SocialCardEntry> | AsyncIterable<SocialCardEntry>} SocialCardEntries */
 /** @typedef {['avif' | 'webp' | 'jpg', 'avif' | 'webp' | 'jpeg', 'image/avif' | 'image/webp' | 'image/jpeg']} ResponsiveOutputFormat */
 /**
  * @typedef {object} SocialCardEntry
@@ -401,7 +402,7 @@ export async function generateSocialCard({
 /**
  * Generate a complete build-time set of public social cards. The cache key
  * covers media bytes (not mtime), title, font, logo and renderer version.
- * @param {SocialCardEntry[]} entries Published blog, condition, or clinic card inputs with relative slugs.
+ * @param {SocialCardEntries} entries Lazy published card inputs; the next entry is requested only after the current card finishes.
  * @param {PublicImageBuildOptions} options Public output directory, private cache directory, fetcher, and optional map settings.
  * @returns {Promise<SocialCardResult[]>} Card paths and cache-hit flags in input order.
  */
@@ -424,7 +425,7 @@ export async function buildSocialCards(entries, options) {
   /** @type {SocialCardResult[]} */
   const results = [];
   const outputPaths = new Set();
-  for (const entry of entries) {
+  for await (const entry of entries) {
     if (!['blog', 'conditions', 'clinics'].includes(entry.kind)) {
       throw new Error(`Unsupported social card kind: ${entry.kind}`);
     }

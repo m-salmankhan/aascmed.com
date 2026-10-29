@@ -17,6 +17,9 @@ export interface SocialCardEntry {
   mediaName?: string;
 }
 
+/** Lazy card inputs, including ordinary arrays used by Gatsby. */
+export type SocialCardEntries = Iterable<SocialCardEntry> | AsyncIterable<SocialCardEntry>;
+
 export interface PublicImageBuildOptions {
   publicDir: string;
   cacheDir: string;
@@ -65,7 +68,7 @@ export function generateSocialCard(
  * @returns Card paths and cache-hit flags in input order.
  */
 export function buildSocialCards(
-  entries: SocialCardEntry[],
+  entries: SocialCardEntries,
   options: PublicImageBuildOptions,
 ): Promise<SocialCardResult[]>;
 /** Build responsive AVIF, WebP, and JPEG candidates for one public CMS image.

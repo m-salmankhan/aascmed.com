@@ -118,6 +118,23 @@ try {
     ),
     /Duplicate public image output path/,
   );
+  const streamedPublicDir = path.join(root, 'streamed-public');
+  /** Supply the next card only after the preceding output exists, then repeat a path across an async boundary.
+   * @yields {import('../src/lib/public-images.mjs').SocialCardEntry} One card input at a time.
+   */
+  async function* streamedEntries() {
+    yield { kind: 'blog', slug: 'streamed', title: 'First streamed card' };
+    assert.ok(await stat(path.join(streamedPublicDir, 'og-images/blog/streamed-default.jpg')));
+    yield { kind: 'blog', slug: 'streamed', title: 'Duplicate later card' };
+  }
+  await assert.rejects(
+    buildSocialCards(streamedEntries(), {
+      publicDir: streamedPublicDir,
+      cacheDir: path.join(root, 'streamed-cache'),
+    }),
+    /Duplicate public image output path/,
+    'streaming renders before pulling another input and retains collision detection across yields',
+  );
   await writeFile(sourcePath, svg('#305de9'));
   const changed = await buildSocialCards([entry], { publicDir, cacheDir });
   assert.equal(
