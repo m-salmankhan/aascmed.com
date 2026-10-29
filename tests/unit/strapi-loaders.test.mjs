@@ -262,8 +262,8 @@ test("all CMS single loaders address their explicit SDK single resources", async
   assert.deepEqual(paths.sort(), [
     "/api/announcement",
     "/api/blog-archive",
-    "/api/conditions-archive",
     "/api/clinics-archive",
+    "/api/conditions-archive",
     "/api/contact",
     "/api/home-page",
     "/api/privacy-policy",
