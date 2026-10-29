@@ -6,26 +6,28 @@ import { mkdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { MediaDescriptor } from '../../../src/shared/content/models';
-
 const WIDTH = 1200;
 const HEIGHT = 630;
-const ASSET_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../src/shared/media/assets');
+const ASSET_DIR = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '../../../src/shared/media/assets',
+);
 const FONT = path.join(ASSET_DIR, 'Poppins-ExtraBold.ttf');
 const LOGO = path.join(ASSET_DIR, 'horizontal-logo.svg');
 const BRAND_PRIMARY = '#1C5E38';
 const CACHE_VERSION = 'aasc-og-v2';
 const FONT_FAMILY = 'Poppins';
 let fontRegistered = false;
-
 /** Canvas 2D context used by the social-card text layout helpers. */
 type CanvasContext = ReturnType<ReturnType<typeof createCanvas>['getContext']>;
 /** Geographic coordinates used to request a clinic's build-time Mapbox background. */
-export interface MapLocation { latitude: number; longitude: number }
+export interface MapLocation {
+  latitude: number;
+  longitude: number;
+}
 /** Persistent cache values keyed by card kind, slug, and media name. */
 type SocialCardCache = Record<string, string>;
-
 export type SocialCardKind = 'blog' | 'conditions' | 'clinics';
-
 export interface SocialCardEntry {
   kind: SocialCardKind;
   slug: string;
@@ -37,7 +39,6 @@ export interface SocialCardEntry {
   /** Stable output basename used to preserve the existing `/og-images/{kind}/...jpg` URL. */
   mediaName?: string;
 }
-
 export interface PublicImageBuildOptions {
   /** Build's static public directory (for example Astro's configured `static/`). */
   publicDir: string;
@@ -50,7 +51,6 @@ export interface PublicImageBuildOptions {
   /** Exact HTTPS media hostnames allowed for build-time fetches. Mapbox static maps are allowed separately. */
   allowedMediaHosts?: string[];
 }
-
 /** Inputs for rendering one social card through the Gatsby-compatible renderer. */
 export interface GenerateSocialCardOptions {
   title: string;
@@ -59,7 +59,6 @@ export interface GenerateSocialCardOptions {
   fetch?: typeof fetch;
   allowedMediaHosts?: string[];
 }
-
 /** Inputs for converting a source image into responsive browser candidates. */
 export interface ResponsiveImageOptions {
   source: string;
@@ -71,7 +70,6 @@ export interface ResponsiveImageOptions {
   fetch?: typeof fetch;
   allowedMediaHosts?: string[];
 }
-
 export interface SocialCardResult {
   kind: SocialCardKind;
   slug: string;
@@ -80,73 +78,105 @@ export interface SocialCardResult {
   outputPath: string;
   wasCached: boolean;
 }
-
 /** Return a stable SHA-256 fingerprint for cache inputs or image bytes.
  * @param value Bytes or text to hash.
  * @returns The lowercase hexadecimal digest.
  */
-const sha256 = (value: Buffer | string) => createHash('sha256').update(value).digest('hex');
-
+const sha256 = (value: Buffer | string) => {
+  return createHash('sha256').update(value).digest('hex');
+};
 /** Reject a cache location nested inside public output so cached metadata cannot be shipped.
  * @param publicDir Build output directory that will be served publicly.
  * @param cacheDir Persistent directory intended to remain private.
  * @returns Nothing; throws when the cache directory overlaps public output.
  */
 function assertPrivateCacheDir(publicDir: string, cacheDir: string): void {
-  const relative = path.relative(path.resolve(publicDir), path.resolve(cacheDir));
-  if (relative === '' || (!relative.startsWith(`..${path.sep}`) && relative !== '..' && !path.isAbsolute(relative))) {
-    throw new Error('Public image cache must be outside the public output directory');
+  const relative = path.relative(
+    path.resolve(publicDir),
+    path.resolve(cacheDir),
+  );
+  if (
+    relative === '' ||
+    (!relative.startsWith(`..${path.sep}`) &&
+      relative !== '..' &&
+      !path.isAbsolute(relative))
+  ) {
+    throw new Error(
+      'Public image cache must be outside the public output directory',
+    );
   }
 }
-
 /** Normalize one public filename segment and reject values that normalize to an unsafe path.
  * @param value Raw slug or filename segment supplied by content or a build adapter.
  * @returns A normalized filesystem-safe segment.
  */
 function safeSegment(value: string): string {
-  const normalized = value.normalize('NFKD').replace(/[\\/]/g, '-').replace(/[^\p{L}\p{N}._-]+/gu, '-').replace(/^-+|-+$/g, '');
-  if (!normalized || normalized === '.' || normalized === '..') throw new Error(`Invalid public image path segment: ${value}`);
+  const normalized = value
+    .normalize('NFKD')
+    .replace(/[\\/]/g, '-')
+    .replace(/[^\p{L}\p{N}._-]+/gu, '-')
+    .replace(/^-+|-+$/g, '');
+  if (!normalized || normalized === '.' || normalized === '..') {
+    throw new Error(`Invalid public image path segment: ${value}`);
+  }
   return normalized;
 }
-
 /** Validate and normalize a slash-separated relative slug without flattening its hierarchy.
  * @param value Relative slug whose segments will become directories and a filename prefix.
  * @returns Safe path segments in their original hierarchy.
  */
 function safePathSegments(value: string): string[] {
-  if (!value || value.includes('\\')) throw new Error(`Invalid public image path: ${value}`);
+  if (!value || value.includes('\\')) {
+    throw new Error(`Invalid public image path: ${value}`);
+  }
   const segments = value.split('/');
-  if (segments.some((segment) => !segment || segment === '.' || segment === '..')) {
+  if (
+    segments.some((segment) => !segment || segment === '.' || segment === '..')
+  ) {
     throw new Error(`Invalid public image path: ${value}`);
   }
   return segments.map(safeSegment);
 }
-
 /** Derive a stable media basename from a URL or local source path.
  * @param source Optional media URL or local path.
  * @returns The path basename without an extension, or `default` when no name exists.
  */
 function basenameFromSource(source?: string): string {
-  if (!source) return 'default';
+  if (!source) {
+    return 'default';
+  }
   let basename = source;
-  try { basename = new URL(source).pathname; } catch { /* A filesystem path is expected. */ }
+  try {
+    basename = new URL(source).pathname;
+  } catch {
+    /* A filesystem path is expected. */
+  }
   return path.basename(basename, path.extname(basename)) || 'default';
 }
-
 /** Construct the Mapbox static-map request used for a clinic card.
  * @param latitude Clinic latitude in degrees, between -90 and 90.
  * @param longitude Clinic longitude in degrees, between -180 and 180.
  * @param token Public Mapbox token used only on this build-time request.
  * @returns The static-map request URL; callers must not serialize it.
  */
-function mapboxStaticUrl(latitude: number, longitude: number, token: string): string {
-  if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90 || !Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
+function mapboxStaticUrl(
+  latitude: number,
+  longitude: number,
+  token: string,
+): string {
+  if (
+    !Number.isFinite(latitude) ||
+    latitude < -90 ||
+    latitude > 90 ||
+    !Number.isFinite(longitude) ||
+    longitude < -180 ||
+    longitude > 180
+  ) {
     throw new Error('Clinic map coordinates are invalid');
   }
   const marker = `pin-l+1C5E38(${longitude},${latitude})`;
   return `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/static/${marker}/${longitude},${latitude},18/${WIDTH}x${HEIGHT}@2x?access_token=${encodeURIComponent(token)}`;
 }
-
 /** Read and validate a local image or an allowlisted remote image with a bounded response body.
  * @param source Local file path or remote image URL.
  * @param fetcher Fetch implementation used for remote requests, including deterministic fixtures.
@@ -154,53 +184,95 @@ function mapboxStaticUrl(latitude: number, longitude: number, token: string): st
  * @param allowMapbox Whether this request came from a generated clinic-map URL.
  * @returns Validated image bytes accepted by Sharp.
  */
-async function fetchImage(source: string, fetcher: typeof fetch, allowedMediaHosts: string[] = [], allowMapbox = false): Promise<Buffer> {
+async function fetchImage(
+  source: string,
+  fetcher: typeof fetch,
+  allowedMediaHosts: string[] = [],
+  allowMapbox = false,
+): Promise<Buffer> {
   let bytes: Buffer;
   if (/^[a-z][a-z0-9+.-]*:\/\//i.test(source)) {
     const url = new URL(source);
     const hostname = url.hostname.toLowerCase();
     const isLoopback = ['localhost', '127.0.0.1', '[::1]'].includes(hostname);
-    const hostIsAllowed = (hostname === 'api.mapbox.com' && allowMapbox) || (hostname !== 'api.mapbox.com' && allowedMediaHosts.some((host) => host.toLowerCase() === hostname));
-    if (!hostIsAllowed) throw new Error(`Remote image host is not allowed: ${hostname}`);
-    if (url.protocol !== 'https:' && !(url.protocol === 'http:' && isLoopback)) throw new Error('Remote images must use HTTPS');
-    if (url.username || url.password || (url.port && url.port !== '443' && !isLoopback)) throw new Error('Remote image URL credentials and non-standard ports are not allowed');
-    const response = await fetcher(url, { signal: AbortSignal.timeout(12_000), redirect: 'error' });
-    if (!response.ok) throw new Error(`Image request returned HTTP ${response.status}`);
+    const hostIsAllowed =
+      (hostname === 'api.mapbox.com' && allowMapbox) ||
+      (hostname !== 'api.mapbox.com' &&
+        allowedMediaHosts.some((host) => host.toLowerCase() === hostname));
+    if (!hostIsAllowed) {
+      throw new Error(`Remote image host is not allowed: ${hostname}`);
+    }
+    if (
+      url.protocol !== 'https:' &&
+      !(url.protocol === 'http:' && isLoopback)
+    ) {
+      throw new Error('Remote images must use HTTPS');
+    }
+    if (
+      url.username ||
+      url.password ||
+      (url.port && url.port !== '443' && !isLoopback)
+    ) {
+      throw new Error(
+        'Remote image URL credentials and non-standard ports are not allowed',
+      );
+    }
+    const response = await fetcher(url, {
+      signal: AbortSignal.timeout(12000),
+      redirect: 'error',
+    });
+    if (!response.ok) {
+      throw new Error(`Image request returned HTTP ${response.status}`);
+    }
     const maxBytes = 20 * 1024 * 1024;
     const contentLength = Number(response.headers.get('content-length') || 0);
-    if (contentLength > maxBytes) throw new Error('Image exceeds the 20 MB build limit');
-    if (!response.body) throw new Error('Image response has no body');
+    if (contentLength > maxBytes) {
+      throw new Error('Image exceeds the 20 MB build limit');
+    }
+    if (!response.body) {
+      throw new Error('Image response has no body');
+    }
     const reader = response.body.getReader();
     const chunks: Uint8Array[] = [];
     let totalBytes = 0;
     try {
       while (true) {
         const { done, value } = await reader.read();
-        if (done) break;
+        if (done) {
+          break;
+        }
         totalBytes += value.byteLength;
-        if (totalBytes > maxBytes) throw new Error('Image exceeds the 20 MB build limit');
+        if (totalBytes > maxBytes) {
+          throw new Error('Image exceeds the 20 MB build limit');
+        }
         chunks.push(value);
       }
     } catch (error) {
       await reader.cancel().catch(() => undefined);
       throw error;
     }
-    bytes = Buffer.concat(chunks.map((chunk) => Buffer.from(chunk)), totalBytes);
+    bytes = Buffer.concat(
+      chunks.map((chunk) => Buffer.from(chunk)),
+      totalBytes,
+    );
   } else {
     bytes = await readFile(source);
   }
   // Reject non-image/invalid payloads early; sharp enforces the actual decoder format.
-  await sharp(bytes, { limitInputPixels: 80_000_000 }).metadata();
+  await sharp(bytes, { limitInputPixels: 80000000 }).metadata();
   return bytes;
 }
-
 /** Wrap a title at word boundaries so each rendered line fits the card width.
  * @param ctx Canvas context used to measure text with the selected font.
  * @param text Title text to wrap.
  * @param maxWidth Maximum line width in pixels.
  * @returns Lines in display order.
  */
-function wrapText(ctx: CanvasContext, text: string, maxWidth: number): string[] {
+function wrapText(
+  ctx: CanvasContext,
+  text: string,
+  maxWidth: number,
+): string[] {
   const lines: string[] = [];
   let line = '';
   for (const word of text.split(/\s+/)) {
@@ -208,24 +280,28 @@ function wrapText(ctx: CanvasContext, text: string, maxWidth: number): string[] 
     if (line && ctx.measureText(candidate).width > maxWidth) {
       lines.push(line);
       line = word;
-    } else line = candidate;
+    } else {
+      line = candidate;
+    }
   }
-  if (line) lines.push(line);
+  if (line) {
+    lines.push(line);
+  }
   return lines;
 }
-
 /** Bound long social-card titles while preserving the last complete word when possible.
  * @param title Source title supplied by a published record.
  * @param limit Maximum number of source characters before truncation.
  * @returns The original title or a shortened title ending in an ellipsis.
  */
 function truncateTitle(title: string, limit = 100): string {
-  if (title.length <= limit) return title;
+  if (title.length <= limit) {
+    return title;
+  }
   const prefix = title.slice(0, limit);
   const boundary = prefix.lastIndexOf(' ');
   return `${(boundary > limit * 0.7 ? prefix.slice(0, boundary) : prefix).trim()}…`;
 }
-
 /** Render the branded gradient, logo, and fitted title layer for an Open Graph card.
  * @param title Card title after CMS mapping.
  * @returns PNG bytes for compositing over the card background.
@@ -242,26 +318,32 @@ async function createOverlay(title: string): Promise<Buffer> {
   gradient.addColorStop(1, 'rgba(77, 162, 73, 0.84)');
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
-
   const logoMeta = await sharp(LOGO).metadata();
   const logoHeight = 70;
-  const logoWidth = Math.round(logoHeight * (logoMeta.width! / logoMeta.height!));
-  const logo = await loadImage(await sharp(LOGO).resize(logoWidth, logoHeight).png().toBuffer());
+  const logoWidth = Math.round(
+    logoHeight * (logoMeta.width! / logoMeta.height!),
+  );
+  const logo = await loadImage(
+    await sharp(LOGO).resize(logoWidth, logoHeight).png().toBuffer(),
+  );
   ctx.drawImage(logo, 60, 40);
-
   const content = truncateTitle(title || 'Untitled');
   let fontSize = 64;
   let lines: string[] = [];
   for (; fontSize >= 36; fontSize -= 4) {
     ctx.font = `bold ${fontSize}px ${FONT_FAMILY}`;
     lines = wrapText(ctx, content, WIDTH - 120);
-    if (lines.length <= 3 && lines.length * fontSize * 1.3 <= HEIGHT - 220) break;
+    if (lines.length <= 3 && lines.length * fontSize * 1.3 <= HEIGHT - 220) {
+      break;
+    }
   }
   ctx.font = `bold ${Math.max(fontSize, 36)}px ${FONT_FAMILY}`;
   if (lines.length > 3) {
     lines = lines.slice(0, 3);
     let last = lines[2];
-    while (last && ctx.measureText(`${last}…`).width > WIDTH - 120) last = last.slice(0, -1).trim();
+    while (last && ctx.measureText(`${last}…`).width > WIDTH - 120) {
+      last = last.slice(0, -1).trim();
+    }
     lines[2] = `${last}…`;
   }
   ctx.fillStyle = '#fff';
@@ -269,40 +351,65 @@ async function createOverlay(title: string): Promise<Buffer> {
   ctx.textBaseline = 'top';
   const lineHeight = Math.max(fontSize, 36) * 1.35;
   const startY = 160 + (HEIGHT - 160 - 60 - lines.length * lineHeight) / 2;
-  lines.forEach((line, index) => ctx.fillText(line, 60, startY + index * lineHeight));
+  lines.forEach((line, index) =>
+    ctx.fillText(line, 60, startY + index * lineHeight),
+  );
   return canvas.toBuffer('image/png');
 }
-
 /** Crop an optional background, composite the branded overlay, and write the JPEG card.
  * @param title Card title rendered into the overlay.
  * @param mediaBytes Validated background image bytes, or undefined for the branded fallback.
  * @param outputPath Destination path for the JPEG output.
  * @returns The path of the written image.
  */
-async function renderSocialCard(title: string, mediaBytes: Buffer | undefined, outputPath: string): Promise<string> {
+async function renderSocialCard(
+  title: string,
+  mediaBytes: Buffer | undefined,
+  outputPath: string,
+): Promise<string> {
   await mkdir(path.dirname(outputPath), { recursive: true });
   const background = mediaBytes
-    ? await sharp(mediaBytes).resize(WIDTH, HEIGHT, { fit: 'cover', position: 'attention' }).png().toBuffer()
-    : await sharp({ create: { width: WIDTH, height: HEIGHT, channels: 4, background: BRAND_PRIMARY } }).png().toBuffer();
+    ? await sharp(mediaBytes)
+        .resize(WIDTH, HEIGHT, { fit: 'cover', position: 'attention' })
+        .png()
+        .toBuffer()
+    : await sharp({
+        create: {
+          width: WIDTH,
+          height: HEIGHT,
+          channels: 4,
+          background: BRAND_PRIMARY,
+        },
+      })
+        .png()
+        .toBuffer();
   await sharp(background)
     .composite([{ input: await createOverlay(title) }])
     .jpeg({ quality: 85, mozjpeg: true })
     .toFile(outputPath);
   return outputPath;
 }
-
 /** Generate one framework-independent Open Graph card using the branded fallback when media is unavailable.
  * @param options Card title, optional background source, destination path, and remote-fetch controls.
  * @returns The destination path of the generated JPEG card.
  */
-export async function generateSocialCard({ title, backgroundImage, outputPath, fetch: fetcher = fetch, allowedMediaHosts = [] }: GenerateSocialCardOptions): Promise<string> {
+export async function generateSocialCard({
+  title,
+  backgroundImage,
+  outputPath,
+  fetch: fetcher = fetch,
+  allowedMediaHosts = [],
+}: GenerateSocialCardOptions): Promise<string> {
   let base: Buffer | undefined;
   if (backgroundImage) {
-    try { base = await fetchImage(backgroundImage, fetcher, allowedMediaHosts); } catch { /* Missing media is a supported branded-card fallback. */ }
+    try {
+      base = await fetchImage(backgroundImage, fetcher, allowedMediaHosts);
+    } catch {
+      /* Missing media is a supported branded-card fallback. */
+    }
   }
   return renderSocialCard(title, base, outputPath);
 }
-
 /**
  * Generate a complete build-time set of public social cards. The cache key
  * covers media bytes (not mtime), title, font, logo and renderer version.
@@ -310,7 +417,10 @@ export async function generateSocialCard({ title, backgroundImage, outputPath, f
  * @param options Public output directory, private cache directory, fetcher, and optional map settings.
  * @returns Card paths and cache-hit flags in input order.
  */
-export async function buildSocialCards(entries: SocialCardEntry[], options: PublicImageBuildOptions): Promise<SocialCardResult[]> {
+export async function buildSocialCards(
+  entries: SocialCardEntry[],
+  options: PublicImageBuildOptions,
+): Promise<SocialCardResult[]> {
   const fetcher = options.fetch || fetch;
   const cardsDir = path.join(options.publicDir, 'og-images');
   const cacheFile = path.join(options.cacheDir, 'social-cards.json');
@@ -318,37 +428,75 @@ export async function buildSocialCards(entries: SocialCardEntry[], options: Publ
   await mkdir(cardsDir, { recursive: true });
   await mkdir(options.cacheDir, { recursive: true });
   let cache: SocialCardCache = {};
-  try { cache = JSON.parse(await readFile(cacheFile, 'utf8')) as SocialCardCache; } catch { /* First build or empty cache. */ }
-
+  try {
+    cache = JSON.parse(await readFile(cacheFile, 'utf8')) as SocialCardCache;
+  } catch {
+    /* First build or empty cache. */
+  }
   const fontBytes = await readFile(FONT);
   const logoBytes = await readFile(LOGO);
   const results: SocialCardResult[] = [];
   for (const entry of entries) {
-    if (!['blog', 'conditions', 'clinics'].includes(entry.kind)) throw new Error(`Unsupported social card kind: ${entry.kind}`);
+    if (!['blog', 'conditions', 'clinics'].includes(entry.kind)) {
+      throw new Error(`Unsupported social card kind: ${entry.kind}`);
+    }
     const kind = entry.kind;
     const slugSegments = safePathSegments(entry.slug);
     const slug = slugSegments.join('/');
-    const mediaName = safeSegment(entry.mediaName || (entry.mapLocation
-      ? `${slug}-${entry.mapLocation.latitude}-${entry.mapLocation.longitude}-map`
-      : basenameFromSource(entry.backgroundImage)));
+    const mediaName = safeSegment(
+      entry.mediaName ||
+        (entry.mapLocation
+          ? `${slug}-${entry.mapLocation.latitude}-${entry.mapLocation.longitude}-map`
+          : basenameFromSource(entry.backgroundImage)),
+    );
     const fileName = `${slugSegments.at(-1)}-${mediaName}.jpg`;
     const imagePath = `/og-images/${kind}/${[...slugSegments.slice(0, -1), fileName].join('/')}`;
-    const outputPath = path.join(cardsDir, kind, ...slugSegments.slice(0, -1), fileName);
+    const outputPath = path.join(
+      cardsDir,
+      kind,
+      ...slugSegments.slice(0, -1),
+      fileName,
+    );
     const cacheKey = `${kind}:${slug}:${mediaName}`;
     let mediaBytes: Buffer | undefined;
-    const isMapboxMap = !entry.backgroundImage && !!entry.mapLocation && !!options.mapboxToken;
-    const backgroundImage = entry.backgroundImage || (isMapboxMap
-      ? mapboxStaticUrl(entry.mapLocation!.latitude, entry.mapLocation!.longitude, options.mapboxToken!)
-      : undefined);
+    const isMapboxMap =
+      !entry.backgroundImage && !!entry.mapLocation && !!options.mapboxToken;
+    const backgroundImage =
+      entry.backgroundImage ||
+      (isMapboxMap
+        ? mapboxStaticUrl(
+            entry.mapLocation!.latitude,
+            entry.mapLocation!.longitude,
+            options.mapboxToken!,
+          )
+        : undefined);
     if (backgroundImage) {
-      try { mediaBytes = await fetchImage(backgroundImage, fetcher, options.allowedMediaHosts, isMapboxMap); } catch { /* Missing media uses the branded fallback. */ }
+      try {
+        mediaBytes = await fetchImage(
+          backgroundImage,
+          fetcher,
+          options.allowedMediaHosts,
+          isMapboxMap,
+        );
+      } catch {
+        /* Missing media uses the branded fallback. */
+      }
     }
-    const contentHash = sha256(Buffer.concat([
-      Buffer.from(CACHE_VERSION), Buffer.from(entry.title || 'Untitled'), fontBytes, logoBytes,
-      mediaBytes || Buffer.from('no-media'),
-    ]));
+    const contentHash = sha256(
+      Buffer.concat([
+        Buffer.from(CACHE_VERSION),
+        Buffer.from(entry.title || 'Untitled'),
+        fontBytes,
+        logoBytes,
+        mediaBytes || Buffer.from('no-media'),
+      ]),
+    );
     let exists = false;
-    try { exists = (await stat(outputPath)).isFile(); } catch { /* Cache miss. */ }
+    try {
+      exists = (await stat(outputPath)).isFile();
+    } catch {
+      /* Cache miss. */
+    }
     const wasCached = exists && cache[cacheKey] === contentHash;
     if (!wasCached) {
       await renderSocialCard(entry.title || 'Untitled', mediaBytes, outputPath);
@@ -361,35 +509,63 @@ export async function buildSocialCards(entries: SocialCardEntry[], options: Publ
   await rename(temporaryCacheFile, cacheFile);
   return results;
 }
-
 /** Build content-addressed AVIF, WebP, and JPEG candidates for a public CMS image.
  * @param options Source URL or path, alt text, output location, public URL prefix, and candidate widths.
  * @returns A serializable descriptor with intrinsic dimensions and responsive source sets.
  */
-export async function buildResponsiveImage({ source, alt, outputDir, publicUrlPrefix, filename, widths = [320, 640, 960, 1280], fetch: fetcher = fetch, allowedMediaHosts = [] }: ResponsiveImageOptions): Promise<MediaDescriptor> {
+export async function buildResponsiveImage({
+  source,
+  alt,
+  outputDir,
+  publicUrlPrefix,
+  filename,
+  widths = [320, 640, 960, 1280],
+  fetch: fetcher = fetch,
+  allowedMediaHosts = [],
+}: ResponsiveImageOptions): Promise<MediaDescriptor> {
   const input = await fetchImage(source, fetcher, allowedMediaHosts);
-  const image = sharp(input, { limitInputPixels: 80_000_000 });
+  const image = sharp(input, { limitInputPixels: 80000000 });
   const metadata = await image.metadata();
-  if (!metadata.width || !metadata.height) throw new Error('Source image has no dimensions');
+  if (!metadata.width || !metadata.height) {
+    throw new Error('Source image has no dimensions');
+  }
   const sourceHash = sha256(input).slice(0, 16);
   const base = safeSegment(filename || basenameFromSource(source));
   await mkdir(outputDir, { recursive: true });
-  const candidates = [...new Set(widths.filter((width) => width > 0 && width <= metadata.width!))].sort((a, b) => a - b);
-  if (!candidates.includes(metadata.width)) candidates.push(metadata.width);
+  const candidates = [
+    ...new Set(widths.filter((width) => width > 0 && width <= metadata.width!)),
+  ].sort((a, b) => a - b);
+  if (!candidates.includes(metadata.width)) {
+    candidates.push(metadata.width);
+  }
   const formats: MediaDescriptor['formats'] = [];
   let jpegCandidates: string[] = [];
-  for (const [extension, format, mimeType] of [['avif', 'avif', 'image/avif'], ['webp', 'webp', 'image/webp'], ['jpg', 'jpeg', 'image/jpeg']] as const) {
+  for (const [extension, format, mimeType] of [
+    ['avif', 'avif', 'image/avif'],
+    ['webp', 'webp', 'image/webp'],
+    ['jpg', 'jpeg', 'image/jpeg'],
+  ] as const) {
     const urls: string[] = [];
     for (const width of candidates) {
       const outputName = `${base}-${sourceHash}-${width}.${extension}`;
       const outputPath = path.join(outputDir, outputName);
-      try { await stat(outputPath); } catch {
-        await sharp(input).resize({ width, withoutEnlargement: true, fit: 'inside' }).toFormat(format).toFile(outputPath);
+      try {
+        await stat(outputPath);
+      } catch {
+        await sharp(input)
+          .resize({ width, withoutEnlargement: true, fit: 'inside' })
+          .toFormat(format)
+          .toFile(outputPath);
       }
-      urls.push(`${publicUrlPrefix.replace(/\/$/, '')}/${outputName} ${width}w`);
+      urls.push(
+        `${publicUrlPrefix.replace(/\/$/, '')}/${outputName} ${width}w`,
+      );
     }
-    if (extension === 'jpg') jpegCandidates = urls;
-    else formats.push({ type: mimeType, srcSet: urls.join(', ') });
+    if (extension === 'jpg') {
+      jpegCandidates = urls;
+    } else {
+      formats.push({ type: mimeType, srcSet: urls.join(', ') });
+    }
   }
   const width = metadata.width;
   const height = metadata.height;
@@ -399,9 +575,14 @@ export async function buildResponsiveImage({ source, alt, outputDir, publicUrlPr
     alt,
     width,
     height,
-    mimeType: metadata.format ? `image/${metadata.format === 'jpg' ? 'jpeg' : metadata.format}` : undefined,
+    mimeType: metadata.format
+      ? `image/${metadata.format === 'jpg' ? 'jpeg' : metadata.format}`
+      : undefined,
     srcSet: jpegCandidates.join(', '),
-    sources: candidates.map((candidate) => ({ src: `${publicUrlPrefix.replace(/\/$/, '')}/${base}-${sourceHash}-${candidate}.jpg`, width: candidate })),
+    sources: candidates.map((candidate) => ({
+      src: `${publicUrlPrefix.replace(/\/$/, '')}/${base}-${sourceHash}-${candidate}.jpg`,
+      width: candidate,
+    })),
     formats,
     aspectRatio: width / height,
   };
