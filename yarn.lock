@@ -2,6 +2,14 @@
 # yarn lockfile v1
 
 
+"@strapi/client@1.6.2":
+  version "1.6.2"
+  resolved "https://registry.yarnpkg.com/@strapi/client/-/client-1.6.2.tgz#c8aa5a8d29d963ed4536950eceb8034920e13c90"
+  integrity sha512-yISbChmwyp0Br1i8iafli38SGy1um9vqN7tzzEHyehrQsx1rkVe1r5Wkgd1DOAYtJcMnH7QmX/owSrHqN4rHEw==
+  dependencies:
+    debug "4.4.3"
+    qs "6.15.2"
+
 "@ardatan/relay-compiler@12.0.0":
   version "12.0.0"
   resolved "https://registry.yarnpkg.com/@ardatan/relay-compiler/-/relay-compiler-12.0.0.tgz#2e4cca43088e807adc63450e8cab037020e91106"
@@ -4288,7 +4296,7 @@ debug@2, debug@2.6.9, debug@^2.6.0:
   dependencies:
     ms "2.0.0"
 
-debug@4, debug@^4.0.1, debug@^4.1.0, debug@^4.1.1, debug@^4.3.1, debug@^4.3.4, debug@^4.4.3, debug@~4.4.1:
+debug@4, debug@4.4.3, debug@^4.0.1, debug@^4.1.0, debug@^4.1.1, debug@^4.3.1, debug@^4.3.4, debug@^4.4.3, debug@~4.4.1:
   version "4.4.3"
   resolved "https://registry.yarnpkg.com/debug/-/debug-4.4.3.tgz#c6ae432d9bd9662582fce08709b038c58e9e3d6a"
   integrity sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA==
@@ -8569,6 +8577,13 @@ pure-react-carousel@^1.35.0:
     deepmerge "^2.2.1"
     equals "^1.0.5"
     prop-types "^15.6.2"
+
+qs@6.15.2:
+  version "6.15.2"
+  resolved "https://registry.yarnpkg.com/qs/-/qs-6.15.2.tgz#fd55426d710403ddccc45e0f9eab16db7727ece9"
+  integrity sha512-Rzq0KEyX/w/tEybncDgdkZrJgVUsUMk3xjh3t5bv3S1HTAtg+uOYt72+ZfwiQwKdysThkTBdL/rTi6HDmX9Ddw==
+  dependencies:
+    side-channel "^1.1.0"
 
 qs@^6.13.1, qs@^6.14.1:
   version "6.15.0"

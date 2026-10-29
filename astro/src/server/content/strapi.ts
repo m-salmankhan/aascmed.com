@@ -1,4 +1,5 @@
-// Requests and validates Strapi REST responses with timeouts and publication guards.
+// Uses the official Strapi SDK for REST queries, publication guards, and collection pagination.
+import { HTTPError, HTTPNotFoundError, strapi, type API } from "@strapi/client";
 import type { paths as StrapiOpenApiPaths } from "./generated/types";
 import { clinicPath } from "../../../../src/shared/content/urls.ts";
 import { getAstroServerConfig } from "../config.ts";
@@ -59,15 +60,10 @@ export class StrapiRequestError extends Error {
 export interface StrapiRequestOptions {
   /** Published content or saved drafts; drafts require a draft-enabled server. */
   mode: ContentMode;
-  /** Optional fetch implementation, primarily for isolated tests. */
-  fetcher?: typeof fetch;
-  /** Maximum time allowed for each upstream request. */
-  timeoutMs?: number;
 }
 const PAGE_SIZE = 100;
 // Defend against a broken upstream that never terminates pagination, not a CMS display limit.
 const MAX_PAGES = 10000;
-const DEFAULT_TIMEOUT_MS = 5000;
 /** URL paths declared by the generated OpenAPI specification. */
 type StrapiApiPath = keyof StrapiOpenApiPaths;
 /** REST endpoint for each supported content type; TypeScript checks these paths against OpenAPI. */
@@ -156,42 +152,6 @@ export const POPULATE: StrapiPopulationByKind = {
   },
   "tracking-info": {},
 };
-/** Encode nested Strapi REST query parameters.
- * @param value Query fields such as status, filters, population, and pagination.
- * @returns A URL-encoded query string.
- */
-export function serializeQuery(value: Record<string, unknown>): string {
-  const pairs: string[] = [];
-  /** Encode one query value at its nested bracket path.
-   * @param current Value to serialize.
-   * @param path Bracketed parameter path.
-   * @returns Nothing; appends encoded pairs to the query.
-   */
-  const visit = (current: unknown, path: string) => {
-    if (current === true) {
-      pairs.push(`${encodeURIComponent(path)}=true`);
-      return;
-    }
-    if (current === false || current == null) {
-      return;
-    }
-    if (Array.isArray(current)) {
-      current.forEach((child, index) => visit(child, `${path}[${index}]`));
-      return;
-    }
-    if (typeof current === "object") {
-      for (const [key, child] of Object.entries(current as Record<string, unknown>)) {
-        visit(child, path ? `${path}[${key}]` : key);
-      }
-      return;
-    }
-    pairs.push(`${encodeURIComponent(path)}=${encodeURIComponent(String(current))}`);
-  };
-  for (const [key, child] of Object.entries(value)) {
-    visit(child, key);
-  }
-  return pairs.join("&");
-}
 /** Validate the configured CMS origin and locate its REST API root.
  * @param base Configured Strapi origin, optionally including an API path.
  * @returns An HTTPS or localhost HTTP API URL; throws for unsupported configuration.
@@ -221,20 +181,6 @@ function safeEndpoint(base: string | undefined): URL {
   }
   return url;
 }
-/** Unwrap a Strapi data envelope when present.
- * @param value Raw response value or data envelope.
- * @returns The enclosed data or the original value.
- */
-function unwrapData(value: unknown): unknown {
-  if (value && typeof value === "object" && !Array.isArray(value) && "data" in value) {
-    return (
-      value as {
-        data: unknown;
-      }
-    ).data;
-  }
-  return value;
-}
 /** Check whether a decoded response value is a JSON object.
  * @param value Untrusted value returned by the CMS.
  * @returns True when properties can be inspected safely.
@@ -242,36 +188,27 @@ function unwrapData(value: unknown): unknown {
 function isObject(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
-/** Validate one flattened Strapi 5 entity.
- * @param value Raw entity or data envelope.
- * @param kind Content type used in error messages.
- * @returns The entity with a nonempty stable document ID; throws on invalid data.
+/** Validate one flattened Strapi 5 record returned by the SDK.
+ * @param value Raw record from the SDK response.
+ * @param kind Content type used in safe error messages.
+ * @returns The record with a nonempty stable document ID; throws for malformed data.
  */
 function validateEntity(value: unknown, kind: StrapiKind): StrapiEntity {
-  const entity = unwrapData(value);
-  if (!entity || typeof entity !== "object" || Array.isArray(entity)) {
+  if (!isObject(value)) {
     throw new StrapiRequestError("invalid-response", `Strapi returned an invalid ${kind} record`);
   }
-  const candidate = entity as Record<string, unknown>;
-  const documentId = candidate.documentId;
+  const documentId = value.documentId;
   if (typeof documentId !== "string" || !documentId.trim()) {
     throw new StrapiRequestError("invalid-response", `Strapi ${kind} record is missing documentId`);
   }
-  return candidate as StrapiEntity;
+  return value as StrapiEntity;
 }
-/** Fetch and decode one Strapi REST response with timeout and publication guards.
- * @param url Server-side CMS URL with its query parameters.
- * @param mode Published or draft status; draft requires a draft-enabled deployment.
- * @param options Fetch override and timeout.
- * @param notFoundIsNull Whether an HTTP 404 represents an absent singleton.
- * @returns Decoded JSON or an allowed null; configuration, upstream, and malformed responses throw sanitized errors.
+/** Validate publication access and create an authenticated official SDK client.
+ * The SDK enforces its built-in 10-second request timeout; its public API does not expose per-request signals.
+ * @param mode Published or draft status requested for this operation.
+ * @returns SDK client configured for the single server-side Strapi instance.
  */
-async function requestJson(
-  url: URL,
-  mode: ContentMode,
-  options: StrapiRequestOptions,
-  notFoundIsNull = false,
-): Promise<unknown> {
+function createClient(mode: ContentMode) {
   const config = getAstroServerConfig();
   if (
     mode === "draft" &&
@@ -285,106 +222,124 @@ async function requestJson(
   if (mode !== "draft" && mode !== "published") {
     throw new StrapiRequestError("configuration", "Invalid content mode");
   }
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? DEFAULT_TIMEOUT_MS);
+  const endpoint = safeEndpoint(config.strapiApiUrl);
+  const headers = {
+    Accept: "application/json",
+    "Cache-Control": "no-store",
+  };
   try {
-    const headers = new Headers({ Accept: "application/json", "Cache-Control": "no-store" });
-    if (config.strapiToken) {
-      headers.set("Authorization", `Bearer ${config.strapiToken}`);
-    }
-    const response = await (options.fetcher ?? fetch)(url, {
-      method: "GET",
+    return strapi({
+      baseURL: endpoint.href.replace(/\/$/, ""),
+      ...(config.strapiToken ? { auth: config.strapiToken } : {}),
       headers,
-      signal: controller.signal,
-      cache: "no-store",
-      redirect: "error",
     });
-    if (response.status === 404 && notFoundIsNull) {
-      await response.body?.cancel().catch(() => undefined);
-      return null;
-    }
-    if (!response.ok) {
-      await response.body?.cancel().catch(() => undefined);
-      throw new StrapiRequestError(
-        "upstream",
-        `Strapi request failed (${response.status})`,
-        response.status,
-      );
-    }
-    try {
-      return await response.json();
-    } catch (error) {
-      if (controller.signal.aborted) {
-        throw error;
-      }
-      throw new StrapiRequestError("invalid-response", "Strapi returned malformed JSON");
-    }
-  } catch (error) {
-    if (error instanceof StrapiRequestError) {
-      throw error;
-    }
-    // Never include the URL, headers, token, or upstream body in the surfaced error.
-    throw new StrapiRequestError(
-      "upstream",
-      error instanceof Error && error.name === "AbortError"
-        ? "Strapi request timed out"
-        : "Strapi request could not be completed",
-    );
-  } finally {
-    clearTimeout(timeout);
-    controller.abort();
+  } catch {
+    throw new StrapiRequestError("configuration", "Strapi client configuration is invalid");
   }
 }
-/** Fetch every page of a Strapi collection in stable order.
+/** Convert SDK, network, and JSON failures to messages that never include URLs or response bodies.
+ * @param error Thrown value from the SDK request.
+ * @param kind CMS content type being loaded.
+ * @returns Sanitized error category, message, and optional HTTP status.
+ */
+function sanitizeRequestError(error: unknown, kind: StrapiKind): StrapiRequestError {
+  if (error instanceof StrapiRequestError) {
+    return error;
+  }
+  if (error instanceof HTTPError) {
+    return new StrapiRequestError(
+      "upstream",
+      `Strapi request failed (${error.response.status})`,
+      error.response.status,
+    );
+  }
+  if (error instanceof SyntaxError) {
+    return new StrapiRequestError("invalid-response", `Strapi returned malformed ${kind} JSON`);
+  }
+  return new StrapiRequestError(
+    "upstream",
+    error instanceof Error && error.name === "AbortError"
+      ? "Strapi request timed out"
+      : "Strapi request could not be completed",
+  );
+}
+/** Run one SDK operation and surface only sanitized failures.
+ * @param kind CMS content type being requested.
+ * @param operation SDK operation that returns a Strapi response envelope.
+ * @returns The parsed SDK response; configuration and upstream failures throw safe errors.
+ */
+async function requestFromSdk<T>(
+  kind: StrapiKind,
+  operation: () => Promise<T>,
+): Promise<T> {
+  try {
+    return await operation();
+  } catch (error) {
+    if (error instanceof HTTPError) {
+      await error.response.body?.cancel().catch(() => undefined);
+    }
+    throw sanitizeRequestError(error, kind);
+  }
+}
+/** Build SDK query parameters with explicit publication state and the requested page.
+ * @param kind Collection type being queried.
+ * @param mode Published or draft content state.
+ * @param page One-based page number.
+ * @returns Parameters consumed and serialized by the official SDK.
+ */
+function collectionQuery(
+  kind: StrapiCollectionKind,
+  mode: ContentMode,
+  page: number,
+): API.BaseQueryParams {
+  return {
+    status: mode,
+    populate: POPULATE[kind],
+    sort:
+      kind === "blog" || kind === "service-update"
+        ? ["date:desc", "documentId:asc"]
+        : kind === "provider" || kind === "condition"
+          ? ["order:asc", "documentId:asc"]
+          : ["documentId:asc"],
+    pagination: { page, pageSize: PAGE_SIZE, withCount: true },
+  };
+}
+/** Fetch every page of a collection using the official SDK query builder.
  * @param kind Collection to enumerate.
- * @param options Publication mode, optional timeout, and fetch override.
- * @returns Validated Strapi entities; upstream, malformed, and excessive responses throw.
+ * @param options Published or draft mode.
+ * @returns Validated records; malformed or excessive responses throw sanitized errors.
  */
 export async function getCollection(
   kind: StrapiCollectionKind,
   options: StrapiRequestOptions,
 ): Promise<StrapiEntity[]> {
-  const config = getAstroServerConfig();
-  const base = config.strapiApiUrl;
-  const endpoint = safeEndpoint(base);
-  endpoint.pathname = `${endpoint.pathname.replace(/\/$/, "")}${CONTENT_PATH[kind]}`;
-  endpoint.search = "";
+  const client = createClient(options.mode);
+  const manager = client.collection(kind, { path: CONTENT_PATH[kind] });
   const all: StrapiEntity[] = [];
   for (let page = 1; page <= MAX_PAGES; page++) {
-    const url = new URL(endpoint);
-    url.search = serializeQuery({
-      status: options.mode,
-      populate: POPULATE[kind],
-      sort:
-        kind === "blog" || kind === "service-update"
-          ? ["date:desc", "documentId:asc"]
-          : kind === "provider" || kind === "condition"
-            ? ["order:asc", "documentId:asc"]
-            : ["documentId:asc"],
-      pagination: { page, pageSize: PAGE_SIZE, withCount: true },
-    });
-    const payload = await requestJson(url, options.mode, options);
-    if (!isObject(payload) || !Array.isArray(payload.data)) {
+    const response = await requestFromSdk(kind, () =>
+      manager.find(collectionQuery(kind, options.mode, page)),
+    );
+    if (!response || !Array.isArray(response.data)) {
       throw new StrapiRequestError(
         "invalid-response",
         `Strapi returned an invalid ${kind} collection`,
       );
     }
-    const meta = isObject(payload.meta) ? payload.meta : undefined;
-    const pagination = isObject(meta?.pagination) ? meta.pagination : undefined;
-    const pageCount = typeof pagination?.pageCount === "number" ? pagination.pageCount : undefined;
-    const total = typeof pagination?.total === "number" ? pagination.total : undefined;
+    const pagination = response.meta?.pagination;
+    const pageCount = pagination?.pageCount;
+    const total = pagination?.total;
     if (
-      (pageCount !== undefined && pageCount > MAX_PAGES) ||
-      (total !== undefined && total > PAGE_SIZE * MAX_PAGES)
+      (typeof pageCount === "number" && pageCount > MAX_PAGES) ||
+      (typeof total === "number" && total > PAGE_SIZE * MAX_PAGES)
     ) {
       throw new StrapiRequestError(
         "upstream",
         `Strapi ${kind} collection exceeds the ${PAGE_SIZE * MAX_PAGES} record safety limit`,
       );
     }
-    all.push(...payload.data.map((entity) => validateEntity(entity, kind)));
-    if (pageCount !== undefined ? page >= pageCount : payload.data.length < PAGE_SIZE) {
+    all.push(...response.data.map((entity) => validateEntity(entity, kind)));
+    if (typeof pageCount === "number" ? page >= pageCount : response.data.length < PAGE_SIZE) {
       break;
     }
     if (page === MAX_PAGES) {
@@ -396,12 +351,12 @@ export async function getCollection(
   }
   return all;
 }
-/** Look up one detail record by its route slug or stable document ID.
+/** Look up one record by its route slug or stable document ID.
  * @param kind Detail collection to query.
  * @param field Identifier field used for the lookup.
  * @param identifier Requested slug or document ID.
- * @param options Publication mode, optional timeout, and fetch override.
- * @returns The entity or null if no record matches; upstream failures throw.
+ * @param options Published or draft mode.
+ * @returns The entity or null if no record matches; upstream failures throw sanitized errors.
  */
 export async function getByIdentifier(
   kind: StrapiDetailKind,
@@ -412,23 +367,21 @@ export async function getByIdentifier(
   if (!identifier.trim()) {
     return null;
   }
-  const config = getAstroServerConfig();
-  const base = config.strapiApiUrl;
-  const endpoint = safeEndpoint(base);
-  endpoint.pathname = `${endpoint.pathname.replace(/\/$/, "")}${CONTENT_PATH[kind]}`;
-  const filters = { [field]: { $eq: identifier } };
-  endpoint.search = serializeQuery({
-    status: options.mode,
-    filters,
-    populate: POPULATE[kind],
-    pagination: { page: 1, pageSize: 1 },
-  });
-  const payload = await requestJson(endpoint, options.mode, options);
-  if (!isObject(payload) || !Array.isArray(payload.data)) {
+  const client = createClient(options.mode);
+  const manager = client.collection(kind, { path: CONTENT_PATH[kind] });
+  const response = await requestFromSdk(kind, () =>
+    manager.find({
+      status: options.mode,
+      filters: { [field]: { $eq: identifier } },
+      populate: POPULATE[kind],
+      pagination: { page: 1, pageSize: 1 },
+    }),
+  );
+  if (!Array.isArray(response?.data)) {
     throw new StrapiRequestError("invalid-response", `Strapi returned an invalid ${kind} lookup`);
   }
-  if (payload.data.length) {
-    return validateEntity(payload.data[0], kind);
+  if (response.data.length) {
+    return validateEntity(response.data[0], kind);
   }
   if (kind === "clinic" && field === "slug") {
     // Name-derived URLs cannot be reversed: both spaces and existing hyphens become '-'.
@@ -446,34 +399,43 @@ export async function getByIdentifier(
   }
   return null;
 }
-/** Fetch one Strapi single type.
+/** Fetch one Strapi single type using the official SDK.
  * @param kind Single type to request.
- * @param options Publication mode, optional timeout, and fetch override.
- * @returns The entity or null for an absent singleton; upstream failures throw.
+ * @param options Published or draft mode.
+ * @returns The entity or null when Strapi returns no data or a not-found status.
  */
 export async function getSingle(
   kind: StrapiSingleKind,
   options: StrapiRequestOptions,
 ): Promise<StrapiEntity | null> {
-  const config = getAstroServerConfig();
-  const base = config.strapiApiUrl;
-  const endpoint = safeEndpoint(base);
-  endpoint.pathname = `${endpoint.pathname.replace(/\/$/, "")}${CONTENT_PATH[kind]}`;
-  endpoint.search = serializeQuery({ status: options.mode, populate: POPULATE[kind] });
-  const payload = await requestJson(endpoint, options.mode, options, true);
-  if (payload === null) {
-    return null;
+  const client = createClient(options.mode);
+  const manager = client.single(kind, { path: CONTENT_PATH[kind] });
+  let response: API.DocumentResponse;
+  try {
+    response = await manager.find({
+      status: options.mode,
+      populate: POPULATE[kind],
+    });
+  } catch (error) {
+    if (error instanceof HTTPNotFoundError) {
+      await error.response.body?.cancel().catch(() => undefined);
+      return null;
+    }
+    if (error instanceof HTTPError) {
+      await error.response.body?.cancel().catch(() => undefined);
+    }
+    throw sanitizeRequestError(error, kind);
   }
-  if (!isObject(payload) || !Object.hasOwn(payload, "data")) {
+  if (!response || !Object.hasOwn(response, "data")) {
     throw new StrapiRequestError(
       "invalid-response",
       `Strapi returned an invalid ${kind} singleton`,
     );
   }
-  if (payload.data == null) {
+  if (response.data == null) {
     return null;
   }
-  return validateEntity(payload.data, kind);
+  return validateEntity(response.data, kind);
 }
 /** Normalize CMS data to JSON-safe values while removing Strapi bookkeeping fields.
  * @param value Raw scalar, array, or object from a CMS response.

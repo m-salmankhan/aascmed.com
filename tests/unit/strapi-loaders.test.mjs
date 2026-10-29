@@ -2,6 +2,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { createServer } from "node:http";
 import { clinicPath } from "../../src/shared/content/urls.ts";
 import {
   mapStrapiAnnouncement,
@@ -20,7 +21,6 @@ import {
   getCollection,
   getSingle,
   POPULATE,
-  serializeQuery,
   StrapiRequestError,
 } from "../../astro/src/server/content/strapi.ts";
 import { getPublishedCollections } from "../../astro/src/server/content/loaders.ts";
@@ -128,74 +128,87 @@ test("all ten single types map to serializable shared records and nested media",
     pixelId: "PX-1",
   });
 });
-test("per-type FAQ population explicitly fetches nested question components", () => {
-  const query = serializeQuery({ populate: POPULATE.condition });
-  assert.ok(
-    query.includes(
-      "populate%5Bcontent%5D%5Bon%5D%5Bgeneric.faq%5D%5Bpopulate%5D%5Bquestions%5D=true",
-    ),
-  );
-});
-test("collection loader paginates past 100 with bounded page size and explicit publication status", async () => {
-  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
-  const requested = [];
-  const fetcher = async (url) => {
-    const parsed = new URL(url);
-    requested.push(parsed);
-    const page = Number(parsed.searchParams.get("pagination[page]"));
-    const items = Array.from({ length: page === 1 ? 100 : 1 }, (_, index) => ({
-      documentId: `doc-${(page - 1) * 100 + index}`,
-    }));
-    return Response.json({ data: items, meta: { pagination: { pageCount: 2, total: 101 } } });
-  };
-  const records = await getCollection("blog", { mode: "published", fetcher });
-  assert.equal(records.length, 101);
-  assert.equal(requested.length, 2);
-  assert.deepEqual(
-    requested.map((url) => url.searchParams.get("pagination[pageSize]")),
-    ["100", "100"],
-  );
-  assert.ok(requested.every((url) => url.searchParams.get("status") === "published"));
-  assert.ok(requested.every((url) => url.searchParams.has("populate[thumbnail]")));
-});
-test("all six collection requests use their Strapi plural API paths", async () => {
-  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
-  const paths = [];
-  for (const [kind, path] of [
-    ["blog", "/api/blogs"],
-    ["clinic", "/api/clinics"],
-    ["condition", "/api/conditions"],
-    ["provider", "/api/providers"],
-    ["service-update", "/api/service-updates"],
-    ["review", "/api/reviews"],
-  ]) {
-    await getCollection(kind, {
-      mode: "published",
-      fetcher: async (url) => {
-        paths.push(new URL(url).pathname);
-        return Response.json({ data: [], meta: { pagination: { pageCount: 1 } } });
-      },
-    });
-    assert.equal(paths.at(-1), path);
-  }
-});
-test("published collection reads are fresh, published-only, and fetch independent collections concurrently", async () => {
-  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
+/** Run real SDK calls through a temporary fetch mock and restore the global transport.
+ * @param {(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>} fetcher Mock response behavior.
+ * @param {() => Promise<unknown>} operation SDK-backed loader operation.
+ * @returns The loader result after all mocked fetch calls complete.
+ */
+async function withFetch(fetcher, operation) {
   const originalFetch = globalThis.fetch;
+  globalThis.fetch = fetcher;
+  try {
+    return await operation();
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+}
+test("official SDK serializes nested population and fetches every collection page", async () => {
+  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
+  const requests = [];
+  const records = await withFetch(async (request) => {
+    requests.push(request);
+    const url = new URL(request.url);
+    const page = Number(url.searchParams.get("pagination[page]"));
+    return Response.json({
+      data: Array.from({ length: page === 1 ? 100 : 1 }, (_, index) => ({
+        documentId: `doc-${(page - 1) * 100 + index}`,
+      })),
+      meta: { pagination: { pageCount: 2, total: 101 } },
+    });
+  }, () => getCollection("blog", { mode: "published" }));
+  assert.equal(records.length, 101);
+  assert.equal(requests.length, 2);
+  for (const request of requests) {
+    const url = new URL(request.url);
+    assert.equal(url.pathname, "/api/blogs");
+    assert.equal(url.searchParams.get("status"), "published");
+    assert.equal(url.searchParams.get("pagination[pageSize]"), "100");
+    assert.equal(url.searchParams.get("populate[thumbnail]"), "true");
+    assert.equal(
+      url.searchParams.get("populate[content][on][clinics.map][populate]"),
+      "*",
+    );
+    assert.equal(request.headers.get("Cache-Control"), "no-store");
+  }
+  assert.deepEqual(
+    requests.map((request) => new URL(request.url).searchParams.get("pagination[page]")),
+    ["1", "2"],
+  );
+});
+test("all collection managers use the configured Strapi REST paths", async () => {
+  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test/custom/api";
+  const paths = [];
+  await withFetch(async (request) => {
+    paths.push(new URL(request.url).pathname);
+    return Response.json({ data: [], meta: { pagination: { pageCount: 1 } } });
+  }, async () => {
+    for (const kind of ["blog", "clinic", "condition", "provider", "service-update", "review"]) {
+      await getCollection(kind, { mode: "published" });
+    }
+  });
+  assert.deepEqual(paths, [
+    "/custom/api/blogs",
+    "/custom/api/clinics",
+    "/custom/api/conditions",
+    "/custom/api/providers",
+    "/custom/api/service-updates",
+    "/custom/api/reviews",
+  ]);
+});
+test("published collection reads are fresh and run independently through the SDK", async () => {
+  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
   let requests = 0;
   let active = 0;
   let maxActive = 0;
-  globalThis.fetch = async (url) => {
+  await withFetch(async (request) => {
     requests++;
     active++;
     maxActive = Math.max(maxActive, active);
     await new Promise((resolve) => setTimeout(resolve, 5));
     active--;
-    const parsed = new URL(url);
-    assert.equal(parsed.searchParams.get("status"), "published");
+    assert.equal(new URL(request.url).searchParams.get("status"), "published");
     return Response.json({ data: [], meta: { pagination: { pageCount: 1, total: 0 } } });
-  };
-  try {
+  }, async () => {
     await getPublishedCollections();
     assert.equal(requests, 6);
     assert.ok(maxActive > 1);
@@ -203,75 +216,226 @@ test("published collection reads are fresh, published-only, and fetch independen
     await getPublishedCollections();
     await getPublishedCollections();
     assert.equal(requests, 12);
-  } finally {
-    globalThis.fetch = originalFetch;
-  }
+  });
 });
-test("independent CMS reads are not throttled by a shared concurrency limit", async () => {
-  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
-  let active = 0;
-  let maxActive = 0;
-  const fetcher = async () => {
-    active++;
-    maxActive = Math.max(maxActive, active);
-    await new Promise((resolve) => setTimeout(resolve, 5));
-    active--;
-    return Response.json({ data: { documentId: "home" } });
-  };
-  await Promise.all(
-    Array.from({ length: 8 }, () => getSingle("home-page", { mode: "published", fetcher })),
-  );
-  assert.equal(maxActive, 8);
-});
-test("collection pagination fails loudly when content exceeds the safety limit", async () => {
+test("collection pagination rejects responses beyond the safety cap", async () => {
   process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
   let requests = 0;
-  await assert.rejects(
-    getCollection("review", {
-      mode: "published",
-      fetcher: async () => {
-        requests++;
-        return Response.json({
-          data: [{ documentId: "review-1" }],
-          meta: { pagination: { pageCount: 10001 } },
-        });
-      },
-    }),
-    (error) =>
-      error instanceof StrapiRequestError &&
-      error.kind === "upstream" &&
-      error.message.includes("1000000 record"),
-  );
+  await withFetch(async () => {
+    requests++;
+    return Response.json({
+      data: [{ documentId: "review-1" }],
+      meta: { pagination: { pageCount: 10001 } },
+    });
+  }, async () => {
+    await assert.rejects(
+      getCollection("review", { mode: "published" }),
+      (error) =>
+        error instanceof StrapiRequestError &&
+        error.kind === "upstream" &&
+        error.message.includes("1000000 record"),
+    );
+  });
   assert.equal(requests, 1);
 });
-test("draft access requires deployment configuration and independent requests do not share data", async () => {
-  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
+test("draft mode requires deployment configuration and requests carry explicit status", async () => {
+  process.env.GATSBY_STRAPI_API_URL = "https://draft-cms.example.test";
   delete process.env.ASTRO_CONTENT_MODE;
   await assert.rejects(
-    getCollection("blog", {
-      mode: "draft",
-      fetcher: async () => {
-        throw Error("must not fetch");
-      },
-    }),
+    getCollection("blog", { mode: "draft" }),
     (error) => error instanceof StrapiRequestError && error.kind === "configuration",
   );
-  const fetcher = (value) => {
-    return async () =>
-      Response.json({ data: [{ documentId: value }], meta: { pagination: { pageCount: 1 } } });
-  };
-  const [first, second] = await Promise.all([
-    getCollection("blog", {
-      mode: "published",
-      fetcher: fetcher("first"),
-    }),
-    getCollection("blog", {
-      mode: "published",
-      fetcher: fetcher("second"),
-    }),
-  ]);
-  assert.equal(first[0].documentId, "first");
-  assert.equal(second[0].documentId, "second");
+  process.env.ASTRO_CONTENT_MODE = "draft";
+  process.env.STRAPI_TOKEN = "fixture-secret-token";
+  const seen = [];
+  await withFetch(async (request) => {
+    const url = new URL(request.url);
+    seen.push({ url, authorization: request.headers.get("Authorization") });
+    if (url.pathname.endsWith("/blogs")) {
+      return Response.json({
+        data: [await fixture("draft-blog")],
+        meta: { pagination: { pageCount: 1 } },
+      });
+    }
+    return Response.json({ data: { documentId: "draft-home" } });
+  }, async () => {
+    await getSingle("home-page", { mode: "published" });
+    const drafts = await getCollection("blog", { mode: "draft" });
+    assert.equal(drafts[0].documentId, "blog-unpublished-preview");
+    assert.equal(seen[0].url.searchParams.get("status"), "published");
+    assert.equal(seen[0].url.searchParams.has("populate[hero][populate][media]"), true);
+    assert.equal(seen[1].url.searchParams.get("status"), "draft");
+    assert.equal(seen[1].url.searchParams.has("populate[thumbnail]"), true);
+    assert.ok(seen.every((request) => request.authorization === "Bearer fixture-secret-token"));
+  });
+  delete process.env.STRAPI_TOKEN;
+});
+test("invalid SDK credentials become configuration errors without making a request", async () => {
+  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
+  process.env.STRAPI_TOKEN = "   ";
+  let requests = 0;
+  try {
+    await withFetch(async () => {
+      requests++;
+      return Response.json({ data: { documentId: "unexpected" } });
+    }, async () => {
+      await assert.rejects(
+        getSingle("home-page", { mode: "published" }),
+        (error) =>
+          error instanceof StrapiRequestError &&
+          error.kind === "configuration" &&
+          !error.message.includes("   "),
+      );
+    });
+    assert.equal(requests, 0);
+  } finally {
+    delete process.env.STRAPI_TOKEN;
+  }
+});
+test("single and detail managers use SDK filters, return missing records, and preserve clinic URL fallback", async () => {
+  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
+  process.env.ASTRO_CONTENT_MODE = "draft";
+  const seen = [];
+  await withFetch(async (request) => {
+    const url = new URL(request.url);
+    seen.push(url);
+    if (url.pathname.endsWith("/home-page")) {
+      return Response.json({ data: { documentId: "home" } });
+    }
+    if (url.searchParams.has("filters[slug][$eq]")) {
+      return Response.json({ data: [] });
+    }
+    return Response.json({
+      data: [
+        { documentId: "hyphen", slug: null, clinic_name: "Oak-Park" },
+        { documentId: "spaces", slug: "", clinic_name: "Crest  Hill" },
+      ],
+      meta: { pagination: { pageCount: 1 } },
+    });
+  }, async () => {
+    assert.equal((await getSingle("home-page", { mode: "draft" }))?.documentId, "home");
+    assert.equal(
+      await getByIdentifier("blog", "slug", "missing-post", { mode: "draft" }),
+      null,
+    );
+    assert.equal(
+      (await getByIdentifier("clinic", "slug", "oak-park", { mode: "draft" }))
+        ?.documentId,
+      "hyphen",
+    );
+  });
+  assert.equal(seen[0].searchParams.get("status"), "draft");
+  assert.equal(seen[1].searchParams.get("filters[slug][$eq]"), "missing-post");
+  assert.equal(seen[1].searchParams.get("pagination[pageSize]"), "1");
+  assert.equal(seen[2].searchParams.has("filters[slug][$eq]"), false);
+});
+test("malformed SDK payloads and upstream failures use safe project errors", async () => {
+  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
+  process.env.STRAPI_TOKEN = "fixture-secret-token";
+  await withFetch(async () => new Response("not-json"), async () => {
+    await assert.rejects(
+      getSingle("home-page", { mode: "published" }),
+      (error) => error instanceof StrapiRequestError && error.kind === "invalid-response",
+    );
+  });
+  await withFetch(async () => Response.json({ unexpected: true }), async () => {
+    await assert.rejects(
+      getSingle("home-page", { mode: "published" }),
+      (error) => error instanceof StrapiRequestError && error.kind === "invalid-response",
+    );
+  });
+  await withFetch(async () => new Response("private body", { status: 503 }), async () => {
+    await assert.rejects(
+      getSingle("home-page", { mode: "published" }),
+      (error) =>
+        error instanceof StrapiRequestError &&
+        error.kind === "upstream" &&
+        error.status === 503 &&
+        !error.message.includes("fixture-secret-token") &&
+        !error.message.includes("private body"),
+    );
+  });
+  delete process.env.STRAPI_TOKEN;
+});
+test("single-type 404 is missing content and SDK abort errors are sanitized", async () => {
+  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
+  await withFetch(async () => new Response("private body", { status: 404 }), async () => {
+    assert.equal(await getSingle("privacy-policy", { mode: "published" }), null);
+  });
+  await withFetch(async () => {
+    throw Object.assign(new Error("fixture transport detail"), { name: "AbortError" });
+  }, async () => {
+    await assert.rejects(
+      getSingle("home-page", { mode: "published" }),
+      (error) =>
+        error instanceof StrapiRequestError &&
+        error.kind === "upstream" &&
+        error.message === "Strapi request timed out",
+    );
+  });
+});
+test("SDK default timeout aborts requests that have not received headers", async (context) => {
+  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
+  context.mock.timers.enable({ apis: ["setTimeout"] });
+  let markStarted;
+  const started = new Promise((resolve) => {
+    markStarted = resolve;
+  });
+  await withFetch(
+    (request) => {
+      markStarted();
+      return new Promise((_, reject) => {
+        request.signal.addEventListener(
+          "abort",
+          () => reject(Object.assign(new Error("abort"), { name: "AbortError" })),
+          { once: true },
+        );
+      });
+    },
+    async () => {
+      const request = getSingle("home-page", { mode: "published" });
+      await started;
+      context.mock.timers.tick(10_000);
+      await assert.rejects(
+        request,
+        (error) =>
+          error instanceof StrapiRequestError &&
+          error.kind === "upstream" &&
+          error.message === "Strapi request timed out",
+      );
+    },
+  );
+});
+test("SDK redirects do not forward the server token across origins", async () => {
+  let receivedAuthorization;
+  const target = createServer((request, response) => {
+    receivedAuthorization = request.headers.authorization;
+    response.writeHead(200, { "content-type": "application/json" });
+    response.end(JSON.stringify({ data: { documentId: "redirected-home" } }));
+  });
+  const source = createServer((_request, response) => {
+    const address = target.address();
+    response.writeHead(302, {
+      location: `http://127.0.0.1:${address.port}/api/home-page`,
+    });
+    response.end();
+  });
+  await new Promise((resolve) => target.listen(0, "127.0.0.1", resolve));
+  await new Promise((resolve) => source.listen(0, "127.0.0.1", resolve));
+  const address = source.address();
+  process.env.GATSBY_STRAPI_API_URL = `http://127.0.0.1:${address.port}`;
+  process.env.STRAPI_TOKEN = "redirect-fixture-secret";
+  try {
+    assert.equal(
+      (await getSingle("home-page", { mode: "published" }))?.documentId,
+      "redirected-home",
+    );
+    assert.equal(receivedAuthorization, undefined);
+  } finally {
+    delete process.env.STRAPI_TOKEN;
+    await new Promise((resolve) => source.close(resolve));
+    await new Promise((resolve) => target.close(resolve));
+  }
 });
 test("dynamic-zone population covers FAQ, rich text and both CTA variants", () => {
   const on = POPULATE.condition.content.on;
@@ -284,138 +448,4 @@ test("dynamic-zone population covers FAQ, rich text and both CTA variants", () =
   assert.equal(on["generic.faq"].populate.questions, true);
   assert.equal(Object.hasOwn(POPULATE.clinic, "body"), false);
   assert.equal(Object.hasOwn(POPULATE.review, "content"), false);
-});
-test("timeouts and malformed singleton responses are errors, not missing content", async () => {
-  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
-  await assert.rejects(
-    getSingle("home-page", { mode: "published", fetcher: async () => Response.json({}) }),
-    (error) => error instanceof StrapiRequestError && error.kind === "invalid-response",
-  );
-  await assert.rejects(
-    getSingle("home-page", {
-      mode: "published",
-      timeoutMs: 10,
-      fetcher: (_, { signal }) =>
-        new Promise((_, reject) =>
-          signal.addEventListener("abort", () =>
-            reject(Object.assign(new Error("abort"), { name: "AbortError" })),
-          ),
-        ),
-    }),
-    (error) =>
-      error instanceof StrapiRequestError &&
-      error.kind === "upstream" &&
-      error.message.includes("timed out"),
-  );
-});
-test("individual draft route lookup filters by slug and returns null when absent", async () => {
-  process.env.ASTRO_CONTENT_MODE = "draft";
-  process.env.GATSBY_STRAPI_API_URL = "https://draft-cms.example.test";
-  const parsed = [];
-  const fetcher = async (url) => {
-    const request = new URL(url);
-    parsed.push(request);
-    return Response.json({ data: [] });
-  };
-  assert.equal(
-    await getByIdentifier("blog", "slug", "new-draft", { mode: "draft", fetcher }),
-    null,
-  );
-  assert.equal(parsed[0].pathname, "/api/blogs");
-  assert.equal(parsed[0].searchParams.get("status"), "draft");
-  assert.equal(parsed[0].searchParams.get("filters[slug][$eq]"), "new-draft");
-  assert.equal(parsed[0].searchParams.get("pagination[pageSize]"), "1");
-});
-test("clinic lookup round-trips fallback URLs and prefers explicit slugs in both content modes", async () => {
-  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
-  process.env.ASTRO_CONTENT_MODE = "draft";
-  const clinics = [
-    { documentId: "hyphen", slug: null, clinic_name: "Oak-Park" },
-    { documentId: "spaces", slug: "", clinic_name: "Crest  Hill" },
-    { documentId: "explicit", slug: "oak-park", clinic_name: "Different Name" },
-    { documentId: "renamed", slug: "custom", clinic_name: "Ignored Clinic" },
-  ];
-  for (const mode of ["published", "draft"]) {
-    let requests = 0;
-    let includeExplicit = false;
-    const fetcher = async (url) => {
-      requests++;
-      const params = new URL(url).searchParams;
-      assert.equal(params.get("status"), mode);
-      const available = clinics.filter(
-        (clinic) => includeExplicit || clinic.documentId !== "explicit",
-      );
-      const slug = params.get("filters[slug][$eq]");
-      return Response.json({
-        data: slug === null ? available : available.filter((clinic) => clinic.slug === slug),
-      });
-    };
-    for (const clinic of clinics.slice(0, 2)) {
-      const path = clinicPath({ slug: clinic.slug, clinicName: clinic.clinic_name });
-      const slug = path.slice("/clinics/".length, -1);
-      const found = await getByIdentifier("clinic", "slug", slug, { mode, fetcher });
-      assert.equal(found?.documentId, clinic.documentId);
-    }
-    assert.equal(
-      await getByIdentifier("clinic", "slug", "ignored-clinic", { mode, fetcher }),
-      null,
-    );
-    includeExplicit = true;
-    requests = 0;
-    assert.equal(
-      (await getByIdentifier("clinic", "slug", "oak-park", { mode, fetcher }))?.documentId,
-      "explicit",
-    );
-    assert.equal(requests, 1);
-  }
-});
-test("draft requests use the draft status and keep the bearer token server-side for both modes", async () => {
-  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
-  process.env.ASTRO_CONTENT_MODE = "draft";
-  process.env.GATSBY_STRAPI_API_URL = "https://draft-cms.example.test";
-  process.env.STRAPI_TOKEN = "fixture-secret-token";
-  const seen = [];
-  const fetcher = async (url, init) => {
-    const parsed = new URL(url);
-    seen.push({ url: parsed, authorization: new Headers(init.headers).get("Authorization") });
-    if (parsed.pathname.endsWith("/blogs")) {
-      return Response.json({ data: [await fixture("draft-blog")] });
-    }
-    return Response.json({ data: { documentId: "draft-home" } });
-  };
-  await getSingle("home-page", { mode: "published", fetcher });
-  const drafts = await getCollection("blog", { mode: "draft", fetcher });
-  assert.equal(seen[0].url.searchParams.get("status"), "published");
-  assert.equal(seen[0].url.pathname, "/api/home-page");
-  assert.equal(seen[0].authorization, "Bearer fixture-secret-token");
-  assert.equal(seen[0].url.searchParams.has("populate[hero][populate][media]"), true);
-  assert.equal(seen[1].url.searchParams.get("status"), "draft");
-  assert.equal(seen[1].authorization, "Bearer fixture-secret-token");
-  assert.equal(seen[1].url.searchParams.has("populate[thumbnail]"), true);
-  assert.equal(drafts[0].documentId, "blog-unpublished-preview");
-  assert.equal(drafts[0].heading, "An edited heading awaiting publication");
-  assert.equal(drafts[0].publishedAt, null);
-  delete process.env.STRAPI_TOKEN;
-});
-test("missing single type is distinct from upstream failure and errors do not expose request secrets", async () => {
-  process.env.ASTRO_CONTENT_MODE = "draft";
-  process.env.GATSBY_STRAPI_API_URL = "https://draft-cms.example.test";
-  process.env.STRAPI_TOKEN = "fixture-secret-token";
-  const missing = await getSingle("privacy-policy", {
-    mode: "draft",
-    fetcher: async () => new Response(null, { status: 404 }),
-  });
-  assert.equal(missing, null);
-  await assert.rejects(
-    getSingle("privacy-policy", {
-      mode: "draft",
-      fetcher: async () => new Response("private body", { status: 503 }),
-    }),
-    (error) =>
-      error instanceof StrapiRequestError &&
-      error.kind === "upstream" &&
-      !error.message.includes("fixture-secret-token") &&
-      !error.message.includes("private body"),
-  );
-  delete process.env.STRAPI_TOKEN;
 });
