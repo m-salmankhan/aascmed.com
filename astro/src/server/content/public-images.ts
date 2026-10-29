@@ -17,7 +17,7 @@ import {
   type SocialCardEntry,
   type SocialCardKind,
   type SocialCardResult,
-} from '../../lib/public-images.ts';
+} from '../../lib/public-images.mjs';
 import type { PublishedContentSnapshot } from './loaders.ts';
 import path from 'node:path';
 /** Published collections that contribute social cards or responsive public media. */
