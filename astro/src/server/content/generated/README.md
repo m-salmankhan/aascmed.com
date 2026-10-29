@@ -9,7 +9,7 @@ CI runs `yarn strapi:types:check` against the committed specification without a 
 Once the separate CMS change is reviewed and deployed, refresh both committed files from Strapi's native live Content API endpoint with:
 
 ```sh
-yarn strapi:types --refresh https://wise-positivity-21c2bd6b3f.strapiapp.com/api/openapi.json
+yarn strapi:types --refresh https://admin.aascmed.com/api/openapi.json
 ```
 
 The endpoint currently returns 404 until that CMS change is deployed. A refresh downloads the schema and regenerates the declarations; review and commit both files together. Add `--check` to compare against the live export without writing files. Ordinary generation and CI remain offline.
