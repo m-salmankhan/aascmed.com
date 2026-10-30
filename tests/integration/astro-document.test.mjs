@@ -226,6 +226,7 @@ import SiteDocument from '../layouts/SiteDocument.astro';
           ...process.env,
           HOST: '127.0.0.1',
           PORT: String(portProbe),
+          PREVIEW_FRAME_ORIGINS: 'https://editor.example.test:8443',
           GATSBY_STRAPI_API_URL: cmsUrl,
         },
         cwd: astroRoot,
@@ -249,7 +250,10 @@ import SiteDocument from '../layouts/SiteDocument.astro';
       assert.ok(ssrHtml.includes('name="robots" content="noindex, nofollow"'));
       assert.ok(response.headers.get('x-robots-tag')?.includes('noindex'));
       assert.ok(response.headers.get('cache-control')?.includes('no-store'));
-      assert.ok(response.headers.get('content-security-policy')?.includes('frame-ancestors'));
+      const framePolicy = response.headers.get('content-security-policy');
+      assert.ok(framePolicy?.includes(new URL(cmsUrl).origin));
+      assert.ok(framePolicy?.includes('https://editor.example.test:8443'));
+      assert.ok(!framePolicy?.includes('strapiapp.com'));
       assert.ok(
         !ssrHtml.includes('googletagmanager.com') && !ssrHtml.includes('connect.facebook.net'),
         'preview omits tracking',

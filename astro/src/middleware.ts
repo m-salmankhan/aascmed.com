@@ -11,10 +11,13 @@ export const onRequest = defineMiddleware(async (_context, next) => {
   if (import.meta.env.PUBLIC_ASTRO_TARGET !== 'static') {
     response.headers.set('Cache-Control', 'private, no-store');
     response.headers.set('X-Robots-Tag', 'noindex, nofollow');
-    response.headers.set(
-      'Content-Security-Policy',
-      "frame-ancestors 'self' https://*.aascmed.com https://wise-positivity-21c2bd6b3f.strapiapp.com https://aascmed.netlify.app",
-    );
+    const configuredParents = [
+      process.env.GATSBY_STRAPI_API_URL,
+      ...(process.env.PREVIEW_FRAME_ORIGINS || '').split(','),
+    ].filter((value) => value?.trim());
+    const parentOrigins = configuredParents.map((value) => new URL(value!.trim()).origin);
+    const frameAncestors = ["'self'", ...new Set(parentOrigins)].join(' ');
+    response.headers.set('Content-Security-Policy', `frame-ancestors ${frameAncestors}`);
   }
   return response;
 });
