@@ -35,7 +35,7 @@ The default CMS batch size is 100, configurable from 1 to 100. Constructing `get
 
 `PUBLIC_RUNTIME_API_BASE_URL` and `PUBLIC_MAPBOX_API_KEY` are safe browser settings. They are separate from the CMS URL and credential; never expose the token as a public variable.
 
-`PREVIEW_FRAME_ORIGINS` optionally adds comma-separated editor origins permitted to embed protected preview pages. The configured CMS API origin and the preview itself are already permitted; no Strapi tenant hostname is hardcoded.
+`PREVIEW_FRAME_ORIGINS` supplies exact, space-separated HTTPS editor origins permitted to embed protected preview pages. The preview itself is also permitted. The deployment preflight requires and validates this value; configure the real editor origin explicitly.
 
 In the SSR preview target, the CMS API origin and `PREVIEW_FRAME_ORIGINS` also define the exact origins trusted for Strapi's saved-update `postMessage`. The listener is emitted only for preview, accepts messages only from the iframe's parent at one of those origins, handles only `strapiUpdate`, and announces `previewReady` only to those configured origins. A direct preview tab remains usable and does not install this listener. Strapi's documented Preview feature disables its link while edits are unsaved; this integration reloads after a saved update and does not provide unsaved live editing.
 

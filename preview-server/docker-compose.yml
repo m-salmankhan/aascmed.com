@@ -4,6 +4,7 @@ services:
     container_name: aascmed-preview
     image: ${PREVIEW_IMAGE:?Set PREVIEW_IMAGE to an immutable image digest}
     restart: unless-stopped
+    init: true
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4321/_health/live').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 30s
@@ -14,7 +15,7 @@ services:
     environment:
       NODE_OPTIONS: --max-old-space-size=700
       ASTRO_CONTENT_MODE: draft
-      PREVIEW_FRAME_ORIGINS: ${PREVIEW_FRAME_ORIGINS:-}
+      PREVIEW_FRAME_ORIGINS: ${PREVIEW_FRAME_ORIGINS:?Set the exact CMS editor origins}
       GATSBY_STRAPI_API_URL: ${GATSBY_STRAPI_API_URL:?Set CMS URL}
       STRAPI_TOKEN: ${STRAPI_TOKEN:?Set CMS token}
 
@@ -24,6 +25,8 @@ services:
     restart: unless-stopped
     command: ["caddy", "run", "--config", "/etc/caddy/config/Caddyfile", "--adapter", "caddyfile"]
     networks: [preview-net]
+    environment:
+      PREVIEW_FRAME_ORIGINS: ${PREVIEW_FRAME_ORIGINS:?Set the exact CMS editor origins}
     volumes:
       - ./caddy-config:/etc/caddy/config:ro,Z
 

@@ -7,8 +7,14 @@ import { fileURLToPath } from 'node:url';
 export async function renderTunnelConfig(env) {
   const { PREVIEW_DOMAIN: host, CLOUDFLARE_TEAM_NAME: team, CLOUDFLARE_ACCESS_AUD: aud,
     CLOUDFLARE_TUNNEL_ID: tunnel, CLOUDFLARE_ACCOUNT_ID: account, TUNNEL_CREDENTIALS_FILE: credentialPath,
-    TUNNEL_CONFIG_FILE: configPath, PREVIEW_IMAGE: image } = env;
+    TUNNEL_CONFIG_FILE: configPath, PREVIEW_IMAGE: image, PREVIEW_FRAME_ORIGINS: frameOrigins } = env;
   if (!image || !/^[a-z0-9][a-z0-9./_-]*@sha256:[a-f0-9]{64}$/.test(image)) throw new Error('Set the reviewed preview image digest');
+  if (!frameOrigins || !/^[^\s]+(?: +[^\s]+)*$/.test(frameOrigins)) throw new Error('Set exact space-separated editor origins');
+  for (const value of frameOrigins.split(' ')) {
+    let origin;
+    try { origin = new URL(value); } catch { throw new Error('Invalid editor origin'); }
+    if (!/^https:\/\/[a-z0-9.-]+(?::[0-9]{1,5})?$/.test(value) || origin.protocol !== 'https:' || origin.origin !== value || origin.username || origin.password || origin.pathname !== '/' || origin.search || origin.hash || value.includes('*')) throw new Error('Editor origins must be exact HTTPS origins');
+  }
   const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (!host || host.length > 253 || !/^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i.test(host) || host === 'preview.example.com') throw new Error('Set the real preview hostname');
   if (!team || !/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i.test(team)) throw new Error('Set the Cloudflare team name');
@@ -41,7 +47,7 @@ export async function renderTunnelConfig(env) {
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   renderTunnelConfig(process.env).then(() => console.log('Tunnel configuration prepared. Validate ingress before starting.')).catch(() => {
-    console.error('Tunnel preflight failed: check image, hostname, account, team, audience, tunnel ID and private credentials file.');
+    console.error('Tunnel preflight failed: check image, hostname, frame origins, account, team, audience, tunnel ID and private credentials file.');
     process.exitCode = 1;
   });
 }

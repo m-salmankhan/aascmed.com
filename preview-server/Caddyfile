@@ -4,7 +4,7 @@
         defer
         Cache-Control "private, no-store"
         X-Robots-Tag "noindex, nofollow"
-        Content-Security-Policy "frame-ancestors 'self' https://*.aascmed.com https://wise-positivity-21c2bd6b3f.strapiapp.com"
+        Content-Security-Policy "frame-ancestors 'self' {$PREVIEW_FRAME_ORIGINS}"
         -X-Frame-Options
     }
     reverse_proxy aascmed-preview:4321 {

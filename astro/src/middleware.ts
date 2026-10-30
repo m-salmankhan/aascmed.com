@@ -18,11 +18,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
   if (import.meta.env.PUBLIC_ASTRO_TARGET !== 'static') {
     response.headers.set('Cache-Control', 'private, no-store');
     response.headers.set('X-Robots-Tag', 'noindex, nofollow');
-    const configuredParents = [
-      process.env.GATSBY_STRAPI_API_URL,
-      ...(process.env.PREVIEW_FRAME_ORIGINS || '').split(','),
-    ].filter((value) => value?.trim());
-    const parentOrigins = configuredParents.map((value) => new URL(value!.trim()).origin);
+    const configuredParents = (process.env.PREVIEW_FRAME_ORIGINS || '').split(/\s+/).filter(Boolean);
+    const parentOrigins = configuredParents.map((value) => new URL(value).origin);
     const frameAncestors = ["'self'", ...new Set(parentOrigins)].join(' ');
     response.headers.set('Content-Security-Policy', `frame-ancestors ${frameAncestors}`);
   }

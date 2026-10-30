@@ -355,8 +355,8 @@ import SiteDocument from '../layouts/SiteDocument.astro';
       assert.ok(response.headers.get('x-robots-tag')?.includes('noindex'));
       assert.ok(response.headers.get('cache-control')?.includes('no-store'));
       const framePolicy = response.headers.get('content-security-policy');
-      assert.ok(framePolicy?.includes(new URL(cmsUrl).origin));
-      assert.ok(framePolicy?.includes('https://editor.example.test:8443'));
+      assert.equal(framePolicy, "frame-ancestors 'self' https://editor.example.test:8443");
+      assert.ok(!framePolicy.includes(new URL(cmsUrl).origin));
       assert.ok(!framePolicy?.includes('strapiapp.com'));
       assert.ok(
         !ssrHtml.includes('googletagmanager.com') && !ssrHtml.includes('connect.facebook.net'),
@@ -389,6 +389,7 @@ import SiteDocument from '../layouts/SiteDocument.astro';
       assert.equal(asset.status, 200);
       assert.match(asset.headers.get('content-type') || '', /pdf/);
       assert.equal((await fetch(`${base}/sitemap-0.xml`)).status, 404, 'preview does not build a sitemap');
+
     } finally {
       if (app?.exitCode === null && app.signalCode === null) {
         const exited = new Promise((resolve) => app.once('exit', resolve));
