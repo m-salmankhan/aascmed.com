@@ -1,6 +1,6 @@
 # Gatsby to Astro migration plan
 
-Status: approved for staged implementation and ticket breakdown on 25 October 2026.
+Status: approved 25 October 2026; delivery order and preview architecture revised 30 October 2026. The current sequence is WEB-16 → public cutover WEB-18 → observation WEB-45 and island prerequisite WEB-50 → Gatsby retirement WEB-46 → new preview WEB-17. See [the deferred preview platform plan](preview-platform-plan.md).
 
 ## Recommendation
 
@@ -9,7 +9,7 @@ Keep Strapi and the existing React components. Replace Gatsby's data queries, ro
 Use two deployments from the same Astro source:
 
 - **Public website:** static Astro output on the existing public hosting, fetching published Strapi content during builds.
-- **Editorial preview:** a compiled Astro Node SSR application behind the existing Caddy and Strapi administrator authentication services, fetching saved drafts on each request.
+- **Editorial preview:** after Gatsby retirement, a compiled Astro Node SSR image on a new VPS behind Traefik and a separate preview authentication service, fetching saved drafts on each request.
 
 This addresses the preview problem without making every public page request depend on Strapi availability. A content save should require neither an application rebuild nor a Gatsby refresh operation to become visible in preview. An already-open preview still needs a reload or a verified Strapi update message; SSR does not automatically push changes into an open browser.
 
@@ -36,7 +36,7 @@ This is a source-based plan, not a production audit. Live Netlify configuration,
 | Shared queries | Announcement, clinic options, site metadata, analytics IDs, share URL | Lift fetching/configuration out of components; pass props or a provider within one React tree. |
 | Images | Gatsby image queries and local files; current reusable media components mostly accept `ReactNode` image slots | Preserve those slots. Replace image preparation/rendering at page boundaries. |
 | Social images | `gatsby/create-pages.js` and `gatsby/og-image-generator.js` generate blog, condition, and clinic OG images | Extract generation from Gatsby; preserve public output independently of preview startup. |
-| Preview | `gatsby develop`, refresh webhook, Podman Compose, Caddy, Express forward-auth | Retain the proxy/auth boundary; replace the application container and deployment lifecycle. |
+| Preview (historical) | `gatsby develop`, refresh webhook, Podman Compose, Caddy, Express forward-auth | Retire the old stack after public cutover; implement the deferred new VPS platform after Gatsby retirement. |
 | Public deployment | README identifies Netlify; `static/_redirects` and `static/_headers` carry hosting behavior | Verify live settings and preserve redirects, headers, canonical host, and atomic deployment/rollback. |
 | Verification | `playwright.config.js`, `tests/ui/routes.json`, `tests/ui/media.spec.js` | Reuse route/visual coverage, adapting Gatsby-specific readiness and image selectors. |
 
@@ -48,7 +48,7 @@ Collections: blog, clinic, condition, provider, service-update, review. Single t
 Published Strapi content -> build-time loaders -> shared view models
                                               -> Astro + React -> static CDN deployment
 
-Browser -> Caddy -> existing forward-auth -> compiled Astro Node SSR
+Browser -> Traefik -> separate preview auth -> compiled Astro Node SSR
                                               -> request-time draft loaders
                                               -> the same view models and React views
 
@@ -127,9 +127,9 @@ Extract OG rendering into a framework-independent server/build utility. Replace 
 
 ### 5. Preview and environment boundaries
 
-Use the Node adapter's compiled server entry point with production runtime settings. Do not replace `gatsby develop` with `astro dev` or the `astro preview` CLI. The adapter supports a standalone server behind the existing HTTPS proxy. [Astro Node adapter](https://docs.astro.build/en/guides/integrations-guide/node/)
+Use the Node adapter's compiled server entry point with production runtime settings. Do not replace `gatsby develop` with `astro dev` or the `astro preview` CLI. The adapter supports a standalone server behind the planned Traefik HTTPS proxy. [Astro Node adapter](https://docs.astro.build/en/guides/integrations-guide/node/)
 
-Keep Caddy and the current administrator login flow initially. The source uses `/admin/login` and `/admin/users/me`; authentication redesign is not required for this migration. The SSR process should be reachable only through the protected internal network. Separate the administrator session cookie from the server-side content-fetching token.
+After WEB-46, use the separate preview auth service described in the [preview platform plan](preview-platform-plan.md). It verifies Strapi administrator credentials at login, discards upstream tokens and uses its own expiring, revocable preview session. The SSR process and authentication service are private to the new host network. The server-side content-fetching token is separate from both login and session credentials.
 
 Preview requirements:
 
@@ -140,7 +140,7 @@ Preview requirements:
 - Replace the Gatsby-specific refresh dependency. Keep `/__refresh` only while the old preview still requires it; remove its webhook registration and proxy bypass after rollback support expires. Public publish-triggered builds are a separate webhook concern and must continue.
 - Verify the Strapi preview message protocol before keeping the existing `strapiUpdate` listener; validate origin/source and enable it only in preview. Saved-draft preview is the baseline. Unsaved live editing is not assumed.
 - Update both CMS environment `admin.ts` files. They currently choose preview/public hosts by status but fetch a document without forwarding status/locale; make preview URL resolution use the requested version. Test changed slugs and date-based routes. For a draft lacking a usable slug/date, provide an authenticated document-ID preview route or an explicit editor-facing explanation, never an accidental `/undefined` URL.
-- Read secrets at runtime in SSR, while treating client-visible API/Mapbox settings as intentional public configuration with documented build-time behavior. Replace Gatsby's environment naming through one config module. [Astro environment variables](https://docs.astro.build/en/guides/environment-variables/)
+- Read secrets at runtime in SSR, while treating client-visible API/Mapbox settings as intentional public configuration with documented build-time behavior. Use `STRAPI_API_URL` for the server-side CMS URL and `PUBLIC_RUNTIME_API_BASE_URL` / `PUBLIC_MAPBOX_API_KEY` for intentional browser settings; do not introduce Gatsby-named aliases. [Astro environment variables](https://docs.astro.build/en/guides/environment-variables/)
 
 SSR removes the Gatsby development build/refresh bottleneck, but Strapi and authentication latency remain on the request path. Measure cold startup, memory, p50/p95 response time, and save-to-preview freshness on the actual host. Do not promise a speed multiplier before measuring.
 
@@ -207,17 +207,13 @@ Use the same route source for static production and SSR preview, with separate b
 
 Exit: every route family works in both modes, fresh draft slugs work without an application build, and content/visual/metadata parity passes against the baseline.
 
-### Phase 4 — Run Astro preview beside Gatsby preview
+### Phase 4 — Deferred: new editorial preview after retirement
 
-Deploy an additional Astro SSR container on the private network and expose a protected candidate hostname or controlled proxy route. Keep Gatsby preview running. Build immutable images in CI; provide separate liveness and dependency-readiness checks, bounded upstream timeouts, resource measurements, and sanitized logs.
+The original parallel-Gatsby preview and proxy-switch plan is superseded. Following WEB-46, implement the new VPS, private repository, Traefik/Podman/Ansible and independent preview authentication in the [preview platform plan](preview-platform-plan.md). Cloudflare Access and Tunnel are not in the selected design. The legacy preview may be offline during the transition, and neither public cutover nor Gatsby retirement waits for this phase.
 
-Test login/expiry/logout, CMS iframe use, new/changed/deleted drafts, publishing/unpublishing, incomplete content, assets, maps, forms, and content refresh without rebuilding. Test CMS/auth outages and verify no draft data is anonymously accessible or cached publicly.
+Test login/expiry/logout, CMS iframe use, saved-draft creation/changes/deletion, incomplete content, assets, maps and forms. Verify no draft data is anonymously accessible or publicly cached; exercise CMS/auth outages and measure startup, memory, latency and freshness on the actual host. A direct tab is a fallback when browser cookie restrictions block an iframe. Retain compatible deployment artifacts for recovery; rollback does not require Gatsby preview.
 
-When ready, reload Caddy to switch the preview upstream while both containers are healthy; retain the same established preview hostname. Changing a test preview host first may require CMS allowed-origin configuration. Do not use the current workflow's `--force-recreate` of the whole stack as a zero-downtime rollout mechanism.
-
-Exit: editors use Astro preview successfully and measured startup/freshness/reliability improve. Rollback is a proxy switch to the retained Gatsby preview. Keep its refresh wiring functional throughout this rollback window.
-
-### Phase 5 — Cut over the public static site
+### Phase 5 — Cut over the public static site (before the deferred preview)
 
 Build Astro against published content and deploy a candidate artifact with the intended production canonical configuration. Run the route/redirect/metadata/image checks and browser suite against the actual hosting environment, not only a local static server. Verify publish, unpublish, and delete events trigger a complete replacement build; publishing during a build must queue another build, and older builds must not overwrite newer ones.
 
@@ -227,9 +223,20 @@ Exit: production route and interaction checks pass, build hooks work, no draft l
 
 ### Phase 6 — Remove Gatsby after a successful observation period
 
-After an agreed observation period (proposed: one week including an editor publishing cycle), remove Gatsby dependencies, GraphQL wrappers/generated types, schema customization, old preview image/workflow paths, refresh webhook/token, and obsolete caches. Keep rollback artifacts until the agreed retention period ends. Simplify scripts and docs; verify the cleaned install, static build, SSR build, types, and browser tests once more.
+After public cutover and the agreed observation period (proposed: one week including an editor publishing cycle), complete WEB-50 and remove Gatsby in WEB-46. Inventory ownership before deletion: root Gatsby dependencies and lockfile, Gatsby entry points/adapters, GraphQL wrappers and generated types, schema customization, old preview image/workflow paths, Gatsby refresh webhook/token, generated outputs and obsolete caches. Preserve shared React views, content contracts, static assets, public publish-triggered webhooks and Astro static/SSR targets. Check external webhook ownership before disabling anything. Keep the agreed public rollback artifact for its retention period; preview may be offline and its replacement is not a prerequisite. Simplify scripts and docs; verify the cleaned install, static build, SSR build, types and browser tests.
 
-Island refinement and broad styling cleanup can then be separate improvements. They are not prerequisites for replacing the preview development server.
+The WEB-46 ownership inventory must distinguish Gatsby-only code from still-live shared dependencies:
+
+| Area | Retirement handling |
+| --- | --- |
+| Root `gatsby-*`, `gatsby/`, `src/pages/`, `src/templates/`, Gatsby adapters and generated GraphQL types | Inspect references and remove Gatsby-only entry points, generators and types after their Astro replacements and public rollback are verified. |
+| Root `package.json`, `yarn.lock`, scripts and dependencies | Remove only Gatsby-specific items after tracing Astro imports. The current isolated Astro package still consumes some root-provided React, Emotion and shared runtime dependencies; move or retain those before removing any root package or lockfile. Preserve test, build and deployment scripts still used by Astro. |
+| `src/shared/`, `src/views/`, shared components, styles, hooks and utilities | Retain what Astro imports. Review mixed-use files individually rather than deleting directories by association with Gatsby. |
+| `astro/`, `static/`, public assets and generated social-card tooling | Retain Astro static/SSR sources, public redirects/headers and media tooling still required by the public site. Do not confuse Gatsby-generated output with source assets. |
+| Legacy `preview-server/`, preview workflow, Gatsby refresh webhook/token and CMS integration | Identify host, repository and webhook ownership before retiring the old preview. Preserve the separate public publish/build webhook. The new preview repo and CMS refresh integration are later WEB-17 work; legacy preview need not remain operational. |
+| Public deployment artifacts and operational records | Retain the agreed public rollback artifact, current route/metadata evidence, and recovery documentation for the approved period. |
+
+The existing WEB-50 island prerequisite must be complete before retirement; any additional island refinement and broad styling cleanup remain separate improvements.
 
 ## Migration risks and how to contain them
 
@@ -256,7 +263,7 @@ Island refinement and broad styling cleanup can then be separate improvements. T
 - Navigation, mobile menu, contact forms, booking, maps, carousels, notices, anchor links, media and patient PDFs retain their behavior on desktop and mobile.
 - Static and SSR output are styled before hydration; there are no hydration warnings, missing content with JavaScript disabled, or unbounded style accumulation across requests.
 - Preview performance is measured against Gatsby on comparable hardware/content; proposed initial operational targets are application readiness within 10 seconds without bulk CMS/media work, and saved content visible on the next reload. Final response-time/memory budgets are set from Phase 0 measurements.
-- A failed build leaves the previous public site live; preview and production rollback procedures are exercised before removing Gatsby.
+- A failed public build leaves the previous public site live; public rollback is exercised and retained before removing Gatsby. Preview recovery is verified later as part of the new platform.
 
 ## Existing bugs: separate work, already filed
 
@@ -272,8 +279,8 @@ The migration should consume those fixes rather than duplicate them. It must not
 
 ## Approval and Kaneo delivery
 
-Approval establishes the two-deployment architecture, shared React/view-model approach, preview-first rollout, and early styling decision gate. Emotion has a slight preference, but architectural fit takes precedence; a broad conversion should be reflected in an updated scope before implementation proceeds.
+Approval establishes separate public static and editorial SSR deployments, the shared React/view-model approach, public-first delivery and the deferred new preview platform, together with the early styling decision gate. Emotion has a slight preference, but architectural fit takes precedence; a broad conversion should be reflected in an updated scope before implementation proceeds.
 
 Kaneo delivery is organized into an overall migration tracker, stage parents, and focused implementation tasks assigned to Salman Khan. See [the ticket and dependency index](astro-migration-tickets.md) for the saved hierarchy and delegation rules. Each implementation ticket contains the relevant repository/files, a short scope, concrete acceptance checks, and prerequisites. Architecture decisions belong in the initial proof; subsequent route/component tickets should reuse its decisions rather than rediscover the design.
 
-Keep the three existing-bug tickets separate from that epic. Exclude CMS upgrades, contact backend rewrites, visual redesign, authentication redesign, and general style cleanup unless separately approved.
+Keep the three existing-bug tickets separate from that epic. Exclude CMS upgrades, contact backend rewrites, visual redesign and general style cleanup unless separately approved. The separate preview authentication service is explicitly included in the deferred platform scope.

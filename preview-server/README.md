@@ -85,7 +85,7 @@ sudo chmod 600 /home/preview-deploy/certs/key.pem
 
 ### 3. GitHub — Secrets and Variables
 
-Add these in your repository **Settings → Secrets and variables → Actions**:
+Add these in your repository **Settings → Secrets and variables → Actions**. The server CMS origin is now `STRAPI_API_URL` (previously `GATSBY_STRAPI_API_URL`). Provision the new variable before merging or deploying this change, and rename any local `.env` entry yourself; the old name is no longer read. Do not commit private environment files.
 
 #### Secrets
 
@@ -101,7 +101,7 @@ Add these in your repository **Settings → Secrets and variables → Actions**:
 
 | Name | Example | Description |
 |------|---------|-------------|
-| `GATSBY_STRAPI_API_URL` | `https://cms.example.com` | Strapi API URL |
+| `STRAPI_API_URL` | `https://cms.example.com` | Strapi API URL |
 | `GATSBY_API_BASE_URL` | `https://api.example.com` | Existing public base URL for non-content runtime API endpoints (currently used by the contact form); separate from Strapi |
 | `PREVIEW_DOMAIN` | `preview.aascmed.com` | Domain for the preview site |
 | `PREVIEW_CERTS_PATH` | `/home/preview-deploy/certs` | Absolute path to cert dir on host |
@@ -178,6 +178,6 @@ All services have `restart: unless-stopped`, so they survive reboots and crashes
 | Node OOM (heap out of memory) | Increase `--max-old-space-size` in `NODE_OPTIONS` (in `.env` or compose) or add swap on host |
 | Caddy can't resolve `preview` or `forward-auth` | Ensure `podman compose ps` shows all 3 services running |
 | 502 from Caddy | Gatsby is still starting — wait for build to finish (`podman compose logs preview`) |
-| Login fails | Confirm the account is a Strapi administrator, check that `GATSBY_STRAPI_API_URL` reaches `/admin/login` from the server, and inspect `podman compose logs forward-auth` |
+| Login fails | Confirm the account is a Strapi administrator, check that `STRAPI_API_URL` reaches `/admin/login` from the server, and inspect `podman compose logs forward-auth` |
 | Preview works directly but not in the editor iframe | Open the preview directly to sign in, then check browser third-party-cookie/privacy settings; iframe support depends on the browser and embedding context |
 | Certificate errors | Ensure Cloudflare SSL mode is "Full (strict)" and origin cert matches the domain |

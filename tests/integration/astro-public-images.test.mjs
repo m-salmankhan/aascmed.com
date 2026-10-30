@@ -232,7 +232,7 @@ test('Astro static builds use astro:assets for CMS thumbnails and cache social c
         env: {
           ...process.env,
           ASTRO_CONTENT_MODE: 'published',
-          GATSBY_STRAPI_API_URL: `http://127.0.0.1:${address.port}/api`,
+          STRAPI_API_URL: `http://127.0.0.1:${address.port}/api`,
           STRAPI_TOKEN: 'fixture-server-secret-never-publish',
         },
       },

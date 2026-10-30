@@ -24,7 +24,7 @@ test('Astro config derives and deduplicates CMS/media image origins from environ
   writeFileSync(
     envFile,
     [
-      'GATSBY_STRAPI_API_URL=https://from-file.config-test.example/api',
+      'STRAPI_API_URL=https://from-file.config-test.example/api',
       'STRAPI_MEDIA_ORIGINS=https://file-cdn.config-test.example:9443',
     ].join('\n'),
     { flag: 'wx' },
@@ -48,7 +48,7 @@ test('Astro config derives and deduplicates CMS/media image origins from environ
           ...process.env,
           NODE_ENV: 'production',
           STRAPI_TOKEN: 'fixture-config-token',
-          GATSBY_STRAPI_API_URL: 'https://cms.config-test.example/api',
+          STRAPI_API_URL: 'https://cms.config-test.example/api',
           STRAPI_MEDIA_ORIGINS:
             'https://cdn.config-test.example:8443, https://cms.config-test.example, https://cdn.config-test.example:8443/',
         },
@@ -95,7 +95,7 @@ test('Astro config derives and deduplicates CMS/media image origins from environ
       NODE_ENV: 'production',
       STRAPI_TOKEN: 'fixture-config-token',
     };
-    delete fromFileEnvironment.GATSBY_STRAPI_API_URL;
+    delete fromFileEnvironment.STRAPI_API_URL;
     delete fromFileEnvironment.STRAPI_MEDIA_ORIGINS;
     const fromFile = execFileSync(
       process.execPath,
