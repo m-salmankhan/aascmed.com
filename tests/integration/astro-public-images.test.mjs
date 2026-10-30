@@ -29,7 +29,7 @@ test('Astro static builds use astro:assets for CMS thumbnails and cache social c
    */
   const jpeg = async (color) => {
     return sharp({
-      create: { width: 900, height: 600, channels: 3, background: color },
+      create: { width: 3000, height: 2000, channels: 3, background: color },
     })
       .jpeg()
       .toBuffer();
@@ -130,8 +130,8 @@ test('Astro static builds use astro:assets for CMS thumbnails and cache social c
               thumbnail: {
                 url: '/uploads/cover.jpg',
                 alternativeText: 'Fixture cover',
-                width: 900,
-                height: 600,
+                width: 3000,
+                height: 2000,
                 mime: 'image/jpeg',
               },
               content: [{ text: 'rich-text-must-not-be-retained' }],
@@ -259,18 +259,24 @@ test('Astro static builds use astro:assets for CMS thumbnails and cache social c
     const htmlFirst = await readFile(routeHtml, 'utf8');
     assert.match(htmlFirst, /src="\/_astro\/[^\"]+\.jpg/);
     assert.match(htmlFirst, /srcset="[^"]+\.jpg \d+w/i);
-    assert.match(htmlFirst, /width="900" height="600"/);
+    assert.match(htmlFirst, /width="1920" height="1280"/);
     assert.match(htmlFirst, /\.webp \d+w/);
+    assert.match(htmlFirst, /sizes="auto, /, 'lazy images advertise their actual layout slot');
     await assertPublicOutputContainsNoBuildSecrets(outputDir);
     const mediaSrc = htmlFirst.match(/src="(\/_astro\/[^\"]+\.jpg)"/)?.[1];
     assert.ok(mediaSrc);
     assert.ok(await stat(path.join(outputDir, mediaSrc.slice(1))));
+    const dimensions = await sharp(path.join(outputDir, mediaSrc.slice(1))).metadata();
+    assert.equal(dimensions.width, 1920, 'native output is bounded for a 3000px source');
+    assert.equal(dimensions.height, 1280);
     const mediaUrls = [
       ...htmlFirst.matchAll(/\/_astro\/[^\s"&,]+\.(?:avif|webp|jpg)/g),
     ].map(([url]) => url);
     assert.ok(mediaUrls.some((url) => url.endsWith('.avif')));
     assert.ok(mediaUrls.some((url) => url.endsWith('.webp')));
     for (const url of new Set(mediaUrls)) {
+      const candidate = await sharp(path.join(outputDir, url.slice(1))).metadata();
+      assert.ok(candidate.width <= 1920, 'every native format candidate is bounded');
       assert.ok(
         await stat(path.join(outputDir, url.slice(1))),
         `${url} is emitted by Astro`,
