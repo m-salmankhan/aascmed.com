@@ -1,5 +1,7 @@
 ---
-// Defines the Astro HTML document, metadata, asset links and tracking tags.
+// Defines the Astro HTML document, shared global styles, metadata, asset links and tracking tags.
+import { Global } from '@emotion/react';
+import { stylesGlobal } from '../../../src/styles/global';
 import type { SiteSettings, TrackingSettings } from '../../../src/shared/content/models';
 import {
   canonicalPathUrl,
@@ -58,6 +60,7 @@ const jsonLd = structuredData ? serializeStructuredData(structuredData) : undefi
 <!doctype html>
 <html lang="en-US">
   <head>
+    <Global styles={stylesGlobal} />
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
     <meta name="google-site-verification" content="AJxvzTXiJ6uf53Wmy2F6q-aoLvLGVCjDsHWfTU4Mhkg" />

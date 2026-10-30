@@ -138,6 +138,13 @@ Source-level unit and contract checks:
 yarn test:unit
 ```
 
+Astro integration tests live in `tests/integration/` and run with
+`yarn test:astro`. Install Astro dependencies with
+`yarn --cwd astro install --frozen-lockfile` first. These tests build static and
+SSR output against a local CMS fixture and check the shared document, redirects,
+sitemaps, assets and runtime dependencies. Temporary page fixtures are removed
+after each test; the application contains no Stage 1 proof page.
+
 Harness self-tests are separate from source tests. Run the Node checks for route,
 target, visual-comparison and review-publication helpers with
 `yarn test:infrastructure:node`; run the browser harness checks with

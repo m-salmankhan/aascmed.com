@@ -10,7 +10,7 @@ export default defineConfig({
   output: 'server',
   adapter: node({ mode: 'standalone' }),
   vite: {
-    define: { 'import.meta.env.PUBLIC_ASTRO_TARGET': JSON.stringify('compiled Node SSR') },
+    define: { 'import.meta.env.PUBLIC_ASTRO_TARGET': JSON.stringify('server') },
     resolve: { dedupe: ['react', 'react-dom', '@emotion/react'] },
     ssr: { external: ['react', 'react-dom', '@emotion/react'] },
   },
