@@ -1,6 +1,7 @@
 ---
 // Resolves dated service updates and rejects URL dates that do not match the CMS record.
 import { ServiceUpdatePage } from '../../../../components/pages/ServiceUpdatePage';
+import { prepareInlineImages } from '../../../../server/content/inline-images';
 import SitePage from '../../../../layouts/SitePage.astro';
 import { getServiceUpdateBySlug } from '../../../../server/content/loaders';
 import { pageContentMode, getPageSettings } from '../../../../server/pages/common';
@@ -19,6 +20,7 @@ if (!update || serviceUpdatePath(update) !== requestedPath) {
   return Astro.rewrite('/404');
 }
 const settings = await getPageSettings(pageContentMode());
+await prepareInlineImages(update, pageContentMode(), 1200);
 ---
 
 <SitePage

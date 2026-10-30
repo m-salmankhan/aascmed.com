@@ -1,6 +1,7 @@
 ---
 // Renders a blog article from a static path or a request-time preview lookup.
 import { BlogPage } from '../../components/pages/BlogPage';
+import { prepareInlineImages } from '../../server/content/inline-images';
 import SitePage from '../../layouts/SitePage.astro';
 import { getBlogBySlug } from '../../server/content/loaders';
 import { getPageSettings, pageContentMode } from '../../server/pages/common';
@@ -19,7 +20,7 @@ if (!blog) return Astro.rewrite('/404');
 const settings = await getPageSettings(mode);
 const originalThumbnail = blog.thumbnail;
 if (blog.thumbnail) {
-  blog.thumbnail = await getResponsiveMediaDescriptor(blog.thumbnail);
+  blog.thumbnail = await getResponsiveMediaDescriptor(blog.thumbnail, { width: 1200 });
 }
 blog.date = blogDate(blog.date);
 const socialImagePath =
@@ -31,6 +32,7 @@ const socialImagePath =
         backgroundImage: originalThumbnail?.src,
       })
     : undefined;
+await prepareInlineImages(blog, mode, 1200);
 ---
 
 <SitePage

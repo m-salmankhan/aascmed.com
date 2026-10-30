@@ -1,6 +1,7 @@
 ---
 // Renders clinic cards from the selected published or preview collection.
 import { ClinicsArchivePage } from '../../components/pages/ClinicsArchivePage';
+import { prepareInlineImages } from '../../server/content/inline-images';
 import SitePage from '../../layouts/SitePage.astro';
 import { getClinics, getClinicsArchive } from '../../server/content/loaders';
 import { pageContentMode, getPageSettings } from '../../server/pages/common';
@@ -12,6 +13,7 @@ const practices: PracticeSummary[] = [];
 for await (const clinic of getClinics(mode)) {
   practices.push(clinicSummary(clinic));
 }
+await prepareInlineImages(page, mode, 1200);
 ---
 
 <SitePage

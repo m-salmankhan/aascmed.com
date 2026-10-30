@@ -1,6 +1,7 @@
 ---
 // Renders the contact page and its published or preview clinic choices.
 import { ContactPage } from '../components/pages/ContactPage';
+import { prepareInlineImages } from '../server/content/inline-images';
 import SitePage from '../layouts/SitePage.astro';
 import { getClinics, getContact } from '../server/content/loaders';
 import { getPageSettings, pageContentMode } from '../server/pages/common';
@@ -22,6 +23,7 @@ for await (const clinic of getClinics(mode)) {
     fax: clinic.contact?.fax || '',
   });
 }
+await prepareInlineImages(page, mode, 1200);
 ---
 
 <SitePage

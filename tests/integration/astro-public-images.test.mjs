@@ -72,6 +72,11 @@ test('Astro static builds use astro:assets for CMS thumbnails and cache social c
   }
   const mockApi = createServer(async (request, response) => {
     const url = new URL(request.url || '/', 'http://127.0.0.1');
+    if (url.pathname === '/uploads/icon.svg') {
+      response.writeHead(200, { 'content-type': 'image/svg+xml' });
+      response.end('<svg xmlns="http://www.w3.org/2000/svg" width="120" height="80"><rect width="120" height="80" fill="green"/></svg>');
+      return;
+    }
     if (url.pathname === '/uploads/cover.jpg') {
       response.writeHead(200, {
         'content-type': 'image/jpeg',
@@ -179,10 +184,14 @@ test('Astro static builds use astro:assets for CMS thumbnails and cache social c
       break;
     }
   }
-  const media = sourceMedia ? await getResponsiveMediaDescriptor(sourceMedia) : undefined;
+  const media = sourceMedia ? await getResponsiveMediaDescriptor(sourceMedia, { width: 300, aspectRatio: 1 }) : undefined;
+  const wide = sourceMedia ? await getResponsiveMediaDescriptor(sourceMedia, { width: 2400, layout: 'full-width', sizes: '100vw' }) : undefined;
+  const vector = sourceMedia ? await getResponsiveMediaDescriptor({ ...sourceMedia, src: new URL('/uploads/icon.svg', sourceMedia.src).href, mimeType: 'image/svg+xml' }, { width: 300 }) : undefined;
   ---
   <html><body>
-    {media && <Image image={media} />}
+    <div id="thumbnail">{media && <Image image={media} />}</div>
+    <div id="wide">{wide && <Image image={wide} />}</div>
+    <div id="vector">{vector && <Image image={vector} />}</div>
   </body></html>
   `;
   const fixtureConfig = `
@@ -259,29 +268,45 @@ test('Astro static builds use astro:assets for CMS thumbnails and cache social c
     const htmlFirst = await readFile(routeHtml, 'utf8');
     assert.match(htmlFirst, /src="\/_astro\/[^\"]+\.jpg/);
     assert.match(htmlFirst, /srcset="[^"]+\.jpg \d+w/i);
-    assert.match(htmlFirst, /width="1920" height="1280"/);
+    const thumbnailHtml = htmlFirst.match(/<div id="thumbnail">([\s\S]*?)<\/div>/)?.[1];
+    const wideHtml = htmlFirst.match(/<div id="wide">([\s\S]*?)<\/div>/)?.[1];
+    assert.ok(thumbnailHtml && wideHtml);
+    assert.match(thumbnailHtml, /width="300" height="300"/);
+    assert.match(wideHtml, /width="2400" height="1600"/);
     assert.match(htmlFirst, /\.webp \d+w/);
-    assert.match(htmlFirst, /sizes="auto, /, 'lazy images advertise their actual layout slot');
+    assert.match(thumbnailHtml, /sizes="auto"/, 'lazy images advertise their actual layout slot');
     await assertPublicOutputContainsNoBuildSecrets(outputDir);
     const mediaSrc = htmlFirst.match(/src="(\/_astro\/[^\"]+\.jpg)"/)?.[1];
     assert.ok(mediaSrc);
     assert.ok(await stat(path.join(outputDir, mediaSrc.slice(1))));
     const dimensions = await sharp(path.join(outputDir, mediaSrc.slice(1))).metadata();
-    assert.equal(dimensions.width, 1920, 'native output is bounded for a 3000px source');
-    assert.equal(dimensions.height, 1280);
+    assert.equal(dimensions.width, 300, 'native output follows the 300px thumbnail slot');
+    assert.equal(dimensions.height, 300);
     const mediaUrls = [
       ...htmlFirst.matchAll(/\/_astro\/[^\s"&,]+\.(?:avif|webp|jpg)/g),
     ].map(([url]) => url);
     assert.ok(mediaUrls.some((url) => url.endsWith('.avif')));
     assert.ok(mediaUrls.some((url) => url.endsWith('.webp')));
     for (const url of new Set(mediaUrls)) {
-      const candidate = await sharp(path.join(outputDir, url.slice(1))).metadata();
-      assert.ok(candidate.width <= 1920, 'every native format candidate is bounded');
       assert.ok(
         await stat(path.join(outputDir, url.slice(1))),
         `${url} is emitted by Astro`,
       );
     }
+    const thumbnailUrls = [...thumbnailHtml.matchAll(/\/_astro\/[^\s"&,]+\.(?:avif|webp|jpg)/g)].map(([url]) => url);
+    for (const url of new Set(thumbnailUrls)) {
+      const candidate = await sharp(path.join(outputDir, url.slice(1))).metadata();
+      assert.ok(candidate.width <= 600, 'Astro constrains thumbnail variants to the slot and 2x density');
+      assert.equal(candidate.width, candidate.height, 'the existing square crop is preserved');
+    }
+    const wideSrc = wideHtml.match(/src="(\/_astro\/[^\"]+\.jpg)"/)?.[1];
+    assert.ok(wideSrc);
+    assert.equal((await sharp(path.join(outputDir, wideSrc.slice(1))).metadata()).width, 2400,
+      'wide native output can exceed 1920px when its display width requires it');
+    const vectorHtml = htmlFirst.match(/<div id="vector">([\s\S]*?)<\/div>/)?.[1];
+    const vectorSrc = vectorHtml?.match(/src="(\/_astro\/[^\"]+\.svg)"/)?.[1];
+    assert.ok(vectorSrc, 'remote SVG also uses a generated local build URL');
+    assert.match(await readFile(path.join(outputDir, vectorSrc.slice(1)), 'utf8'), /<svg/);
     const cardPath = path.join(
       outputDir,
       'og-images',

@@ -1,6 +1,7 @@
 ---
 // Renders a condition from a static path or a request-time preview lookup.
 import { ConditionPage } from '../../components/pages/ConditionPage';
+import { prepareInlineImages } from '../../server/content/inline-images';
 import SitePage from '../../layouts/SitePage.astro';
 import { getConditionBySlug } from '../../server/content/loaders';
 import { getPageSettings, pageContentMode } from '../../server/pages/common';
@@ -25,6 +26,7 @@ const socialImagePath =
         backgroundImage: condition.thumbnail?.src,
       })
     : condition.thumbnail?.src;
+await prepareInlineImages(condition, mode, 1200);
 ---
 
 <SitePage

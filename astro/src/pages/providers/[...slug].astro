@@ -1,7 +1,9 @@
 ---
 // Renders a provider profile from a static path or request-time preview lookup.
 import moment from 'moment';
+import { getImage } from 'astro:assets';
 import { ProviderPage } from '../../components/pages/ProviderPage';
+import { prepareInlineImages } from '../../server/content/inline-images';
 import SitePage from '../../layouts/SitePage.astro';
 import { getProviderBySlug } from '../../server/content/loaders';
 import { getPageSettings, pageContentMode } from '../../server/pages/common';
@@ -17,9 +19,28 @@ const mode = pageContentMode();
 const provider = await getProviderBySlug(Astro.params.slug || '', mode);
 if (!provider) return Astro.rewrite('/404');
 const settings = await getPageSettings(mode);
-const socialImagePath = provider.image?.src;
+let socialImagePath = provider.image?.src;
+if (provider.image && import.meta.env.PUBLIC_ASTRO_TARGET === 'static') {
+  // Social metadata uses a local portrait at the existing social-card display width.
+  const socialWidth = Math.min(1200, provider.image.width ?? 1200);
+  const socialHeight =
+    provider.image.width && provider.image.height
+      ? Math.round((socialWidth * provider.image.height) / provider.image.width)
+      : undefined;
+  const socialImage = await getImage({
+    src: provider.image.src,
+    width: socialWidth,
+    height: socialHeight,
+    inferSize: true,
+    format: 'jpg',
+  });
+  socialImagePath = socialImage.src;
+}
 if (provider.image) {
-  provider.image = await getResponsiveMediaDescriptor(provider.image, 1);
+  provider.image = await getResponsiveMediaDescriptor(provider.image, {
+    width: 600,
+    aspectRatio: 1,
+  });
 }
 if (provider.review?.date) {
   const date = moment.utc(provider.review.date, moment.ISO_8601, true);
@@ -28,6 +49,7 @@ if (provider.review?.date) {
 const honorific =
   provider.name?.honorific && provider.name.honorific !== 'None' ? provider.name.honorific : '';
 const title = `${honorific} ${provider.name?.fullName || 'Untitled'}`.trim();
+await prepareInlineImages(provider, mode, 800);
 ---
 
 <SitePage

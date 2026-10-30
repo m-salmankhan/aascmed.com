@@ -157,6 +157,19 @@ test(
         if (pathname === '/blog/article-1/') {
           assert.ok(html.includes('G-FIXTURE'), 'public articles retain enabled analytics');
         }
+        if (pathname === '/blog/article-1/') {
+          const inline = page.getByRole('img', { name: 'Fixture inline image' });
+          const src = await inline.getAttribute('src');
+          assert.match(src, /^\/_astro\//, 'embedded CMS images are native local static assets');
+          assert.ok((await inline.getAttribute('srcset')).includes('/_astro/'));
+          assert.equal((await fetch(new URL(src, staticOrigin))).status, 200);
+        }
+        if (pathname === '/providers/doctor-example/') {
+          const social = html.match(/property="og:image" content="([^"]+)"/)?.[1];
+          assert.ok(social);
+          assert.match(new URL(social).pathname, /^\/_astro\//, 'provider social metadata uses a local image');
+          assert.equal((await fetch(new URL(new URL(social).pathname, staticOrigin))).status, 200);
+        }
         if (pathname === '/clinics/example-clinic/') {
           const clinic = jsonLd.find((entry) => entry['@type'] === 'MedicalClinic');
           assert.ok(clinic);
@@ -195,6 +208,12 @@ test(
           ),
           `${pathname} saved draft is server-rendered without JavaScript`,
         );
+        if (pathname === '/blog/article-1/') {
+          const inline = page.getByRole('img', { name: 'Fixture inline image' });
+          const src = await inline.getAttribute('src');
+          assert.match(src, /^\/_image\/?\?/, 'preview uses the same native image service on demand');
+          assert.equal((await fetch(new URL(src, origin))).status, 200);
+        }
         assert.match(response.headers()['cache-control'] || '', /no-store/);
         assert.match(response.headers()['x-robots-tag'] || '', /noindex/);
         assert.ok(html.includes('noindex, nofollow'));

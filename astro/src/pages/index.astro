@@ -1,6 +1,7 @@
 ---
 // Renders the real CMS homepage through the shared homepage view and native Astro document.
 import { HomePage } from '../components/pages/HomePage';
+import { prepareInlineImages } from '../server/content/inline-images';
 import SitePage from '../layouts/SitePage.astro';
 import { getPageSettings, pageContentMode } from '../server/pages/common';
 import { getHomePageData } from '../server/pages/home';
@@ -9,6 +10,7 @@ const [{ props, description }, settings] = await Promise.all([
   getHomePageData(mode),
   getPageSettings(mode),
 ]);
+await prepareInlineImages(props, mode, 600);
 ---
 
 <SitePage

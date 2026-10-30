@@ -1,6 +1,7 @@
 ---
 // Renders the conditions archive with ordered CMS condition summaries.
 import { ConditionsArchivePage } from '../../components/pages/ConditionsArchivePage';
+import { prepareInlineImages } from '../../server/content/inline-images';
 import SitePage from '../../layouts/SitePage.astro';
 import { getConditionsArchive, getConditions } from '../../server/content/loaders';
 import { getPageSettings, pageContentMode } from '../../server/pages/common';
@@ -12,7 +13,7 @@ const [page, settings] = await Promise.all([getConditionsArchive(mode), getPageS
 const conditions: ConditionViewItem[] = [];
 for await (const condition of getConditions(mode)) {
   const thumbnail = condition.thumbnail
-    ? await getResponsiveMediaDescriptor(condition.thumbnail)
+    ? await getResponsiveMediaDescriptor(condition.thumbnail, { width: 800 })
     : condition.thumbnail;
   conditions.push({
     slug: conditionPath(condition.slug) || '/conditions/',
@@ -20,6 +21,7 @@ for await (const condition of getConditions(mode)) {
     thumbnail,
   });
 }
+await prepareInlineImages(page, mode, 1200);
 ---
 
 <SitePage

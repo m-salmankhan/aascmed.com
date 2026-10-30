@@ -1,5 +1,6 @@
 // Loads shared page settings and chooses the server-controlled publication state.
 import { getAnnouncement, getTrackingInfo } from '../content/loaders';
+import { prepareInlineImages } from '../content/inline-images';
 import type { ContentMode } from '../content/strapi';
 
 /** Select the configured publication state; static output always uses published content.
@@ -21,5 +22,6 @@ export async function getPageSettings(mode: ContentMode) {
     getAnnouncement(mode),
     getTrackingInfo(mode),
   ]);
+  await prepareInlineImages(announcement, mode, 1200);
   return { announcement, trackingSettings };
 }

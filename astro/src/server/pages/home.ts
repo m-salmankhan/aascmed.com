@@ -21,7 +21,7 @@ import {
   getServiceUpdates,
 } from '../content/loaders';
 import type { ContentMode } from '../content/strapi';
-import { getResponsiveMediaDescriptor } from '../content/astro-media';
+import { getResponsiveMediaDescriptor, type ResponsiveMediaOptions } from '../content/astro-media';
 import { blogDate } from './content';
 /** Shared homepage props and their nested section/media models. */
 type HomeProps = ComponentProps<typeof HomeView>;
@@ -61,14 +61,14 @@ function isMediaDescriptor(value: unknown): value is MediaDescriptor {
 }
 /** Use native Astro image output, generated at build time or on demand by the SSR image endpoint.
  * @param media Optional normalized CMS descriptor.
- * @param aspectRatio Optional thumbnail crop ratio, matching the shared Gatsby view.
+ * @param options Display width and crop for the section's existing image slot.
  * @returns Its native responsive descriptor, or undefined when absent.
  */
 async function image(
   media: MediaDescriptor | undefined,
-  aspectRatio?: number,
+  options: ResponsiveMediaOptions,
 ): Promise<MediaDescriptor | undefined> {
-  return media ? getResponsiveMediaDescriptor(media, aspectRatio) : undefined;
+  return media ? getResponsiveMediaDescriptor(media, options) : undefined;
 }
 /** Preserve a section's image/video inputs while using native Astro output for image entries.
  * @param value Normalized CMS section, with its mapped media descriptors.
@@ -85,7 +85,9 @@ async function sectionMedia(
     if (!isMediaDescriptor(entry)) {
       continue;
     }
-    const descriptor = entry.mimeType?.startsWith('image/') ? await image(entry) : entry;
+    const descriptor = entry.mimeType?.startsWith('image/')
+      ? await image(entry, { width: 600 })
+      : entry;
     media.push({ mime: entry.mimeType, name: entry.alt, url: entry.src, descriptor });
   }
   return media.length ? media : undefined;
@@ -107,9 +109,7 @@ async function section(value: JsonValue | undefined, fallback: string): Promise<
  * @returns A serializable responsive hero descriptor using static assets or the SSR image endpoint.
  */
 async function heroImage(): Promise<MediaDescriptor> {
-  const widths = [320, 640, 960, 1280].filter((width) => width < heroBackground.width);
-  widths.push(heroBackground.width);
-  const result = await getImage({ src: heroBackground, widths, format: 'webp' });
+  const result = await getImage({ src: heroBackground, layout: 'full-width', format: 'webp' });
   return {
     src: result.src,
     alt: '',
@@ -117,6 +117,7 @@ async function heroImage(): Promise<MediaDescriptor> {
     height: heroBackground.height,
     mimeType: 'image/webp',
     srcSet: result.srcSet.attribute,
+    sizes: result.attributes.sizes,
     sources: result.srcSet.values.map(({ url, transform }) => ({
       src: url,
       width: transform.width ?? heroBackground.width,
@@ -138,7 +139,7 @@ export async function getHomePageData(mode: ContentMode) {
     conditions.push({
       slug,
       title: condition.heading || condition.title || '',
-      thumbnail: await image(condition.thumbnail),
+      thumbnail: await image(condition.thumbnail, { width: 800 }),
     });
     if (conditions.length === 11) {
       break;
@@ -196,7 +197,7 @@ export async function getHomePageData(mode: ContentMode) {
             : '',
         degreeAbbr: provider.name?.qualificationAbbr || '',
       },
-      image: await image(provider.image, 1),
+      image: await image(provider.image, { width: 600, aspectRatio: 1 }),
     });
   }
   const reviews: HomeProps['feedback']['reviews'] = [];

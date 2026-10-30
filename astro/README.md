@@ -64,3 +64,11 @@ The static image hook reads only the published blogs, conditions, and clinics ne
 Set the public Runtime API and Mapbox variables explicitly for the environment being tested. The CMS credential is separate and remains server-only. The Gatsby homepage's old Netlify Identity login hooks are omitted from the public Astro homepage; protected preview authentication belongs to the deployment stage.
 
 [Stage 3 validation](../docs/astro-stage3-parity.md) records the matched Gatsby baseline, browser comparisons, deliberate differences and screenshot evidence. Stage 4 deployment remains separate.
+
+## Responsive CMS images
+
+Astro owns image fetching, transforms, responsive candidates, output files and disk caching. The small `server/content/astro-media.ts` adapter passes normal native `width`, `layout` and `sizes` inputs to `getImage()` and converts the returned attributes for the shared React image component. Astro components cannot be rendered directly inside those React views; this is the [documented framework-component use of getImage](https://docs.astro.build/en/guides/images/#generating-images-with-getimage).
+
+Callers supply the existing view's intended display width, just as the Gatsby image queries did. Astro's constrained layout generates density variants bounded by the source; lazy `sizes="auto"` lets the browser use the actual CSS slot. The hero uses native full-width layout. There is no application-wide pixel ceiling or handwritten candidate-width list.
+
+Authorized remote uploads produce local `/_astro/` files during static builds and native on-demand image URLs in SSR. Relative rich-text image URLs are resolved against the configured CMS and prepared through the same service; SVGs and static provider social images also have local build output. The native integration test verifies actual remote-source output pixels and files, including a small thumbnail and a wide image above 1920px. Live Mapbox maps remain a separate runtime map integration.

@@ -339,6 +339,11 @@ export async function startFixtureCms() {
     state.blogs.forEach((record) => {
       record.thumbnail = media;
     });
+    state.blogs[0].content[0].text.push({
+      type: 'image',
+      image: { url: '/media/fixture.png', alternativeText: 'Fixture inline image', width: 32, height: 24, mime: 'image/png' },
+      children: [{ type: 'text', text: '' }],
+    });
     state.conditions[0].thumbnail = media;
     state.providers[0].image = media;
     state['home-page'].hero.media = [media];

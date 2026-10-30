@@ -1,6 +1,7 @@
 ---
 // Resolves clinic detail pages using explicit slugs or the existing clinic-name fallback.
 import { ClinicPage } from '../../components/pages/ClinicPage';
+import { prepareInlineImages } from '../../server/content/inline-images';
 import SitePage from '../../layouts/SitePage.astro';
 import { getClinicBySlug } from '../../server/content/loaders';
 import { pageContentMode, getPageSettings } from '../../server/pages/common';
@@ -32,6 +33,7 @@ const socialImagePath =
         mediaName: `${leafSlug}-${latitude}-${longitude}-map`,
       })
     : undefined;
+await prepareInlineImages(clinic, mode, 1200);
 ---
 
 <SitePage

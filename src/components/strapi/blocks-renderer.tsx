@@ -1,8 +1,35 @@
+// Renders Strapi blocks and dynamic zones with shared headings, controls and prepared images.
 import React from "react";
 import { BlocksRenderer, type BlocksContent } from "@strapi/blocks-react-renderer";
+import { Image } from "../media/image";
+import type { MediaDescriptor } from "../../shared/content/models";
 import { DynamicHeading } from "../headings";
 import { ContactBanner, ButtonList } from "../posts/shortcode-components";
 import { StrapiFAQ } from "./faq";
+
+/** Image block fields owned by Strapi's renderer package. */
+type CmsInlineImage = Extract<BlocksContent[number], { type: 'image' }>['image'];
+/** Optional Astro-generated attributes added at the server content boundary. */
+type PreparedInlineImage = CmsInlineImage & {
+    responsive?: Pick<MediaDescriptor, 'srcSet' | 'sizes' | 'formats'>;
+};
+
+/** Render an embedded image using its prepared responsive attributes when supplied.
+ * @param props Strapi image fields plus optional native Astro source candidates.
+ * @returns The shared responsive image, or the existing plain image for Gatsby data.
+ */
+function InlineImageBlock({ image }: { image: PreparedInlineImage }): React.ReactElement {
+    if (!image.responsive) {
+        return <img src={image.url} alt={image.alternativeText || undefined} />;
+    }
+    return <Image image={{
+        src: image.url,
+        alt: image.alternativeText || '',
+        width: image.width,
+        height: image.height,
+        ...image.responsive,
+    }} />;
+}
 
 // Helper to convert text to URL-friendly slug
 function slugify(text: string): string {
@@ -102,6 +129,7 @@ export const StrapiBlocksRenderer: React.FC<StrapiBlocksRendererProps> = ({ cont
 
     // Custom block renderers with heading IDs for table of contents
     const blocks = {
+        image: InlineImageBlock,
         heading: ({ children, level }: { children?: React.ReactNode; level: 1 | 2 | 3 | 4 | 5 | 6 }) => {
             const text = headingTexts[headingIndex] || '';
             const id = headingIdMap.get(text) || '';
