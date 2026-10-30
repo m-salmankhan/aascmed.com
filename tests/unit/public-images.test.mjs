@@ -1,13 +1,20 @@
-// Deterministic fixtures for shared social-card rendering and responsive public image outputs.
+// Deterministic fixtures for shared social-card rendering, caching and path safety.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import {
+  mkdtemp,
+  mkdir,
+  readFile,
+  rm,
+  stat,
+  writeFile,
+} from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
 import sharp from 'sharp';
-import { buildResponsiveImage, buildSocialCards } from '../../astro/src/lib/public-images.mjs';
-test('shared images preserve card paths, orientation, caching and remote fetch boundaries', async () => {
+import { buildSocialCards } from '../../astro/src/lib/public-images.mjs';
+test('shared social cards preserve paths, orientation, cache keys and remote-fetch boundaries', async () => {
   const require = createRequire(import.meta.url);
   const gatsbyGenerator = require('../../gatsby/og-image-generator.js');
   const root = await mkdtemp(path.join(os.tmpdir(), 'aasc-public-images-'));
@@ -55,10 +62,13 @@ test('shared images preserve card paths, orientation, caching and remote fetch b
       'backslash\\segment',
     ]) {
       await assert.rejects(
-        buildSocialCards([{ kind: 'blog', slug: unsafeSlug, title: 'Unsafe route' }], {
-          publicDir,
-          cacheDir,
-        }),
+        buildSocialCards(
+          [{ kind: 'blog', slug: unsafeSlug, title: 'Unsafe route' }],
+          {
+            publicDir,
+            cacheDir,
+          },
+        ),
         /Invalid public image path/,
         `unsafe slug segment is rejected: ${unsafeSlug}`,
       );
@@ -79,7 +89,11 @@ test('shared images preserve card paths, orientation, caching and remote fetch b
       [1200, 630],
     );
     const same = await buildSocialCards([entry], { publicDir, cacheDir });
-    assert.equal(same[0].wasCached, true, 'an unchanged image and title reuse the cached card');
+    assert.equal(
+      same[0].wasCached,
+      true,
+      'an unchanged image and title reuse the cached card',
+    );
     const unicodeSlugCards = await buildSocialCards(
       [
         { kind: 'blog', slug: 'cafe', title: 'Cafe' },
@@ -119,7 +133,11 @@ test('shared images preserve card paths, orientation, caching and remote fetch b
      */
     async function* streamedEntries() {
       yield { kind: 'blog', slug: 'streamed', title: 'First streamed card' };
-      assert.ok(await stat(path.join(streamedPublicDir, 'og-images/blog/streamed-default.jpg')));
+      assert.ok(
+        await stat(
+          path.join(streamedPublicDir, 'og-images/blog/streamed-default.jpg'),
+        ),
+      );
       yield { kind: 'blog', slug: 'streamed', title: 'Duplicate later card' };
     }
     await assert.rejects(
@@ -170,59 +188,6 @@ test('shared images preserve card paths, orientation, caching and remote fetch b
         .then(({ width, height }) => [width, height]),
       [1200, 630],
     );
-    const media = await buildResponsiveImage({
-      source: sourcePath,
-      alt: 'Fixture image',
-      outputDir: path.join(publicDir, 'media'),
-      publicUrlPrefix: '/media',
-      filename: 'fixture',
-      widths: [320, 640],
-    });
-    assert.equal(media.width, 900);
-    assert.equal(media.height, 600);
-    assert.equal(media.mimeType, 'image/jpeg');
-    assert.match(media.formats?.[0]?.srcSet || '', /\.avif 320w/);
-    assert.match(media.formats?.[1]?.srcSet || '', /\.webp 640w/);
-    assert.equal(media.sources?.length, 3, 'candidate widths include the original image width');
-    const orientedOutputDir = path.join(publicDir, 'oriented-media');
-    const orientedSource = path.join(root, 'oriented-source.jpg');
-    await sharp({
-      create: {
-        width: 120,
-        height: 80,
-        channels: 3,
-        background: '#f84a26',
-      },
-    })
-      .jpeg()
-      .withMetadata({ orientation: 6 })
-      .toFile(orientedSource);
-    const orientedMedia = await buildResponsiveImage({
-      source: orientedSource,
-      alt: 'Portrait image with EXIF orientation',
-      outputDir: orientedOutputDir,
-      publicUrlPrefix: '/oriented-media',
-      filename: 'oriented',
-      widths: [60],
-    });
-    assert.deepEqual(
-      [orientedMedia.width, orientedMedia.height],
-      [80, 120],
-      'responsive dimensions reflect EXIF display orientation',
-    );
-    const orientedJpeg = await sharp(
-      path.join(orientedOutputDir, path.basename(orientedMedia.src)),
-    ).metadata();
-    assert.deepEqual(
-      [orientedJpeg.width, orientedJpeg.height],
-      [80, 120],
-      'the largest responsive JPEG is auto-oriented before resizing',
-    );
-    assert.equal(
-      orientedJpeg.orientation,
-      undefined,
-      'the generated derivative does not retain stale EXIF orientation metadata',
-    );
     const mapboxToken = 'pk-fixture-not-for-output';
     let mapboxCalledForMap = false;
     const mapCard = await buildSocialCards(
@@ -254,33 +219,18 @@ test('shared images preserve card paths, orientation, caching and remote fetch b
       true,
       'only generated clinic map assets may use the fixed Mapbox host',
     );
-    assert.equal((await readFile(mapCard[0].outputPath)).includes(Buffer.from(mapboxToken)), false);
     assert.equal(
-      (await readFile(path.join(cacheDir, 'social-cards.json'), 'utf8')).includes(mapboxToken),
+      (await readFile(mapCard[0].outputPath)).includes(
+        Buffer.from(mapboxToken),
+      ),
       false,
     );
-    let allowedRemoteFetch = false;
-    const remoteMedia = await buildResponsiveImage({
-      source: 'https://media.example.test/cover.svg',
-      alt: 'Approved remote fixture',
-      outputDir: path.join(publicDir, 'remote-media'),
-      publicUrlPrefix: '/remote-media',
-      widths: [320],
-      allowedMediaHosts: ['media.example.test'],
-      fetch: async (_url, init) => {
-        allowedRemoteFetch = init?.redirect === 'error';
-        return new Response(await readFile(sourcePath), {
-          headers: { 'content-type': 'image/svg+xml' },
-        });
-      },
-    });
     assert.equal(
-      allowedRemoteFetch,
-      true,
-      'approved remote hosts are fetched without following redirects',
+      (
+        await readFile(path.join(cacheDir, 'social-cards.json'), 'utf8')
+      ).includes(mapboxToken),
+      false,
     );
-    assert.equal(remoteMedia.width, 900);
-    let blockedRemoteFetch = false;
     let arbitraryMapboxFetch = false;
     const arbitraryMapboxCard = await buildSocialCards(
       [
@@ -300,26 +250,12 @@ test('shared images preserve card paths, orientation, caching and remote fetch b
         },
       },
     );
-    assert.equal(arbitraryMapboxFetch, false, 'arbitrary CMS URLs cannot use the Mapbox host');
-    assert.equal(arbitraryMapboxCard[0].wasCached, false);
-    await assert.rejects(
-      buildResponsiveImage({
-        source: 'https://127.0.0.1/private.jpg',
-        alt: 'Blocked URL',
-        outputDir: path.join(root, 'blocked'),
-        publicUrlPrefix: '/blocked',
-        fetch: async () => {
-          blockedRemoteFetch = true;
-          throw new Error('fetch must not run');
-        },
-      }),
-      /Remote image host is not allowed/,
-    );
     assert.equal(
-      blockedRemoteFetch,
+      arbitraryMapboxFetch,
       false,
-      'unapproved image hosts are rejected before network access',
+      'arbitrary CMS URLs cannot use the Mapbox host',
     );
+    assert.equal(arbitraryMapboxCard[0].wasCached, false);
     const gatsbyOutput = path.join(root, 'gatsby-adapter.jpg');
     await gatsbyGenerator.generateOGImage({
       title: 'Gatsby adapter fixture',
@@ -333,7 +269,7 @@ test('shared images preserve card paths, orientation, caching and remote fetch b
       [1200, 630],
     );
     console.log(
-      'Public image fixtures passed: deterministic bytes, cache hit, same-path media change, absent thumbnail, safe slug segments, private cache placement, Mapbox token isolation, approved and blocked remote hosts, and responsive AVIF/WebP/JPEG output.',
+      'Public image fixtures passed: deterministic social-card bytes, cache behavior, safe paths, private cache placement, and Mapbox token isolation.',
     );
   } finally {
     await rm(root, { recursive: true, force: true });

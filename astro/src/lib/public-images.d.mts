@@ -1,6 +1,4 @@
 // TypeScript declarations for the shared Node-compatible image renderer.
-import type { MediaDescriptor } from '../../../src/shared/content/models';
-
 export type SocialCardKind = 'blog' | 'conditions' | 'clinics';
 
 export interface MapLocation {
@@ -36,17 +34,6 @@ export interface GenerateSocialCardOptions {
   allowedMediaHosts?: string[];
 }
 
-export interface ResponsiveImageOptions {
-  source: string;
-  alt: string;
-  outputDir: string;
-  publicUrlPrefix: string;
-  filename?: string;
-  widths?: number[];
-  fetch?: typeof fetch;
-  allowedMediaHosts?: string[];
-}
-
 export interface SocialCardResult {
   kind: SocialCardKind;
   slug: string;
@@ -71,10 +58,3 @@ export function buildSocialCards(
   entries: SocialCardEntries,
   options: PublicImageBuildOptions,
 ): Promise<SocialCardResult[]>;
-/** Build responsive AVIF, WebP, and JPEG candidates for one public CMS image.
- * @param options Source URL or path, alt text, output location, public URL prefix, and candidate widths.
- * @returns A descriptor with oriented dimensions and responsive source sets.
- */
-export function buildResponsiveImage(
-  options: ResponsiveImageOptions,
-): Promise<MediaDescriptor>;

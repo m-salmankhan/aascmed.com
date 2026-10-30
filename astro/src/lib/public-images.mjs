@@ -1,18 +1,16 @@
 // @ts-check
-// Shared social-card rendering and responsive image generation for Astro and Gatsby builds.
+// Shared social-card rendering for Astro and Gatsby builds.
 import { createCanvas, GlobalFonts, loadImage } from '@napi-rs/canvas';
 import sharp from 'sharp';
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-/** @typedef {import('../../../src/shared/content/models').MediaDescriptor} MediaDescriptor */
 /** @typedef {ReturnType<ReturnType<typeof import('@napi-rs/canvas').createCanvas>['getContext']>} CanvasContext */
 /** @typedef {'blog' | 'conditions' | 'clinics'} SocialCardKind */
 /** @typedef {{ latitude: number, longitude: number }} MapLocation */
 /** @typedef {Record<string, string>} SocialCardCache */
 /** @typedef {Iterable<SocialCardEntry> | AsyncIterable<SocialCardEntry>} SocialCardEntries */
-/** @typedef {['avif' | 'webp' | 'jpg', 'avif' | 'webp' | 'jpeg', 'image/avif' | 'image/webp' | 'image/jpeg']} ResponsiveOutputFormat */
 /**
  * @typedef {object} SocialCardEntry
  * @property {SocialCardKind} kind Content route family used in the card URL.
@@ -37,17 +35,6 @@ import { fileURLToPath } from 'node:url';
  * @property {string} outputPath Destination path for the JPEG card.
  * @property {typeof fetch} [fetch] Fetch implementation for deterministic tests.
  * @property {string[]} [allowedMediaHosts] Exact HTTPS hostnames allowed for background media.
- */
-/**
- * @typedef {object} ResponsiveImageOptions
- * @property {string} source Local path or allowlisted image URL.
- * @property {string} alt Accessible alternative text for the source image.
- * @property {string} outputDir Destination for generated image candidates.
- * @property {string} publicUrlPrefix Public URL prefix for generated candidates.
- * @property {string} [filename] Optional stable basename without an extension.
- * @property {number[]} [widths] Candidate widths, capped to the oriented source width.
- * @property {typeof fetch} [fetch] Fetch implementation for controlled builds.
- * @property {string[]} [allowedMediaHosts] Exact HTTPS hostnames allowed for the source.
  */
 /**
  * @typedef {object} SocialCardResult
@@ -505,93 +492,4 @@ export async function buildSocialCards(entries, options) {
   await writeFile(temporaryCacheFile, `${JSON.stringify(cache, null, 2)}\n`);
   await rename(temporaryCacheFile, cacheFile);
   return results;
-}
-/** Build content-addressed AVIF, WebP, and JPEG candidates for a public CMS image.
- * @param {ResponsiveImageOptions} options Source URL or path, alt text, output location, public URL prefix, and candidate widths.
- * @returns {Promise<MediaDescriptor>} A serializable descriptor with oriented dimensions and responsive source sets.
- */
-export async function buildResponsiveImage({
-  source,
-  alt,
-  outputDir,
-  publicUrlPrefix,
-  filename,
-  widths = [320, 640, 960, 1280],
-  fetch: fetcher = fetch,
-  allowedMediaHosts = [],
-}) {
-  const input = await fetchImage(source, fetcher, allowedMediaHosts);
-  const image = sharp(input, { limitInputPixels: 80000000 });
-  const metadata = await image.metadata();
-  if (!metadata.width || !metadata.height) {
-    throw new Error('Source image has no dimensions');
-  }
-  const orientation = metadata.orientation ?? 1;
-  const swapsDimensions = orientation >= 5 && orientation <= 8;
-  const width = swapsDimensions ? metadata.height : metadata.width;
-  const height = swapsDimensions ? metadata.width : metadata.height;
-  const orientationSuffix =
-    orientation === 1 ? '' : `-orientation-${orientation}`;
-  const sourceHash = sha256(input).slice(0, 16);
-  const base = safeSegment(filename || basenameFromSource(source));
-  await mkdir(outputDir, { recursive: true });
-  const candidates = [
-    ...new Set(
-      widths.filter(
-        (candidateWidth) => candidateWidth > 0 && candidateWidth <= width,
-      ),
-    ),
-  ].sort((a, b) => a - b);
-  if (!candidates.includes(width)) {
-    candidates.push(width);
-  }
-  /** @type {NonNullable<MediaDescriptor['formats']>} */
-  const formats = [];
-  /** @type {string[]} */
-  let jpegCandidates = [];
-  /** @type {ResponsiveOutputFormat[]} */
-  const outputFormats = [
-    ['avif', 'avif', 'image/avif'],
-    ['webp', 'webp', 'image/webp'],
-    ['jpg', 'jpeg', 'image/jpeg'],
-  ];
-  for (const [extension, format, mimeType] of outputFormats) {
-    const urls = [];
-    for (const width of candidates) {
-      const outputName = `${base}-${sourceHash}${orientationSuffix}-${width}.${extension}`;
-      const outputPath = path.join(outputDir, outputName);
-      try {
-        await stat(outputPath);
-      } catch {
-        await sharp(input)
-          .rotate()
-          .resize({ width, withoutEnlargement: true, fit: 'inside' })
-          .toFormat(format)
-          .toFile(outputPath);
-      }
-      urls.push(
-        `${publicUrlPrefix.replace(/\/$/, '')}/${outputName} ${width}w`,
-      );
-    }
-    if (extension === 'jpg') {
-      jpegCandidates = urls;
-    } else {
-      formats.push({ type: mimeType, srcSet: urls.join(', ') });
-    }
-  }
-  const largestWidth = candidates[candidates.length - 1];
-  return {
-    src: `${publicUrlPrefix.replace(/\/$/, '')}/${base}-${sourceHash}${orientationSuffix}-${largestWidth}.jpg`,
-    alt,
-    width,
-    height,
-    mimeType: 'image/jpeg',
-    srcSet: jpegCandidates.join(', '),
-    sources: candidates.map((candidate) => ({
-      src: `${publicUrlPrefix.replace(/\/$/, '')}/${base}-${sourceHash}${orientationSuffix}-${candidate}.jpg`,
-      width: candidate,
-    })),
-    formats,
-    aspectRatio: width / height,
-  };
 }
