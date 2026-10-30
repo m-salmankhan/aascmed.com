@@ -11,7 +11,7 @@ import {
   type PublicImageBuildOptions,
   type SocialCardEntry,
   type SocialCardResult,
-} from '../../lib/public-images.mjs';
+} from '../../../../src/shared/media/social-cards.mjs';
 import type { PublishedCollections } from './loaders.ts';
 
 /** Lazy CMS streams needed to render public blog, condition and clinic cards. */
