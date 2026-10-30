@@ -33,6 +33,10 @@ The default CMS batch size is 100, configurable from 1 to 100. Constructing `get
 
 `PUBLIC_RUNTIME_API_BASE_URL` and `PUBLIC_MAPBOX_API_KEY` are safe browser settings. They are separate from the CMS URL and credential; never expose the token as a public variable.
 
+## Sitemaps
+
+The official `@astrojs/sitemap` integration discovers Astro pages and adds published CMS detail URLs through `customPages`, including in preview builds. It writes the existing `sitemap-index.xml` and `sitemap-0.xml` URLs, preserves Gatsby’s daily frequency and 0.7 priority, and uses CMS `updatedAt` for `lastmod`. Unknown edit dates are omitted. Preview sitemaps contain published URLs as of the build; draft URLs are excluded. XML serialization, escaping and large-sitemap splitting belong to the integration.
+
 ## Tests
 
 From the repository root, run `yarn test:unit` for source contracts and `yarn test:astro` for Astro integration tests. Both root and Astro dependencies must be installed. Install the browser once with `yarn playwright install chromium`.

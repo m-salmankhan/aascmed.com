@@ -8,7 +8,6 @@ import {
   serializeStructuredData,
 } from '../../astro/src/server/document-metadata.ts';
 import { findRedirect, parseNetlifyRedirects } from '../../astro/src/server/netlify-redirects.ts';
-import { renderSitemapXml } from '../../astro/src/server/sitemap.ts';
 test('canonical metadata retains the public host and route trailing slash', () => {
   assert.equal(canonicalPathUrl('/blog/example/'), 'https://www.aascmed.com/blog/example/');
   assert.equal(canonicalPathUrl('contact/'), 'https://www.aascmed.com/contact/');
@@ -60,15 +59,4 @@ test('real legacy redirects preserve query strings and do not loop contact', asy
     location: '/new/path?source=legacy&q=one',
     status: 302,
   });
-});
-test('published sitemap escapes XML, deduplicates paths and rejects host-changing values', () => {
-  const xml = renderSitemapXml([
-    { pathname: '/blog/a&b/' },
-    { pathname: '/blog/a&b/' },
-    { pathname: '//other.example/' },
-    { pathname: '/\\other.example/' },
-  ]);
-  assert.equal((xml.match(/a&amp;b/g) || []).length, 1);
-  assert.ok(xml.includes('https://www.aascmed.com/contact/'));
-  assert.ok(!xml.includes('other.example'));
 });
