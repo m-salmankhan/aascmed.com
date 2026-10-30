@@ -43,7 +43,7 @@ Legacy redirects remain in `static/_redirects` for the public hosting platform. 
 
 ## Sitemaps
 
-The official `@astrojs/sitemap` integration discovers Astro pages and adds published CMS detail URLs through `customPages`, including in preview builds. It writes the existing `sitemap-index.xml` and `sitemap-0.xml` URLs, preserves Gatsby’s daily frequency and 0.7 priority, and uses CMS `updatedAt` for `lastmod`. Unknown edit dates are omitted. Preview sitemaps contain published URLs as of the build; draft URLs are excluded. XML serialization, escaping and large-sitemap splitting belong to the integration.
+The official `@astrojs/sitemap` integration discovers Astro pages and adds published CMS detail URLs through `customPages`, in static builds. The compiled preview build omits sitemap generation so it needs no CMS connection or token at image-build time. It writes the existing `sitemap-index.xml` and `sitemap-0.xml` URLs, preserves Gatsby’s daily frequency and 0.7 priority, and uses CMS `updatedAt` for `lastmod`. Unknown edit dates are omitted. The preview target does not generate a sitemap. XML serialization, escaping and large-sitemap splitting belong to the integration.
 
 ## Tests
 

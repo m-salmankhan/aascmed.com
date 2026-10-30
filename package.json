@@ -20,7 +20,7 @@
     "test:astro": "node --test --test-concurrency=1 tests/integration/astro-config.test.mjs tests/integration/astro-document.test.mjs tests/integration/astro-runtime.test.mjs tests/integration/astro-public-images.test.mjs tests/integration/astro-hydration.test.mjs tests/integration/astro-content-parity.test.mjs",
     "strapi:types": "node scripts/generate-strapi-openapi.mjs",
     "strapi:types:check": "node scripts/generate-strapi-openapi.mjs --check",
-    "test:infrastructure:node": "node --test tests/infrastructure/contracts.test.js tests/infrastructure/review.test.js tests/infrastructure/targets.test.js",
+    "test:infrastructure:node": "node --test tests/infrastructure/preview-readiness.test.mjs tests/infrastructure/contracts.test.js tests/infrastructure/review.test.js tests/infrastructure/targets.test.js",
     "test:infrastructure:browser": "playwright test --config playwright.infrastructure.config.js",
     "test:infrastructure": "yarn test:infrastructure:node && yarn test:infrastructure:browser",
     "test:smoke": "playwright test tests/ui/behavior.spec.js",

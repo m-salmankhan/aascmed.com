@@ -1,7 +1,7 @@
 # GitHub Actions Workflow: Deploy Preview Server
 # Builds preview site + forward-auth images, pushes to GHCR,
 # then deploys three containers on the remote host:
-#   1. aascmed-preview        — Gatsby develop (draft content)
+#   1. aascmed-preview        — compiled Astro Node SSR (saved drafts)
 #   2. preview-forward-auth   — Strapi-based login / JWT verification
 #   3. preview-caddy          — TLS reverse proxy with forward_auth
 
@@ -47,14 +47,20 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=ref,event=branch
-            type=sha,prefix=
+            type=sha,format=long,prefix=
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push preview image
+        id: preview-build
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./preview-server/Dockerfile
+          file: ./preview-server/Dockerfile.astro
+          build-args: |
+            GATSBY_STRAPI_API_URL=${{ vars.GATSBY_STRAPI_API_URL }}
+            STRAPI_MEDIA_ORIGINS=${{ vars.STRAPI_MEDIA_ORIGINS }}
+            PUBLIC_RUNTIME_API_BASE_URL=${{ vars.PREVIEW_PUBLIC_RUNTIME_API_BASE_URL }}
+            PUBLIC_MAPBOX_API_KEY=${{ vars.PREVIEW_PUBLIC_MAPBOX_API_KEY }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -69,10 +75,11 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.AUTH_IMAGE_NAME }}
           tags: |
             type=ref,event=branch
-            type=sha,prefix=
+            type=sha,format=long,prefix=
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push forward-auth image
+        id: auth-build
         uses: docker/build-push-action@v5
         with:
           context: ./preview-server/forward-auth
@@ -108,24 +115,27 @@ jobs:
 
             cd ~/
 
-            # ── Write .env with secrets and image tags ──────────────────
+            # ── Write .env with secrets and immutable image digests ───────
+            umask 077
             printf '%s\n' \
-              'PREVIEW_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}' \
-              'AUTH_IMAGE=${{ env.REGISTRY }}/${{ env.AUTH_IMAGE_NAME }}:${{ github.ref_name }}' \
+              'PREVIEW_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.preview-build.outputs.digest }}' \
+              'AUTH_IMAGE=${{ env.REGISTRY }}/${{ env.AUTH_IMAGE_NAME }}@${{ steps.auth-build.outputs.digest }}' \
               'GATSBY_STRAPI_API_URL=${{ vars.GATSBY_STRAPI_API_URL }}' \
               'STRAPI_TOKEN=${{ secrets.STRAPI_TOKEN }}' \
-              'GATSBY_REFRESH_TOKEN=${{ secrets.GATSBY_REFRESH_TOKEN }}' \
-              'GATSBY_MAPBOX_API_KEY=${{ secrets.GATSBY_MAPBOX_API_KEY }}' \
-              'GATSBY_API_BASE_URL=${{ vars.GATSBY_API_BASE_URL }}' \
+              'PREVIEW_FRAME_ORIGINS=${{ vars.PREVIEW_FRAME_ORIGINS }}' \
               'PREVIEW_DOMAIN=${{ vars.PREVIEW_DOMAIN }}' \
               'PREVIEW_CERTS_PATH=${{ vars.PREVIEW_CERTS_PATH }}' \
               'PREVIEW_HTTPS_PORT=8443' \
               'PREVIEW_HTTP_PORT=8080' \
               > .env
 
+            # Keep Caddy configuration in a directory mount so reload sees file updates.
+            mkdir -p caddy-config
+            cp Caddyfile caddy-config/Caddyfile
+
             # ── Pull and (re)start ──────────────────────────────────────
             podman compose pull
-            podman compose up -d --remove-orphans --force-recreate
+            podman compose up -d preview forward-auth caddy
+            podman exec preview-caddy caddy reload --config /etc/caddy/config/Caddyfile --adapter caddyfile
 
-            # ── Cleanup ─────────────────────────────────────────────────
-            podman image prune -f
+            # Retain older images for rollback.

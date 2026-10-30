@@ -12,8 +12,13 @@
 	tls /etc/caddy/certs/cert.pem /etc/caddy/certs/key.pem
 
 	# Allow framing from Strapi and *.aascmed.com
-	header Content-Security-Policy "frame-ancestors 'self' https://*.aascmed.com https://wise-positivity-21c2bd6b3f.strapiapp.com"
-	header -X-Frame-Options
+	header {
+		defer
+		Cache-Control "private, no-store"
+		X-Robots-Tag "noindex, nofollow"
+		Content-Security-Policy "frame-ancestors 'self' https://*.aascmed.com https://wise-positivity-21c2bd6b3f.strapiapp.com"
+		-X-Frame-Options
+	}
 
 	# Auth endpoints and static assets are served by the forward-auth service
 	handle /login* {
@@ -26,11 +31,6 @@
 
 	handle /auth/* {
 		reverse_proxy preview-forward-auth:3001
-	}
-
-	# Gatsby refresh webhook — bypasses auth (protected by GATSBY_REFRESH_TOKEN)
-	handle /__refresh {
-		reverse_proxy aascmed-preview:8000
 	}
 
 	# Everything else: verify auth first, then proxy to preview
@@ -65,7 +65,7 @@
 			}
 		}
 
-		reverse_proxy aascmed-preview:8000 {
+		reverse_proxy aascmed-preview:4321 {
 			header_down -X-Frame-Options
 			header_down -Content-Security-Policy
 		}
@@ -73,8 +73,5 @@
 
 	encode zstd gzip
 
-	log {
-		output stdout
-		format console
-	}
+	# Access logs are disabled to avoid recording draft paths and query strings.
 }

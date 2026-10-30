@@ -1,0 +1,26 @@
+# Build a compiled SSR image without CMS credentials or draft content.
+FROM node:22.23.4-bookworm-slim AS build
+WORKDIR /app
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile --non-interactive
+COPY astro/package.json astro/yarn.lock ./astro/
+RUN yarn --cwd astro install --frozen-lockfile --non-interactive
+COPY . .
+# Browser-visible settings and allowed image origins are compiled into the bundle.
+ARG PUBLIC_RUNTIME_API_BASE_URL
+ARG PUBLIC_MAPBOX_API_KEY
+ARG GATSBY_STRAPI_API_URL
+ARG STRAPI_MEDIA_ORIGINS
+RUN yarn astro:ssr:build
+
+FROM node:22.23.4-bookworm-slim
+ENV NODE_ENV=production HOST=0.0.0.0 PORT=4321 ASTRO_CONTENT_MODE=draft
+WORKDIR /app
+# Shared components and Astro server imports resolve dependencies from both packages.
+COPY --from=build --chown=node:node /app/node_modules ./node_modules
+COPY --from=build --chown=node:node /app/astro/node_modules ./astro/node_modules
+COPY --from=build --chown=node:node /app/astro/dist-ssr ./astro/dist-ssr
+USER node
+EXPOSE 4321
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 CMD node -e "fetch('http://127.0.0.1:4321/_health/live').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+CMD ["node", "astro/dist-ssr/server/entry.mjs"]

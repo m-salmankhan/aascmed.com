@@ -42,3 +42,9 @@ __tests__/
 
 # Preview server folder (don't need to copy itself)
 preview-server/
+
+# Exclude nested dependency directories and symlinks as well.
+**/node_modules
+astro/dist-ssr/
+astro/dist-static/
+astro/.astro/
