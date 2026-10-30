@@ -73,3 +73,9 @@ export function buildSocialCards(
   entries: SocialCardEntries,
   options: PublicImageBuildOptions,
 ): Promise<SocialCardResult[]>;
+
+/** Resolve a card's stable public path without rendering it.
+ * @param entry Card family, slug, and optional source or map name.
+ * @returns Site-relative JPEG path used by the renderer.
+ */
+export function socialCardPath(entry: SocialCardEntry): string;

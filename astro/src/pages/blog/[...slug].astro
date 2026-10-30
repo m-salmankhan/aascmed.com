@@ -1,0 +1,45 @@
+---
+// Renders a blog article from a static path or a request-time preview lookup.
+import SitePage from '../../layouts/SitePage.astro';
+import { getBlogBySlug } from '../../server/content/loaders';
+import { getPageSettings, pageContentMode } from '../../server/pages/common';
+import { blogDate, contentPaths } from '../../server/pages/content';
+import { getResponsiveMediaDescriptor } from '../../server/content/astro-media';
+import { socialCardPath } from '../../../../src/shared/media/social-cards.mjs';
+/** Enumerate compact published blog route parameters for static output.
+ * @returns Slugs for published blog pages.
+ */
+export async function getStaticPaths() {
+  return contentPaths('blog', '/blog/');
+}
+const mode = pageContentMode();
+const blog = await getBlogBySlug(Astro.params.slug || '', mode);
+if (!blog) return Astro.rewrite('/404');
+const settings = await getPageSettings(mode);
+const originalThumbnail = blog.thumbnail;
+if (blog.thumbnail && import.meta.env.PUBLIC_ASTRO_TARGET === 'static') {
+  blog.thumbnail = await getResponsiveMediaDescriptor(blog.thumbnail);
+}
+blog.date = blogDate(blog.date);
+const socialImagePath =
+  import.meta.env.PUBLIC_ASTRO_TARGET === 'static'
+    ? socialCardPath({
+        kind: 'blog',
+        slug: blog.slug || '',
+        title: blog.heading || blog.title,
+        backgroundImage: originalThumbnail?.src,
+      })
+    : undefined;
+---
+
+<SitePage
+  pathname={Astro.url.pathname}
+  {...settings}
+  title={blog.title || blog.heading || 'Untitled'}
+  description={blog.description || ''}
+  useTracking
+  ogType="article"
+  articleSection="blog"
+  {socialImagePath}
+  view={{ kind: 'blog', props: { blog, pathname: Astro.url.pathname } }}
+/>

@@ -23,6 +23,7 @@ test('canonical metadata retains the public host and route trailing slash', () =
     'https://www.aascmed.com/og-images/blog/test.jpg',
   );
   assert.equal(socialImageUrl('https://cdn.example/image.jpg'), 'https://cdn.example/image.jpg');
+  assert.equal(socialImageUrl('http://127.0.0.1:4321/image.jpg'), 'http://127.0.0.1:4321/image.jpg');
   for (const value of [
     'javascript:alert(1)',
     'http://example.com/image.jpg',

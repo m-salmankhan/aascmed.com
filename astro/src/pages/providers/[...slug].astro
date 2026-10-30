@@ -1,0 +1,36 @@
+---
+// Renders a provider profile from a static path or request-time preview lookup.
+import SitePage from '../../layouts/SitePage.astro';
+import { getProviderBySlug } from '../../server/content/loaders';
+import { getPageSettings, pageContentMode } from '../../server/pages/common';
+import { contentPaths } from '../../server/pages/content';
+import { getResponsiveMediaDescriptor } from '../../server/content/astro-media';
+/** Enumerate compact published provider route parameters for static output.
+ * @returns Slugs for published provider pages.
+ */
+export async function getStaticPaths() {
+  return contentPaths('provider', '/providers/');
+}
+const mode = pageContentMode();
+const provider = await getProviderBySlug(Astro.params.slug || '', mode);
+if (!provider) return Astro.rewrite('/404');
+const settings = await getPageSettings(mode);
+const socialImagePath = provider.image?.src;
+if (provider.image && import.meta.env.PUBLIC_ASTRO_TARGET === 'static') {
+  provider.image = await getResponsiveMediaDescriptor(provider.image);
+}
+const honorific =
+  provider.name?.honorific && provider.name.honorific !== 'None' ? provider.name.honorific : '';
+const title = `${honorific} ${provider.name?.fullName || 'Untitled'}`.trim();
+---
+
+<SitePage
+  pathname={Astro.url.pathname}
+  {...settings}
+  {title}
+  description={provider.description || ''}
+  useTracking
+  ogType="profile"
+  {socialImagePath}
+  view={{ kind: 'provider', props: { provider, pathname: Astro.url.pathname } }}
+/>

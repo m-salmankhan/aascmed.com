@@ -115,6 +115,17 @@ function basenameFromSource(source) {
   }
   return path.basename(basename, path.extname(basename)) || 'default';
 }
+/** Resolve the public path shared by card generation and page metadata.
+ * @param {SocialCardEntry} entry Card family, route slug, and optional source or map name.
+ * @returns {string} Stable site-relative JPEG path for this card.
+ */
+export function socialCardPath(entry) {
+  const segments = safePathSegments(entry.slug);
+  const name = safeSegment(entry.mediaName || (entry.mapLocation
+    ? `${entry.slug}-${entry.mapLocation.latitude}-${entry.mapLocation.longitude}-map`
+    : basenameFromSource(entry.backgroundImage)));
+  return `/og-images/${entry.kind}/${[...segments.slice(0, -1), `${segments.at(-1)}-${name}.jpg`].join('/')}`;
+}
 /** Construct the Mapbox static-map request used for a clinic card.
  * @param {number} latitude Clinic latitude in degrees, between -90 and 90.
  * @param {number} longitude Clinic longitude in degrees, between -180 and 180.
@@ -397,7 +408,7 @@ export async function buildSocialCards(entries, options) {
           : basenameFromSource(entry.backgroundImage)),
     );
     const fileName = `${slugSegments.at(-1)}-${mediaName}.jpg`;
-    const imagePath = `/og-images/${kind}/${[...slugSegments.slice(0, -1), fileName].join('/')}`;
+    const imagePath = socialCardPath(entry);
     const outputPath = path.join(
       cardsDir,
       kind,

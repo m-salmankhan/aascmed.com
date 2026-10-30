@@ -1,0 +1,35 @@
+---
+// Renders the conditions archive with ordered CMS condition summaries.
+import SitePage from '../../layouts/SitePage.astro';
+import { getConditionsArchive, getConditions } from '../../server/content/loaders';
+import { getPageSettings, pageContentMode } from '../../server/pages/common';
+import { conditionPath } from '../../../../src/shared/content/urls';
+import { getResponsiveMediaDescriptor } from '../../server/content/astro-media';
+import type { ConditionViewItem } from '../../../../src/views/fixed-archive';
+const mode = pageContentMode();
+const [page, settings] = await Promise.all([getConditionsArchive(mode), getPageSettings(mode)]);
+const conditions: ConditionViewItem[] = [];
+for await (const condition of getConditions(mode)) {
+  const thumbnail =
+    condition.thumbnail && import.meta.env.PUBLIC_ASTRO_TARGET === 'static'
+      ? await getResponsiveMediaDescriptor(condition.thumbnail)
+      : condition.thumbnail;
+  conditions.push({
+    slug: conditionPath(condition.slug) || '/conditions/',
+    title: condition.heading || condition.title || 'untitled',
+    thumbnail,
+  });
+}
+---
+
+<SitePage
+  pathname={Astro.url.pathname}
+  {...settings}
+  title={page?.heading || ''}
+  description={page?.metaDescription || ''}
+  ogType="website"
+  view={{
+    kind: 'conditions-archive',
+    props: { heading: page?.heading || 'Conditions', blocks: page?.text, conditions },
+  }}
+/>

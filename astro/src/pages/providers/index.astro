@@ -1,0 +1,39 @@
+---
+// Renders the provider archive with biographies summarized for each card.
+import SitePage from '../../layouts/SitePage.astro';
+import { getProvidersPage, getProviders } from '../../server/content/loaders';
+import { getPageSettings, pageContentMode } from '../../server/pages/common';
+import { providerPath } from '../../../../src/shared/content/urls';
+import { createExcerpt } from '../../../../src/utils/strapi-excerpt';
+import { getResponsiveMediaDescriptor } from '../../server/content/astro-media';
+import type { ProviderViewItem } from '../../../../src/views/fixed-archive';
+const mode = pageContentMode();
+const [page, settings] = await Promise.all([getProvidersPage(mode), getPageSettings(mode)]);
+const providers: ProviderViewItem[] = [];
+for await (const provider of getProviders(mode)) {
+  const image =
+    provider.image && import.meta.env.PUBLIC_ASTRO_TARGET === 'static'
+      ? await getResponsiveMediaDescriptor(provider.image)
+      : provider.image;
+  providers.push({
+    slug: providerPath(provider.slug) || '/providers/',
+    excerpt: provider.body ? createExcerpt(provider.body, 600) : '',
+    name: provider.name,
+    retired: provider.retirementNotice?.retired || false,
+    image,
+  });
+}
+---
+
+<SitePage
+  pathname={Astro.url.pathname}
+  {...settings}
+  title={page?.heading || ''}
+  description={page?.metaDescription || ''}
+  useTracking
+  ogType="website"
+  view={{
+    kind: 'providers-archive',
+    props: { heading: page?.heading || 'Meet the team', blocks: page?.text, providers },
+  }}
+/>

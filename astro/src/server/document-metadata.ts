@@ -20,13 +20,15 @@ export function canonicalPathUrl(pathname: string): string {
   return new URL(path, canonicalOrigin).href;
 }
 /** Resolve a social-card image against the public website.
- * @param path Site-relative asset path or absolute HTTPS media URL.
+ * @param path Site-relative asset path or absolute HTTPS media URL; HTTP loopback is allowed for local development.
  * @returns Absolute HTTPS image URL, including separately hosted public media.
  * @throws When the URL uses another protocol or embeds credentials.
  */
 export function socialImageUrl(path: string): string {
   const url = new URL(path, canonicalOrigin);
-  if (url.protocol !== "https:" || url.username || url.password) {
+  const localHttp = url.protocol === "http:" &&
+    ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
+  if ((url.protocol !== "https:" && !localHttp) || url.username || url.password) {
     throw new Error("Social metadata requires a public HTTPS image");
   }
   return url.href;

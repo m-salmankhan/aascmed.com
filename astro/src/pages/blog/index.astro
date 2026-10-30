@@ -1,0 +1,39 @@
+---
+// Renders the published or preview blog archive from CMS records.
+import SitePage from '../../layouts/SitePage.astro';
+import { getBlogArchive, getBlogs } from '../../server/content/loaders';
+import { getPageSettings, pageContentMode } from '../../server/pages/common';
+import { blogDate } from '../../server/pages/content';
+import { blogPath } from '../../../../src/shared/content/urls';
+import { getResponsiveMediaDescriptor } from '../../server/content/astro-media';
+import type { BlogViewItem } from '../../../../src/views/fixed-archive';
+const mode = pageContentMode();
+const [page, settings] = await Promise.all([getBlogArchive(mode), getPageSettings(mode)]);
+const blogs: BlogViewItem[] = [];
+for await (const blog of getBlogs(mode)) {
+  const thumbnail =
+    blog.thumbnail && import.meta.env.PUBLIC_ASTRO_TARGET === 'static'
+      ? await getResponsiveMediaDescriptor(blog.thumbnail)
+      : blog.thumbnail;
+  blogs.push({
+    slug: blogPath(blog.slug) || '/blog/',
+    title: blog.title || 'Untitled',
+    date: blogDate(blog.date),
+    description: blog.description || '',
+    thumbnail: thumbnail && { ...thumbnail, alt: blog.title || 'Untitled' },
+  });
+}
+---
+
+<SitePage
+  pathname={Astro.url.pathname}
+  {...settings}
+  title={page?.heading || ''}
+  description={page?.metaDescription || ''}
+  useTracking
+  ogType="website"
+  view={{
+    kind: 'blog-archive',
+    props: { heading: page?.heading || 'Blog', blocks: page?.text, blogs },
+  }}
+/>

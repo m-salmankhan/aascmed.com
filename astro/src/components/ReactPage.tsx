@@ -1,7 +1,17 @@
 // Renders shared React views with their framework-neutral site contexts.
 import React, { type ComponentProps } from 'react';
 import AnnouncementBanner from '../../../src/components/AnnouncementBanner';
-import { ContactView, NotFoundView, PrivacyView } from '../../../src/views/fixed-archive';
+import {
+  BlogArchiveView,
+  ConditionsArchiveView,
+  ProvidersArchiveView,
+  ContactView,
+  NotFoundView,
+  PrivacyView,
+} from '../../../src/views/fixed-archive';
+import { BlogPostView } from '../../../src/views/blog-post';
+import { ConditionView } from '../../../src/views/condition';
+import { ProviderView } from '../../../src/views/provider';
 import { CurrentPathProvider } from '../../../src/shared/navigation/current-path';
 import { PublicConfigProvider } from '../../../src/shared/config/public-context';
 import { SiteDataProvider } from '../../../src/shared/data/site-data';
@@ -10,6 +20,12 @@ import type { AnnouncementSettings, SiteSettings } from '../../../src/shared/con
 
 /** Serializable view selection and its corresponding shared-view inputs. */
 export type PageView =
+  | { kind: 'blog-archive'; props: ComponentProps<typeof BlogArchiveView> }
+  | { kind: 'conditions-archive'; props: ComponentProps<typeof ConditionsArchiveView> }
+  | { kind: 'providers-archive'; props: ComponentProps<typeof ProvidersArchiveView> }
+  | { kind: 'blog'; props: ComponentProps<typeof BlogPostView> }
+  | { kind: 'condition'; props: ComponentProps<typeof ConditionView> }
+  | { kind: 'provider'; props: ComponentProps<typeof ProviderView> }
   | { kind: 'not-found' }
   | { kind: 'privacy'; props: ComponentProps<typeof PrivacyView> }
   | { kind: 'contact'; props: ComponentProps<typeof ContactView> };
@@ -36,6 +52,24 @@ export function ReactPage({
 }: ReactPageProps) {
   let content: React.ReactNode;
   switch (view.kind) {
+    case 'blog-archive':
+      content = <BlogArchiveView {...view.props} />;
+      break;
+    case 'conditions-archive':
+      content = <ConditionsArchiveView {...view.props} />;
+      break;
+    case 'providers-archive':
+      content = <ProvidersArchiveView {...view.props} />;
+      break;
+    case 'blog':
+      content = <BlogPostView {...view.props} />;
+      break;
+    case 'condition':
+      content = <ConditionView {...view.props} />;
+      break;
+    case 'provider':
+      content = <ProviderView {...view.props} />;
+      break;
     case 'not-found':
       content = <NotFoundView />;
       break;

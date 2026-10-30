@@ -20,10 +20,11 @@ interface Props {
   useTracking?: boolean;
   socialImagePath?: string;
   ogType?: OpenGraphType;
+  articleSection?: string;
   noIndex?: boolean;
   structuredData?: StructuredData;
 }
-const { view, announcement, trackingSettings, ...document } = Astro.props;
+const { view, announcement, trackingSettings, articleSection, ...document } = Astro.props;
 const siteSettings: SiteSettings = {
   title: 'Allergy, Asthma and Sinus Centers',
   url: 'https://www.aascmed.com',
@@ -36,6 +37,7 @@ const siteSettings: SiteSettings = {
   siteSettings={siteSettings}
   trackingSettings={trackingSettings ?? undefined}
 >
+  {articleSection && <meta slot="head" name="article:section" content={articleSection} />}
   <ReactPage
     client:load
     pathname={document.pathname}
