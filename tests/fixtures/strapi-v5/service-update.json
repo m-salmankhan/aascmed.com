@@ -1,0 +1,8 @@
+{
+  "documentId": "update-office-hours",
+  "title": "Office hours update",
+  "slug": "office-hours",
+  "description": "Updated opening hours",
+  "date": "2026-07-04T09:00:00.000Z",
+  "body": [{ "type": "paragraph", "children": [{ "type": "text", "text": "Hours have changed." }] }]
+}

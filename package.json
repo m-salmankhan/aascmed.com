@@ -14,8 +14,12 @@
     "serve": "gatsby serve",
     "clean": "gatsby clean",
     "typecheck": "tsc --noEmit",
+    "typecheck:images": "tsc -p tsconfig.public-images.json",
     "test:ui": "playwright test",
-    "test:unit": "node --test tests/unit/content-contracts.test.mjs tests/unit/navigation.test.js tests/unit/public-config.test.mjs tests/unit/public-config-consumers.test.js",
+    "test:unit": "node --test tests/unit/content-contracts.test.mjs tests/unit/navigation.test.js tests/unit/public-config.test.mjs tests/unit/public-config-consumers.test.js tests/unit/strapi-loaders.test.mjs tests/unit/astro-document.test.mjs tests/unit/public-images.test.mjs tests/unit/public-image-build.test.mjs",
+    "test:astro": "node --test --test-concurrency=1 tests/integration/astro-config.test.mjs tests/integration/astro-document.test.mjs tests/integration/astro-runtime.test.mjs tests/integration/astro-public-images.test.mjs tests/integration/astro-hydration.test.mjs tests/integration/astro-content-parity.test.mjs",
+    "strapi:types": "node scripts/generate-strapi-openapi.mjs",
+    "strapi:types:check": "node scripts/generate-strapi-openapi.mjs --check",
     "test:infrastructure:node": "node --test tests/infrastructure/contracts.test.js tests/infrastructure/review.test.js tests/infrastructure/targets.test.js",
     "test:infrastructure:browser": "playwright test --config playwright.infrastructure.config.js",
     "test:infrastructure": "yarn test:infrastructure:node && yarn test:infrastructure:browser",
@@ -29,6 +33,7 @@
     "@emotion/styled": "^11.14.1",
     "@napi-rs/canvas": "^0.1.95",
     "@strapi/blocks-react-renderer": "^1.0.2",
+    "@strapi/client": "1.6.2",
     "color": "^5",
     "gatsby": "^5.16.0",
     "gatsby-omni-font-loader": "^2.0.2",
@@ -63,6 +68,7 @@
     "gray-matter": "^4.0.3",
     "pixelmatch": "^7.1.0",
     "pngjs": "^7.0.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "openapi-typescript": "7.10.1"
   }
 }

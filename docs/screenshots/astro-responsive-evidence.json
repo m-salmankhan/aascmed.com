@@ -1,0 +1,115 @@
+{
+  "applicationCommit": "2d0ec7ca397e5a1adeced44fecebfa2fe5dd0d2e",
+  "baselineCommit": "5a03162b082a64ea502d0c172fcef433f842b47e",
+  "pullRequest": "https://github.com/m-salmankhan/aascmed.com/pull/154",
+  "applicationCi": "https://github.com/m-salmankhan/aascmed.com/actions/runs/41045857401",
+  "checks": {
+    "astroIntegrations": {
+      "passed": 6,
+      "description": "Actual static/SSR builds, image outputs, lazy content and draft isolation; CI passes at applicationCommit."
+    },
+    "sourceUnits": {
+      "passed": 41
+    },
+    "astroTypecheck": {
+      "files": 53,
+      "errors": 0,
+      "warnings": 0,
+      "hints": 0
+    },
+    "realBuilds": {
+      "staticPages": 65,
+      "ssr": "passed"
+    },
+    "fullStaticBrowserComparison": {
+      "passed": 176,
+      "failed": 0,
+      "flaky": 0,
+      "commit": "bf2f06baedaaf326cfdbe153a517eabc18f013c5",
+      "description": "Before the final isolated inline-image CSS correction; 130 screenshot dimensions match at this revision."
+    },
+    "representativeSsrBrowserComparison": {
+      "passed": 14,
+      "commit": "bf2f06baedaaf326cfdbe153a517eabc18f013c5"
+    },
+    "finalInlineImageStaticRecheck": {
+      "passed": 2,
+      "commit": "2d0ec7ca397e5a1adeced44fecebfa2fe5dd0d2e"
+    },
+    "finalInlineImageSsrRecheck": {
+      "passed": 2,
+      "commit": "2d0ec7ca397e5a1adeced44fecebfa2fe5dd0d2e"
+    },
+    "inlineImageGeometryIntegration": {
+      "passed": 1,
+      "description": "Static and SSR image fits its content column at 390px and 1280px with JavaScript disabled."
+    },
+    "publishedHtmlComparison": {
+      "routes": 64,
+      "matched": [
+        "title",
+        "description",
+        "canonical",
+        "meaningful body text"
+      ],
+      "errorRoute": "404 status/content match; canonical follows the requested error URL."
+    }
+  },
+  "matchedDevelopmentContent": {
+    "baselineCommit": "5a03162b082a64ea502d0c172fcef433f842b47e",
+    "candidateCodeCommit": "bf2f06baedaaf326cfdbe153a517eabc18f013c5",
+    "checkedAt": "2026-10-30T10:55:48.406Z",
+    "counts": {
+      "blogs": 33,
+      "conditions": 10,
+      "providers": 5,
+      "clinics": 4,
+      "service-updates": 4
+    },
+    "matched": 56,
+    "changed": [],
+    "documentVersionsSha256": "10a817ce55801fc68cbadca99020db68ced2ca54acbf7a2b7f0d7b495627093a",
+    "publicFilesScanned": 1195,
+    "credentialLeaks": []
+  },
+  "finalMobileBrowser": {
+    "viewportWidth": 390,
+    "scrollWidth": 390,
+    "remoteCmsImageRequests": 0,
+    "unexpectedWrites": 0,
+    "assets": [
+      {
+        "src": "/_astro/2_eeaf36a173_1dRC0f.avif",
+        "renderedWidth": 351,
+        "naturalWidth": 351,
+        "encodedWidth": 640
+      },
+      {
+        "src": "/_astro/Allergy_Immunotherapy_ILIT_Blog_Post_3335f99bcf_ZVMLgd.avif",
+        "renderedWidth": 351,
+        "naturalWidth": 351,
+        "encodedWidth": 640
+      }
+    ]
+  },
+  "remoteImageFixture": {
+    "thumbnailDisplayWidth": 300,
+    "maximumThumbnailCandidateWidth": 600,
+    "wideOutputWidth": 2400,
+    "formats": [
+      "jpg",
+      "avif",
+      "webp"
+    ],
+    "remoteSvgCopiedLocally": true,
+    "inlineImagesSavedLocally": true,
+    "providerSocialImagesSavedLocally": true
+  },
+  "intentionalDifferences": [
+    "The published /blog/ili/ inline graphic now fits its mobile column; the old Gatsby page overflowed horizontally. Its final screenshot geometry therefore intentionally differs.",
+    "Native responsive image source selection and encoders can differ from Gatsby pixels.",
+    "Provider social images use local static asset URLs."
+  ],
+  "screenshot": "astro-responsive-inline-mobile.png",
+  "deployment": "Local validation only; all review MRs remain unmerged and undeployed."
+}

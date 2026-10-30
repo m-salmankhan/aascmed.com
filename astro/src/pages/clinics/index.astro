@@ -1,0 +1,34 @@
+---
+// Renders clinic cards from the selected published or preview collection.
+import { ClinicsArchivePage } from '../../components/pages/ClinicsArchivePage';
+import { prepareInlineImages } from '../../server/content/inline-images';
+import SitePage from '../../layouts/SitePage.astro';
+import { getClinics, getClinicsArchive } from '../../server/content/loaders';
+import { pageContentMode, getPageSettings } from '../../server/pages/common';
+import { clinicSummary } from '../../server/pages/locations';
+import type { PracticeSummary } from '../../../../src/components/practices/practice-archive';
+const mode = pageContentMode();
+const [page, settings] = await Promise.all([getClinicsArchive(mode), getPageSettings(mode)]);
+const practices: PracticeSummary[] = [];
+for await (const clinic of getClinics(mode)) {
+  practices.push(clinicSummary(clinic));
+}
+await prepareInlineImages(page, mode, 1200);
+---
+
+<SitePage
+  pathname={Astro.url.pathname}
+  trackingSettings={settings.trackingSettings}
+  title={page?.heading || ''}
+  description={page?.metaDescription || ''}
+  useTracking
+>
+  <ClinicsArchivePage
+    client:load
+    pathname={Astro.url.pathname}
+    announcement={settings.announcement}
+    heading={page?.heading || 'Clinics'}
+    blocks={page?.text}
+    {practices}
+  />
+</SitePage>

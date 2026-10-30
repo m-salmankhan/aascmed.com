@@ -1,0 +1,46 @@
+---
+// Renders the published or preview blog archive from CMS records.
+import { BlogArchivePage } from '../../components/pages/BlogArchivePage';
+import { prepareInlineImages } from '../../server/content/inline-images';
+import SitePage from '../../layouts/SitePage.astro';
+import { getBlogArchive, getBlogs } from '../../server/content/loaders';
+import { getPageSettings, pageContentMode } from '../../server/pages/common';
+import { blogDate } from '../../server/pages/content';
+import { blogPath } from '../../../../src/shared/content/urls';
+import { getResponsiveMediaDescriptor } from '../../server/content/astro-media';
+import type { BlogViewItem } from '../../../../src/views/fixed-archive';
+const mode = pageContentMode();
+const [page, settings] = await Promise.all([getBlogArchive(mode), getPageSettings(mode)]);
+const blogs: BlogViewItem[] = [];
+for await (const blog of getBlogs(mode)) {
+  const thumbnail = blog.thumbnail
+    ? await getResponsiveMediaDescriptor(blog.thumbnail, { width: 400, aspectRatio: 400 / 250 })
+    : blog.thumbnail;
+  blogs.push({
+    slug: blogPath(blog.slug) || '/blog/',
+    title: blog.title || 'Untitled',
+    date: blogDate(blog.date),
+    description: blog.description || '',
+    thumbnail: thumbnail && { ...thumbnail, alt: blog.title || 'Untitled' },
+  });
+}
+await prepareInlineImages(page, mode, 1200);
+---
+
+<SitePage
+  pathname={Astro.url.pathname}
+  trackingSettings={settings.trackingSettings}
+  title={page?.heading || ''}
+  description={page?.metaDescription || ''}
+  useTracking
+  ogType="website"
+>
+  <BlogArchivePage
+    client:load
+    pathname={Astro.url.pathname}
+    announcement={settings.announcement}
+    heading={page?.heading || 'Blog'}
+    blocks={page?.text}
+    {blogs}
+  />
+</SitePage>

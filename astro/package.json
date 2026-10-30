@@ -6,22 +6,21 @@
     "node": ">=22.23.4"
   },
   "scripts": {
-    "build:static": "astro build --config astro.config.static.mjs",
-    "build:ssr": "astro build --config astro.config.ssr.mjs",
+    "build:static": "astro build --config astro.config.static.ts",
+    "build:ssr": "astro build --config astro.config.ssr.ts",
     "start:ssr": "node dist-ssr/server/entry.mjs",
-    "typecheck": "astro check --config astro.config.static.mjs",
-    "verify:proof": "node scripts/verify-proof.mjs",
-    "verify:runtime": "node scripts/verify-runtime.mjs"
+    "typecheck": "astro check --config astro.config.static.ts"
   },
   "dependencies": {
     "@astrojs/node": "10.1.4",
     "@astrojs/react": "7.1.0",
+    "@astrojs/sitemap": "3.7.4",
     "astro": "6.4.2"
   },
   "peerDependencies": {
+    "@emotion/react": "^11.11.0",
     "react": "^18.0.0",
-    "react-dom": "^18.0.0",
-    "@emotion/react": "^11.11.0"
+    "react-dom": "^18.0.0"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.4",

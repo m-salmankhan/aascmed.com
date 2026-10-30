@@ -1,0 +1,70 @@
+---
+// Renders a provider profile from a static path or request-time preview lookup.
+import moment from 'moment';
+import { getImage } from 'astro:assets';
+import { ProviderPage } from '../../components/pages/ProviderPage';
+import { prepareInlineImages } from '../../server/content/inline-images';
+import SitePage from '../../layouts/SitePage.astro';
+import { getProviderBySlug } from '../../server/content/loaders';
+import { getPageSettings, pageContentMode } from '../../server/pages/common';
+import { contentPaths } from '../../server/pages/content';
+import { getResponsiveMediaDescriptor } from '../../server/content/astro-media';
+/** Enumerate compact published provider route parameters for static output.
+ * @returns Slugs for published provider pages.
+ */
+export async function getStaticPaths() {
+  return contentPaths('provider', '/providers/');
+}
+const mode = pageContentMode();
+const provider = await getProviderBySlug(Astro.params.slug || '', mode);
+if (!provider) return Astro.rewrite('/404');
+const settings = await getPageSettings(mode);
+let socialImagePath = provider.image?.src;
+if (provider.image && import.meta.env.PUBLIC_ASTRO_TARGET === 'static') {
+  // Social metadata uses a local portrait at the existing social-card display width.
+  const socialWidth = Math.min(1200, provider.image.width ?? 1200);
+  const socialHeight =
+    provider.image.width && provider.image.height
+      ? Math.round((socialWidth * provider.image.height) / provider.image.width)
+      : undefined;
+  const socialImage = await getImage({
+    src: provider.image.src,
+    width: socialWidth,
+    height: socialHeight,
+    inferSize: true,
+    format: 'jpg',
+  });
+  socialImagePath = socialImage.src;
+}
+if (provider.image) {
+  provider.image = await getResponsiveMediaDescriptor(provider.image, {
+    width: 600,
+    aspectRatio: 1,
+  });
+}
+if (provider.review?.date) {
+  const date = moment.utc(provider.review.date, moment.ISO_8601, true);
+  provider.review.date = date.isValid() ? date.format('MMMM D, YYYY') : '';
+}
+const honorific =
+  provider.name?.honorific && provider.name.honorific !== 'None' ? provider.name.honorific : '';
+const title = `${honorific} ${provider.name?.fullName || 'Untitled'}`.trim();
+await prepareInlineImages(provider, mode, 800);
+---
+
+<SitePage
+  pathname={Astro.url.pathname}
+  trackingSettings={settings.trackingSettings}
+  {title}
+  description={provider.description || ''}
+  useTracking
+  ogType="profile"
+  {socialImagePath}
+>
+  <ProviderPage
+    client:load
+    pathname={Astro.url.pathname}
+    announcement={settings.announcement}
+    {provider}
+  />
+</SitePage>

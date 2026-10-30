@@ -1,0 +1,47 @@
+---
+// Renders a condition from a static path or a request-time preview lookup.
+import { ConditionPage } from '../../components/pages/ConditionPage';
+import { prepareInlineImages } from '../../server/content/inline-images';
+import SitePage from '../../layouts/SitePage.astro';
+import { getConditionBySlug } from '../../server/content/loaders';
+import { getPageSettings, pageContentMode } from '../../server/pages/common';
+import { contentPaths } from '../../server/pages/content';
+import { socialCardPath } from '../../../../src/shared/media/social-cards.mjs';
+/** Enumerate compact published condition route parameters for static output.
+ * @returns Slugs for published condition pages.
+ */
+export async function getStaticPaths() {
+  return contentPaths('condition', '/conditions/');
+}
+const mode = pageContentMode();
+const condition = await getConditionBySlug(Astro.params.slug || '', mode);
+if (!condition) return Astro.rewrite('/404');
+const settings = await getPageSettings(mode);
+const socialImagePath =
+  import.meta.env.PUBLIC_ASTRO_TARGET === 'static'
+    ? socialCardPath({
+        kind: 'conditions',
+        slug: condition.slug || '',
+        title: condition.heading || condition.title,
+        backgroundImage: condition.thumbnail?.src,
+      })
+    : condition.thumbnail?.src;
+await prepareInlineImages(condition, mode, 1200);
+---
+
+<SitePage
+  pathname={Astro.url.pathname}
+  trackingSettings={settings.trackingSettings}
+  title={condition.title || condition.heading || 'Untitled'}
+  description={condition.description || ''}
+  ogType="article"
+  articleSection="conditions"
+  {socialImagePath}
+>
+  <ConditionPage
+    client:load
+    pathname={Astro.url.pathname}
+    announcement={settings.announcement}
+    {condition}
+  />
+</SitePage>

@@ -1,0 +1,76 @@
+# Stage 3 Astro validation
+
+The remaining Stage 3 implementation is submitted as six stacked review MRs over feature MR #145. No new MR has been merged and no deployment was performed. Stage 4 preview deployment and Gatsby retirement remain separate work.
+
+## Matched content and builds
+
+- Gatsby baseline: `5a03162b082a64ea502d0c172fcef433f842b47e` (`main`), built locally with development CMS settings.
+- Astro application: `b1919bbb560768f137a7c1c49a61c8088425ea90`; later evidence commits contain documentation/images only.
+- Both builds use the same 56 published detail records: 33 blogs, 10 conditions, 5 providers, 4 clinics and 4 service updates. Record IDs and `updatedAt` values were checked again after the Astro build; none changed.
+- The version-set SHA-256 is `10a817ce55801fc68cbadca99020db68ced2ca54acbf7a2b7f0d7b495627093a`.
+- Real Gatsby, Astro static and compiled Node SSR builds succeed. The static output has 65 pages, including the 404 asset. All 1,066 public files were scanned for the configured CMS token; none contain it.
+
+## Validation
+
+| Check | Result |
+| --- | --- |
+| Astro typecheck | 37 files, zero errors/warnings/hints |
+| Source unit suite | 41 passed |
+| Full actual static/SSR integration suite | 6 passed |
+| Individual MR boundaries | WEB-32/33/34/35: 4 integration cases each; WEB-37: 5; all pass |
+| Matched-content static browser suite | 176 passed, zero failed/flaky; all 130 screenshot dimensions match |
+| Real SSR HTML comparison | All 64 published routes match static title, description, canonical and meaningful body text; the 404 response matches status/content but canonical follows the requested error URL |
+| Real SSR image delivery | Cold homepage/conditions pass unchanged 10-second image waits; 12/12 real SSR desktop/mobile comparisons pass |
+
+The synthetic CMS integration builds both actual Astro targets and verifies every fixed/archive/detail family without JavaScript, published-only sitemap dates/metadata, JSON-LD and public artifact isolation. The running SSR server sees newly created, edited, renamed and deleted drafts without rebuilding. Missing/wrong-date URLs return 404; incomplete draft profiles/homepage sections remain usable; CMS outages return 500 without leaking credentials. Browser input cannot switch publication mode. Preview responses disable tracking and carry private/no-store/noindex policy.
+
+Interaction tests cover mobile navigation/current links, announcement dismissal and preloaded session storage, carousel controls, booking dismissal/handoff, maps, contents anchors and contact success/field/server errors. Forms use interception or a synthetic local HTTP endpoint; no real enquiry was submitted. A UTC server and Chicago browser retain the same November 1 service-update date and breadcrumb at the month boundary.
+
+## Regressions resolved
+
+Collection ties/defaults now retain Gatsby's numeric CMS source order; stable document identity still uses `documentId`. This restores condition cards, clinics/contact choices and the first review. Service-update date display and breadcrumbs preserve the stored calendar date across timezones.
+
+Cold SSR testing found that a 315px card could select a 6,584px AVIF, taking 39.4 seconds to transform. The initial validation revision used a temporary 1,920px ceiling. The image review follow-up removes that ceiling and the handwritten candidate list: native Astro layouts now generate candidates from each view's display-width input, and standard lazy `sizes="auto"` selects the actual CSS slot. Full-width heroes use Astro's full-width layout. Actual remote-image tests verify a 300px square produces thumbnail-sized density variants while a wide image can produce 2,400px output, all saved locally by Astro.
+
+That audit also found a published rich-text image bypassing processing. Embedded blocks now receive native responsive attributes before React rendering, and provider social images have local static output. The Gatsby renderer's existing fallback remains intact. See [current image architecture](../astro/README.md#responsive-cms-images) for the native API boundary; the recorded measurements below describe the original validation revision.
+
+## Deliberate differences and limits
+
+Semantic and pixel comparisons are advisory and were reviewed separately from functional pass counts. Remaining differences are explicit article/profile Open Graph types (the previous rendered Gatsby output used website), provider social-image asset URLs, 404 canonical/noindex behavior, and the corrected explicit Crest Hill breadcrumb/JSON-LD URL. Six small pixel-threshold advisories remain across five routes; visual review found no corresponding layout or content defect. Native image encoders/source selection account for those differences; exact per-route results are in the [evidence JSON](screenshots/astro-stage3-evidence.json).
+
+The public homepage omits legacy Netlify Identity login hooks. Authentication and deployment performance on the actual preview host belong to Stage 4. The test servers are local; this report does not claim a deployed preview, production cutover, or third-party analytics delivery.
+
+## Reproduce
+
+Install root/Astro dependencies and Chromium with the documented Node version in [Astro setup](../astro/README.md). Run `yarn test:unit`, `yarn --cwd astro typecheck` and `yarn test:astro`. The integration suite uses its own synthetic CMS and blocks external browser requests.
+
+For matched-content comparisons, build Gatsby `main` and this Astro branch using the same development CMS version and public Runtime API/Mapbox settings. Configure `STRAPI_MEDIA_ORIGINS` from the upload origins returned by that CMS, then run `yarn astro:static --mode development` and `yarn astro:ssr:build --mode development`. Serve the Gatsby baseline and static Astro output on distinct loopback ports; run:
+
+```sh
+UI_BASE_URL=http://127.0.0.1:4330/ UI_REFERENCE_URL=http://127.0.0.1:4329/ yarn test:ui
+```
+
+Run the compiled Node SSR entry with the same server environment and repeat representative media comparisons against its port. `tests/ui` already protects against unintended write requests. Application builds may emit the existing navigation duplicate-case warnings; the navigation behavior checks pass.
+
+## Screenshots
+
+These are real development-content Astro pages, captured after image loading with booking bubbles dismissed. Maps are unmasked. They are committed so they can be viewed in the GitHub mobile app.
+
+| Page | Evidence |
+| --- | --- |
+| Homepage desktop | [Viewport](screenshots/astro-stage3-home-desktop.png), [full page](screenshots/astro-stage3-home-desktop-full.png) |
+| Homepage mobile | [Viewport](screenshots/astro-stage3-home-mobile.png), [full page](screenshots/astro-stage3-home-mobile-full.png) |
+| Clinics archive desktop | [Full page](screenshots/astro-stage3-clinics-desktop.png) |
+| Clinic detail mobile | [Full page](screenshots/astro-stage3-clinic-mobile.png) |
+| Condition detail mobile | [Full page](screenshots/astro-stage3-condition-mobile.png) |
+
+
+## Native responsive image review follow-up
+
+[MR #154](https://github.com/m-salmankhan/aascmed.com/pull/154) uses Astro's native layouts and image service instead of an application-wide width ceiling or candidate list. Remote uploads produce local static files; a mobile browser audit requested zero CMS/CDN images. A 351px image slot selected a 640px encoded variant. The actual remote-image fixture also verifies 300px thumbnails remain bounded by native density variants while a wide image can produce 2,400px output.
+
+At implementation commit `2d0ec7ca397e5a1adeced44fecebfa2fe5dd0d2e`, [regression CI passes](https://github.com/m-salmankhan/aascmed.com/actions/runs/41045857401). Independent validation passed 6 integrations, 41 source tests and Astro checking of 53 files without diagnostics. Real static and SSR builds pass. The full native-image revision passed 176 static browser comparisons and 14 representative SSR comparisons. After the isolated inline-image CSS correction, both desktop/mobile static and SSR rechecks pass; an integration check verifies the image fits its column with JavaScript disabled.
+
+The published `/blog/ili/` graphic previously overflowed its mobile column in Gatsby. It now fits, so that page's final geometry intentionally differs from the baseline. The final 390px viewport has 390px scroll width and no horizontal overflow. These follow-up results are separate from the original measurements above; [machine-readable evidence](screenshots/astro-responsive-evidence.json) records the exact revisions.
+
+![Astro mobile article with a responsive locally generated inline graphic](screenshots/astro-responsive-inline-mobile.png)

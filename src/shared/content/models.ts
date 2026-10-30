@@ -1,3 +1,4 @@
+// Defines normalized content and media records consumed by the shared website views.
 /** JSON scalar values used for serializable CMS data. */
 export type JsonPrimitive = string | number | boolean | null;
 /** Recursively JSON-safe data used for CMS rich text and dynamic-zone content. */
@@ -47,6 +48,8 @@ export interface MediaDescriptor {
 
 /** Common identity, copy, rich-text, media, and date fields for normalized content records. */
 export interface ContentRecord {
+  /** Strapi v5 stable identity, when available. */
+  documentId?: string;
   /** Stable CMS record identifier. */
   id: string;
   /** URL slug, or null when the CMS record has no slug. */
@@ -109,6 +112,44 @@ export interface ClinicRecord extends ContentRecord {
 /** Service-update data with a nullable date; published routes require a valid calendar date. */
 export interface ServiceUpdateRecord extends ContentRecord {
   date: string | null;
+}
+
+export interface ReviewRecord {
+  documentId?: string;
+  id: string;
+  name: string;
+  stars?: number;
+  content?: JsonValue[];
+  sourceName?: string;
+  sourceUrl?: string;
+}
+
+/** Normalized singleton page fields shared by archive and fixed page views. */
+export interface ContentPageRecord {
+  /** CMS modification timestamp, when supplied. */
+  updatedAt?: string;
+  documentId: string;
+  id: string;
+  heading?: string;
+  title?: string;
+  description?: string;
+  metaDescription?: string;
+  text?: JsonValue[];
+}
+
+export interface HomePageRecord {
+  documentId: string;
+  id: string;
+  metaDescription?: string;
+  hero?: JsonValue;
+  genericBelowHero?: JsonValue;
+  conditions?: JsonValue;
+  serviceUpdates?: JsonValue;
+  blog?: JsonValue;
+  providers?: JsonValue;
+  feedback?: JsonValue;
+  locations?: JsonValue;
+  contact?: JsonValue;
 }
 
 /** Public site metadata used to render titles and canonical URLs. */

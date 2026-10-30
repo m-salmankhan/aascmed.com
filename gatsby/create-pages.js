@@ -1,16 +1,33 @@
 /**
  * Page Creation
- * 
+ *
  * Creates dynamic pages from Strapi content types.
  * Each content type has its own creation function for clarity.
  */
-
 const path = require('node:path');
 const fs = require('node:fs');
-const crypto = require('node:crypto');
 const moment = require('moment');
-const { generateOGImage, initOGImageGenerator, downloadMapboxImage } = require('./og-image-generator');
-
+const { downloadMapboxImage } = require('./og-image-generator');
+/**
+ * @import { Actions, CreatePagesArgs, Reporter } from 'gatsby'
+ * @import {
+ *   SocialCardKind,
+ *   SocialCardResult,
+ * } from '../src/shared/media/social-cards.d.mts'
+ */
+/** Gatsby's page-registration action, derived from its own Actions interface.
+ * @typedef {Actions['createPage']} CreatePage
+ */
+/** Social-card input adapted from one Gatsby query record.
+ * @typedef {object} OGImageRequest
+ * @property {string} slug Content slug used in the public card path.
+ * @property {string} title Text rendered on the card.
+ * @property {string} [thumbnailPath] Local background image supplied by Gatsby.
+ * @property {SocialCardKind} outputDir Card family used for its output directory.
+ */
+/** Public URL and cache result returned by the Gatsby adapter.
+ * @typedef {Pick<SocialCardResult, 'imagePath' | 'wasCached'>} OGImageResult
+ */
 /**
  * GraphQL query to fetch all content for page creation
  */
@@ -71,99 +88,67 @@ const PAGE_QUERY = `
     }
   }
 `;
-
-/**
- * Main createPages function
+/** Run Gatsby's page-creation query and dispatch records to their page builders.
+ * @param {CreatePagesArgs} context Gatsby hook inputs for querying records, registering pages, and reporting build issues.
+ * @returns Promise<void> after every dynamic page has been created.
  */
-async function createPages({ graphql, actions, reporter, cache }) {
+async function createPages({ graphql, actions, reporter }) {
   const { createPage } = actions;
-
   const result = await graphql(PAGE_QUERY);
-
   if (result.errors) {
     reporter.panicOnBuild('🚨 ERROR: Loading "createPages" query');
     return;
   }
-
   const { data } = result;
   const siteTitle = data.site.siteMetadata.title;
-
-  // Initialize OG image generator (downloads fonts, etc.)
-  await initOGImageGenerator();
-
   // Create pages for each content type
-  await createBlogPages(createPage, data.strapiBlogPosts.nodes, reporter, cache);
-  await createConditionPages(createPage, data.strapiConditions.nodes, reporter, cache);
+  await createBlogPages(createPage, data.strapiBlogPosts.nodes, reporter);
+  await createConditionPages(createPage, data.strapiConditions.nodes, reporter);
   createProviderPages(createPage, data.strapiProviders.nodes);
   createServiceUpdatePages(createPage, data.strapiServiceUpdates.nodes);
-  await createClinicPages(createPage, data.clinics.nodes, reporter, cache, siteTitle);
-
-  reporter.info(`Created pages: ${data.strapiBlogPosts.nodes.length} blogs, ${data.strapiConditions.nodes.length} conditions, ${data.strapiProviders.nodes.length} providers, ${data.strapiServiceUpdates.nodes.length} service updates, ${data.clinics.nodes.length} clinics`);
+  await createClinicPages(createPage, data.clinics.nodes, reporter, siteTitle);
+  reporter.info(
+    `Created pages: ${data.strapiBlogPosts.nodes.length} blogs, ${data.strapiConditions.nodes.length} conditions, ${data.strapiProviders.nodes.length} providers, ${data.strapiServiceUpdates.nodes.length} service updates, ${data.clinics.nodes.length} clinics`,
+  );
 }
-
-/**
- * Generate a hash for cache invalidation based on title and thumbnail
+/** Reuse or create one social card through the shared renderer and private content-aware cache.
+ * @param {OGImageRequest} options Record slug, card title, optional local thumbnail, and public card family.
+ * @returns {Promise<OGImageResult>} Compatible public image URL and whether the existing output was reused.
  */
-function generateOGImageHash(title, thumbnailPath) {
-  const hash = crypto.createHash('md5');
-  hash.update(title || '');
-  
-  if (thumbnailPath && fs.existsSync(thumbnailPath)) {
-    const stat = fs.statSync(thumbnailPath);
-    hash.update(stat.mtimeMs.toString());
-  }
-  
-  return hash.digest('hex');
+async function getOGImage({ slug, title, thumbnailPath, outputDir }) {
+  const { buildSocialCards } = await import(
+    '../src/shared/media/social-cards.mjs'
+  );
+  const kind = outputDir === 'conditions' ? 'conditions' : outputDir;
+  const [card] = await buildSocialCards(
+    [
+      {
+        kind,
+        slug,
+        title: title || 'Untitled',
+        backgroundImage: thumbnailPath,
+        mediaName: thumbnailPath
+          ? path.basename(thumbnailPath, path.extname(thumbnailPath))
+          : 'default',
+      },
+    ],
+    {
+      publicDir: path.resolve('./public'),
+      cacheDir: path.resolve('./.cache/public-images'),
+    },
+  );
+  return { imagePath: card.imagePath, wasCached: card.wasCached };
 }
-
-/**
- * Get or generate an OG image with caching
- * 
- * @param {Object} options
- * @param {string} options.slug - Unique identifier for the image
- * @param {string} options.title - Title text for the image
- * @param {string} options.thumbnailPath - Path to background image (optional)
- * @param {string} options.outputDir - Directory to save the image
- * @param {Object} options.cache - Gatsby cache instance
- * @returns {Promise<{ imagePath: string, wasCached: boolean }>}
+/** Create each blog detail page and attach its shared social-card path to Gatsby page context.
+ * @param {CreatePage} createPage Gatsby page creation action.
+ * @param {Array<Object>} posts Blog nodes returned by PAGE_QUERY.
+ * @param {Reporter} reporter Gatsby build reporter for generation counts and recoverable failures.
+ * @returns Promise<void> after all blog pages are registered.
  */
-async function getOGImage({ slug, title, thumbnailPath, outputDir, cache }) {
-  const thumbnailName = path.basename(thumbnailPath, path.extname(thumbnailPath));
-  const outputName = `${slug}-${thumbnailName}.jpg`;
-
-  const imagePath = `/og-images/${outputDir}/${outputName}`;
-  const outputPath = path.resolve(`./public/og-images/${outputDir}/${outputName}`);
-  const cacheKey = `og-image-${outputDir}-${slug}`;
-  const contentHash = generateOGImageHash(title, thumbnailPath);
-  
-  // Check cache
-  const cachedHash = await cache.get(cacheKey);
-  const outputExists = fs.existsSync(outputPath);
-  
-  if (cachedHash === contentHash && outputExists) {
-    return { imagePath, wasCached: true };
-  }
-  
-  // Generate new image
-  await generateOGImage({
-    title: title || 'Untitled',
-    backgroundImagePath: thumbnailPath,
-    outputPath,
-  });
-  
-  await cache.set(cacheKey, contentHash);
-  return { imagePath, wasCached: false };
-}
-
-/**
- * Create blog post pages and generate OG images (with caching)
- */
-async function createBlogPages(createPage, posts, reporter, cache) {
+async function createBlogPages(createPage, posts, reporter) {
   const blogTemplate = path.resolve('./src/templates/blog-post.tsx');
-  
   let generated = 0;
   let cached = 0;
-  
   for (const node of posts) {
     try {
       const { imagePath, wasCached } = await getOGImage({
@@ -171,11 +156,8 @@ async function createBlogPages(createPage, posts, reporter, cache) {
         title: node.title,
         thumbnailPath: node.thumbnail?.localFile?.absolutePath,
         outputDir: 'blog',
-        cache,
       });
-      
       wasCached ? cached++ : generated++;
-      
       createPage({
         path: `/blog/${node.slug}/`,
         component: blogTemplate,
@@ -186,8 +168,9 @@ async function createBlogPages(createPage, posts, reporter, cache) {
         },
       });
     } catch (error) {
-      reporter.warn(`Failed to generate OG image for "${node.slug}": ${error.message}`);
-      
+      reporter.warn(
+        `Failed to generate OG image for "${node.slug}": ${error.message}`,
+      );
       // Still create the page, just without the OG image
       createPage({
         path: `/blog/${node.slug}/`,
@@ -199,19 +182,20 @@ async function createBlogPages(createPage, posts, reporter, cache) {
       });
     }
   }
-  
-  reporter.info(`OG images: ${generated} generated, ${cached} cached (${posts.length} total)`);
+  reporter.info(
+    `OG images: ${generated} generated, ${cached} cached (${posts.length} total)`,
+  );
 }
-
-/**
- * Create condition pages and generate OG images (with caching)
+/** Create condition detail pages and attach their shared social-card paths.
+ * @param {CreatePage} createPage Gatsby page creation action.
+ * @param {Array<Object>} conditions Condition nodes returned by PAGE_QUERY.
+ * @param {Reporter} reporter Gatsby build reporter for generation counts and recoverable failures.
+ * @returns Promise<void> after all condition pages are registered.
  */
-async function createConditionPages(createPage, conditions, reporter, cache) {
+async function createConditionPages(createPage, conditions, reporter) {
   const conditionTemplate = path.resolve('./src/templates/condition.tsx');
-  
   let generated = 0;
   let cached = 0;
-  
   for (const node of conditions) {
     try {
       const { imagePath, wasCached } = await getOGImage({
@@ -219,11 +203,8 @@ async function createConditionPages(createPage, conditions, reporter, cache) {
         title: node.heading,
         thumbnailPath: node.thumbnail?.localFile?.absolutePath,
         outputDir: 'conditions',
-        cache,
       });
-      
       wasCached ? cached++ : generated++;
-      
       createPage({
         path: `/conditions/${node.slug}/`,
         component: conditionTemplate,
@@ -234,8 +215,9 @@ async function createConditionPages(createPage, conditions, reporter, cache) {
         },
       });
     } catch (error) {
-      reporter.warn(`Failed to generate OG image for condition "${node.slug}": ${error.message}`);
-      
+      reporter.warn(
+        `Failed to generate OG image for condition "${node.slug}": ${error.message}`,
+      );
       createPage({
         path: `/conditions/${node.slug}/`,
         component: conditionTemplate,
@@ -246,12 +228,14 @@ async function createConditionPages(createPage, conditions, reporter, cache) {
       });
     }
   }
-  
-  reporter.info(`Condition OG images: ${generated} generated, ${cached} cached (${conditions.length} total)`);
+  reporter.info(
+    `Condition OG images: ${generated} generated, ${cached} cached (${conditions.length} total)`,
+  );
 }
-
-/**
- * Create provider pages
+/** Register provider detail pages using their existing template and content IDs.
+ * @param {CreatePage} createPage Gatsby page creation action.
+ * @param {Array<Object>} providers Provider nodes returned by PAGE_QUERY.
+ * @returns Nothing; pages are registered through `createPage`.
  */
 function createProviderPages(createPage, providers) {
   providers.forEach((node) => {
@@ -265,15 +249,15 @@ function createProviderPages(createPage, providers) {
     });
   });
 }
-
-/**
- * Create service update pages with date-based URLs
+/** Register dated service-update pages using each record's stored date and slug.
+ * @param {CreatePage} createPage Gatsby page creation action.
+ * @param {Array<Object>} updates Service-update nodes returned by PAGE_QUERY.
+ * @returns Nothing; pages are registered through `createPage`.
  */
 function createServiceUpdatePages(createPage, updates) {
   updates.forEach((node) => {
     const date = moment(node.date);
     const slug = `/service-updates/${date.format('YYYY')}/${date.format('MM')}/${node.slug}/`;
-    
     createPage({
       path: slug,
       component: path.resolve('./src/templates/service-update.tsx'),
@@ -284,58 +268,56 @@ function createServiceUpdatePages(createPage, updates) {
     });
   });
 }
-
-/**
- * Create clinic pages with OG images using Mapbox static maps
+/** Create clinic pages and use cached Mapbox imagery as their social-card background.
+ * @param {CreatePage} createPage Gatsby page creation action.
+ * @param {Array<Object>} clinics Clinic nodes with optional coordinates.
+ * @param {Reporter} reporter Gatsby build reporter for generation counts and recoverable failures.
+ * @param {string} siteTitle Site title prepended to each clinic name in its card.
+ * @returns Promise<void> after every clinic page is registered.
  */
-async function createClinicPages(createPage, clinics, reporter, cache, siteTitle) {
+async function createClinicPages(createPage, clinics, reporter, siteTitle) {
   const clinicTemplate = path.resolve('./src/templates/clinic.tsx');
   const mapCacheDir = path.resolve('./.cache/mapbox');
-  
   // Ensure map cache directory exists
   if (!fs.existsSync(mapCacheDir)) {
     fs.mkdirSync(mapCacheDir, { recursive: true });
   }
-  
   let generated = 0;
   let cached = 0;
-  
   for (const node of clinics) {
     // Generate slug from clinic_name (e.g., "Aurora" -> "/clinics/aurora/")
-    const slug = node.slug || node.clinic_name.toLowerCase().replace(/\s+/g, '-');
+    const slug =
+      node.slug || node.clinic_name.toLowerCase().replace(/\s+/g, '-');
     const pagePath = `/clinics/${slug}/`;
-    
     // Check if clinic has location data
     const lat = node.location?.lat;
     const lng = node.location?.long;
-    
     let ogImagePath = undefined;
-    
     if (lat && lng) {
       try {
         // Download Mapbox static image as background (cached on disk)
-        const mapImagePath = path.join(mapCacheDir, `${slug}-${lat}-${lng}-map.png`);
-        
+        const mapImagePath = path.join(
+          mapCacheDir,
+          `${slug}-${lat}-${lng}-map.png`,
+        );
         if (!fs.existsSync(mapImagePath)) {
           await downloadMapboxImage(lat, lng, mapImagePath);
         }
-        
         // Generate OG image with map as background
         const { imagePath, wasCached } = await getOGImage({
           slug,
           title: `${siteTitle} ${node.clinic_name}`,
           thumbnailPath: mapImagePath,
           outputDir: 'clinics',
-          cache,
         });
-        
         ogImagePath = imagePath;
         wasCached ? cached++ : generated++;
       } catch (error) {
-        reporter.warn(`Failed to generate OG image for clinic "${node.clinic_name}": ${error.message}`);
+        reporter.warn(
+          `Failed to generate OG image for clinic "${node.clinic_name}": ${error.message}`,
+        );
       }
     }
-    
     createPage({
       path: pagePath,
       component: clinicTemplate,
@@ -346,10 +328,10 @@ async function createClinicPages(createPage, clinics, reporter, cache, siteTitle
       },
     });
   }
-  
-  reporter.info(`Clinic OG images: ${generated} generated, ${cached} cached (${clinics.length} total)`);
+  reporter.info(
+    `Clinic OG images: ${generated} generated, ${cached} cached (${clinics.length} total)`,
+  );
 }
-
 module.exports = {
   createPages,
   // Export individual functions for testing or reuse

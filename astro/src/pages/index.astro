@@ -1,28 +1,31 @@
 ---
-import ProofPage from '../views/ProofPage';
-import { getDraftPreview } from '../server/draft-preview';
-import DraftStatus from '../components/DraftStatus';
-import VisitCounter from '../components/VisitCounter';
-
-const target = import.meta.env.PUBLIC_ASTRO_TARGET;
-const draft = await getDraftPreview();
-if (target === 'compiled Node SSR') Astro.response.headers.set('Cache-Control', 'private, no-store');
-const media = { src: '/assets/hero-bg.png', alt: 'Soft green and blue healthcare themed background', width: 1920, height: 1080 };
+// Renders the real CMS homepage through the shared homepage view and native Astro document.
+import { HomePage } from '../components/pages/HomePage';
+import { prepareInlineImages } from '../server/content/inline-images';
+import SitePage from '../layouts/SitePage.astro';
+import { getPageSettings, pageContentMode } from '../server/pages/common';
+import { getHomePageData } from '../server/pages/home';
+const mode = pageContentMode();
+const [{ props, description }, settings] = await Promise.all([
+  getHomePageData(mode),
+  getPageSettings(mode),
+]);
+await prepareInlineImages(props, mode, 600);
 ---
 
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;800&display=swap" />
-    <title>Astro architecture proof</title>
-  </head>
-  <body>
-    <ProofPage target={target} draft={draft} media={media} />
-    <VisitCounter client:load />
-    <DraftStatus client:load initialTitle={draft.title} />
-  </body>
-</html>
+<SitePage
+  pathname={Astro.url.pathname}
+  trackingSettings={settings.trackingSettings}
+  title="Allergy, Asthma and Sinus Centers in Illinois"
+  description={description}
+  appendBusinessNameToTitle={false}
+  useTracking
+  ogType="website"
+>
+  <HomePage
+    client:load
+    pathname={Astro.url.pathname}
+    announcement={settings.announcement}
+    {...props}
+  />
+</SitePage>

@@ -1,0 +1,24 @@
+---
+// Adds document metadata around a page's independently typed React entry.
+import SiteDocument from './SiteDocument.astro';
+import { siteSettings } from '../config/site';
+import type { TrackingSettings } from '../../../src/shared/content/models';
+
+type DocumentProps = import('astro/types').ComponentProps<typeof SiteDocument>;
+
+/** Page metadata layered over the document's shared site identity. */
+interface Props extends Omit<DocumentProps, 'siteSettings' | 'trackingSettings'> {
+  trackingSettings?: TrackingSettings | null;
+  articleSection?: string;
+}
+const { trackingSettings, articleSection, ...document } = Astro.props;
+---
+
+<SiteDocument
+  {...document}
+  siteSettings={siteSettings}
+  trackingSettings={trackingSettings ?? undefined}
+>
+  {articleSection && <meta slot="head" name="article:section" content={articleSection} />}
+  <slot />
+</SiteDocument>
