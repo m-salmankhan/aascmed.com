@@ -63,3 +63,14 @@ These are real development-content Astro pages, captured after image loading wit
 | Clinics archive desktop | [Full page](screenshots/astro-stage3-clinics-desktop.png) |
 | Clinic detail mobile | [Full page](screenshots/astro-stage3-clinic-mobile.png) |
 | Condition detail mobile | [Full page](screenshots/astro-stage3-condition-mobile.png) |
+
+
+## Native responsive image review follow-up
+
+[MR #154](https://github.com/m-salmankhan/aascmed.com/pull/154) uses Astro's native layouts and image service instead of an application-wide width ceiling or candidate list. Remote uploads produce local static files; a mobile browser audit requested zero CMS/CDN images. A 351px image slot selected a 640px encoded variant. The actual remote-image fixture also verifies 300px thumbnails remain bounded by native density variants while a wide image can produce 2,400px output.
+
+At implementation commit `2d0ec7ca397e5a1adeced44fecebfa2fe5dd0d2e`, [regression CI passes](https://github.com/m-salmankhan/aascmed.com/actions/runs/41045857401). Independent validation passed 6 integrations, 41 source tests and Astro checking of 53 files without diagnostics. Real static and SSR builds pass. The full native-image revision passed 176 static browser comparisons and 14 representative SSR comparisons. After the isolated inline-image CSS correction, both desktop/mobile static and SSR rechecks pass; an integration check verifies the image fits its column with JavaScript disabled.
+
+The published `/blog/ili/` graphic previously overflowed its mobile column in Gatsby. It now fits, so that page's final geometry intentionally differs from the baseline. The final 390px viewport has 390px scroll width and no horizontal overflow. These follow-up results are separate from the original measurements above; [machine-readable evidence](screenshots/astro-responsive-evidence.json) records the exact revisions.
+
+![Astro mobile article with a responsive locally generated inline graphic](screenshots/astro-responsive-inline-mobile.png)
