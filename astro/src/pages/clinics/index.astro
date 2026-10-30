@@ -1,5 +1,6 @@
 ---
 // Renders clinic cards from the selected published or preview collection.
+import { ClinicsArchivePage } from '../../components/pages/ClinicsArchivePage';
 import SitePage from '../../layouts/SitePage.astro';
 import { getClinics, getClinicsArchive } from '../../server/content/loaders';
 import { pageContentMode, getPageSettings } from '../../server/pages/common';
@@ -15,12 +16,17 @@ for await (const clinic of getClinics(mode)) {
 
 <SitePage
   pathname={Astro.url.pathname}
-  {...settings}
+  trackingSettings={settings.trackingSettings}
   title={page?.heading || ''}
   description={page?.metaDescription || ''}
   useTracking
-  view={{
-    kind: 'clinics-archive',
-    props: { heading: page?.heading || 'Clinics', blocks: page?.text, practices },
-  }}
-/>
+>
+  <ClinicsArchivePage
+    client:load
+    pathname={Astro.url.pathname}
+    announcement={settings.announcement}
+    heading={page?.heading || 'Clinics'}
+    blocks={page?.text}
+    {practices}
+  />
+</SitePage>

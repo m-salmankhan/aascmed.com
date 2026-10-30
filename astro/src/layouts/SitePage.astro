@@ -1,29 +1,17 @@
 ---
-// Wraps shared React pages in the Astro document and public site contexts.
+// Adds document metadata around a page's independently typed React entry.
 import SiteDocument from './SiteDocument.astro';
-import { ReactPage, type PageView } from '../components/ReactPage';
-import { astroPublicConfig } from '../config/public';
-import type {
-  AnnouncementSettings,
-  SiteSettings,
-  TrackingSettings,
-} from '../../../src/shared/content/models';
+import { siteSettings } from '../config/site';
+import type { TrackingSettings } from '../../../src/shared/content/models';
 
 type DocumentProps = import('astro/types').ComponentProps<typeof SiteDocument>;
 
-/** Page-specific view inputs layered over the document's own metadata contract. */
+/** Page metadata layered over the document's shared site identity. */
 interface Props extends Omit<DocumentProps, 'siteSettings' | 'trackingSettings'> {
-  view: PageView;
-  announcement: AnnouncementSettings | null;
   trackingSettings?: TrackingSettings | null;
   articleSection?: string;
 }
-const { view, announcement, trackingSettings, articleSection, ...document } = Astro.props;
-const siteSettings: SiteSettings = {
-  title: 'Allergy, Asthma and Sinus Centers',
-  url: 'https://www.aascmed.com',
-  twitterHandle: '@DrMaazAllergy',
-};
+const { trackingSettings, articleSection, ...document } = Astro.props;
 ---
 
 <SiteDocument
@@ -32,12 +20,5 @@ const siteSettings: SiteSettings = {
   trackingSettings={trackingSettings ?? undefined}
 >
   {articleSection && <meta slot="head" name="article:section" content={articleSection} />}
-  <ReactPage
-    client:load
-    pathname={document.pathname}
-    view={view}
-    siteSettings={siteSettings}
-    publicConfig={astroPublicConfig}
-    announcement={announcement}
-  />
+  <slot />
 </SiteDocument>

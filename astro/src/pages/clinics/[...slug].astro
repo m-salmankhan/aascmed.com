@@ -1,5 +1,6 @@
 ---
 // Resolves clinic detail pages using explicit slugs or the existing clinic-name fallback.
+import { ClinicPage } from '../../components/pages/ClinicPage';
 import SitePage from '../../layouts/SitePage.astro';
 import { getClinicBySlug } from '../../server/content/loaders';
 import { pageContentMode, getPageSettings } from '../../server/pages/common';
@@ -35,11 +36,17 @@ const socialImagePath =
 
 <SitePage
   pathname={Astro.url.pathname}
-  {...settings}
+  trackingSettings={settings.trackingSettings}
   title={clinic.title || 'Untitled'}
   description={clinic.description || ''}
   appendBusinessNameToTitle={false}
   useTracking
   {socialImagePath}
-  view={{ kind: 'clinic', props: { clinic } }}
-/>
+>
+  <ClinicPage
+    client:load
+    pathname={Astro.url.pathname}
+    announcement={settings.announcement}
+    {clinic}
+  />
+</SitePage>

@@ -1,5 +1,6 @@
 ---
 // Renders the CMS privacy policy using the shared privacy view.
+import { PrivacyPage } from '../components/pages/PrivacyPage';
 import SitePage from '../layouts/SitePage.astro';
 import { getPrivacyPolicy } from '../server/content/loaders';
 import { getPageSettings, pageContentMode } from '../server/pages/common';
@@ -13,13 +14,18 @@ const lastUpdated =
 
 <SitePage
   pathname={Astro.url.pathname}
-  {...settings}
+  trackingSettings={settings.trackingSettings}
   title={page?.title || ''}
   description={page?.description || ''}
   ogType="article"
   useTracking
-  view={{
-    kind: 'privacy',
-    props: { heading: page?.title || 'Privacy Policy', blocks: page?.text, lastUpdated },
-  }}
-/>
+>
+  <PrivacyPage
+    client:load
+    pathname={Astro.url.pathname}
+    announcement={settings.announcement}
+    heading={page?.title || 'Privacy Policy'}
+    blocks={page?.text}
+    {lastUpdated}
+  />
+</SitePage>

@@ -1,5 +1,6 @@
 ---
 // Renders the provider archive with biographies summarized for each card.
+import { ProvidersArchivePage } from '../../components/pages/ProvidersArchivePage';
 import SitePage from '../../layouts/SitePage.astro';
 import { getProvidersPage, getProviders } from '../../server/content/loaders';
 import { getPageSettings, pageContentMode } from '../../server/pages/common';
@@ -26,13 +27,18 @@ for await (const provider of getProviders(mode)) {
 
 <SitePage
   pathname={Astro.url.pathname}
-  {...settings}
+  trackingSettings={settings.trackingSettings}
   title={page?.heading || ''}
   description={page?.metaDescription || ''}
   useTracking
   ogType="website"
-  view={{
-    kind: 'providers-archive',
-    props: { heading: page?.heading || 'Meet the team', blocks: page?.text, providers },
-  }}
-/>
+>
+  <ProvidersArchivePage
+    client:load
+    pathname={Astro.url.pathname}
+    announcement={settings.announcement}
+    heading={page?.heading || 'Meet the team'}
+    blocks={page?.text}
+    {providers}
+  />
+</SitePage>

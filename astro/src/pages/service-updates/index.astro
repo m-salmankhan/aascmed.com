@@ -1,5 +1,6 @@
 ---
 // Renders service updates in the CMS's newest-first order.
+import { ServiceUpdatesArchivePage } from '../../components/pages/ServiceUpdatesArchivePage';
 import SitePage from '../../layouts/SitePage.astro';
 import { getServiceUpdatePage, getServiceUpdates } from '../../server/content/loaders';
 import { pageContentMode, getPageSettings } from '../../server/pages/common';
@@ -24,12 +25,17 @@ for await (const update of getServiceUpdates(mode)) {
 
 <SitePage
   pathname={Astro.url.pathname}
-  {...settings}
+  trackingSettings={settings.trackingSettings}
   title={page?.heading || ''}
   description={page?.metaDescription || ''}
   useTracking
-  view={{
-    kind: 'service-updates-archive',
-    props: { heading: page?.heading || 'Service Updates', blocks: page?.text, serviceUpdates },
-  }}
-/>
+>
+  <ServiceUpdatesArchivePage
+    client:load
+    pathname={Astro.url.pathname}
+    announcement={settings.announcement}
+    heading={page?.heading || 'Service Updates'}
+    blocks={page?.text}
+    {serviceUpdates}
+  />
+</SitePage>

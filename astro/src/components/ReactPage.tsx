@@ -1,121 +1,35 @@
-// Renders shared React views with their framework-neutral site contexts.
-import React, { type ComponentProps } from 'react';
-import { HomeView } from '../../../src/views/home';
-import { App } from '../../../src/components/layouts/app';
+// Supplies the shared site contexts and announcement around a React page tree.
+import type { ReactNode } from 'react';
 import AnnouncementBanner from '../../../src/components/AnnouncementBanner';
-import {
-  BlogArchiveView,
-  ConditionsArchiveView,
-  ProvidersArchiveView,
-  ClinicsArchiveView,
-  ServiceUpdatesArchiveView,
-  ContactView,
-  NotFoundView,
-  PrivacyView,
-} from '../../../src/views/fixed-archive';
-import { BlogPostView } from '../../../src/views/blog-post';
-import { ConditionView } from '../../../src/views/condition';
-import { ClinicView } from '../../../src/views/clinic';
-import { ServiceUpdateView } from '../../../src/views/service-update';
-import { ProviderView } from '../../../src/views/provider';
 import { CurrentPathProvider } from '../../../src/shared/navigation/current-path';
 import { PublicConfigProvider } from '../../../src/shared/config/public-context';
 import { SiteDataProvider } from '../../../src/shared/data/site-data';
-import type { PublicConfig } from '../../../src/shared/config/public';
-import type { AnnouncementSettings, SiteSettings } from '../../../src/shared/content/models';
+import type { AnnouncementSettings } from '../../../src/shared/content/models';
+import { astroPublicConfig } from '../config/public';
+import { siteSettings } from '../config/site';
 
-/** Serializable view selection and its corresponding shared-view inputs. */
-export type PageView =
-  | { kind: 'home'; props: ComponentProps<typeof HomeView> }
-  | { kind: 'clinics-archive'; props: ComponentProps<typeof ClinicsArchiveView> }
-  | { kind: 'service-updates-archive'; props: ComponentProps<typeof ServiceUpdatesArchiveView> }
-  | { kind: 'clinic'; props: ComponentProps<typeof ClinicView> }
-  | { kind: 'service-update'; props: ComponentProps<typeof ServiceUpdateView> }
-  | { kind: 'blog-archive'; props: ComponentProps<typeof BlogArchiveView> }
-  | { kind: 'conditions-archive'; props: ComponentProps<typeof ConditionsArchiveView> }
-  | { kind: 'providers-archive'; props: ComponentProps<typeof ProvidersArchiveView> }
-  | { kind: 'blog'; props: ComponentProps<typeof BlogPostView> }
-  | { kind: 'condition'; props: ComponentProps<typeof ConditionView> }
-  | { kind: 'provider'; props: ComponentProps<typeof ProviderView> }
-  | { kind: 'not-found' }
-  | { kind: 'privacy'; props: ComponentProps<typeof PrivacyView> }
-  | { kind: 'contact'; props: ComponentProps<typeof ContactView> };
-
-/** Values needed by the shared page tree, excluding server-only CMS credentials. */
-export interface ReactPageProps {
+/** Public request-specific context needed by a hydrated page. */
+export interface PageContextProps {
   pathname: string;
-  view: PageView;
-  siteSettings: SiteSettings;
-  publicConfig: PublicConfig;
   announcement: AnnouncementSettings | null;
 }
 
-/** Render one selected shared view with the same site-wide contexts used by Gatsby.
- * @param props Serializable page selection, public settings, pathname and announcement.
- * @returns The selected view and optional banner inside the shared providers.
+/** A React child tree rendered inside the common site providers. */
+interface ReactPageProps extends PageContextProps {
+  children: ReactNode;
+}
+
+/** Render a page tree with the same public contexts used by Gatsby.
+ * @param props Page children, current pathname and optional announcement.
+ * @returns The children and optional banner inside the shared providers.
  */
-export function ReactPage({
-  pathname,
-  view,
-  siteSettings,
-  publicConfig,
-  announcement,
-}: ReactPageProps) {
-  let content: React.ReactNode;
-  switch (view.kind) {
-    case 'home':
-      content = (
-        <App>
-          <HomeView {...view.props} />
-        </App>
-      );
-      break;
-    case 'clinics-archive':
-      content = <ClinicsArchiveView {...view.props} />;
-      break;
-    case 'service-updates-archive':
-      content = <ServiceUpdatesArchiveView {...view.props} />;
-      break;
-    case 'clinic':
-      content = <ClinicView {...view.props} />;
-      break;
-    case 'service-update':
-      content = <ServiceUpdateView {...view.props} />;
-      break;
-    case 'blog-archive':
-      content = <BlogArchiveView {...view.props} />;
-      break;
-    case 'conditions-archive':
-      content = <ConditionsArchiveView {...view.props} />;
-      break;
-    case 'providers-archive':
-      content = <ProvidersArchiveView {...view.props} />;
-      break;
-    case 'blog':
-      content = <BlogPostView {...view.props} />;
-      break;
-    case 'condition':
-      content = <ConditionView {...view.props} />;
-      break;
-    case 'provider':
-      content = <ProviderView {...view.props} />;
-      break;
-    case 'not-found':
-      content = <NotFoundView />;
-      break;
-    case 'privacy':
-      content = <PrivacyView {...view.props} />;
-      break;
-    case 'contact':
-      content = <ContactView {...view.props} />;
-      break;
-  }
+export function ReactPage({ pathname, announcement, children }: ReactPageProps) {
   return (
-    <PublicConfigProvider value={publicConfig}>
+    <PublicConfigProvider value={astroPublicConfig}>
       <SiteDataProvider value={{ siteSettings }}>
         <CurrentPathProvider path={pathname}>
           {announcement && <AnnouncementBanner announcement={announcement} />}
-          {content}
+          {children}
         </CurrentPathProvider>
       </SiteDataProvider>
     </PublicConfigProvider>

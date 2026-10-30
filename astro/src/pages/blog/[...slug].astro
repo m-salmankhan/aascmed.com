@@ -1,5 +1,6 @@
 ---
 // Renders a blog article from a static path or a request-time preview lookup.
+import { BlogPage } from '../../components/pages/BlogPage';
 import SitePage from '../../layouts/SitePage.astro';
 import { getBlogBySlug } from '../../server/content/loaders';
 import { getPageSettings, pageContentMode } from '../../server/pages/common';
@@ -34,12 +35,13 @@ const socialImagePath =
 
 <SitePage
   pathname={Astro.url.pathname}
-  {...settings}
+  trackingSettings={settings.trackingSettings}
   title={blog.title || blog.heading || 'Untitled'}
   description={blog.description || ''}
   useTracking
   ogType="article"
   articleSection="blog"
   {socialImagePath}
-  view={{ kind: 'blog', props: { blog, pathname: Astro.url.pathname } }}
-/>
+>
+  <BlogPage client:load pathname={Astro.url.pathname} announcement={settings.announcement} {blog} />
+</SitePage>

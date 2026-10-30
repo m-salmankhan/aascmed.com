@@ -1,5 +1,6 @@
 ---
 // Resolves dated service updates and rejects URL dates that do not match the CMS record.
+import { ServiceUpdatePage } from '../../../../components/pages/ServiceUpdatePage';
 import SitePage from '../../../../layouts/SitePage.astro';
 import { getServiceUpdateBySlug } from '../../../../server/content/loaders';
 import { pageContentMode, getPageSettings } from '../../../../server/pages/common';
@@ -22,11 +23,17 @@ const settings = await getPageSettings(pageContentMode());
 
 <SitePage
   pathname={Astro.url.pathname}
-  {...settings}
+  trackingSettings={settings.trackingSettings}
   title={update.title || 'Untitled'}
   description={update.description || ''}
   ogType="article"
   articleSection="service-updates"
   useTracking
-  view={{ kind: 'service-update', props: { serviceUpdate: update, pathname: Astro.url.pathname } }}
-/>
+>
+  <ServiceUpdatePage
+    client:load
+    pathname={Astro.url.pathname}
+    announcement={settings.announcement}
+    serviceUpdate={update}
+  />
+</SitePage>

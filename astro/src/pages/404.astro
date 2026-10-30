@@ -1,9 +1,19 @@
 ---
 // Renders the shared not-found view for missing Astro routes.
+import { NotFoundPage } from '../components/pages/NotFoundPage';
 import SitePage from '../layouts/SitePage.astro';
 import { getPageSettings, pageContentMode } from '../server/pages/common';
 const settings = await getPageSettings(pageContentMode());
 Astro.response.status = 404;
 ---
-<SitePage pathname={Astro.url.pathname} view={{ kind: 'not-found' }} {...settings}
-  title="404 Not Found" description="This page could not be found." ogType="website" noIndex />
+
+<SitePage
+  pathname={Astro.url.pathname}
+  trackingSettings={settings.trackingSettings}
+  title="404 Not Found"
+  description="This page could not be found."
+  ogType="website"
+  noIndex
+>
+  <NotFoundPage client:load pathname={Astro.url.pathname} announcement={settings.announcement} />
+</SitePage>

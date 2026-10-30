@@ -1,5 +1,6 @@
 ---
 // Renders the conditions archive with ordered CMS condition summaries.
+import { ConditionsArchivePage } from '../../components/pages/ConditionsArchivePage';
 import SitePage from '../../layouts/SitePage.astro';
 import { getConditionsArchive, getConditions } from '../../server/content/loaders';
 import { getPageSettings, pageContentMode } from '../../server/pages/common';
@@ -23,12 +24,17 @@ for await (const condition of getConditions(mode)) {
 
 <SitePage
   pathname={Astro.url.pathname}
-  {...settings}
+  trackingSettings={settings.trackingSettings}
   title={page?.heading || ''}
   description={page?.metaDescription || ''}
   ogType="website"
-  view={{
-    kind: 'conditions-archive',
-    props: { heading: page?.heading || 'Conditions', blocks: page?.text, conditions },
-  }}
-/>
+>
+  <ConditionsArchivePage
+    client:load
+    pathname={Astro.url.pathname}
+    announcement={settings.announcement}
+    heading={page?.heading || 'Conditions'}
+    blocks={page?.text}
+    {conditions}
+  />
+</SitePage>

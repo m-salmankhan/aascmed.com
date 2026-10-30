@@ -1,6 +1,7 @@
 ---
 // Renders a provider profile from a static path or request-time preview lookup.
 import moment from 'moment';
+import { ProviderPage } from '../../components/pages/ProviderPage';
 import SitePage from '../../layouts/SitePage.astro';
 import { getProviderBySlug } from '../../server/content/loaders';
 import { getPageSettings, pageContentMode } from '../../server/pages/common';
@@ -31,11 +32,17 @@ const title = `${honorific} ${provider.name?.fullName || 'Untitled'}`.trim();
 
 <SitePage
   pathname={Astro.url.pathname}
-  {...settings}
+  trackingSettings={settings.trackingSettings}
   {title}
   description={provider.description || ''}
   useTracking
   ogType="profile"
   {socialImagePath}
-  view={{ kind: 'provider', props: { provider, pathname: Astro.url.pathname } }}
-/>
+>
+  <ProviderPage
+    client:load
+    pathname={Astro.url.pathname}
+    announcement={settings.announcement}
+    {provider}
+  />
+</SitePage>

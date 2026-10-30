@@ -1,5 +1,6 @@
 ---
 // Renders the contact page and its published or preview clinic choices.
+import { ContactPage } from '../components/pages/ContactPage';
 import SitePage from '../layouts/SitePage.astro';
 import { getClinics, getContact } from '../server/content/loaders';
 import { getPageSettings, pageContentMode } from '../server/pages/common';
@@ -25,13 +26,19 @@ for await (const clinic of getClinics(mode)) {
 
 <SitePage
   pathname={Astro.url.pathname}
-  {...settings}
+  trackingSettings={settings.trackingSettings}
   title={page?.heading || ''}
   description={page?.metaDescription || ''}
   ogType="website"
   useTracking
-  view={{
-    kind: 'contact',
-    props: { heading: page?.heading || 'Contact Us', blocks: page?.text, practices, clinicOptions },
-  }}
-/>
+>
+  <ContactPage
+    client:load
+    pathname={Astro.url.pathname}
+    announcement={settings.announcement}
+    heading={page?.heading || 'Contact Us'}
+    blocks={page?.text}
+    {practices}
+    {clinicOptions}
+  />
+</SitePage>
