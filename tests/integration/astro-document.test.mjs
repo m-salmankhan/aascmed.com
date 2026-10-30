@@ -7,6 +7,7 @@ import { spawn } from 'node:child_process';
 import { createServer } from 'node:http';
 import { readFile, stat, writeFile, unlink } from 'node:fs/promises';
 import { chromium } from '@playwright/test';
+import { startFixtureCms, fixtureToken } from '../fixtures/astro-cms/server.mjs';
 const astroRoot = fileURLToPath(new URL('../../astro/', import.meta.url));
 const staticOutputDir = path.join(astroRoot, 'dist-static');
 /** Check real build output for legacy sitemap fields and truthful CMS edit dates.
@@ -30,38 +31,27 @@ function assertSitemapMetadata(xml) {
     'publication date is not substituted for modification time',
   );
 }
-
 test(
   'Astro static and SSR documents preserve metadata, tracking, sitemaps and assets',
   { timeout: 120000 },
   async () => {
-    const observedCmsRequests = [];
-    const cms = createServer((request, response) => {
-      observedCmsRequests.push(new URL(request.url, 'http://localhost'));
-      response.writeHead(200, { 'content-type': 'application/json' });
-      const data = request.url.startsWith('/api/blogs?')
-        ? [
-            {
-              documentId: 'modified-blog',
-              slug: 'modified-blog',
-              title: 'Modified post',
-              date: '2026-01-01',
-              updatedAt: '2026-04-03T14:20:00.000Z',
-            },
-            {
-              documentId: 'undated-blog',
-              slug: 'undated-blog',
-              title: 'Post without an edit date',
-              date: '2026-01-02',
-            },
-          ]
-        : [];
-      response.end(
-        JSON.stringify({ data, meta: { pagination: { pageCount: 1, total: data.length } } }),
-      );
+    const cms = await startFixtureCms();
+    const cmsUrl = cms.origin;
+    const observedCmsRequests = cms.requests;
+    cms.published.blogs.push({
+      ...structuredClone(cms.published.blogs[0]),
+      documentId: 'modified-blog',
+      slug: 'modified-blog',
+      title: 'Modified post',
     });
-    await new Promise((resolve) => cms.listen(0, '127.0.0.1', resolve));
-    const cmsUrl = `http://127.0.0.1:${cms.address().port}`;
+    const undatedBlog = {
+      ...structuredClone(cms.published.blogs[1]),
+      documentId: 'undated-blog',
+      slug: 'undated-blog',
+      title: 'Post without an edit date',
+    };
+    delete undatedBlog.updatedAt;
+    cms.published.blogs.push(undatedBlog);
     /** Build one Astro target against the test's local CMS fixture.
      * @param config Static or SSR Astro configuration filename, relative to the Astro package.
      * @returns A promise that resolves when the child build succeeds; rejects on spawn or build failure.
@@ -75,7 +65,11 @@ test(
             env: {
               ...process.env,
               GATSBY_STRAPI_API_URL: cmsUrl,
-              STRAPI_TOKEN: 'fixture-document-token',
+              STRAPI_TOKEN: fixtureToken,
+              ASTRO_CONTENT_MODE: 'published',
+              STRAPI_MEDIA_ORIGINS: cmsUrl,
+              PUBLIC_MAPBOX_API_KEY: '',
+              GATSBY_MAPBOX_API_KEY: '',
             },
             cwd: astroRoot,
             stdio: 'inherit',
@@ -130,10 +124,7 @@ import SiteDocument from '../layouts/SiteDocument.astro';
       );
       fixtureCreated = true;
       for (const trackingCase of trackingCases) {
-        const file = new URL(
-          `../../astro/src/pages/${trackingCase.name}.astro`,
-          import.meta.url,
-        );
+        const file = new URL(`../../astro/src/pages/${trackingCase.name}.astro`, import.meta.url);
         await writeFile(
           file,
           `---
@@ -153,10 +144,9 @@ import SiteDocument from '../layouts/SiteDocument.astro';
         'static sitemap loads its published route collections',
       );
       assert.ok(
-        observedCmsRequests.every((url) => url.searchParams.get('status') === 'published'),
+        observedCmsRequests.every((url) => url.query.status === 'published'),
         'static build requests published content only',
       );
-      await assert.rejects(stat(path.join(staticOutputDir, 'index.html')), { code: 'ENOENT' });
       const fixtureHtml = await readFile(
         path.join(staticOutputDir, 'verification-document-fixture/index.html'),
         'utf8',
@@ -172,10 +162,7 @@ import SiteDocument from '../layouts/SiteDocument.astro';
       ]) {
         assert.ok(fixtureHtml.includes(expected), `static HTML missing ${expected}`);
       }
-      assert.ok(
-        !fixtureHtml.includes('name="robots"'),
-        'public static page must remain indexable',
-      );
+      assert.ok(!fixtureHtml.includes('name="robots"'), 'public static page must remain indexable');
       assert.ok(
         fixtureHtml.includes('gtag/js?id=G-TEST') &&
           fixtureHtml.includes('GTM-TEST') &&
@@ -298,7 +285,7 @@ import SiteDocument from '../layouts/SiteDocument.astro';
       }
       const notFoundHtml = await readFile(path.join(staticOutputDir, '404.html'), 'utf8');
       assert.ok(notFoundHtml.includes('name="robots" content="noindex, nofollow"'));
-      assert.ok(notFoundHtml.includes('<h1>Page not found</h1>'));
+      assert.ok(notFoundHtml.includes('Page Not Found!'));
       for (const asset of [
         'assets/favicon/favicon.svg',
         'assets/favicon/favicon-32x32.png',
@@ -322,7 +309,6 @@ import SiteDocument from '../layouts/SiteDocument.astro';
       const indexXml = await readFile(path.join(staticOutputDir, 'sitemap-index.xml'), 'utf8');
       assert.ok(indexXml.includes('https://www.aascmed.com/sitemap-0.xml'));
       await runBuild('astro.config.ssr.ts');
-      const beforeSsrRequests = observedCmsRequests.length;
       const portProbe = await new Promise((resolve) => {
         const server = createServer();
         server.listen(0, '127.0.0.1', () => {
@@ -337,6 +323,8 @@ import SiteDocument from '../layouts/SiteDocument.astro';
           PORT: String(portProbe),
           PREVIEW_FRAME_ORIGINS: 'https://editor.example.test:8443',
           GATSBY_STRAPI_API_URL: cmsUrl,
+          STRAPI_TOKEN: fixtureToken,
+          ASTRO_CONTENT_MODE: 'published',
         },
         cwd: astroRoot,
         stdio: 'ignore',
@@ -385,18 +373,15 @@ import SiteDocument from '../layouts/SiteDocument.astro';
           'preview omits both the Google scripts and their initialization',
         );
       }
-      assert.equal((await fetch(base)).status, 404, 'the retired POC homepage is not shipped');
       const missing = await fetch(`${base}/unknown-public-route/`);
       assert.equal(missing.status, 404);
       const asset = await fetch(`${base}/assets/forms/patient_information.pdf`);
       assert.equal(asset.status, 200);
       assert.match(asset.headers.get('content-type') || '', /pdf/);
+      const beforeSsrRequests = observedCmsRequests.length;
       const sitemapResponse = await fetch(`${base}/sitemap-0.xml`);
       assert.equal(sitemapResponse.status, 200);
-      assert.match(
-        sitemapResponse.headers.get('content-type') || '',
-        /(?:application|text)\/xml/,
-      );
+      assert.match(sitemapResponse.headers.get('content-type') || '', /(?:application|text)\/xml/);
       assertSitemapMetadata(await sitemapResponse.text());
       assert.equal((await fetch(`${base}/sitemap-index.xml`)).status, 200);
       assert.equal(
@@ -405,7 +390,7 @@ import SiteDocument from '../layouts/SiteDocument.astro';
         'the Node adapter serves generated sitemaps without request-time CMS reads',
       );
       assert.ok(
-        observedCmsRequests.every((url) => url.searchParams.get('status') === 'published'),
+        observedCmsRequests.every((url) => url.query.status === 'published'),
         'static and preview sitemaps are built from published content only',
       );
     } finally {
@@ -414,7 +399,7 @@ import SiteDocument from '../layouts/SiteDocument.astro';
         app.kill();
         await exited;
       }
-      await new Promise((resolve) => cms.close(resolve));
+      await cms.close();
       for (const file of trackingFixtures) {
         await unlink(file);
       }

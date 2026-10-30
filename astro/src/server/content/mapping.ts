@@ -415,6 +415,7 @@ export function mapStrapiPage(entity: StrapiEntity): ContentPageRecord {
     heading: string(source.heading),
     title: string(source.title),
     description: string(source.description),
+    updatedAt: string(source.updatedAt),
     metaDescription: string(source.metaDescription),
     text: optionalJson(source.text),
   });

@@ -1,0 +1,37 @@
+---
+// Renders the contact page and its published or preview clinic choices.
+import SitePage from '../layouts/SitePage.astro';
+import { getClinics, getContact } from '../server/content/loaders';
+import { getPageSettings, pageContentMode } from '../server/pages/common';
+import { clinicPath } from '../../../src/shared/content/urls';
+import type { PracticeSummary } from '../../../src/components/practices/practice-archive';
+const mode = pageContentMode();
+const [page, settings] = await Promise.all([getContact(mode), getPageSettings(mode)]);
+const practices: PracticeSummary[] = [];
+const clinicOptions: string[] = [];
+for await (const clinic of getClinics(mode)) {
+  if (clinic.clinicName) clinicOptions.push(clinic.clinicName);
+  practices.push({
+    slug: clinicPath(clinic) || '/clinics/',
+    clinic_name: clinic.clinicName || 'Untitled Clinic',
+    latitude: clinic.location?.latitude || 0,
+    longitude: clinic.location?.longitude || 0,
+    address: clinic.location?.address || '',
+    phone: clinic.contact?.phone || '',
+    fax: clinic.contact?.fax || '',
+  });
+}
+---
+
+<SitePage
+  pathname={Astro.url.pathname}
+  {...settings}
+  title={page?.heading || ''}
+  description={page?.metaDescription || ''}
+  ogType="website"
+  useTracking
+  view={{
+    kind: 'contact',
+    props: { heading: page?.heading || 'Contact Us', blocks: page?.text, practices, clinicOptions },
+  }}
+/>

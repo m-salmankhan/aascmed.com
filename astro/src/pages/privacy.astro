@@ -1,0 +1,25 @@
+---
+// Renders the CMS privacy policy using the shared privacy view.
+import SitePage from '../layouts/SitePage.astro';
+import { getPrivacyPolicy } from '../server/content/loaders';
+import { getPageSettings, pageContentMode } from '../server/pages/common';
+const mode = pageContentMode();
+const [page, settings] = await Promise.all([getPrivacyPolicy(mode), getPageSettings(mode)]);
+const lastUpdated =
+  page?.updatedAt && Number.isFinite(Date.parse(page.updatedAt))
+    ? new Date(page.updatedAt).toISOString().split('T')[0].replace(/-/g, '.')
+    : undefined;
+---
+
+<SitePage
+  pathname={Astro.url.pathname}
+  {...settings}
+  title={page?.title || ''}
+  description={page?.description || ''}
+  ogType="article"
+  useTracking
+  view={{
+    kind: 'privacy',
+    props: { heading: page?.title || 'Privacy Policy', blocks: page?.text, lastUpdated },
+  }}
+/>

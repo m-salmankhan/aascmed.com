@@ -1,0 +1,47 @@
+---
+// Wraps shared React pages in the Astro document and public site contexts.
+import SiteDocument from './SiteDocument.astro';
+import { ReactPage, type PageView } from '../components/ReactPage';
+import { astroPublicConfig } from '../config/public';
+import type {
+  AnnouncementSettings,
+  SiteSettings,
+  TrackingSettings,
+} from '../../../src/shared/content/models';
+import type { OpenGraphType, StructuredData } from '../server/document-metadata';
+
+interface Props {
+  pathname: string;
+  view: PageView;
+  announcement: AnnouncementSettings | null;
+  trackingSettings?: TrackingSettings | null;
+  title?: string;
+  description?: string;
+  useTracking?: boolean;
+  socialImagePath?: string;
+  ogType?: OpenGraphType;
+  noIndex?: boolean;
+  structuredData?: StructuredData;
+}
+const { view, announcement, trackingSettings, ...document } = Astro.props;
+const siteSettings: SiteSettings = {
+  title: 'Allergy, Asthma and Sinus Centers',
+  url: 'https://www.aascmed.com',
+  twitterHandle: '@DrMaazAllergy',
+};
+---
+
+<SiteDocument
+  {...document}
+  siteSettings={siteSettings}
+  trackingSettings={trackingSettings ?? undefined}
+>
+  <ReactPage
+    client:load
+    pathname={document.pathname}
+    view={view}
+    siteSettings={siteSettings}
+    publicConfig={astroPublicConfig}
+    announcement={announcement}
+  />
+</SiteDocument>

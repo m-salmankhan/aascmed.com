@@ -1,18 +1,9 @@
 ---
-// Renders the temporary infrastructure 404 document before fixed-page view integration.
-import SiteDocument from "../layouts/SiteDocument.astro";
-// WEB-32 replaces this infrastructure placeholder with the shared NotFoundView.
+// Renders the shared not-found view for missing Astro routes.
+import SitePage from '../layouts/SitePage.astro';
+import { getPageSettings, pageContentMode } from '../server/pages/common';
+const settings = await getPageSettings(pageContentMode());
+Astro.response.status = 404;
 ---
-
-<SiteDocument
-  title="Page not found"
-  description="The requested page could not be found."
-  pathname="/404.html"
-  noIndex
->
-  <main>
-    <h1>Page not found</h1>
-    <p>The page you requested could not be found.</p>
-    <a href="/">Return to the homepage</a>
-  </main>
-</SiteDocument>
+<SitePage pathname={Astro.url.pathname} view={{ kind: 'not-found' }} {...settings}
+  title="404 Not Found" description="This page could not be found." ogType="website" noIndex />

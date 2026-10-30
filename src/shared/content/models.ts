@@ -126,6 +126,8 @@ export interface ReviewRecord {
 
 /** Normalized singleton page fields shared by archive and fixed page views. */
 export interface ContentPageRecord {
+  /** CMS modification timestamp, when supplied. */
+  updatedAt?: string;
   documentId: string;
   id: string;
   heading?: string;

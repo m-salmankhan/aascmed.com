@@ -14,12 +14,8 @@ test('Astro static builds use astro:assets for CMS thumbnails and cache social c
     path.dirname(fileURLToPath(import.meta.url)),
     '../../astro',
   );
-  const routePath = path.join(
-    astroRoot,
-    'src',
-    'pages',
-    'public-image-fixture.astro',
-  );
+  const fixtureSrcDir = path.join(astroRoot, '.astro', 'public-images-pages-fixture');
+  const routePath = path.join(fixtureSrcDir, 'pages', 'public-image-fixture.astro');
   const configPath = path.join(
     astroRoot,
     'astro.config.public-images-fixture.mjs',
@@ -62,7 +58,7 @@ test('Astro static builds use astro:assets for CMS thumbnails and cache social c
     }
   }
   for (const target of [
-    routePath,
+    fixtureSrcDir,
     configPath,
     outputDir,
     stagingDir,
@@ -173,9 +169,9 @@ test('Astro static builds use astro:assets for CMS thumbnails and cache social c
   assert.ok(address && typeof address === 'object');
   const fixtureRoute = `
   ---
-  import { getBlogs } from '../server/content/loaders.ts';
-  import { Image } from '../../../src/components/media/image.tsx';
-  import { getResponsiveMediaDescriptor } from '../server/content/astro-media.ts';
+  import { getBlogs } from '../../../src/server/content/loaders.ts';
+  import { Image } from '../../../../src/components/media/image.tsx';
+  import { getResponsiveMediaDescriptor } from '../../../src/server/content/astro-media.ts';
   let sourceMedia;
   for await (const blog of getBlogs('published', { pageSize: 2 })) {
     if (blog.slug === 'fixture-post') {
@@ -204,7 +200,7 @@ test('Astro static builds use astro:assets for CMS thumbnails and cache social c
     cacheDir: path.resolve('.astro/public-image-cache-fixture'),
   });
   const integrations = base.integrations.filter((item) => item.name !== 'aasc-public-images');
-  export default { ...base, outDir: './dist-public-images-fixture', integrations: [...integrations, integration] };
+  export default { ...base, srcDir: './.astro/public-images-pages-fixture', outDir: './dist-public-images-fixture', integrations: [...integrations, integration] };
   `;
   /** Run one isolated Astro static build against the local CMS/media fixture.
    * @returns Promise<number> Number of CMS collection requests served during the build.
@@ -251,6 +247,7 @@ test('Astro static builds use astro:assets for CMS thumbnails and cache social c
     return buildRequests.length;
   };
   try {
+    await mkdir(path.dirname(routePath), { recursive: true });
     await writeFile(configPath, fixtureConfig, 'utf8');
     await writeFile(routePath, fixtureRoute, 'utf8');
     await runStaticBuild();
@@ -318,7 +315,7 @@ test('Astro static builds use astro:assets for CMS thumbnails and cache social c
     );
   } finally {
     await new Promise((resolve) => mockApi.close(resolve));
-    await rm(routePath, { force: true });
+    await rm(fixtureSrcDir, { recursive: true, force: true });
     await rm(configPath, { force: true });
     await rm(outputDir, { recursive: true, force: true });
     await rm(stagingDir, { recursive: true, force: true });
