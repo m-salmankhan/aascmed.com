@@ -109,6 +109,7 @@ const homePagePopulate = {
   locations: { populate: { media: true } },
   contact: { populate: { media: true } },
 };
+// Numeric CMS IDs preserve Gatsby source order when display dates or orders tie.
 /** Load and normalize published or draft blogs, ordered by date.
  * @param mode Content state requested from Strapi.
  * @param options Optional bounded page size for the CMS requests.
@@ -122,7 +123,7 @@ export async function* getBlogs(
   const mediaOrigin = new URL(client.baseURL).origin;
   for await (const entity of readRecords(client.collection("blogs"), {
     status: mode,
-    sort: ["date:desc", "documentId:asc"],
+    sort: ["date:desc", "id:asc"],
     populate: blogPopulate,
   }, options.pageSize)) {
     const record = mapStrapiBlog(entity, mediaOrigin);
@@ -142,7 +143,7 @@ export async function* getClinics(
   const client = createClient(mode);
   for await (const entity of readRecords(client.collection("clinics"), {
     status: mode,
-    sort: ["documentId:asc"],
+    sort: ["id:asc"],
     populate: clinicPopulate,
   }, options.pageSize)) {
     const record = mapStrapiClinic(entity);
@@ -163,8 +164,8 @@ export async function* getConditions(
   const mediaOrigin = new URL(client.baseURL).origin;
   // Query present orders first, then missing orders, to keep nulls last without materializing.
   for (const orderedQuery of [
-    { filters: { order: { $notNull: true } }, sort: ["order:asc", "documentId:asc"] },
-    { filters: { order: { $null: true } }, sort: ["documentId:asc"] },
+    { filters: { order: { $notNull: true } }, sort: ["order:asc", "id:asc"] },
+    { filters: { order: { $null: true } }, sort: ["id:asc"] },
   ]) {
     for await (const entity of readRecords(client.collection("conditions"), {
       status: mode,
@@ -190,8 +191,8 @@ export async function* getProviders(
   const mediaOrigin = new URL(client.baseURL).origin;
   // Query present orders first, then missing orders, to keep nulls last without materializing.
   for (const orderedQuery of [
-    { filters: { order: { $notNull: true } }, sort: ["order:asc", "documentId:asc"] },
-    { filters: { order: { $null: true } }, sort: ["documentId:asc"] },
+    { filters: { order: { $notNull: true } }, sort: ["order:asc", "id:asc"] },
+    { filters: { order: { $null: true } }, sort: ["id:asc"] },
   ]) {
     for await (const entity of readRecords(client.collection("providers"), {
       status: mode,
@@ -216,8 +217,8 @@ export async function* getServiceUpdates(
   const client = createClient(mode);
   // Query dated updates first, then undated updates, to keep nulls last without materializing.
   for (const orderedQuery of [
-    { filters: { date: { $notNull: true } }, sort: ["date:desc", "documentId:asc"] },
-    { filters: { date: { $null: true } }, sort: ["documentId:asc"] },
+    { filters: { date: { $notNull: true } }, sort: ["date:desc", "id:asc"] },
+    { filters: { date: { $null: true } }, sort: ["id:asc"] },
   ]) {
     for await (const entity of readRecords(client.collection("service-updates"), {
       status: mode,
@@ -232,7 +233,7 @@ export async function* getServiceUpdates(
 /** Load and normalize patient reviews.
  * @param mode Content state requested from Strapi.
  * @param options Optional bounded page size for the CMS requests.
- * @returns Reviews in document ID order, fetched one page at a time.
+ * @returns Reviews in CMS insertion order, fetched one page at a time.
  */
 export async function* getReviews(
   mode: ContentMode,
@@ -241,7 +242,7 @@ export async function* getReviews(
   const client = createClient(mode);
   for await (const entity of readRecords(client.collection("reviews"), {
     status: mode,
-    sort: ["documentId:asc"],
+    sort: ["id:asc"],
   }, options.pageSize)) {
     yield mapStrapiReview(entity);
   }
@@ -350,7 +351,7 @@ export async function getClinicBySlug(
   }
   for await (const entity of readRecords(client.collection("clinics"), {
     status: mode,
-    sort: ["documentId:asc"],
+    sort: ["id:asc"],
     populate: clinicPopulate,
   })) {
     const clinic = mapStrapiClinic(entity);

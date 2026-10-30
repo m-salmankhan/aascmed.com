@@ -1,6 +1,6 @@
 # Astro migration target
 
-This package contains the static and Node SSR targets for the Gatsby-to-Astro migration. It currently provides the document layout, server-side content loaders and sitemaps. Page families, including the real homepage, are implemented separately. The Stage 1 proof page and its counter/draft demonstrations have been retired.
+This package contains the static and Node SSR targets for the Gatsby-to-Astro migration. It renders the homepage, fixed pages, archives and all five CMS detail families using the existing shared React views. Static production builds use published content; protected Node SSR preview resolves saved drafts per request. The Stage 1 proof page and its counter/draft demonstrations have been retired.
 
 ## Install and run
 
@@ -47,7 +47,7 @@ The official `@astrojs/sitemap` integration discovers Astro pages and adds publi
 
 From the repository root, run `yarn test:unit` for source contracts and `yarn test:astro` for Astro integration tests. Both root and Astro dependencies must be installed. Install the browser once with `yarn playwright install chromium`.
 
-The document integration test builds the real static/SSR layouts and checks metadata, JSON-LD, tracking, headers, sitemaps and static assets. Its fixture route is created only during the test and removed afterward. No POC route or interactive demo is included in the app. The runtime test checks that Astro and shared UI dependencies resolve one React/Emotion installation.
+The integration tests build the real static/SSR site against a synthetic local CMS and check every route family, metadata, JSON-LD, tracking, headers, sitemaps and static assets. Browser checks cover hydration, navigation, notices, booking, carousels, timezone boundaries and synthetic form responses. Mutable draft checks create, edit, rename and delete records without rebuilding, and scan published artifacts for draft content and credentials. Its fixture route is created only during the test and removed afterward. No POC route or interactive demo is included in the app. The runtime test checks that Astro and shared UI dependencies resolve one React/Emotion installation.
 
 ## Social cards
 
@@ -56,3 +56,11 @@ The Node renderer in `src/shared/media/social-cards.mjs` composes branded Open G
 The shared Astro config reads the repository's `.env` files using Vite's loader; existing process variables take precedence. Use `yarn astro:static --mode development` for the local development settings. `GATSBY_STRAPI_API_URL` supplies the CMS origin. If uploads live on a separate CDN, list its full origin in `STRAPI_MEDIA_ORIGINS` (comma-separated, including any custom port). Both Astro images and social cards receive the same origins. There is no tenant hostname default or separate host-policy helper.
 
 The static image hook reads only the published blogs, conditions, and clinics needed for social cards. It stages those cards outside the public asset directory and reuses their small cache metadata between builds. Astro creates responsive CMS image outputs through `astro:assets` while pages render; each page owns the record it displays. Reviews are not fetched for social-card generation.
+
+## Page implementation and parity
+
+[Page boundaries](src/server/pages/README.md) explains how route files, loaders, display mappings and shared React views fit together. Astro owns routing, image transforms and sitemap serialization. The application keeps only compact static path lists and the display models needed by each page; CMS collections remain paginated lazy streams.
+
+Set the public Runtime API and Mapbox variables explicitly for the environment being tested. The CMS credential is separate and remains server-only. The Gatsby homepage's old Netlify Identity login hooks are omitted from the public Astro homepage; protected preview authentication belongs to the deployment stage.
+
+[Stage 3 validation](../docs/astro-stage3-parity.md) records the matched Gatsby baseline, browser comparisons, deliberate differences and screenshot evidence. Stage 4 deployment remains separate.

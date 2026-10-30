@@ -193,6 +193,7 @@ test("blog loader exposes its SDK resource, nested query and bounded pagination"
     assert.equal(url.searchParams.get("status"), "published");
     assert.equal(url.searchParams.get("pagination[pageSize]"), "100");
     assert.equal(url.searchParams.get("sort[0]"), "date:desc");
+    assert.equal(url.searchParams.get("sort[1]"), "id:asc", "date ties retain Gatsby CMS source order");
     assert.equal(url.searchParams.get("populate[thumbnail]"), "true");
     assert.equal(
       url.searchParams.get("populate[content][on][clinics.map][populate]"),
@@ -313,6 +314,12 @@ test("ordered collections preserve missing values last through explicit SDK filt
     providers: await collect(getProviders("draft")),
     updates: await collect(getServiceUpdates("draft")),
   }));
+  for (const request of requests) {
+    const sort = [...new URL(request.url).searchParams.entries()]
+      .filter(([name]) => name.startsWith("sort["))
+      .map(([, value]) => value);
+    assert.equal(sort.at(-1), "id:asc", "display ties retain the CMS source order");
+  }
   assert.deepEqual(conditions.map((record) => record.documentId), ["ordered", "unordered"]);
   assert.deepEqual(providers.map((record) => record.documentId), ["ordered", "unordered"]);
   assert.deepEqual(updates.map((record) => record.documentId), ["dated", "undated"]);
