@@ -1,5 +1,7 @@
 // Renders shared React views with their framework-neutral site contexts.
 import React, { type ComponentProps } from 'react';
+import { HomeView } from '../../../src/views/home';
+import { App } from '../../../src/components/layouts/app';
 import AnnouncementBanner from '../../../src/components/AnnouncementBanner';
 import {
   BlogArchiveView,
@@ -24,6 +26,7 @@ import type { AnnouncementSettings, SiteSettings } from '../../../src/shared/con
 
 /** Serializable view selection and its corresponding shared-view inputs. */
 export type PageView =
+  | { kind: 'home'; props: ComponentProps<typeof HomeView> }
   | { kind: 'clinics-archive'; props: ComponentProps<typeof ClinicsArchiveView> }
   | { kind: 'service-updates-archive'; props: ComponentProps<typeof ServiceUpdatesArchiveView> }
   | { kind: 'clinic'; props: ComponentProps<typeof ClinicView> }
@@ -60,6 +63,13 @@ export function ReactPage({
 }: ReactPageProps) {
   let content: React.ReactNode;
   switch (view.kind) {
+    case 'home':
+      content = (
+        <App>
+          <HomeView {...view.props} />
+        </App>
+      );
+      break;
     case 'clinics-archive':
       content = <ClinicsArchiveView {...view.props} />;
       break;

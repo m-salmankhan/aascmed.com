@@ -1,45 +1,48 @@
 // Turns CMS media descriptors into responsive files through Astro's configured image service.
 import { getImage } from 'astro:assets';
 import type { MediaDescriptor } from '../../../../src/shared/content/models.ts';
-
 const RESPONSIVE_WIDTHS = [320, 640, 960, 1280];
-
 /** Generate responsive JPEG and modern-format candidates during an Astro page render.
  * @param media Original CMS media URL, alternative text and any known intrinsic dimensions.
- * @returns A serializable descriptor with Astro-generated URLs, or the original descriptor for SVG inputs.
+ * @param aspectRatio Optional output width-to-height ratio for cropped thumbnails.
+ * @returns A serializable descriptor with native build or SSR image URLs, or the original descriptor for SVG inputs.
  */
 export async function getResponsiveMediaDescriptor(
   media: MediaDescriptor,
+  aspectRatio?: number,
 ): Promise<MediaDescriptor> {
+  if (aspectRatio !== undefined && (!Number.isFinite(aspectRatio) || aspectRatio <= 0)) {
+    throw new Error('Image aspect ratio must be a positive finite number');
+  }
   if (!media.src) {
     return media;
   }
   if (
     media.mimeType === 'image/svg+xml' ||
-    new URL(media.src, 'https://media.invalid').pathname
-      .toLowerCase()
-      .endsWith('.svg')
+    new URL(media.src, 'https://media.invalid').pathname.toLowerCase().endsWith('.svg')
   ) {
     return media;
   }
   const inferred = /^https?:\/\//i.test(media.src)
     ? await getImage({ src: media.src, inferSize: true, format: 'jpg' })
     : undefined;
-  const width = inferred?.options.width ?? media.width;
-  const height = inferred?.options.height ?? media.height;
-  if (!width || !height) {
+  const sourceWidth = inferred?.options.width ?? media.width;
+  const sourceHeight = inferred?.options.height ?? media.height;
+  if (!sourceWidth || !sourceHeight) {
     throw new Error('Astro could not determine public image dimensions');
   }
-  const widths = [
-    ...RESPONSIVE_WIDTHS.filter((candidate) => candidate < width),
-    width,
-  ];
+  // Keep the crop inside both source dimensions so Astro does not need to upscale.
+  const width = aspectRatio
+    ? Math.max(1, Math.min(sourceWidth, Math.round(sourceHeight * aspectRatio)))
+    : sourceWidth;
+  const height = aspectRatio ? Math.max(1, Math.round(width / aspectRatio)) : sourceHeight;
+  const widths = [...RESPONSIVE_WIDTHS.filter((candidate) => candidate < width), width];
   const imageOptions = {
     src: media.src,
     widths,
     width,
     height,
-    fit: 'inside' as const,
+    fit: aspectRatio ? ('cover' as const) : ('inside' as const),
     quality: 'high' as const,
   };
   const [jpeg, avif, webp] = await Promise.all([

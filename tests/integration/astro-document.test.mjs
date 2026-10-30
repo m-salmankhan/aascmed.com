@@ -147,6 +147,11 @@ import SiteDocument from '../layouts/SiteDocument.astro';
         observedCmsRequests.every((url) => url.query.status === 'published'),
         'static build requests published content only',
       );
+      const homeHtml = await readFile(path.join(staticOutputDir, 'index.html'), 'utf8');
+      assert.ok(
+        homeHtml.includes('PUBLISHED HERO'),
+        'the real homepage replaces the retired architecture proof',
+      );
       const fixtureHtml = await readFile(
         path.join(staticOutputDir, 'verification-document-fixture/index.html'),
         'utf8',
@@ -373,6 +378,9 @@ import SiteDocument from '../layouts/SiteDocument.astro';
           'preview omits both the Google scripts and their initialization',
         );
       }
+      const homepageResponse = await fetch(base);
+      assert.equal(homepageResponse.status, 200, 'the real homepage is served');
+      assert.ok((await homepageResponse.text()).includes('PUBLISHED HERO'));
       const missing = await fetch(`${base}/unknown-public-route/`);
       assert.equal(missing.status, 404);
       const asset = await fetch(`${base}/assets/forms/patient_information.pdf`);

@@ -1,0 +1,22 @@
+---
+// Renders the real CMS homepage through the shared homepage view and native Astro document.
+import SitePage from '../layouts/SitePage.astro';
+import { getPageSettings, pageContentMode } from '../server/pages/common';
+import { getHomePageData } from '../server/pages/home';
+const mode = pageContentMode();
+const [{ props, description }, settings] = await Promise.all([
+  getHomePageData(mode),
+  getPageSettings(mode),
+]);
+---
+
+<SitePage
+  pathname={Astro.url.pathname}
+  {...settings}
+  title="Allergy, Asthma and Sinus Centers in Illinois"
+  description={description}
+  appendBusinessNameToTitle={false}
+  useTracking
+  ogType="website"
+  view={{ kind: 'home', props }}
+/>
