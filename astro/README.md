@@ -1,6 +1,6 @@
 # Astro migration target
 
-This package contains the static and Node SSR targets for the Gatsby-to-Astro migration. It currently provides the document layout, server-side content loaders, redirects and sitemaps. Page families, including the real homepage, are implemented separately. The Stage 1 proof page and its counter/draft demonstrations have been retired.
+This package contains the static and Node SSR targets for the Gatsby-to-Astro migration. It currently provides the document layout, server-side content loaders and sitemaps. Page families, including the real homepage, are implemented separately. The Stage 1 proof page and its counter/draft demonstrations have been retired.
 
 ## Install and run
 
@@ -33,6 +33,8 @@ The default CMS batch size is 100, configurable from 1 to 100. Constructing `get
 
 `PUBLIC_RUNTIME_API_BASE_URL` and `PUBLIC_MAPBOX_API_KEY` are safe browser settings. They are separate from the CMS URL and credential; never expose the token as a public variable.
 
+Legacy redirects remain in `static/_redirects` for the public hosting platform. The preview server uses Astro’s current routes and normal 404 handling; it does not implement legacy URL redirects.
+
 ## Sitemaps
 
 The official `@astrojs/sitemap` integration discovers Astro pages and adds published CMS detail URLs through `customPages`, including in preview builds. It writes the existing `sitemap-index.xml` and `sitemap-0.xml` URLs, preserves Gatsby’s daily frequency and 0.7 priority, and uses CMS `updatedAt` for `lastmod`. Unknown edit dates are omitted. Preview sitemaps contain published URLs as of the build; draft URLs are excluded. XML serialization, escaping and large-sitemap splitting belong to the integration.
@@ -41,4 +43,4 @@ The official `@astrojs/sitemap` integration discovers Astro pages and adds publi
 
 From the repository root, run `yarn test:unit` for source contracts and `yarn test:astro` for Astro integration tests. Both root and Astro dependencies must be installed. Install the browser once with `yarn playwright install chromium`.
 
-The document integration test builds the real static/SSR layouts and checks metadata, JSON-LD, tracking, headers, redirects, sitemaps and static assets. Its fixture route is created only during the test and removed afterward. No POC route or interactive demo is included in the app. The runtime test checks that Astro and shared UI dependencies resolve one React/Emotion installation.
+The document integration test builds the real static/SSR layouts and checks metadata, JSON-LD, tracking, headers, sitemaps and static assets. Its fixture route is created only during the test and removed afterward. No POC route or interactive demo is included in the app. The runtime test checks that Astro and shared UI dependencies resolve one React/Emotion installation.

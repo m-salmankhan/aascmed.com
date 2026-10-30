@@ -1,4 +1,4 @@
-// Checks rendered Astro metadata, tracking, redirects, sitemaps and assets using local fixtures.
+// Checks rendered Astro metadata, tracking, sitemaps and assets using local fixtures.
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import path from 'node:path';
@@ -32,7 +32,7 @@ function assertSitemapMetadata(xml) {
 }
 
 test(
-  'Astro static and SSR documents preserve metadata, tracking, redirects, sitemaps and assets',
+  'Astro static and SSR documents preserve metadata, tracking, sitemaps and assets',
   { timeout: 120000 },
   async () => {
     const observedCmsRequests = [];
@@ -264,11 +264,6 @@ import SiteDocument from '../layouts/SiteDocument.astro';
         'document metadata is rendered in the server response head',
       );
       assert.equal((await fetch(base)).status, 404, 'the retired POC homepage is not shipped');
-      const legacy = await fetch(`${base}/contact/index.php?source=legacy`, {
-        redirect: 'manual',
-      });
-      assert.equal(legacy.status, 301);
-      assert.equal(legacy.headers.get('location'), '/contact/?source=legacy');
       const missing = await fetch(`${base}/unknown-public-route/`);
       assert.equal(missing.status, 404);
       const asset = await fetch(`${base}/assets/forms/patient_information.pdf`);

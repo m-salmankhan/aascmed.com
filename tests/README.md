@@ -141,7 +141,7 @@ yarn test:unit
 Astro integration tests live in `tests/integration/` and run with
 `yarn test:astro`. Install Astro dependencies with
 `yarn --cwd astro install --frozen-lockfile` first. These tests build static and
-SSR output against a local CMS fixture and check the shared document, redirects,
+SSR output against a local CMS fixture and check the shared document,
 sitemaps, assets and runtime dependencies. Temporary page fixtures are removed
 after each test; the application contains no Stage 1 proof page.
 

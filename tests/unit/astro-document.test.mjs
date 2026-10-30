@@ -1,13 +1,11 @@
-// Checks document metadata safety and legacy redirect/sitemap compatibility.
+// Checks canonical metadata URLs and safe JSON-LD serialization.
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { readFile } from 'node:fs/promises';
 import {
   canonicalPathUrl,
   socialImageUrl,
   serializeStructuredData,
 } from '../../astro/src/server/document-metadata.ts';
-import { findRedirect, parseNetlifyRedirects } from '../../astro/src/server/netlify-redirects.ts';
 test('canonical metadata retains the public host and route trailing slash', () => {
   assert.equal(canonicalPathUrl('/blog/example/'), 'https://www.aascmed.com/blog/example/');
   assert.equal(canonicalPathUrl('contact/'), 'https://www.aascmed.com/contact/');
@@ -38,25 +36,4 @@ test('JSON-LD remains parseable while authored tags cannot close its script', ()
   const result = serializeStructuredData(data);
   assert.equal(result.includes('<'), false);
   assert.deepEqual(JSON.parse(result), data);
-});
-test('real legacy redirects preserve query strings and do not loop contact', async () => {
-  const rules = parseNetlifyRedirects(
-    await readFile(new URL('../../static/_redirects', import.meta.url), 'utf8'),
-  );
-  assert.deepEqual(findRedirect('/contact/index.php', rules, '?from=legacy'), {
-    location: '/contact/?from=legacy',
-    status: 301,
-  });
-  assert.deepEqual(findRedirect('/clinics/joliet-(crest-hill)', rules), {
-    location: '/clinics/crest-hill/',
-    status: 301,
-  });
-  assert.equal(findRedirect('/contact/', rules), undefined);
-  assert.equal(findRedirect('/unrelated/', rules), undefined);
-  const extra = parseNetlifyRedirects('/old/* /new/:splat?source=legacy 302\n/bad /target 200');
-  assert.equal(extra.length, 1);
-  assert.deepEqual(findRedirect('/old/path', extra, '?q=one'), {
-    location: '/new/path?source=legacy&q=one',
-    status: 302,
-  });
 });
