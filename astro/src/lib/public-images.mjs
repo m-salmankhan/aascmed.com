@@ -138,14 +138,14 @@ function mapboxStaticUrl(latitude, longitude, token) {
 /** Read and validate a local image or an allowlisted remote image with a bounded response body.
  * @param {string} source Local file path or remote image URL.
  * @param {typeof fetch} fetcher Fetch implementation used for remote requests, including deterministic fixtures.
- * @param {string[]} [allowedMediaHosts=[]] Exact remote hostnames accepted for CMS media.
+ * @param {string[]} [allowedMediaOrigins=[]] Exact HTTP(S) origins accepted for CMS media, including any configured port.
  * @param {boolean} [allowMapbox=false] Whether this request came from a generated clinic-map URL.
  * @returns {Promise<Buffer>} Validated image bytes accepted by Sharp.
  */
 async function fetchImage(
   source,
   fetcher,
-  allowedMediaHosts = [],
+  allowedMediaOrigins = [],
   allowMapbox = false,
 ) {
   /** @type {Buffer} */
@@ -155,9 +155,9 @@ async function fetchImage(
     const hostname = url.hostname.toLowerCase();
     const isLoopback = ['localhost', '127.0.0.1', '[::1]'].includes(hostname);
     const hostIsAllowed =
-      (hostname === 'api.mapbox.com' && allowMapbox) ||
+      (url.origin === 'https://api.mapbox.com' && allowMapbox) ||
       (hostname !== 'api.mapbox.com' &&
-        allowedMediaHosts.some((host) => host.toLowerCase() === hostname));
+        allowedMediaOrigins.includes(url.origin));
     if (!hostIsAllowed) {
       throw new Error(`Remote image host is not allowed: ${hostname}`);
     }
@@ -167,14 +167,8 @@ async function fetchImage(
     ) {
       throw new Error('Remote images must use HTTPS');
     }
-    if (
-      url.username ||
-      url.password ||
-      (url.port && url.port !== '443' && !isLoopback)
-    ) {
-      throw new Error(
-        'Remote image URL credentials and non-standard ports are not allowed',
-      );
+    if (url.username || url.password) {
+      throw new Error('Remote image URL credentials are not allowed');
     }
     const response = await fetcher(url, {
       signal: AbortSignal.timeout(12000),
@@ -350,13 +344,13 @@ export async function generateSocialCard({
   backgroundImage,
   outputPath,
   fetch: fetcher = fetch,
-  allowedMediaHosts = [],
+  allowedMediaOrigins = [],
 }) {
   /** @type {Buffer | undefined} */
   let base;
   if (backgroundImage) {
     try {
-      base = await fetchImage(backgroundImage, fetcher, allowedMediaHosts);
+      base = await fetchImage(backgroundImage, fetcher, allowedMediaOrigins);
     } catch {
       /* Missing media is a supported branded-card fallback. */
     }
@@ -436,7 +430,7 @@ export async function buildSocialCards(entries, options) {
         mediaBytes = await fetchImage(
           backgroundImage,
           fetcher,
-          options.allowedMediaHosts,
+          options.allowedMediaOrigins,
           isMapboxMap,
         );
       } catch {

@@ -34,7 +34,8 @@ export interface PublicImageBuildOptions {
   cacheDir: string;
   fetch?: typeof fetch;
   mapboxToken?: string;
-  allowedMediaHosts?: string[];
+  /** Approved CMS/CDN origins, including protocol and any custom port. */
+  allowedMediaOrigins?: string[];
 }
 
 /** Inputs for rendering one card to its destination file. */
@@ -43,7 +44,8 @@ export interface GenerateSocialCardOptions {
   backgroundImage?: string;
   outputPath: string;
   fetch?: typeof fetch;
-  allowedMediaHosts?: string[];
+  /** Approved CMS/CDN origins, including protocol and any custom port. */
+  allowedMediaOrigins?: string[];
 }
 
 /** Public/local output paths and cache status for one generated card. */

@@ -256,6 +256,40 @@ test('shared social cards preserve paths, orientation, cache keys and remote-fet
       'arbitrary CMS URLs cannot use the Mapbox host',
     );
     assert.equal(arbitraryMapboxCard[0].wasCached, false);
+    const configuredOrigin = 'https://cms.example.test:8443';
+    const fetchedOrigins = [];
+    const configuredMedia = await buildSocialCards(
+      [{ kind: 'blog', slug: 'configured-origin', title: 'Configured CMS',
+        backgroundImage: `${configuredOrigin}/cover.svg` }],
+      {
+        publicDir,
+        cacheDir,
+        allowedMediaOrigins: [configuredOrigin],
+        fetch: async (input) => {
+          fetchedOrigins.push(new URL(String(input)).origin);
+          return new Response(await readFile(sourcePath));
+        },
+      },
+    );
+    assert.deepEqual(fetchedOrigins, [configuredOrigin],
+      'configured HTTPS ports are accepted for social-card media');
+    assert.ok(await stat(configuredMedia[0].outputPath));
+    let unconfiguredOriginFetched = false;
+    await buildSocialCards(
+      [{ kind: 'blog', slug: 'other-origin', title: 'Unconfigured port',
+        backgroundImage: 'https://cms.example.test:9443/cover.svg' }],
+      {
+        publicDir,
+        cacheDir,
+        allowedMediaOrigins: [configuredOrigin],
+        fetch: async () => {
+          unconfiguredOriginFetched = true;
+          return new Response(await readFile(sourcePath));
+        },
+      },
+    );
+    assert.equal(unconfiguredOriginFetched, false,
+      'an unconfigured port must never be requested');
     const gatsbyOutput = path.join(root, 'gatsby-adapter.jpg');
     await gatsbyGenerator.generateOGImage({
       title: 'Gatsby adapter fixture',
