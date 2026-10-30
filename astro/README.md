@@ -50,3 +50,5 @@ The document integration test builds the real static/SSR layouts and checks meta
 ## Social cards
 
 The Node renderer in `src/shared/media/social-cards.mjs` composes branded Open Graph cards using the maintained font and logo. Gatsby retains its existing public card filenames through a compatibility adapter. Install root dependencies first; canvas and sharp are root-provided peers. Keep generated cache files outside public output.
+
+The static build processes published records in CMS batches and generates assets before advancing each record. Full content bodies are never collected or serialized. A private temporary manifest contains route references and image descriptors only; its small indexes grow with route count and are removed after building. Generated images and their reusable cache remain on disk outside source control. Reviews are not fetched by image generation.
