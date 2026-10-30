@@ -8,11 +8,8 @@
 name: Deploy Preview Server
 
 on:
-  push:
-    branches:
-      - main
-
-  # Allow manual trigger
+  # Stage 4 is merged as a stack. Do not let an intermediate main revision
+  # redeploy the old login/preview stack while Access is being provisioned.
   workflow_dispatch:
 
 env:
