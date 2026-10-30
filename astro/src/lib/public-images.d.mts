@@ -1,23 +1,34 @@
 // TypeScript declarations for the shared Node-compatible image renderer.
-export type SocialCardKind = 'blog' | 'conditions' | 'clinics';
 
+/** Route families that have branded social cards. */
+export type SocialCardKind =
+  | 'blog'
+  | 'conditions'
+  | 'clinics';
+
+/** Clinic coordinates used to request the background map. */
 export interface MapLocation {
   latitude: number;
   longitude: number;
 }
 
+/** Text, imagery and route identity for one card. */
 export interface SocialCardEntry {
   kind: SocialCardKind;
   slug: string;
   title: string;
   backgroundImage?: string;
   mapLocation?: MapLocation;
+  /** Optional filename stem preserving an existing public card URL. */
   mediaName?: string;
 }
 
 /** Lazy card inputs, including ordinary arrays used by Gatsby. */
-export type SocialCardEntries = Iterable<SocialCardEntry> | AsyncIterable<SocialCardEntry>;
+export type SocialCardEntries =
+  | Iterable<SocialCardEntry>
+  | AsyncIterable<SocialCardEntry>;
 
+/** Output/cache directories and remote-image settings shared by a card batch. */
 export interface PublicImageBuildOptions {
   publicDir: string;
   cacheDir: string;
@@ -26,6 +37,7 @@ export interface PublicImageBuildOptions {
   allowedMediaHosts?: string[];
 }
 
+/** Inputs for rendering one card to its destination file. */
 export interface GenerateSocialCardOptions {
   title: string;
   backgroundImage?: string;
@@ -34,6 +46,7 @@ export interface GenerateSocialCardOptions {
   allowedMediaHosts?: string[];
 }
 
+/** Public/local output paths and cache status for one generated card. */
 export interface SocialCardResult {
   kind: SocialCardKind;
   slug: string;

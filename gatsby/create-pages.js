@@ -8,11 +8,26 @@ const path = require('node:path');
 const fs = require('node:fs');
 const moment = require('moment');
 const { downloadMapboxImage } = require('./og-image-generator');
-/** @typedef {{ panicOnBuild: Function, info: Function, warn: Function }} GatsbyPageReporter Reporter methods used by page generation. */
-/** @typedef {{ createPage: Function }} GatsbyPageActions Gatsby page-registration actions. */
-/** @typedef {{ graphql: Function, actions: GatsbyPageActions, reporter: GatsbyPageReporter }} GatsbyPageCreationContext Gatsby createPages hook inputs. */
-/** @typedef {{ slug: string, title: string, thumbnailPath?: string, outputDir: 'blog'|'conditions'|'clinics' }} OGImageRequest Social-card input for one Gatsby record. */
-/** @typedef {{ imagePath: string, wasCached: boolean }} OGImageResult Public card URL and cache-reuse result. */
+/**
+ * @import { Actions, CreatePagesArgs, Reporter } from 'gatsby'
+ * @import {
+ *   SocialCardKind,
+ *   SocialCardResult,
+ * } from '../astro/src/lib/public-images.d.mts'
+ */
+/** Gatsby's page-registration action, derived from its own Actions interface.
+ * @typedef {Actions['createPage']} CreatePage
+ */
+/** Social-card input adapted from one Gatsby query record.
+ * @typedef {object} OGImageRequest
+ * @property {string} slug Content slug used in the public card path.
+ * @property {string} title Text rendered on the card.
+ * @property {string} [thumbnailPath] Local background image supplied by Gatsby.
+ * @property {SocialCardKind} outputDir Card family used for its output directory.
+ */
+/** Public URL and cache result returned by the Gatsby adapter.
+ * @typedef {Pick<SocialCardResult, 'imagePath' | 'wasCached'>} OGImageResult
+ */
 /**
  * GraphQL query to fetch all content for page creation
  */
@@ -74,7 +89,7 @@ const PAGE_QUERY = `
   }
 `;
 /** Run Gatsby's page-creation query and dispatch records to their page builders.
- * @param {GatsbyPageCreationContext} context Gatsby hook inputs for querying records, registering pages, and reporting build issues.
+ * @param {CreatePagesArgs} context Gatsby hook inputs for querying records, registering pages, and reporting build issues.
  * @returns Promise<void> after every dynamic page has been created.
  */
 async function createPages({ graphql, actions, reporter }) {
@@ -125,9 +140,9 @@ async function getOGImage({ slug, title, thumbnailPath, outputDir }) {
   return { imagePath: card.imagePath, wasCached: card.wasCached };
 }
 /** Create each blog detail page and attach its shared social-card path to Gatsby page context.
- * @param {Function} createPage Gatsby page creation action.
+ * @param {CreatePage} createPage Gatsby page creation action.
  * @param {Array<Object>} posts Blog nodes returned by PAGE_QUERY.
- * @param {GatsbyPageReporter} reporter Gatsby build reporter for generation counts and recoverable failures.
+ * @param {Reporter} reporter Gatsby build reporter for generation counts and recoverable failures.
  * @returns Promise<void> after all blog pages are registered.
  */
 async function createBlogPages(createPage, posts, reporter) {
@@ -172,9 +187,9 @@ async function createBlogPages(createPage, posts, reporter) {
   );
 }
 /** Create condition detail pages and attach their shared social-card paths.
- * @param {Function} createPage Gatsby page creation action.
+ * @param {CreatePage} createPage Gatsby page creation action.
  * @param {Array<Object>} conditions Condition nodes returned by PAGE_QUERY.
- * @param {GatsbyPageReporter} reporter Gatsby build reporter for generation counts and recoverable failures.
+ * @param {Reporter} reporter Gatsby build reporter for generation counts and recoverable failures.
  * @returns Promise<void> after all condition pages are registered.
  */
 async function createConditionPages(createPage, conditions, reporter) {
@@ -218,7 +233,7 @@ async function createConditionPages(createPage, conditions, reporter) {
   );
 }
 /** Register provider detail pages using their existing template and content IDs.
- * @param {Function} createPage Gatsby page creation action.
+ * @param {CreatePage} createPage Gatsby page creation action.
  * @param {Array<Object>} providers Provider nodes returned by PAGE_QUERY.
  * @returns Nothing; pages are registered through `createPage`.
  */
@@ -235,7 +250,7 @@ function createProviderPages(createPage, providers) {
   });
 }
 /** Register dated service-update pages using each record's stored date and slug.
- * @param {Function} createPage Gatsby page creation action.
+ * @param {CreatePage} createPage Gatsby page creation action.
  * @param {Array<Object>} updates Service-update nodes returned by PAGE_QUERY.
  * @returns Nothing; pages are registered through `createPage`.
  */
@@ -254,9 +269,9 @@ function createServiceUpdatePages(createPage, updates) {
   });
 }
 /** Create clinic pages and use cached Mapbox imagery as their social-card background.
- * @param {Function} createPage Gatsby page creation action.
+ * @param {CreatePage} createPage Gatsby page creation action.
  * @param {Array<Object>} clinics Clinic nodes with optional coordinates.
- * @param {GatsbyPageReporter} reporter Gatsby build reporter for generation counts and recoverable failures.
+ * @param {Reporter} reporter Gatsby build reporter for generation counts and recoverable failures.
  * @param {string} siteTitle Site title prepended to each clinic name in its card.
  * @returns Promise<void> after every clinic page is registered.
  */

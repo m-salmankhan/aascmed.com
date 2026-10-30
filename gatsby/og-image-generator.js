@@ -2,6 +2,15 @@
 const path = require('node:path');
 const fs = require('node:fs');
 const https = require('node:https');
+/**
+ * @import { generateSocialCard } from '../astro/src/lib/public-images.mjs'
+ */
+/** Existing Gatsby arguments translated to the shared renderer's card options.
+ * @typedef {object} GatsbyCardOptions
+ * @property {string} [title] Text rendered on the card; missing titles use a fallback.
+ * @property {string} [backgroundImagePath] Gatsby's local background-image path.
+ * @property {string} outputPath Destination for the generated JPEG.
+ */
 const OG_WIDTH = 1200;
 const OG_HEIGHT = 630;
 const BRAND_PRIMARY = '#1C5E38';
@@ -73,7 +82,7 @@ async function downloadMapboxImage(lat, lng, outputPath) {
   return outputPath;
 }
 /** Preserve Gatsby's OG-generator call shape while delegating rendering to the shared implementation.
- * @param {{ title?: string, backgroundImagePath?: string, outputPath: string }} options Existing Gatsby title, local background path, and output path.
+ * @param {GatsbyCardOptions} options Existing Gatsby title, local background path, and output path.
  * @returns Promise<string> The path written by the shared social-card renderer.
  */
 async function generateOGImage({ title, backgroundImagePath, outputPath }) {
@@ -87,7 +96,7 @@ async function generateOGImage({ title, backgroundImagePath, outputPath }) {
   });
 }
 /** Return the shared renderer for callers that still perform the former Gatsby warm-up step.
- * @returns Promise<Function> The social-card rendering function; loading it performs no image work.
+ * @returns {Promise<typeof generateSocialCard>} The social-card rendering function; loading it performs no image work.
  */
 async function initOGImageGenerator() {
   const { generateSocialCard } = await import(

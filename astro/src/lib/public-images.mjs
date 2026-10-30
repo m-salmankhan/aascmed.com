@@ -6,43 +6,20 @@ import { createHash } from 'node:crypto';
 import { mkdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-/** @typedef {ReturnType<ReturnType<typeof import('@napi-rs/canvas').createCanvas>['getContext']>} CanvasContext */
-/** @typedef {'blog' | 'conditions' | 'clinics'} SocialCardKind */
-/** @typedef {{ latitude: number, longitude: number }} MapLocation */
-/** @typedef {Record<string, string>} SocialCardCache */
-/** @typedef {Iterable<SocialCardEntry> | AsyncIterable<SocialCardEntry>} SocialCardEntries */
 /**
- * @typedef {object} SocialCardEntry
- * @property {SocialCardKind} kind Content route family used in the card URL.
- * @property {string} slug Route-relative slug; nested segments are retained.
- * @property {string} title Text rendered on the card.
- * @property {string} [backgroundImage] Local path or allowlisted image URL.
- * @property {MapLocation} [mapLocation] Clinic coordinates used for a generated Mapbox map.
- * @property {string} [mediaName] Stable basename preserving the existing card URL.
+ * @import { SKRSContext2D } from '@napi-rs/canvas'
+ * @import {
+ *   SocialCardKind,
+ *   MapLocation,
+ *   SocialCardEntry,
+ *   SocialCardEntries,
+ *   PublicImageBuildOptions,
+ *   GenerateSocialCardOptions,
+ *   SocialCardResult,
+ * } from './public-images.d.mts'
  */
-/**
- * @typedef {object} PublicImageBuildOptions
- * @property {string} publicDir Build's static public directory.
- * @property {string} cacheDir Persistent private cache directory outside public output.
- * @property {typeof fetch} [fetch] Fetch implementation for controlled build environments.
- * @property {string} [mapboxToken] Public token used only for the build-time map request.
- * @property {string[]} [allowedMediaHosts] Exact HTTPS hostnames allowed for CMS media.
- */
-/**
- * @typedef {object} GenerateSocialCardOptions
- * @property {string} title Text rendered on the card.
- * @property {string} [backgroundImage] Optional local path or allowlisted image URL.
- * @property {string} outputPath Destination path for the JPEG card.
- * @property {typeof fetch} [fetch] Fetch implementation for deterministic tests.
- * @property {string[]} [allowedMediaHosts] Exact HTTPS hostnames allowed for background media.
- */
-/**
- * @typedef {object} SocialCardResult
- * @property {SocialCardKind} kind Card route family.
- * @property {string} slug Original route-relative slug.
- * @property {string} imagePath Relative public URL suitable for page metadata.
- * @property {string} outputPath Local path to the emitted JPEG.
- * @property {boolean} wasCached Whether the existing output matched current inputs.
+/** Cached input fingerprints keyed by public card URL.
+ * @typedef {Record<string, string>} SocialCardCache
  */
 const WIDTH = 1200;
 const HEIGHT = 630;
@@ -246,7 +223,7 @@ async function fetchImage(
   return bytes;
 }
 /** Wrap a title at word boundaries so each rendered line fits the card width.
- * @param {CanvasContext} ctx Canvas context used to measure text with the selected font.
+ * @param {SKRSContext2D} ctx Canvas context used to measure text with the selected font.
  * @param {string} text Title text to wrap.
  * @param {number} maxWidth Maximum line width in pixels.
  * @returns {string[]} Lines in display order.
