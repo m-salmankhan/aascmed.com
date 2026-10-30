@@ -1,77 +1,21 @@
-# Caddyfile for the preview site reverse proxy
-#
-# TLS is terminated here using a Cloudflare Origin Certificate.
-# Authentication is handled via forward_auth to the forward-auth service.
-#
-# The PREVIEW_DOMAIN env var is set by the container (-e PREVIEW_DOMAIN=...).
-# Cert paths must match where you placed the Cloudflare Origin Certificate
-# on the host (mounted into the Caddy container).
-
-{$PREVIEW_DOMAIN:localhost} {
-	# Use Cloudflare Origin Certificate for TLS
-	tls /etc/caddy/certs/cert.pem /etc/caddy/certs/key.pem
-
-	# Allow framing from Strapi and *.aascmed.com
-	header {
-		defer
-		Cache-Control "private, no-store"
-		X-Robots-Tag "noindex, nofollow"
-		Content-Security-Policy "frame-ancestors 'self' https://*.aascmed.com https://wise-positivity-21c2bd6b3f.strapiapp.com"
-		-X-Frame-Options
-	}
-
-	# Auth endpoints and static assets are served by the forward-auth service
-	handle /login* {
-		reverse_proxy preview-forward-auth:3001
-	}
-
-	handle /logout {
-		reverse_proxy preview-forward-auth:3001
-	}
-
-	handle /auth/* {
-		reverse_proxy preview-forward-auth:3001
-	}
-
-	# Everything else: verify auth first, then proxy to preview
-	handle {
-		# Expanded forward_auth: pre-check request to auth service
-		reverse_proxy preview-forward-auth:3001 {
-			# Send as GET so original body is not consumed
-			method GET
-			rewrite /verify
-
-			# Pass original method and URI for the auth service
-			header_up X-Forwarded-Method {method}
-			header_up X-Forwarded-Uri {uri}
-
-			# On 2xx — auth passed, copy user header and proceed
-			@good status 2xx
-			handle_response @good {
-				request_header X-Auth-User {rp.header.X-Auth-User}
-			}
-
-			# On 401 — not authenticated, redirect to login
-			@unauthorized status 401
-			handle_response @unauthorized {
-				header Location /login?redirect={http.request.uri}
-				respond "" 302
-			}
-
-			# On 5xx — auth service error, fail closed
-			@error status 5xx
-			handle_response @error {
-				respond "Auth service unavailable — please try again shortly." 503
-			}
-		}
-
-		reverse_proxy aascmed-preview:4321 {
-			header_down -X-Frame-Options
-			header_down -Content-Security-Policy
-		}
-	}
-
-	encode zstd gzip
-
-	# Access logs are disabled to avoid recording draft paths and query strings.
+# Private HTTP proxy. Only the Access-enforcing tunnel may reach this network.
+:8080 {
+    header {
+        defer
+        Cache-Control "private, no-store"
+        X-Robots-Tag "noindex, nofollow"
+        Content-Security-Policy "frame-ancestors 'self' https://*.aascmed.com https://wise-positivity-21c2bd6b3f.strapiapp.com"
+        -X-Frame-Options
+    }
+    reverse_proxy aascmed-preview:4321 {
+        # Authentication is checked by cloudflared. Do not forward its credentials.
+        header_up -Cookie
+        header_up -Authorization
+        header_up -Cf-Access-Jwt-Assertion
+        header_up X-Forwarded-Proto https
+        header_down -X-Frame-Options
+        header_down -Content-Security-Policy
+    }
+    encode zstd gzip
+    # No access log: avoid recording draft URLs or query strings.
 }

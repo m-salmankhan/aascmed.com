@@ -1,141 +1,40 @@
-# GitHub Actions Workflow: Deploy Preview Server
-# Builds preview site + forward-auth images, pushes to GHCR,
-# then deploys three containers on the remote host:
-#   1. aascmed-preview        — compiled Astro Node SSR (saved drafts)
-#   2. preview-forward-auth   — Strapi-based login / JWT verification
-#   3. preview-caddy          — TLS reverse proxy with forward_auth
-
-name: Deploy Preview Server
-
+# Build only. Provisioning and deployment are explicit, separate manual operations.
+name: Build preview image for review
 on:
-  # Stage 4 is merged as a stack. Do not let an intermediate main revision
-  # redeploy the old login/preview stack while Access is being provisioned.
+  pull_request:
+  push:
+    branches: [main]
   workflow_dispatch:
-
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}-preview
-  AUTH_IMAGE_NAME: ${{ github.repository }}-preview-auth
-
+permissions:
+  contents: read
+  packages: write
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
-      packages: write
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to Container Registry
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Log in to GHCR for main or manual builds
+        if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      # ── Preview site image ────────────────────────────────────────────
-      - name: Extract metadata (preview)
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=ref,event=branch
-            type=sha,format=long,prefix=
-            type=raw,value=latest,enable={{is_default_branch}}
-
-      - name: Build and push preview image
-        id: preview-build
+      - name: Build compiled preview image
+        id: image
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./preview-server/Dockerfile.astro
+          file: preview-server/Dockerfile.astro
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ghcr.io/${{ github.repository }}-preview:${{ github.sha }}
           build-args: |
             GATSBY_STRAPI_API_URL=${{ vars.GATSBY_STRAPI_API_URL }}
             STRAPI_MEDIA_ORIGINS=${{ vars.STRAPI_MEDIA_ORIGINS }}
             PUBLIC_RUNTIME_API_BASE_URL=${{ vars.PREVIEW_PUBLIC_RUNTIME_API_BASE_URL }}
             PUBLIC_MAPBOX_API_KEY=${{ vars.PREVIEW_PUBLIC_MAPBOX_API_KEY }}
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      # ── Forward-auth image ────────────────────────────────────────────
-      - name: Extract metadata (forward-auth)
-        id: meta-auth
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.AUTH_IMAGE_NAME }}
-          tags: |
-            type=ref,event=branch
-            type=sha,format=long,prefix=
-            type=raw,value=latest,enable={{is_default_branch}}
-
-      - name: Build and push forward-auth image
-        id: auth-build
-        uses: docker/build-push-action@v5
-        with:
-          context: ./preview-server/forward-auth
-          file: ./preview-server/forward-auth/Dockerfile
-          push: true
-          tags: ${{ steps.meta-auth.outputs.tags }}
-          labels: ${{ steps.meta-auth.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      # ── Deploy to remote server ───────────────────────────────────────
-      - name: Copy compose files to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.PREVIEW_SERVER_HOST }}
-          username: ${{ secrets.PREVIEW_SERVER_USER }}
-          key: ${{ secrets.PREVIEW_SERVER_SSH_KEY }}
-          source: "preview-server/Caddyfile,preview-server/docker-compose.yml"
-          target: "/home/${{ secrets.PREVIEW_SERVER_USER }}/"
-          strip_components: 1
-
-      - name: Deploy with Podman Compose
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.PREVIEW_SERVER_HOST }}
-          username: ${{ secrets.PREVIEW_SERVER_USER }}
-          key: ${{ secrets.PREVIEW_SERVER_SSH_KEY }}
-          script: |
-            set -e
-
-            # ── Registry login ──────────────────────────────────────────
-            echo ${{ secrets.GITHUB_TOKEN }} | podman login ghcr.io -u ${{ github.actor }} --password-stdin
-
-            cd ~/
-
-            # ── Write .env with secrets and immutable image digests ───────
-            umask 077
-            printf '%s\n' \
-              'PREVIEW_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.preview-build.outputs.digest }}' \
-              'AUTH_IMAGE=${{ env.REGISTRY }}/${{ env.AUTH_IMAGE_NAME }}@${{ steps.auth-build.outputs.digest }}' \
-              'GATSBY_STRAPI_API_URL=${{ vars.GATSBY_STRAPI_API_URL }}' \
-              'STRAPI_TOKEN=${{ secrets.STRAPI_TOKEN }}' \
-              'PREVIEW_FRAME_ORIGINS=${{ vars.PREVIEW_FRAME_ORIGINS }}' \
-              'PREVIEW_DOMAIN=${{ vars.PREVIEW_DOMAIN }}' \
-              'PREVIEW_CERTS_PATH=${{ vars.PREVIEW_CERTS_PATH }}' \
-              'PREVIEW_HTTPS_PORT=8443' \
-              'PREVIEW_HTTP_PORT=8080' \
-              > .env
-
-            # Keep Caddy configuration in a directory mount so reload sees file updates.
-            mkdir -p caddy-config
-            cp Caddyfile caddy-config/Caddyfile
-
-            # ── Pull and (re)start ──────────────────────────────────────
-            podman compose pull
-            podman compose up -d preview forward-auth caddy
-            podman exec preview-caddy caddy reload --config /etc/caddy/config/Caddyfile --adapter caddyfile
-
-            # Retain older images for rollback.
+      - name: Record image digest
+        run: echo "Built image digest ${{ steps.image.outputs.digest }}. Deployment is manual and requires Access provisioning." >> "$GITHUB_STEP_SUMMARY"
