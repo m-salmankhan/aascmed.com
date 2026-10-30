@@ -206,10 +206,7 @@ test(
       staticServer = undefined;
       const beforeSsrBuild = cms.requests.length;
       await build('astro.config.ssr.ts', env);
-      assert.ok(
-        cms.requests.slice(beforeSsrBuild).every(({ query }) => query.status === 'published'),
-        'SSR build-time sitemap also excludes saved drafts',
-      );
+      assert.equal(cms.requests.length, beforeSsrBuild, 'SSR compilation makes no CMS requests');
       const port = await availablePort();
       const origin = `http://127.0.0.1:${port}`;
       previewServer = command(['dist-ssr/server/entry.mjs'], {
@@ -374,13 +371,7 @@ test(
         );
       }
       const previewSitemap = await fetch(`${origin}/sitemap-0.xml`);
-      assert.equal(previewSitemap.status, 200);
-      const previewXml = await previewSitemap.text();
-      assert.ok(!previewXml.includes('draft-new') && !previewXml.includes('renamed-'));
-      assert.ok(
-        previewXml.includes('/blog/article-1/'),
-        'preview sitemap remains the published build artifact',
-      );
+      assert.equal(previewSitemap.status, 404, 'private preview omits the build-time sitemap');
       await assertPublicArtifacts(path.join(astroRoot, 'dist-static'));
       await stop(previewServer);
       const publishedPort = await availablePort();
