@@ -6,10 +6,10 @@
     "node": ">=22.23.4"
   },
   "scripts": {
-    "build:static": "astro build --config astro.config.static.mjs",
-    "build:ssr": "astro build --config astro.config.ssr.mjs",
+    "build:static": "astro build --config astro.config.static.ts",
+    "build:ssr": "astro build --config astro.config.ssr.ts",
     "start:ssr": "node dist-ssr/server/entry.mjs",
-    "typecheck": "astro check --config astro.config.static.mjs"
+    "typecheck": "astro check --config astro.config.static.ts"
   },
   "dependencies": {
     "@astrojs/node": "10.1.4",

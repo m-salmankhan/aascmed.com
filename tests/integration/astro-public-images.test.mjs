@@ -190,8 +190,8 @@ test('Astro static builds use astro:assets for CMS thumbnails and cache social c
   </body></html>
   `;
   const fixtureConfig = `
-  import base from './astro.config.static.mjs';
-  import { mediaOrigins } from './astro.config.shared.mjs';
+  import base from './astro.config.static.ts';
+  import { mediaOrigins } from './astro.config.shared.ts';
   import { publicImagesIntegration } from './src/integrations/public-images.ts';
   import path from 'node:path';
   const integration = publicImagesIntegration({

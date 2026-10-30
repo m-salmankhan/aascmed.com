@@ -13,7 +13,7 @@ test('Astro config derives and deduplicates CMS/media image origins from environ
     '../..',
   );
   const script = `
-    import config, { mediaOrigins } from './astro/astro.config.shared.mjs';
+    import config, { mediaOrigins } from './astro/astro.config.shared.ts';
     console.log('CONFIG_RESULT:' + JSON.stringify({
       mediaOrigins,
       remotePatterns: config.image.remotePatterns,

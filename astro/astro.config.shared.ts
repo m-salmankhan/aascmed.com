@@ -1,5 +1,5 @@
 // Shares Astro settings and environment-backed media origins between static and preview builds.
-import { defineConfig } from 'astro/config';
+import type { AstroUserConfig } from 'astro';
 import { loadEnv } from 'vite';
 import react from '@astrojs/react';
 import { fileURLToPath } from 'node:url';
@@ -12,7 +12,9 @@ const { values } = parseArgs({
   strict: false,
   allowPositionals: true,
 });
-const mode = values.mode || process.env.NODE_ENV || 'development';
+const mode = typeof values.mode === 'string'
+  ? values.mode
+  : process.env.NODE_ENV || 'development';
 // Vite preserves existing process variables when loading the repository's env files.
 Object.assign(process.env, loadEnv(mode, repositoryRoot, ''));
 
@@ -29,7 +31,7 @@ for (const source of cdnOrigins) {
   }
 }
 const mediaSources = [process.env.GATSBY_STRAPI_API_URL, ...cdnOrigins];
-const origins = new Set();
+const origins = new Set<string>();
 for (const source of mediaSources) {
   if (!source?.trim()) {
     continue;
@@ -50,13 +52,13 @@ for (const source of mediaSources) {
 }
 export const mediaOrigins = [...origins];
 
-export default defineConfig({
+const config = {
   site: 'https://www.aascmed.com',
   root: '.',
   srcDir: './src',
   publicDir: '../static',
   integrations: [
-    react({ jsxImportSource: '@emotion/react' }),
+    react(),
     publishedSitemap(),
   ],
   image: {
@@ -76,4 +78,6 @@ export default defineConfig({
     resolve: { dedupe: ['react', 'react-dom', '@emotion/react'] },
     ssr: { external: ['react', 'react-dom', '@emotion/react'] },
   },
-});
+} satisfies AstroUserConfig;
+
+export default config;

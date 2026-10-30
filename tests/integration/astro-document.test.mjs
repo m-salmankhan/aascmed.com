@@ -104,7 +104,7 @@ import SiteDocument from '../layouts/SiteDocument.astro';
         { flag: 'wx' },
       );
       fixtureCreated = true;
-      await runBuild('astro.config.static.mjs');
+      await runBuild('astro.config.static.ts');
       assert.ok(
         observedCmsRequests.length >= 5,
         'static sitemap loads its published route collections',
@@ -213,7 +213,7 @@ import SiteDocument from '../layouts/SiteDocument.astro';
       assert.ok(!staticSitemap.includes('/404'), 'Astro excludes the error page');
       const indexXml = await readFile(path.join(staticOutputDir, 'sitemap-index.xml'), 'utf8');
       assert.ok(indexXml.includes('https://www.aascmed.com/sitemap-0.xml'));
-      await runBuild('astro.config.ssr.mjs');
+      await runBuild('astro.config.ssr.ts');
       const beforeSsrRequests = observedCmsRequests.length;
       const portProbe = await new Promise((resolve) => {
         const server = createServer();

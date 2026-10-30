@@ -15,6 +15,8 @@ yarn astro:ssr:build
 yarn astro:ssr:start
 ```
 
+The shared, static and SSR Astro configurations are TypeScript files and are included in the Astro typecheck, which also runs in CI.
+
 React, ReactDOM and Emotion are supplied by the root package. Keep their Vite deduplication and SSR external settings so shared components use one runtime. `SiteDocument` applies the existing shared global stylesheet; page views do not need a demo wrapper to receive it.
 
 ## CMS content
