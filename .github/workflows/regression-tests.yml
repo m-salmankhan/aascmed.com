@@ -110,6 +110,7 @@ jobs:
             astro/yarn.lock
       - run: yarn install --frozen-lockfile
       - run: yarn --cwd astro install --frozen-lockfile
+      - run: yarn --cwd astro typecheck
       - run: yarn playwright install --with-deps chromium
       - run: yarn test:astro
 
