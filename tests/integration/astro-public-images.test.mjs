@@ -68,9 +68,9 @@ test('Astro static builds use astro:assets for CMS thumbnails and cache social c
     stagingDir,
     cacheDir,
   ]) {
-    assert.equal(
-      await exists(target),
-      false,
+    await assert.rejects(
+      stat(target),
+      { code: 'ENOENT' },
       `Refusing to overwrite existing fixture path: ${target}`,
     );
   }
@@ -113,7 +113,8 @@ test('Astro static builds use astro:assets for CMS thumbnails and cache social c
       partition,
       status: url.searchParams.get('status'),
     });
-    if (kind === 'blogs' && page === 2) {
+    const pageSize = Number(url.searchParams.get('pagination[pageSize]') || 2);
+    if (kind === 'blogs' && page === 2 && !url.searchParams.has('fields[0]')) {
       assert.ok(
         await stat(
           path.join(stagingDir, 'og-images/blog/fixture-post-cover.jpg'),
@@ -153,14 +154,14 @@ test('Astro static builds use astro:assets for CMS thumbnails and cache social c
             },
           ]
         : [];
-    const data = records.slice((page - 1) * 2, page * 2);
+    const data = records.slice((page - 1) * pageSize, page * pageSize);
     response.writeHead(200, { 'content-type': 'application/json' });
     response.end(
       JSON.stringify({
         data,
         meta: {
           pagination: {
-            pageCount: Math.max(1, Math.ceil(records.length / 2)),
+            pageCount: Math.max(1, Math.ceil(records.length / pageSize)),
             total: records.length,
           },
         },
@@ -173,18 +174,19 @@ test('Astro static builds use astro:assets for CMS thumbnails and cache social c
   const fixtureRoute = `
   ---
   import { getBlogs } from '../server/content/loaders.ts';
+  import { Image } from '../../../src/components/media/image.tsx';
   import { getResponsiveMediaDescriptor } from '../server/content/astro-media.ts';
   let sourceMedia;
   for await (const blog of getBlogs('published', { pageSize: 2 })) {
-    if (blog.slug === 'fixture-post') sourceMedia = blog.thumbnail;
+    if (blog.slug === 'fixture-post') {
+      sourceMedia = blog.thumbnail;
+      break;
+    }
   }
   const media = sourceMedia ? await getResponsiveMediaDescriptor(sourceMedia) : undefined;
   ---
   <html><body>
-    <picture>
-      <source id="modern" type="image/webp" srcset={media?.formats?.find(({ type }) => type === 'image/webp')?.srcSet} />
-      <img id="responsive" src={media?.src} srcset={media?.srcSet} width={media?.width} height={media?.height} />
-    </picture>
+    {media && <Image image={media} />}
   </body></html>
   `;
   const fixtureConfig = `
@@ -257,7 +259,7 @@ test('Astro static builds use astro:assets for CMS thumbnails and cache social c
     );
     const htmlFirst = await readFile(routeHtml, 'utf8');
     assert.match(htmlFirst, /src="\/_astro\/[^\"]+\.jpg/);
-    assert.match(htmlFirst, /srcset="[^"]+\.jpg \d+w/);
+    assert.match(htmlFirst, /srcset="[^"]+\.jpg \d+w/i);
     assert.match(htmlFirst, /width="900" height="600"/);
     assert.match(htmlFirst, /\.webp \d+w/);
     await assertPublicOutputContainsNoBuildSecrets(outputDir);
@@ -282,6 +284,7 @@ test('Astro static builds use astro:assets for CMS thumbnails and cache social c
       'fixture-post-cover.jpg',
     );
     const cardFirst = await readFile(cardPath);
+    const mediaFirst = await readFile(path.join(outputDir, mediaSrc.slice(1)));
     blogTitle = 'Fixture version two';
     imageBytes = await jpeg('#2b60d4');
     await runStaticBuild();
@@ -301,7 +304,7 @@ test('Astro static builds use astro:assets for CMS thumbnails and cache social c
     );
     assert.notDeepEqual(
       mediaSecond,
-      await readFile(path.join(outputDir, mediaSrc.slice(1))),
+      mediaFirst,
       'Astro refreshes optimized output when the remote image changes at the same URL',
     );
     await runStaticBuild();
@@ -310,9 +313,6 @@ test('Astro static builds use astro:assets for CMS thumbnails and cache social c
       cardThird,
       cardSecond,
       'unchanged public cards reuse deterministic cached output',
-    );
-    console.log(
-      'Astro static integration passed: published image processing, Astro-generated responsive assets, and social-card cache reuse.',
     );
   } finally {
     await new Promise((resolve) => mockApi.close(resolve));
