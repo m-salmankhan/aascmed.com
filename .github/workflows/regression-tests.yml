@@ -90,6 +90,7 @@ jobs:
           cache: yarn
       - run: yarn install --frozen-lockfile
       - run: yarn strapi:types:check
+      - run: yarn typecheck:images
       - run: yarn test:unit
 
   astro:
