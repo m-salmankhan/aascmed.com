@@ -1,5 +1,6 @@
 ---
 // Renders a provider profile from a static path or request-time preview lookup.
+import moment from 'moment';
 import SitePage from '../../layouts/SitePage.astro';
 import { getProviderBySlug } from '../../server/content/loaders';
 import { getPageSettings, pageContentMode } from '../../server/pages/common';
@@ -16,8 +17,12 @@ const provider = await getProviderBySlug(Astro.params.slug || '', mode);
 if (!provider) return Astro.rewrite('/404');
 const settings = await getPageSettings(mode);
 const socialImagePath = provider.image?.src;
-if (provider.image && import.meta.env.PUBLIC_ASTRO_TARGET === 'static') {
-  provider.image = await getResponsiveMediaDescriptor(provider.image);
+if (provider.image) {
+  provider.image = await getResponsiveMediaDescriptor(provider.image, 1);
+}
+if (provider.review?.date) {
+  const date = moment.utc(provider.review.date, moment.ISO_8601, true);
+  provider.review.date = date.isValid() ? date.format('MMMM D, YYYY') : '';
 }
 const honorific =
   provider.name?.honorific && provider.name.honorific !== 'None' ? provider.name.honorific : '';

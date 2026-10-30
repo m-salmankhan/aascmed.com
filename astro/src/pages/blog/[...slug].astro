@@ -17,7 +17,7 @@ const blog = await getBlogBySlug(Astro.params.slug || '', mode);
 if (!blog) return Astro.rewrite('/404');
 const settings = await getPageSettings(mode);
 const originalThumbnail = blog.thumbnail;
-if (blog.thumbnail && import.meta.env.PUBLIC_ASTRO_TARGET === 'static') {
+if (blog.thumbnail) {
   blog.thumbnail = await getResponsiveMediaDescriptor(blog.thumbnail);
 }
 blog.date = blogDate(blog.date);

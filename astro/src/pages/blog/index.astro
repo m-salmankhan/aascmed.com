@@ -11,10 +11,9 @@ const mode = pageContentMode();
 const [page, settings] = await Promise.all([getBlogArchive(mode), getPageSettings(mode)]);
 const blogs: BlogViewItem[] = [];
 for await (const blog of getBlogs(mode)) {
-  const thumbnail =
-    blog.thumbnail && import.meta.env.PUBLIC_ASTRO_TARGET === 'static'
-      ? await getResponsiveMediaDescriptor(blog.thumbnail)
-      : blog.thumbnail;
+  const thumbnail = blog.thumbnail
+    ? await getResponsiveMediaDescriptor(blog.thumbnail, 400 / 250)
+    : blog.thumbnail;
   blogs.push({
     slug: blogPath(blog.slug) || '/blog/',
     title: blog.title || 'Untitled',
