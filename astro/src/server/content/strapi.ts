@@ -89,7 +89,7 @@ export function createClient(mode: ContentMode) {
   if (mode === "draft") {
     headers["Cache-Control"] = "no-store";
   }
-  const endpoint = safeEndpoint(process.env.GATSBY_STRAPI_API_URL);
+  const endpoint = safeEndpoint(process.env.STRAPI_API_URL);
   try {
     return strapi({
       baseURL: endpoint.href.replace(/\/$/, ""),

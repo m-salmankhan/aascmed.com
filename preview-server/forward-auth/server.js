@@ -5,13 +5,13 @@ const cookieParser = require("cookie-parser");
 // ---------------------------------------------------------------------------
 // Config
 // ---------------------------------------------------------------------------
-const STRAPI_URL = process.env.STRAPI_URL; // e.g. https://cms.example.com
+const STRAPI_URL = process.env.STRAPI_API_URL; // e.g. https://cms.example.com
 const COOKIE_NAME = process.env.COOKIE_NAME || "preview_jwt";
 const COOKIE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 1 week
 const PORT = process.env.PORT || 3001;
 
 if (!STRAPI_URL) {
-  console.error("STRAPI_URL env var is required");
+  console.error("STRAPI_API_URL env var is required");
   process.exit(1);
 }
 

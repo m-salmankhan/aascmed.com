@@ -27,7 +27,7 @@ services:
       - preview-net
     environment:
       - NODE_OPTIONS=--max-old-space-size=700
-      - GATSBY_STRAPI_API_URL=${GATSBY_STRAPI_API_URL}
+      - STRAPI_API_URL=${STRAPI_API_URL}
       - STRAPI_TOKEN=${STRAPI_TOKEN}
       - GATSBY_REFRESH_TOKEN=${GATSBY_REFRESH_TOKEN}
       - GATSBY_MAPBOX_API_KEY=${GATSBY_MAPBOX_API_KEY}
@@ -45,7 +45,7 @@ services:
     networks:
       - preview-net
     environment:
-      - STRAPI_URL=${GATSBY_STRAPI_API_URL}
+      - STRAPI_API_URL=${STRAPI_API_URL}
 
   caddy:
     container_name: preview-caddy

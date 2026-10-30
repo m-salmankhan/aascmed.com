@@ -3,7 +3,7 @@ const path = require('path');
 const matter = require('gray-matter');
 
 // Strapi API config
-let STRAPI_URL = process.env.STRAPI_URL || process.env.GATSBY_STRAPI_API_URL || 'http://localhost:1337';
+let STRAPI_URL = process.env.STRAPI_API_URL || 'http://localhost:1337';
 // Remove trailing slash if present
 STRAPI_URL = STRAPI_URL.replace(/\/$/, '');
 const STRAPI_TOKEN = process.env.STRAPI_TOKEN;

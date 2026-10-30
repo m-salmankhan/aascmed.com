@@ -46,7 +46,7 @@ test(
       ...process.env,
       DEBUG: '',
       TZ: 'UTC',
-      GATSBY_STRAPI_API_URL: cms.origin,
+      STRAPI_API_URL: cms.origin,
       STRAPI_TOKEN: fixtureToken,
       STRAPI_MEDIA_ORIGINS: cms.origin,
       ASTRO_CONTENT_MODE: 'published',
