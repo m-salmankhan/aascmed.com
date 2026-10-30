@@ -230,6 +230,7 @@ export async function startFixtureCms() {
     .png()
     .toBuffer();
   const requests = [];
+  const unavailableResources = new Set();
   const server = createServer(async (request, response) => {
     const url = new URL(request.url, 'http://localhost');
     if (url.pathname === '/runtime/contact/') {
@@ -277,6 +278,11 @@ export async function startFixtureCms() {
     }
     const source = query.status === 'draft' ? draft : published;
     const resource = url.pathname.replace(/^\/api\//, '');
+    if (unavailableResources.has(resource)) {
+      response.writeHead(503, { 'content-type': 'application/json' });
+      response.end(JSON.stringify({ error: { message: 'Synthetic CMS outage' } }));
+      return;
+    }
     const value = source[resource];
     response.setHeader('content-type', 'application/json');
     if (value === undefined) {
@@ -340,6 +346,7 @@ export async function startFixtureCms() {
   return {
     origin,
     requests,
+    unavailableResources,
     runtime,
     published,
     draft,

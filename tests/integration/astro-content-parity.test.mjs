@@ -203,6 +203,20 @@ test(
           `${pathname} suppresses tracking in preview`,
         );
       }
+      cms.draft.providers.push({ documentId: 'incomplete-profile', slug: 'minimal-profile' });
+      const incomplete = await fetch(`${origin}/providers/minimal-profile/`);
+      assert.equal(incomplete.status, 200, 'saved drafts tolerate missing optional profile fields');
+      assert.ok((await incomplete.text()).includes('<title>'));
+      cms.draft.providers.pop();
+      const completeHome = cms.draft['home-page'];
+      cms.draft['home-page'] = { documentId: 'incomplete-home' };
+      assert.equal((await fetch(origin)).status, 200, 'missing draft sections use public view defaults');
+      cms.draft['home-page'] = completeHome;
+      cms.unavailableResources.add('blogs');
+      const unavailable = await fetch(`${origin}/blog/article-1/`);
+      assert.equal(unavailable.status, 500, 'CMS failures do not masquerade as successful or missing pages');
+      assert.ok(!(await unavailable.text()).includes(fixtureToken), 'CMS failure responses omit credentials');
+      cms.unavailableResources.clear();
       cms.draft.blogs.push({
         ...structuredClone(cms.draft.blogs[0]),
         documentId: 'created-after-startup',
