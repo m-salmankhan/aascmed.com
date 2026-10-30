@@ -1,8 +1,6 @@
 // Generates Strapi API types from a committed export or an explicitly requested live schema refresh.
-import { readFile, writeFile, mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { spawnSync } from "node:child_process";
+import { readFile, writeFile } from "node:fs/promises";
+import openapiTS, { astToString, COMMENT_HEADER } from "openapi-typescript";
 import { fileURLToPath } from "node:url";
 const args = process.argv.slice(2);
 const refreshIndex = args.indexOf("--refresh");
@@ -55,39 +53,20 @@ function removeVolatileDefaults(value) {
   }
 }
 removeVolatileDefaults(spec);
-const temporary = await mkdtemp(join(tmpdir(), "aascmed-openapi-"));
 const output = fileURLToPath(
   new URL("../astro/src/server/content/generated/types.d.ts", import.meta.url),
 );
-try {
-  const normalized = join(temporary, "strapi-openapi.json");
-  const generated = join(temporary, "strapi-openapi.d.ts");
-  await writeFile(normalized, JSON.stringify(spec));
-  const generator = fileURLToPath(
-    new URL("../node_modules/openapi-typescript/bin/cli.js", import.meta.url),
-  );
-  const result = spawnSync(process.execPath, [generator, normalized, "-o", generated], {
-    stdio: "inherit",
-  });
-  if (result.error) {
-    throw result.error;
+const content =
+  "// Types for the Strapi Content API, generated from its OpenAPI specification.\n" +
+  COMMENT_HEADER +
+  astToString(await openapiTS(spec));
+if (args.includes("--check")) {
+  if ((await readFile(output, "utf8")) !== content) {
+    throw new Error("Generated Strapi API types are out of date");
   }
-  if (result.status !== 0) {
-    throw new Error(`openapi-typescript exited with ${result.status}`);
+} else {
+  await writeFile(output, content);
+  if (refreshIndex >= 0) {
+    await writeFile(committedSpec, sourceText);
   }
-  const content =
-    "// Types for the Strapi Content API, generated from its OpenAPI specification.\n" +
-    (await readFile(generated, "utf8"));
-  if (process.argv.includes("--check")) {
-    if ((await readFile(output, "utf8")) !== content) {
-      throw new Error("Generated Strapi API types are out of date");
-    }
-  } else {
-    await writeFile(output, content);
-    if (refreshIndex >= 0) {
-      await writeFile(committedSpec, sourceText);
-    }
-  }
-} finally {
-  await rm(temporary, { recursive: true, force: true });
 }
