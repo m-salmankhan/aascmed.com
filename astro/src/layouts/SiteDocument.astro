@@ -55,6 +55,12 @@ const isPreview = import.meta.env.PUBLIC_ASTRO_TARGET !== 'static';
 const shouldNoIndex = isPreview || noIndex === true;
 const analytics = !isPreview && useTracking ? trackingSettings : undefined;
 const jsonLd = structuredData ? serializeStructuredData(structuredData) : undefined;
+const previewCmsOrigins = isPreview
+  ? [...new Set([process.env.GATSBY_STRAPI_API_URL, ...(process.env.PREVIEW_FRAME_ORIGINS || '').split(',')]
+      .map((origin) => origin?.trim())
+      .filter((origin): origin is string => Boolean(origin))
+      .map((origin) => new URL(origin).origin))]
+  : [];
 ---
 
 <!doctype html>
@@ -89,6 +95,7 @@ const jsonLd = structuredData ? serializeStructuredData(structuredData) : undefi
     <meta name="twitter:description" content={description} />
     {siteSettings.twitterHandle && <meta name="twitter:site" content={siteSettings.twitterHandle} />}
     <meta name="theme-color" content="#1C5E38" />
+    {previewCmsOrigins.length > 0 && <meta name="preview-cms-origins" content={previewCmsOrigins.join(',')} />}
     {jsonLd && <script type="application/ld+json" set:html={jsonLd} />}
     {(analytics?.googleAnalyticsId || analytics?.googleTagManagerId) && <script is:inline>
       window.dataLayer = window.dataLayer || [];
@@ -153,6 +160,7 @@ const jsonLd = structuredData ? serializeStructuredData(structuredData) : undefi
       fbq('track', 'PageView');
     </script>}
     <slot name="head" />
+    {previewCmsOrigins.length > 0 && <script src="../client/preview-refresh.ts"></script>}
   </head>
   <body>
     {analytics?.pixelId && <noscript>

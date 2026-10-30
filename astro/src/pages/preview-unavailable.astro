@@ -1,0 +1,17 @@
+---
+// Gives editors a useful preview destination when a saved draft has no valid public route yet.
+import SiteDocument from '../layouts/SiteDocument.astro';
+---
+
+<SiteDocument pathname="/preview-unavailable/" title="Preview unavailable" noIndex>
+  <main>
+    <h1>Preview unavailable for this draft</h1>
+    <p>The draft is saved, but the website cannot build its preview URL until its route fields are complete.</p>
+    <ul>
+      <li>Blog posts, conditions and providers need a valid slug.</li>
+      <li>Clinics need a slug or clinic name.</li>
+      <li>Service updates need a valid date and slug.</li>
+    </ul>
+    <p>Complete the route fields, save the draft, then reopen Preview.</p>
+  </main>
+</SiteDocument>

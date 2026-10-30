@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import path from 'node:path';
+import { createServer } from 'node:http';
 import { readFile, readdir } from 'node:fs/promises';
 import { chromium } from '@playwright/test';
 import {
@@ -88,10 +89,13 @@ test(
   { timeout: 240000 },
   async () => {
     const cms = await startFixtureCms();
+    const cmsPreviewPort = await availablePort();
+    const cmsPreviewOrigin = `http://127.0.0.1:${cmsPreviewPort}`;
     const env = {
       ...process.env,
       DEBUG: '',
       GATSBY_STRAPI_API_URL: cms.origin,
+      PREVIEW_FRAME_ORIGINS: cmsPreviewOrigin,
       STRAPI_TOKEN: fixtureToken,
       STRAPI_MEDIA_ORIGINS: cms.origin,
       ASTRO_CONTENT_MODE: 'draft',
@@ -101,6 +105,7 @@ test(
     };
     let staticServer;
     let previewServer;
+    let cmsPreview;
     let browser;
     try {
       await build('astro.config.static.ts', env);
@@ -155,6 +160,7 @@ test(
         assert.equal(response.status(), 200, `${pathname} published status`);
         const html = await response.text();
         const jsonLd = assertDocument(html, pathname);
+        assert.ok(!html.includes('preview-cms-origins'), 'static output does not load the saved-draft refresh listener');
         assert.ok(
           (await page.locator('body').innerText()).includes(marker),
           `${pathname} meaningful content exists without JavaScript`,
@@ -212,11 +218,19 @@ test(
         PORT: String(port),
       });
       await ready(previewServer, origin);
+      const unavailablePreview = await fetch(`${origin}/preview-unavailable/`);
+      assert.equal(unavailablePreview.status, 200);
+      assert.match(await unavailablePreview.text(), /complete the route fields/i);
+      assert.match(unavailablePreview.headers.get('cache-control') || '', /no-store/);
       for (const [pathname, publishedMarker] of routes) {
         const response = await page.goto(`${origin}${pathname}`, { waitUntil: 'domcontentloaded' });
         assert.equal(response.status(), 200, `${pathname} preview status`);
         const html = await response.text();
         assertDocument(html, pathname);
+        assert.ok(
+          html.includes('name="preview-cms-origins"') && html.includes(cmsPreviewOrigin),
+          'preview HTML embeds the configured CMS origins for the protected listener',
+        );
         assert.ok(
           (await page.locator('body').innerText()).includes(
             publishedMarker.replace('PUBLISHED', draftMarker),
@@ -238,6 +252,34 @@ test(
           `${pathname} suppresses tracking in preview`,
         );
       }
+      cmsPreview = createServer((_request, response) => {
+        response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        response.end(`<!doctype html><body><iframe name="previewFrame" src="${origin}/blog/article-1/"></iframe><script>let loads=0; const frame=document.querySelector('[name=previewFrame]'); frame.addEventListener('load',()=>{document.body.dataset.loads=String(++loads)}); addEventListener('message',event=>{if(event.source===frame.contentWindow && event.data?.type==='previewReady') document.body.dataset.ready='true'})</script></body>`);
+      });
+      await new Promise((resolve) => cmsPreview.listen(cmsPreviewPort, '127.0.0.1', resolve));
+      const livePreview = await browser.newPage();
+      let previewNavigations = 0;
+      livePreview.on('framenavigated', (frame) => {
+        if (frame.url().startsWith(origin)) previewNavigations++;
+      });
+      livePreview.on('pageerror', (error) => console.error('Preview iframe script error:', error));
+      await livePreview.goto(cmsPreviewOrigin);
+      await livePreview.waitForFunction(() => document.body.dataset.ready === 'true', null, { timeout: 10000 });
+      previewNavigations = 0;
+      await livePreview.evaluate(() => {
+        const frame = document.querySelector('iframe[name="previewFrame"]');
+        frame.contentWindow.postMessage({ type: 'strapiUpdate' }, new URL(frame.src).origin);
+      });
+      await livePreview.waitForFunction(() => document.body.dataset.loads >= '2', null, { timeout: 10000 });
+      assert.equal(
+        await livePreview.locator('[name=previewFrame]').getAttribute('src'),
+        `${origin}/blog/article-1/`,
+        'the compiled client listener reloads the current saved-draft route after Strapi sends strapiUpdate',
+      );
+      assert.ok(previewNavigations >= 1, 'strapiUpdate reloads the embedded preview route');
+      await livePreview.close();
+      await new Promise((resolve) => cmsPreview.close(resolve));
+      cmsPreview = undefined;
       cms.draft.providers.push({ documentId: 'incomplete-profile', slug: 'minimal-profile' });
       const incomplete = await fetch(`${origin}/providers/minimal-profile/`);
       assert.equal(incomplete.status, 200, 'saved drafts tolerate missing optional profile fields');
@@ -363,6 +405,7 @@ test(
       assert.equal((await fetch(`${publishedOrigin}/blog/draft-new/?status=draft`)).status, 404);
     } finally {
       await browser?.close();
+      if (cmsPreview?.listening) await new Promise((resolve) => cmsPreview.close(resolve));
       await stop(staticServer);
       await stop(previewServer);
       await cms.close();
