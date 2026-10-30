@@ -594,6 +594,46 @@ test("SDK timeout aborts requests waiting for response headers", async (context)
     );
   });
 });
+test("complete SDK deadline cancels a JSON body that stalls after successful headers", async (context) => {
+  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
+  process.env.STRAPI_TOKEN = "body-stall-fixture-secret";
+  context.mock.timers.enable({ apis: ["setTimeout"] });
+  let markHeadersReturned;
+  const headersReturned = new Promise((resolve) => {
+    markHeadersReturned = resolve;
+  });
+  let cancelled = false;
+  try {
+    await withFetch(async () => {
+      const response = new Response(new ReadableStream({
+        start(controller) {
+          controller.enqueue(new TextEncoder().encode('{"data":'));
+        },
+        pull() {
+          return new Promise(() => {});
+        },
+        cancel() {
+          cancelled = true;
+        },
+      }), { status: 200, headers: { "content-type": "application/json" } });
+      markHeadersReturned();
+      return response;
+    }, async () => {
+      const pending = getHomePage("published");
+      await headersReturned;
+      await new Promise((resolve) => setImmediate(resolve));
+      context.mock.timers.tick(10_000);
+      await assert.rejects(pending, (error) =>
+        error instanceof StrapiRequestError &&
+        error.message === "Strapi request timed out" &&
+        !error.message.includes("body-stall-fixture-secret"),
+      );
+      assert.equal(cancelled, true, "timed-out response bytes are cancelled");
+    });
+  } finally {
+    delete process.env.STRAPI_TOKEN;
+  }
+});
 test("SDK cross-origin redirects strip the server token", async () => {
   let receivedAuthorization;
   const target = createServer((request, response) => {

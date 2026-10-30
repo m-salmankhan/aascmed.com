@@ -5,6 +5,7 @@ import {
   strapi,
   type API,
   type CollectionTypeManager,
+  type StrapiClient,
   type SingleTypeManager,
 } from "@strapi/client";
 import type { ContentMode as ValidationContentMode } from "../../../../src/shared/content/validation.ts";
@@ -36,6 +37,7 @@ export class StrapiRequestError extends Error {
 }
 const DEFAULT_PAGE_SIZE = 100;
 const MAX_PAGE_SIZE = 100;
+const REQUEST_DEADLINE_MS = 10_000;
 // Protect against a broken upstream that never terminates pagination, not a CMS display limit.
 const MAX_PAGES = 10000;
 /** Validate the configured CMS origin and locate its REST API root.
@@ -91,14 +93,125 @@ export function createClient(mode: ContentMode) {
   }
   const endpoint = safeEndpoint(process.env.GATSBY_STRAPI_API_URL);
   try {
-    return strapi({
+    const sdk = strapi({
       baseURL: endpoint.href.replace(/\/$/, ""),
       ...(process.env.STRAPI_TOKEN ? { auth: process.env.STRAPI_TOKEN } : {}),
       headers,
     });
+    return {
+      baseURL: sdk.baseURL,
+      collection(resource: string) {
+        return {
+          find: (query: API.BaseQueryParams = {}) =>
+            requestJson<API.DocumentResponseCollection>(sdk, resource, query),
+        };
+      },
+      single(resource: string) {
+        return {
+          find: (query: API.BaseQueryParams = {}) =>
+            requestJson<API.DocumentResponse>(sdk, resource, query),
+        };
+      },
+    };
   } catch {
     throw new StrapiRequestError("configuration", "Strapi client configuration is invalid");
   }
+}
+
+/** Serialize the supported Strapi query object with the SDK's indexed bracket convention.
+ * @param value Query parameters or a nested query value.
+ * @param prefix Current bracketed key path.
+ * @param output URL parameters accumulated by recursion.
+ * @returns Flattened query parameters; nullish values are omitted like the SDK serializer.
+ */
+function appendQuery(
+  value: unknown,
+  prefix: string,
+  output: URLSearchParams,
+): void {
+  if (value === undefined || value === null) return;
+  if (Array.isArray(value)) {
+    value.forEach((item, index) => appendQuery(item, `${prefix}[${index}]`, output));
+    return;
+  }
+  if (typeof value === "object") {
+    for (const [key, item] of Object.entries(value)) {
+      appendQuery(item, prefix ? `${prefix}[${key}]` : key, output);
+    }
+    return;
+  }
+  output.append(prefix, String(value));
+}
+
+/** Read one successful SDK response body within the original request deadline.
+ * @param response Raw successful response returned by the public SDK fetch method.
+ * @param deadline Absolute deadline shared with response-header acquisition.
+ * @returns Parsed JSON payload, or a sanitized timeout/JSON failure.
+ */
+async function readJsonBody(response: Response, deadline: number): Promise<unknown> {
+  if (!response.body) {
+    throw new StrapiRequestError("invalid-response", "Strapi returned an empty response");
+  }
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let text = "";
+  try {
+    while (true) {
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) {
+        void reader.cancel().catch(() => undefined);
+        throw Object.assign(new Error("Strapi request timed out"), { name: "AbortError" });
+      }
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      let didTimeout = false;
+      const timedRead = new Promise<ReadableStreamReadResult<Uint8Array>>((_, reject) => {
+        timer = setTimeout(() => {
+          didTimeout = true;
+          reject(Object.assign(new Error("Strapi request timed out"), { name: "AbortError" }));
+          void reader.cancel().catch(() => undefined);
+        }, remaining);
+      });
+      let result: ReadableStreamReadResult<Uint8Array>;
+      try {
+        result = await Promise.race([reader.read(), timedRead]);
+      } finally {
+        if (timer !== undefined) clearTimeout(timer);
+      }
+      if (didTimeout || Date.now() >= deadline) {
+        void reader.cancel().catch(() => undefined);
+        throw Object.assign(new Error("Strapi request timed out"), { name: "AbortError" });
+      }
+      if (result.done) break;
+      text += decoder.decode(result.value, { stream: true });
+    }
+    text += decoder.decode();
+    return JSON.parse(text) as unknown;
+  } finally {
+    try {
+      reader.releaseLock();
+    } catch {
+      // A timed-out pending read may still be unwinding after the body cancellation.
+    }
+  }
+}
+
+/** Fetch and parse a JSON API resource using the SDK's public raw-response method.
+ * @param sdk Authenticated official Strapi SDK client.
+ * @param resource Collection or single-type REST resource path.
+ * @param query Serialized Strapi REST filters, population, and pagination.
+ * @returns Parsed content API response.
+ */
+async function requestJson<T>(
+  sdk: StrapiClient,
+  resource: string,
+  query: API.BaseQueryParams,
+): Promise<T> {
+  const deadline = Date.now() + REQUEST_DEADLINE_MS;
+  const params = new URLSearchParams();
+  appendQuery(query, "", params);
+  const search = params.toString();
+  const response = await sdk.fetch(`/${resource}${search ? `?${search}` : ""}`);
+  return await readJsonBody(response, deadline) as T;
 }
 /** Convert SDK and JSON failures into safe project errors.
  * @param error Thrown SDK, network, or parsing error.
@@ -155,7 +268,7 @@ function validateEntity(value: unknown): StrapiEntity {
  * @returns Validated records in server order; later pages are fetched only when requested.
  */
 export async function* readRecords(
-  manager: CollectionTypeManager,
+  manager: Pick<CollectionTypeManager, "find">,
   query: API.BaseQueryParams,
   pageSize = DEFAULT_PAGE_SIZE,
 ): AsyncGenerator<StrapiEntity> {
@@ -226,7 +339,7 @@ export async function* readRecords(
  * @returns The matching validated record or null when no row matches.
  */
 export async function readFirst(
-  manager: CollectionTypeManager,
+  manager: Pick<CollectionTypeManager, "find">,
   query: API.BaseQueryParams,
 ): Promise<StrapiEntity | null> {
   let response: API.DocumentResponseCollection;
@@ -247,7 +360,7 @@ export async function readFirst(
  * @returns The validated record or null when Strapi reports no document.
  */
 export async function readSingle(
-  manager: SingleTypeManager,
+  manager: Pick<SingleTypeManager, "find">,
   query: API.BaseQueryParams,
 ): Promise<StrapiEntity | null> {
   let response: API.DocumentResponse;
