@@ -313,7 +313,9 @@ import SiteDocument from '../layouts/SiteDocument.astro';
       assert.ok(!staticSitemap.includes('/404'), 'Astro excludes the error page');
       const indexXml = await readFile(path.join(staticOutputDir, 'sitemap-index.xml'), 'utf8');
       assert.ok(indexXml.includes('https://www.aascmed.com/sitemap-0.xml'));
+      const beforeSsrBuild = observedCmsRequests.length;
       await runBuild('astro.config.ssr.ts');
+      assert.equal(observedCmsRequests.length, beforeSsrBuild, 'SSR image builds without CMS requests');
       const portProbe = await new Promise((resolve) => {
         const server = createServer();
         server.listen(0, '127.0.0.1', () => {
@@ -386,21 +388,7 @@ import SiteDocument from '../layouts/SiteDocument.astro';
       const asset = await fetch(`${base}/assets/forms/patient_information.pdf`);
       assert.equal(asset.status, 200);
       assert.match(asset.headers.get('content-type') || '', /pdf/);
-      const beforeSsrRequests = observedCmsRequests.length;
-      const sitemapResponse = await fetch(`${base}/sitemap-0.xml`);
-      assert.equal(sitemapResponse.status, 200);
-      assert.match(sitemapResponse.headers.get('content-type') || '', /(?:application|text)\/xml/);
-      assertSitemapMetadata(await sitemapResponse.text());
-      assert.equal((await fetch(`${base}/sitemap-index.xml`)).status, 200);
-      assert.equal(
-        observedCmsRequests.length,
-        beforeSsrRequests,
-        'the Node adapter serves generated sitemaps without request-time CMS reads',
-      );
-      assert.ok(
-        observedCmsRequests.every((url) => url.query.status === 'published'),
-        'static and preview sitemaps are built from published content only',
-      );
+      assert.equal((await fetch(`${base}/sitemap-0.xml`)).status, 404, 'preview does not build a sitemap');
     } finally {
       if (app?.exitCode === null && app.signalCode === null) {
         const exited = new Promise((resolve) => app.once('exit', resolve));

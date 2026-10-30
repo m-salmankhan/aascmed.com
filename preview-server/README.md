@@ -1,5 +1,7 @@
 # Preview server
 
+This is the intermediate image/deployment review layer. Merge the Cloudflare Access layer above it before rollout; the legacy login configuration here is superseded by that layer. Automatic main-branch rollout is disabled while the stack is merged.
+
 The existing preview hostname serves a compiled Astro Node SSR process behind Caddy and the existing Strapi administrator forward-auth service. The public Gatsby build is unchanged. Per the revised WEB-40 direction, this replaces the preview service directly rather than running a separate candidate alongside Gatsby. This configuration has not itself been deployed or validated on the host.
 
 The workflow builds and publishes commit-SHA image tags and deploys their immutable registry digests without CMS credentials. The SSR build omits the CMS-backed sitemap and does not fetch content; `STRAPI_TOKEN` and `GATSBY_STRAPI_API_URL` are provided at runtime. `ASTRO_CONTENT_MODE=draft` is enforced by Compose. `PUBLIC_RUNTIME_API_BASE_URL`, `PUBLIC_MAPBOX_API_KEY`, `GATSBY_STRAPI_API_URL` and optional `STRAPI_MEDIA_ORIGINS` are image build arguments: browser settings and allowed image origins are compiled into the bundle, so rebuild when these change. Use the workflow variables `PREVIEW_PUBLIC_RUNTIME_API_BASE_URL`, `PREVIEW_PUBLIC_MAPBOX_API_KEY`, `GATSBY_STRAPI_API_URL`, and `STRAPI_MEDIA_ORIGINS`; public keys must not be secrets. The runtime token is separate from the administrator login cookie.

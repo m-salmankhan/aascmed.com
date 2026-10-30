@@ -7,7 +7,7 @@ export default defineConfig({
   ...shared,
   outDir: './dist-ssr',
   output: 'server',
-  // The candidate image must compile without contacting the CMS or containing credentials.
+  // The preview image must compile without contacting the CMS or containing credentials.
   integrations: shared.integrations.filter((integration) => integration.name !== '@astrojs/sitemap'),
   adapter: node({ mode: 'standalone' }),
   vite: {
