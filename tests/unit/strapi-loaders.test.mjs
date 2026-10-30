@@ -85,6 +85,7 @@ test("collection mappers normalize blog, provider, service update and review rec
       heading: "Post",
       slug: "post",
       date: "2026-01-01",
+      updatedAt: "2026-04-03T14:20:00.000Z",
       thumbnail: { url: "/uploads/post.jpg" },
       content: [],
     },
@@ -93,6 +94,7 @@ test("collection mappers normalize blog, provider, service update and review rec
   const provider = mapStrapiProvider(await fixture("provider"), "https://cms.example.test");
   const update = mapStrapiServiceUpdate(await fixture("service-update"));
   const review = mapStrapiReview(await fixture("review"));
+  assert.equal(blog.updatedAt, "2026-04-03T14:20:00.000Z");
   assert.equal(blog.id, "blog-1");
   assert.equal(blog.thumbnail?.src, "https://cms.example.test/uploads/post.jpg");
   assert.equal(provider.name?.qualificationAbbr, "MD");

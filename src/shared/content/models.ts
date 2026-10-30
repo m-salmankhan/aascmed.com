@@ -60,6 +60,8 @@ export interface ContentRecord {
   body?: JsonValue[];
   content?: JsonValue[];
   image?: MediaDescriptor;
+  /** CMS modification timestamp, used by public sitemaps when available. */
+  updatedAt?: string;
   /** Optional CMS date text, commonly an ISO-like calendar date or timestamp. */
   date?: string | null;
 }
