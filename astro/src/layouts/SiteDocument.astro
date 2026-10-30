@@ -90,18 +90,12 @@ const jsonLd = structuredData ? serializeStructuredData(structuredData) : undefi
     {siteSettings.twitterHandle && <meta name="twitter:site" content={siteSettings.twitterHandle} />}
     <meta name="theme-color" content="#1C5E38" />
     {jsonLd && <script type="application/ld+json" set:html={jsonLd} />}
-    {analytics?.googleAnalyticsId && <script async src={`https://www.googletagmanager.com/gtag/js?id=${analytics.googleAnalyticsId}`} />}
-    {analytics?.googleTagManagerId && <script is:inline define:vars={{ gtmId: analytics.googleTagManagerId }}>
-      (function (w, d, s, l, i) {
-        w[l] = w[l] || [];
-        w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
-        var f = d.getElementsByTagName(s)[0],
-          j = d.createElement(s),
-          dl = l != 'dataLayer' ? '&l=' + l : '';
-        j.async = true;
-        j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
-        f.parentNode.insertBefore(j, f);
-      })(window, document, 'script', 'dataLayer', gtmId);
+    {(analytics?.googleAnalyticsId || analytics?.googleTagManagerId) && <script is:inline>
+      window.dataLayer = window.dataLayer || [];
+      /** Queue a Google tag command until the external tag library loads.
+       * @param {...unknown} command Command name followed by its arguments.
+       * @returns {void} Appends the command arguments to the shared data layer.
+       */
       window.gtag = function () {
         window.dataLayer.push(arguments);
       };
@@ -118,6 +112,25 @@ const jsonLd = structuredData ? serializeStructuredData(structuredData) : undefi
         ad_personalization: 'denied',
         analytics_storage: 'denied',
       });
+    </script>}
+    {analytics?.googleAnalyticsId && <>
+      <script is:inline define:vars={{ measurementId: analytics.googleAnalyticsId }}>
+        window.gtag('js', new Date());
+        window.gtag('config', measurementId);
+      </script>
+      <script async src={`https://www.googletagmanager.com/gtag/js?id=${analytics.googleAnalyticsId}`} />
+    </>}
+    {analytics?.googleTagManagerId && <script is:inline define:vars={{ gtmId: analytics.googleTagManagerId }}>
+      (function (w, d, s, l, i) {
+        w[l] = w[l] || [];
+        w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+        var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s),
+          dl = l != 'dataLayer' ? '&l=' + l : '';
+        j.async = true;
+        j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+        f.parentNode.insertBefore(j, f);
+      })(window, document, 'script', 'dataLayer', gtmId);
     </script>}
     {analytics?.pixelId && <script is:inline define:vars={{ pixelId: analytics.pixelId }}>
       !(function (f, b, e, v, n, t, s) {

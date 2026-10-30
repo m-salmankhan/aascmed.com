@@ -72,8 +72,11 @@ test(
           process.execPath,
           ['node_modules/astro/bin/astro.mjs', 'build', '--config', config],
           {
-            env: { ...process.env, GATSBY_STRAPI_API_URL: cmsUrl,
-              STRAPI_TOKEN: 'fixture-document-token' },
+            env: {
+              ...process.env,
+              GATSBY_STRAPI_API_URL: cmsUrl,
+              STRAPI_TOKEN: 'fixture-document-token',
+            },
             cwd: astroRoot,
             stdio: 'inherit',
           },
@@ -90,6 +93,28 @@ test(
       import.meta.url,
     );
     let fixtureCreated = false;
+    const trackingFixtures = [];
+    const trackingCases = [
+      {
+        name: 'analytics-only',
+        enabled: true,
+        settings: { googleAnalyticsId: 'G-ONLY', googleTagManagerId: '', pixelId: '' },
+      },
+      {
+        name: 'tag-manager-only',
+        enabled: true,
+        settings: { googleAnalyticsId: '', googleTagManagerId: 'GTM-ONLY', pixelId: '' },
+      },
+      {
+        name: 'tracking-disabled',
+        enabled: false,
+        settings: {
+          googleAnalyticsId: 'G-DISABLED',
+          googleTagManagerId: 'GTM-DISABLED',
+          pixelId: '',
+        },
+      },
+    ];
     try {
       await writeFile(
         fixturePath,
@@ -104,6 +129,24 @@ import SiteDocument from '../layouts/SiteDocument.astro';
         { flag: 'wx' },
       );
       fixtureCreated = true;
+      for (const trackingCase of trackingCases) {
+        const file = new URL(
+          `../../astro/src/pages/${trackingCase.name}.astro`,
+          import.meta.url,
+        );
+        await writeFile(
+          file,
+          `---
+import SiteDocument from '../layouts/SiteDocument.astro';
+---
+<SiteDocument pathname="/${trackingCase.name}/" useTracking={${trackingCase.enabled}}
+  trackingSettings={${JSON.stringify(trackingCase.settings)}}>
+  <main>Tracking fixture</main>
+</SiteDocument>`,
+          { flag: 'wx' },
+        );
+        trackingFixtures.push(file);
+      }
       await runBuild('astro.config.static.ts');
       assert.ok(
         observedCmsRequests.length >= 5,
@@ -174,7 +217,18 @@ import SiteDocument from '../layouts/SiteDocument.astro';
         const tracking = await page.evaluate(() => ({
           tagManager: window.dataLayer.some((item) => item['gtm.start']),
           pixel: window.fbq.queue.map((item) => [...item]),
+          commands: window.dataLayer
+            .filter((item) => typeof item[0] === 'string')
+            .map((item) => Array.from(item)),
+          analyticsDate: window.dataLayer.find((item) => item[0] === 'js')?.[1] instanceof Date,
         }));
+        assert.deepEqual(
+          tracking.commands.map((command) => command[0]),
+          ['consent', 'consent', 'js', 'config'],
+          'consent precedes one Analytics initialization when GA and GTM are both configured',
+        );
+        assert.deepEqual(tracking.commands.at(-1), ['config', 'G-TEST']);
+        assert.ok(tracking.analyticsDate, 'Analytics startup includes its timestamp');
         assert.ok(tracking.tagManager, 'GTM initialization executes');
         assert.deepEqual(tracking.pixel, [
           ['init', 'TEST-PIXEL'],
@@ -184,6 +238,60 @@ import SiteDocument from '../layouts/SiteDocument.astro';
           errors,
           [],
           'enabled tracking scripts execute together without lexical collisions',
+        );
+        for (const trackingCase of trackingCases) {
+          const html = await readFile(
+            path.join(staticOutputDir, trackingCase.name, 'index.html'),
+            'utf8',
+          );
+          const trackingPage = await context.newPage();
+          trackingPage.on('pageerror', (error) => errors.push(error.message));
+          await trackingPage.setContent(html, { waitUntil: 'load' });
+          const state = await trackingPage.evaluate(() => ({
+            commands: (window.dataLayer || [])
+              .filter((item) => typeof item[0] === 'string')
+              .map((item) => Array.from(item)),
+            analyticsDate:
+              (window.dataLayer || []).find((item) => item[0] === 'js')?.[1] instanceof Date,
+            tagManager: (window.dataLayer || []).some((item) => item.event === 'gtm.js'),
+          }));
+          if (trackingCase.name === 'analytics-only') {
+            assert.deepEqual(
+              state.commands.map((command) => command[0]),
+              ['consent', 'consent', 'js', 'config'],
+            );
+            assert.deepEqual(
+              state.commands.at(-1),
+              ['config', 'G-ONLY'],
+              'a measurement ID initializes Analytics without a GTM container',
+            );
+            assert.ok(state.analyticsDate);
+            assert.equal(state.tagManager, false);
+            assert.equal(
+              await trackingPage.locator('script[src*="/gtag/js?id=G-ONLY"]').count(),
+              1,
+            );
+          } else if (trackingCase.name === 'tag-manager-only') {
+            assert.deepEqual(
+              state.commands.map((command) => command[0]),
+              ['consent', 'consent'],
+            );
+            assert.equal(state.tagManager, true);
+            assert.equal(await trackingPage.locator('script[src*="/gtag/js"]').count(), 0);
+          } else {
+            assert.deepEqual(state.commands, []);
+            assert.equal(state.tagManager, false);
+            assert.equal(
+              await trackingPage.locator('script[src*="googletagmanager.com"]').count(),
+              0,
+            );
+          }
+          await trackingPage.close();
+        }
+        assert.deepEqual(
+          errors,
+          [],
+          'all supported tracking configurations execute without errors',
         );
       } finally {
         await browser.close();
@@ -268,6 +376,15 @@ import SiteDocument from '../layouts/SiteDocument.astro';
           ssrHtml.indexOf('application/ld+json') < ssrHtml.indexOf('</head>'),
         'document metadata is rendered in the server response head',
       );
+      for (const trackingCase of trackingCases) {
+        const preview = await fetch(`${base}/${trackingCase.name}/`);
+        assert.equal(preview.status, 200);
+        assert.doesNotMatch(
+          await preview.text(),
+          /googletagmanager\.com|window\.gtag|window\.dataLayer/,
+          'preview omits both the Google scripts and their initialization',
+        );
+      }
       assert.equal((await fetch(base)).status, 404, 'the retired POC homepage is not shipped');
       const missing = await fetch(`${base}/unknown-public-route/`);
       assert.equal(missing.status, 404);
@@ -298,6 +415,9 @@ import SiteDocument from '../layouts/SiteDocument.astro';
         await exited;
       }
       await new Promise((resolve) => cms.close(resolve));
+      for (const file of trackingFixtures) {
+        await unlink(file);
+      }
       if (fixtureCreated) {
         await unlink(fixturePath);
       }
