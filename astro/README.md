@@ -49,4 +49,4 @@ The document integration test builds the real static/SSR layouts and checks meta
 
 ## Social cards
 
-The shared Node renderer composes branded Open Graph cards using the maintained font and logo. Gatsby retains its existing public card filenames through a compatibility adapter. Install root dependencies first; canvas and sharp are root-provided peers. Keep generated cache files outside public output.
+The Node renderer in `src/shared/media/social-cards.mjs` composes branded Open Graph cards using the maintained font and logo. Gatsby retains its existing public card filenames through a compatibility adapter. Install root dependencies first; canvas and sharp are root-provided peers. Keep generated cache files outside public output.

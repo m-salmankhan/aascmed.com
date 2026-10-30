@@ -10,6 +10,6 @@
     "skipLibCheck": true,
     "types": ["@emotion/react", "node"]
   },
-  "files": ["astro/src/lib/public-images.mjs"],
+  "files": ["src/shared/media/social-cards.mjs"],
   "include": []
 }

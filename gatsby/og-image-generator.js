@@ -3,7 +3,7 @@ const path = require('node:path');
 const fs = require('node:fs');
 const https = require('node:https');
 /**
- * @import { generateSocialCard } from '../astro/src/lib/public-images.mjs'
+ * @import { generateSocialCard } from '../src/shared/media/social-cards.mjs'
  */
 /** Existing Gatsby arguments translated to the shared renderer's card options.
  * @typedef {object} GatsbyCardOptions
@@ -87,7 +87,7 @@ async function downloadMapboxImage(lat, lng, outputPath) {
  */
 async function generateOGImage({ title, backgroundImagePath, outputPath }) {
   const { generateSocialCard } = await import(
-    '../astro/src/lib/public-images.mjs'
+    '../src/shared/media/social-cards.mjs'
   );
   return generateSocialCard({
     title: title || 'Untitled',
@@ -100,7 +100,7 @@ async function generateOGImage({ title, backgroundImagePath, outputPath }) {
  */
 async function initOGImageGenerator() {
   const { generateSocialCard } = await import(
-    '../astro/src/lib/public-images.mjs'
+    '../src/shared/media/social-cards.mjs'
   );
   // Registration occurs on the first rendering request; this warm-up call is intentionally a no-op.
   return generateSocialCard;

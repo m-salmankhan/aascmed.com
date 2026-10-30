@@ -13,7 +13,7 @@ const { downloadMapboxImage } = require('./og-image-generator');
  * @import {
  *   SocialCardKind,
  *   SocialCardResult,
- * } from '../astro/src/lib/public-images.d.mts'
+ * } from '../src/shared/media/social-cards.d.mts'
  */
 /** Gatsby's page-registration action, derived from its own Actions interface.
  * @typedef {Actions['createPage']} CreatePage
@@ -117,7 +117,7 @@ async function createPages({ graphql, actions, reporter }) {
  */
 async function getOGImage({ slug, title, thumbnailPath, outputDir }) {
   const { buildSocialCards } = await import(
-    '../astro/src/lib/public-images.mjs'
+    '../src/shared/media/social-cards.mjs'
   );
   const kind = outputDir === 'conditions' ? 'conditions' : outputDir;
   const [card] = await buildSocialCards(

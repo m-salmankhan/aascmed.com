@@ -16,7 +16,7 @@ import { fileURLToPath } from 'node:url';
  *   PublicImageBuildOptions,
  *   GenerateSocialCardOptions,
  *   SocialCardResult,
- * } from './public-images.d.mts'
+ * } from './social-cards.d.mts'
  */
 /** Cached input fingerprints keyed by public card URL.
  * @typedef {Record<string, string>} SocialCardCache
@@ -25,7 +25,7 @@ const WIDTH = 1200;
 const HEIGHT = 630;
 const ASSET_DIR = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
-  '../../../src/shared/media/assets',
+  './assets',
 );
 const FONT = path.join(ASSET_DIR, 'Poppins-ExtraBold.ttf');
 const LOGO = path.join(ASSET_DIR, 'horizontal-logo.svg');

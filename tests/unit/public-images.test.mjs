@@ -13,7 +13,7 @@ import { createRequire } from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
 import sharp from 'sharp';
-import { buildSocialCards } from '../../astro/src/lib/public-images.mjs';
+import { buildSocialCards } from '../../src/shared/media/social-cards.mjs';
 test('shared social cards preserve paths, orientation, cache keys and remote-fetch boundaries', async () => {
   const require = createRequire(import.meta.url);
   const gatsbyGenerator = require('../../gatsby/og-image-generator.js');
@@ -129,7 +129,7 @@ test('shared social cards preserve paths, orientation, cache keys and remote-fet
     );
     const streamedPublicDir = path.join(root, 'streamed-public');
     /** Supply the next card only after the preceding output exists, then repeat a path across an async boundary.
-     * @yields {import('../../astro/src/lib/public-images.mjs').SocialCardEntry} One card input at a time.
+     * @yields {import('../../src/shared/media/social-cards.mjs').SocialCardEntry} One card input at a time.
      */
     async function* streamedEntries() {
       yield { kind: 'blog', slug: 'streamed', title: 'First streamed card' };
