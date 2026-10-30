@@ -2,6 +2,8 @@
 
 Approved 25 October 2026. Canonical design: [Astro migration plan](astro-migration-plan.md).
 
+Stage 4 was revised by the user on 30 October: directly replace preview on its existing server/hostname, without retaining Gatsby preview; defer Traefik/Quadlets. The user also requested an auth audit and an alternative to the Strapi-admin login relay. The review stack proposes free Cloudflare Access plus a validating private Tunnel. Deployment, editor allowlist/identity-provider configuration, real-host validation and acceptance remain subsequent gates. Public Gatsby deployment/rollback is unchanged.
+
 Kaneo workspace: AASCMed. Project: Website Development (WEB). All migration tickets are assigned to Salman Khan and start in To Do.
 
 ## Hierarchy and labels
@@ -19,7 +21,7 @@ Every migration item has the **Astro migration** label. Each stage parent and it
 3. A stage parent is a completion gate: close it only when all children are Done, changes are integrated, and its exit criteria have evidence. Do not close parents just to unblock later work. The overall epic closes after all seven stages.
 4. Independent siblings may proceed in parallel only when their own blockers are complete. Coordinate edits to shared files; a clear dependency graph does not remove merge-conflict risk.
 5. Follow behavior contracts and the architecture proof, not stale implementation guesses. Document and correct a mistaken dependency or file hint explicitly rather than silently bypassing it or widening scope.
-6. Deploy tasks require their validation prerequisites and retained rollback artifacts. The observation gate must include the agreed elapsed period and editor publishing cycle; it is not complete merely because deployment succeeded.
+6. Deploy tasks require their validation prerequisites and documented recovery artifacts. Stage 4 does not require a retained Gatsby preview after the user revision. Public rollback and the later observation gate still require the agreed artifacts, elapsed period and editor publishing cycle; success is not established merely by code review.
 
 Kaneo Blocks/blocked-by relations record ordering. They should **not** be treated as hard status-transition enforcement: the published status-update handler does not check blocker completion. These explicit ticket rules supply the delegation guardrail; no workflow automation or server-side enforcement has been installed. Sources: [Kaneo dependency guide](https://kaneo.app/guides/task-dependencies), [status-update implementation](https://github.com/usekaneo/kaneo/blob/main/apps/api/src/task/controllers/update-task-status.ts).
 
@@ -31,7 +33,7 @@ Kaneo Blocks/blocked-by relations record ordering. They should **not** be treate
 | 1: Architecture and styling proof | WEB-14 | A representative page works in static output and compiled Node SSR. Compatible versions, image boundary, hydration strategy and a clean Emotion/CSS decision are recorded without disrupting Gatsby. | WEB-12 |
 | 2: Prepare reusable components in Gatsby | WEB-15 | Framework-independent contracts and React views are consumed by Gatsby without visual/behavioral regressions. Gatsby queries/types remain in adapters. Only justified compatibility styling changes are included. | WEB-14 |
 | 3: Strapi loaders and Astro route parity | WEB-16 | All route families, media, metadata and interactions pass static/SSR parity checks. New draft URLs work without rebuilds; public output contains only published content. | WEB-15 |
-| 4: Deploy and switch authenticated preview | WEB-17 | Compiled Astro SSR is validated on the real preview infrastructure, editors can review fresh drafts, and the preview proxy is switched with a tested Gatsby rollback retained. | WEB-16 |
+| 4: Replace authenticated preview | WEB-17 | Compiled Astro SSR replaces the current preview; fresh drafts, Access/origin isolation, editor workflow and recovery are validated on the actual infrastructure. | WEB-16 |
 | 5: Publish and cut over the public site | WEB-18 | Published-only Astro static artifacts are promoted atomically. Content webhooks, ordering, production smoke checks and rollback are verified without changing public URLs. | WEB-17 |
 | 6: Observe and retire Gatsby | WEB-19 | The observation period and editor publishing cycle pass, rollback retention is documented, and obsolete Gatsby dependencies/services/refresh wiring are removed with clean-install verification. | WEB-18 |
 
@@ -94,9 +96,9 @@ Label: **Astro stage 4: Preview rollout**. Parent: **WEB-17**.
 | Ticket | Work | Direct blockers |
 | --- | --- | --- |
 | WEB-39 | Connect Strapi preview URLs and safe saved-draft refresh | WEB-16 |
-| WEB-40 | Deploy a protected Astro SSR candidate beside Gatsby preview | WEB-16, WEB-9 |
-| WEB-41 | Validate candidate preview security, freshness and reliability | WEB-16, WEB-39, WEB-40 |
-| WEB-42 | Switch editorial preview to Astro with a retained Gatsby rollback | WEB-16, WEB-41 |
+| WEB-40 | Prepare direct compiled Astro SSR preview replacement and supported Access/Tunnel authentication | WEB-16, WEB-9 |
+| WEB-41 | Deploy reviewed replacement and validate security, freshness and reliability | WEB-16, WEB-39, WEB-40 |
+| WEB-42 | Confirm editor acceptance and documented preview recovery | WEB-16, WEB-41 |
 
 ### Stage 5: Publish and cut over the public site
 

@@ -56,7 +56,7 @@ const shouldNoIndex = isPreview || noIndex === true;
 const analytics = !isPreview && useTracking ? trackingSettings : undefined;
 const jsonLd = structuredData ? serializeStructuredData(structuredData) : undefined;
 const previewCmsOrigins = isPreview
-  ? [...new Set([process.env.GATSBY_STRAPI_API_URL, ...(process.env.PREVIEW_FRAME_ORIGINS || '').split(',')]
+  ? [...new Set((process.env.PREVIEW_FRAME_ORIGINS || '').split(/\s+/)
       .map((origin) => origin?.trim())
       .filter((origin): origin is string => Boolean(origin))
       .map((origin) => new URL(origin).origin))]

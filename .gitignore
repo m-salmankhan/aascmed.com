@@ -3,6 +3,9 @@ node_modules/
 public
 src/gatsby-types.d.ts
 .env.*
+.env
+preview-server/tunnel-credentials.json
+preview-server/tunnel-config.json
 playwright-report/
 test-results/
 before-test-results/

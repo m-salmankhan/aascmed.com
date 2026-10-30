@@ -328,7 +328,7 @@ import SiteDocument from '../layouts/SiteDocument.astro';
           ...process.env,
           HOST: '127.0.0.1',
           PORT: String(portProbe),
-          PREVIEW_FRAME_ORIGINS: 'https://editor.example.test:8443',
+          PREVIEW_FRAME_ORIGINS: 'https://editor.example.test:8443 https://second-editor.example.test',
           GATSBY_STRAPI_API_URL: cmsUrl,
           STRAPI_TOKEN: fixtureToken,
           ASTRO_CONTENT_MODE: 'published',
@@ -355,7 +355,8 @@ import SiteDocument from '../layouts/SiteDocument.astro';
       assert.ok(response.headers.get('x-robots-tag')?.includes('noindex'));
       assert.ok(response.headers.get('cache-control')?.includes('no-store'));
       const framePolicy = response.headers.get('content-security-policy');
-      assert.equal(framePolicy, "frame-ancestors 'self' https://editor.example.test:8443");
+      assert.equal(framePolicy, "frame-ancestors 'self' https://editor.example.test:8443 https://second-editor.example.test");
+      assert.match(ssrHtml, /name="preview-cms-origins" content="https:\/\/editor\.example\.test:8443,https:\/\/second-editor\.example\.test"/);
       assert.ok(!framePolicy.includes(new URL(cmsUrl).origin));
       assert.ok(!framePolicy?.includes('strapiapp.com'));
       assert.ok(
