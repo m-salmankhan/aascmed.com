@@ -1,0 +1,150 @@
+---
+// Defines the Astro HTML document, shared global styles, metadata, asset links and tracking tags.
+import { Global } from '@emotion/react';
+import { stylesGlobal } from '../../../src/styles/global';
+import type { SiteSettings, TrackingSettings } from '../../../src/shared/content/models';
+import {
+  canonicalPathUrl,
+  socialImageUrl,
+  serializeStructuredData,
+} from '../server/document-metadata';
+import type { OpenGraphType, StructuredData } from '../server/document-metadata';
+
+interface Props {
+  title?: string;
+  description?: string;
+  pathname: string;
+  siteSettings?: SiteSettings;
+  trackingSettings?: TrackingSettings;
+  useTracking?: boolean;
+  appendBusinessNameToTitle?: boolean;
+  socialImagePath?: string;
+  ogType?: OpenGraphType;
+  noIndex?: boolean;
+  structuredData?: StructuredData;
+}
+
+const {
+  title,
+  description = '',
+  pathname,
+  siteSettings = {
+    title: 'Allergy, Asthma and Sinus Centers',
+    url: 'https://www.aascmed.com',
+    twitterHandle: '@DrMaazAllergy',
+  },
+  trackingSettings,
+  useTracking = false,
+  appendBusinessNameToTitle = true,
+  socialImagePath,
+  ogType = 'website',
+  noIndex,
+  structuredData,
+} = Astro.props;
+
+const siteTitle = siteSettings.title || 'Allergy, Asthma and Sinus Centers';
+const pageTitle = title
+  ? `${title}${appendBusinessNameToTitle ? ` | ${siteTitle}` : ''}`
+  : siteTitle;
+const canonicalUrl = canonicalPathUrl(pathname);
+const hasCustomSocialImage = Boolean(socialImagePath || siteSettings.defaultImage?.src);
+const socialImage = socialImageUrl(
+  socialImagePath || siteSettings.defaultImage?.src || '/assets/favicon/favicon-300x300.png',
+);
+const isPreview = import.meta.env.PUBLIC_ASTRO_TARGET !== 'static';
+const shouldNoIndex = isPreview || noIndex === true;
+const analytics = !isPreview && useTracking ? trackingSettings : undefined;
+const jsonLd = structuredData ? serializeStructuredData(structuredData) : undefined;
+---
+
+<!doctype html>
+<html lang="en-US">
+  <head>
+    <Global styles={stylesGlobal} />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="google-site-verification" content="AJxvzTXiJ6uf53Wmy2F6q-aoLvLGVCjDsHWfTU4Mhkg" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+    {shouldNoIndex && <meta name="robots" content="noindex, nofollow" />}
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;800&display=swap" />
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16x16.png" />
+    <link rel="icon" type="image/png" sizes="120x120" href="/assets/favicon/favicon-120x120.png" />
+    <link rel="icon" type="image/png" sizes="300x300" href="/assets/favicon/favicon-300x300.png" />
+    <link rel="icon" type="image/x-icon" href="/assets/favicon/favicon.ico" />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={socialImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content={hasCustomSocialImage ? 'summary_large_image' : 'summary'} />
+    <meta name="twitter:image" content={socialImage} />
+    <meta name="twitter:description" content={description} />
+    {siteSettings.twitterHandle && <meta name="twitter:site" content={siteSettings.twitterHandle} />}
+    <meta name="theme-color" content="#1C5E38" />
+    {jsonLd && <script type="application/ld+json" set:html={jsonLd} />}
+    {analytics?.googleAnalyticsId && <script async src={`https://www.googletagmanager.com/gtag/js?id=${analytics.googleAnalyticsId}`} />}
+    {analytics?.googleTagManagerId && <script is:inline define:vars={{ gtmId: analytics.googleTagManagerId }}>
+      (function (w, d, s, l, i) {
+        w[l] = w[l] || [];
+        w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+        var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s),
+          dl = l != 'dataLayer' ? '&l=' + l : '';
+        j.async = true;
+        j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+        f.parentNode.insertBefore(j, f);
+      })(window, document, 'script', 'dataLayer', gtmId);
+      window.gtag = function () {
+        window.dataLayer.push(arguments);
+      };
+      window.gtag('consent', 'default', {
+        ad_storage: 'granted',
+        ad_user_data: 'granted',
+        ad_personalization: 'granted',
+        analytics_storage: 'granted',
+        region: ['US'],
+      });
+      window.gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+      });
+    </script>}
+    {analytics?.pixelId && <script is:inline define:vars={{ pixelId: analytics.pixelId }}>
+      !(function (f, b, e, v, n, t, s) {
+        if (f.fbq) return;
+        n = f.fbq = function () {
+          n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
+        };
+        if (!f._fbq) f._fbq = n;
+        n.push = n;
+        n.loaded = !0;
+        n.version = '2.0';
+        n.queue = [];
+        t = b.createElement(e);
+        t.async = !0;
+        t.src = v;
+        s = b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t, s);
+      })(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+      fbq('init', pixelId);
+      fbq('track', 'PageView');
+    </script>}
+    <slot name="head" />
+  </head>
+  <body>
+    {analytics?.pixelId && <noscript>
+      <img height="1" width="1" src={`https://www.facebook.com/tr?id=${analytics.pixelId}&ev=PageView&noscript=1`} />
+    </noscript>}
+    <slot />
+  </body>
+</html>

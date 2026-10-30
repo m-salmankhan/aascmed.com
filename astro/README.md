@@ -1,26 +1,48 @@
-# Astro stage 1 proof
+# Astro migration target
 
-This isolated candidate uses Astro 6.4.2, `@astrojs/react` 7.1.0, `@astrojs/node` 10.1.4, React 18.3.1, and Emotion 11.14.0 on Node 22.23.4. The standard React integration's `jsxImportSource: '@emotion/react'` works in both builds; no custom renderer, extraction hook, or client-side style workaround is used. Emotion Global and component styles are present in first-paint HTML. The proof page loads the same Poppins stylesheet as Gatsby. Two separate React islands hydrate independently.
+This package contains the static and Node SSR targets for the Gatsby-to-Astro migration. It currently provides the document layout, server-side content loaders and sitemaps. Page families, including the real homepage, are implemented separately. The Stage 1 proof page and its counter/draft demonstrations have been retired.
 
-`src/components/header/hero-base.tsx` is the Gatsby-free Hero extraction, `src/components/layouts/columns.tsx` is the shared Columns/Column extraction, and `src/styles/global.ts` is the existing Gatsby global style object extracted unchanged from `App`. Gatsby's existing `Hero` wrapper still supplies its Gatsby `Navigation`; `half-columns.tsx` re-exports the same layout components and Gatsby's `App` still renders the extracted global object. The Astro view passes a serializable `MediaDescriptor` to the shared React `HeroImage` renderer; the TSX view creates the `<img>` node without importing Astro components or Gatsby image APIs. The maintained `/assets/hero-bg.png` is emitted through Astro's existing static directory.
+## Install and run
 
-The `/` SSR route is a temporary Stage 1 proof, not an editorial preview implementation. It requests the fixed `/api/blogs` resource from the existing `GATSBY_STRAPI_API_URL` Strapi instance with `status=draft`, using the server-only `STRAPI_TOKEN`, and renders the first title from Strapi 5's collection response. No separate preview host is used. The route must remain behind the existing preview authentication boundary before deployment. SSR responses and upstream requests are `private, no-store`; requests are bounded to 1.8 seconds. Missing configuration, timeout, non-2xx response, malformed response, or disallowed URL falls back to a labeled fixture. The static target always uses the fixture and never reads the server-only token.
+Use Node 22.23.4 or newer within the supported SDK runtime range. From the repository root:
 
-The temporary Stage 1 preview route accepts only HTTPS except HTTP localhost for local proof, rejects redirects, and does not cache draft responses. It does not implement production CMS loading or editorial preview routes.
-Public Astro settings use `PUBLIC_RUNTIME_API_BASE_URL` and `PUBLIC_MAPBOX_API_KEY`; Astro may compile these into browser assets. The runtime API base URL serves non-content endpoints and is separate from Strapi; the contact form is its current caller. Gatsby continues to use its existing `GATSBY_API_BASE_URL` and `GATSBY_MAPBOX_API_KEY` client settings for compatibility. `GATSBY_STRAPI_API_URL` selects the single Strapi instance, and `STRAPI_TOKEN` is read only by server-side loaders.
+```sh
+yarn install --frozen-lockfile
+yarn --cwd astro install --frozen-lockfile
+yarn --cwd astro typecheck
+yarn astro:static
+yarn astro:ssr:build
+yarn astro:ssr:start
+```
 
-When an Astro route renders a shared React tree that includes a contact form or map, pass `astroPublicConfig` from the Astro boundary as serializable props and wrap that tree in `PublicConfigProvider`. Each independent React island needs its own provider. The Mapbox key and runtime API URL are public settings; never put the Strapi token in this provider.
+React, ReactDOM and Emotion are supplied by the root package. Keep their Vite deduplication and SSR external settings so shared components use one runtime. `SiteDocument` applies the existing shared global stylesheet; page views do not need a demo wrapper to receive it.
 
-WEB-30's server-only content adapter reads the existing `GATSBY_STRAPI_API_URL` Strapi origin and `STRAPI_TOKEN` from the server/build environment. It explicitly requests published or draft status and paginates using Strapi 5's 100-item limit. Set `ASTRO_CONTENT_MODE=draft` only in the protected preview deployment; public/default and static builds reject draft requests. Never expose the token or deployment mode as browser input. Published builds may require a server-side read token too. The adapter uses the official `@strapi/client` collection and single managers for query serialization, token auth, and requests. The SDK public API uses a fixed 10-second timeout that ends when response headers arrive; JSON body parsing occurs after that timer. It follows redirects using Node fetch defaults, which strip Authorization on cross-origin redirects. SDK failures are translated to safe messages, and error response bodies are cancelled.
+## CMS content
 
-Create a fresh `createStrapiRequestScope()` for each request or build. Pass it to `getPublishedBuildSnapshot({ scope })` and `getPublishedRouteManifest(scope)` to reuse one published snapshot within that build; discard it afterward. Without a scope no snapshot persists. Individual lookups return null for missing documents and propagate upstream failures. Do not publish snapshots into public output. The deployment boundary, not a query parameter, decides whether draft reads are permitted.
+`GATSBY_STRAPI_API_URL` and the server-only `STRAPI_TOKEN` configure the official Strapi client. Published reads leave caching to the server; draft reads send `no-store` and require `ASTRO_CONTENT_MODE=draft` on the protected preview deployment. Static builds reject draft requests. The SDK uses its public transport defaults, including its 10-second timeout until response headers arrive and normal fetch redirects. Errors are sanitized before reaching callers.
 
-## Styling decision
+Collection loaders are lazy async iterators:
 
-Keep Emotion for the early migration: Astro's standard React integration emits usable SSR styles and the interaction remains deterministic. Emotion's default SSR style tags make `:nth-child(2)` unsafe when targeting siblings; `Column` uses a semantic class plus `:nth-of-type(2)` so inserted `<style>` siblings do not shift the grid column's type position. A broad conversion is not warranted by this proof. React, ReactDOM, and Emotion are peer dependencies of the Astro package so shared Gatsby components, Strapi's blocks renderer, and the Astro renderer use the repository's one root runtime. Keep `resolve.dedupe` and externalize these runtime packages for SSR; do not alias them to Astro-local copies. The SSR artifact still resolves these peers from repository-root `node_modules`, which must remain available in the runtime image until a deployment package explicitly includes them. The proof's fixed `stylesGlobal` object is emitted by Astro; checks confirm all tested global rules are present in the initial HTML.
+```ts
+for await (const blog of getBlogs('published', { pageSize: 25 })) {
+  // Process this record before requesting more content.
+}
+```
 
-## Run and verify
+The default CMS batch size is 100, configurable from 1 to 100. Constructing `getPublishedCollections()` starts no requests, and stopping iteration leaves later pages unfetched. Detail and single-type loaders return promises. SDK queries, mapping and validation are visible together in each domain loader.
 
-Install the repository dependencies first with `corepack yarn install` from the repository root, then install Astro's own tools from this directory with `corepack yarn install`. React, ReactDOM, and Emotion resolve as peers from the root install. Run `corepack yarn verify:runtime` after both installs to catch duplicate runtimes, followed by `corepack yarn typecheck`, `corepack yarn build:static`, `corepack yarn build:ssr`, and `corepack yarn verify:proof` (the last command starts a local mock Strapi response and compiled SSR server). Start the compiled candidate with `corepack yarn start:ssr`. After installing the root package's Playwright dependency and Chromium, run `node astro/scripts/verify-browser.mjs` from the repository root while the SSR server is listening on `127.0.0.1:4321`. The counter and draft badge are separate `client:load` islands.
+`PUBLIC_RUNTIME_API_BASE_URL` and `PUBLIC_MAPBOX_API_KEY` are safe browser settings. They are separate from the CMS URL and credential; never expose the token as a public variable.
 
-The local mock verification observed `status=draft`, rendered three successive titles (A/B/C), returned to the fixture after a 1.8-second upstream timeout, a 503 response with an open body, and malformed data, and confirmed `private, no-store`. The open error body was cancelled promptly. Every successful SSR response contained representative Emotion Global and column rules, and style markup remained exactly 5,232 characters across the three requests. The static output includes the fixture, representative extracted global rules and component style tags, the second-column `nth-of-type(2)` rule, and the maintained hero image; it contains no configured test token. Playwright verified SSR content and computed styles with JavaScript disabled: a Poppins font face loaded, and the second column's top margin is 32px on mobile and 0px on desktop. With JavaScript enabled, the counter incremented and the separate draft badge hid without changing the counter; no console errors, page errors, or hydration warnings were captured. Static first-paint styling was verified from generated HTML rather than in a separate static browser session.
+`PREVIEW_FRAME_ORIGINS` optionally adds comma-separated editor origins permitted to embed protected preview pages. The configured CMS API origin and the preview itself are already permitted; no Strapi tenant hostname is hardcoded.
+
+Legacy redirects remain in `static/_redirects` for the public hosting platform. The preview server uses Astro’s current routes and normal 404 handling; it does not implement legacy URL redirects.
+
+## Sitemaps
+
+The official `@astrojs/sitemap` integration discovers Astro pages and adds published CMS detail URLs through `customPages`, including in preview builds. It writes the existing `sitemap-index.xml` and `sitemap-0.xml` URLs, preserves Gatsby’s daily frequency and 0.7 priority, and uses CMS `updatedAt` for `lastmod`. Unknown edit dates are omitted. Preview sitemaps contain published URLs as of the build; draft URLs are excluded. XML serialization, escaping and large-sitemap splitting belong to the integration.
+
+## Tests
+
+From the repository root, run `yarn test:unit` for source contracts and `yarn test:astro` for Astro integration tests. Both root and Astro dependencies must be installed. Install the browser once with `yarn playwright install chromium`.
+
+The document integration test builds the real static/SSR layouts and checks metadata, JSON-LD, tracking, headers, sitemaps and static assets. Its fixture route is created only during the test and removed afterward. No POC route or interactive demo is included in the app. The runtime test checks that Astro and shared UI dependencies resolve one React/Emotion installation.
