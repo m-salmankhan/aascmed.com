@@ -1,0 +1,144 @@
+{
+  "baselineCommit": "5a03162b082a64ea502d0c172fcef433f842b47e",
+  "candidateCodeCommit": "b1919bbb560768f137a7c1c49a61c8088425ea90",
+  "checkedAt": "2026-10-30T09:11:50.479Z",
+  "counts": {
+    "blogs": 33,
+    "conditions": 10,
+    "providers": 5,
+    "clinics": 4,
+    "service-updates": 4
+  },
+  "matched": 56,
+  "changed": [],
+  "documentVersionsSha256": "10a817ce55801fc68cbadca99020db68ced2ca54acbf7a2b7f0d7b495627093a",
+  "publicFilesScanned": 1066,
+  "credentialLeaks": [],
+  "browser": {
+    "startTime": "2026-10-30T09:05:35.538Z",
+    "duration": 298125.74,
+    "expected": 176,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0,
+    "comparisons": 130,
+    "viewports": {
+      "desktop": "1440×1000",
+      "mobile": "390×844"
+    },
+    "locale": "en-US",
+    "timezone": "America/Chicago"
+  },
+  "checks": {
+    "astroTypecheck": {
+      "files": 37,
+      "errors": 0,
+      "warnings": 0,
+      "hints": 0
+    },
+    "unit": {
+      "passed": 41
+    },
+    "astroIntegration": {
+      "passed": 6,
+      "failed": 0
+    },
+    "stackBoundaries": {
+      "WEB32": "7319b2c:4/4",
+      "WEB33": "6bde78d:4/4",
+      "WEB34": "cf51f98:4/4",
+      "WEB35": "cc30452:4/4",
+      "WEB37": "73e4c2d:5/5"
+    }
+  },
+  "realSsrHtml": {
+    "routes": 65,
+    "publishedRoutesMatched": 64,
+    "differences": [
+      {
+        "path": "/404.html",
+        "status": 404,
+        "fields": [
+          "canonical"
+        ],
+        "expected": true,
+        "reason": "The error-page canonical follows the requested URL on SSR."
+      }
+    ]
+  },
+  "realSsrBrowser": {
+    "passed": 12,
+    "failed": 0
+  },
+  "coldSsrImages": {
+    "timeoutMs": 10000,
+    "homepage": {
+      "pageReadyMs": 5925,
+      "slowestImageMs": 1063
+    },
+    "conditions": {
+      "pageReadyMs": 2498,
+      "slowestImageMs": 981,
+      "cardRenderedWidth": 315,
+      "selectedCandidateWidth": 320
+    },
+    "maximumCandidateWidth": 1920
+  },
+  "comparisons": {
+    "total": 130,
+    "matchingScreenshotDimensions": 130,
+    "unintendedDomDifferences": 0,
+    "intentionalLinkDifference": "/clinics/crest-hill/: breadcrumb now uses the explicit canonical slug (both viewports)",
+    "metadataAdvisories": 110,
+    "metadataReasons": [
+      "Explicit article/profile Open Graph types",
+      "Provider social-image public CDN URLs",
+      "404 canonical/noindex policy",
+      "Corrected Crest Hill JSON-LD URL"
+    ],
+    "pixelAdvisories": [
+      {
+        "route": "/providers/brenda-kelley/",
+        "viewport": "desktop",
+        "description": "Changed pixels: 3053 pixels (0.1425%); limit 0.1%"
+      },
+      {
+        "route": "/",
+        "viewport": "mobile",
+        "description": "Changed pixels: 11008 pixels (0.1506%); limit 0.1%"
+      },
+      {
+        "route": "/blog/",
+        "viewport": "mobile",
+        "description": "Changed pixels: 15431 pixels (0.1997%); limit 0.1%"
+      },
+      {
+        "route": "/conditions/",
+        "viewport": "mobile",
+        "description": "Changed pixels: 5242 pixels (0.2519%); limit 0.1%"
+      },
+      {
+        "route": "/providers/",
+        "viewport": "mobile",
+        "description": "Changed pixels: 3639 pixels (0.1446%); limit 0.1%"
+      },
+      {
+        "route": "/providers/brenda-kelley/",
+        "viewport": "mobile",
+        "description": "Changed pixels: 3601 pixels (0.3214%); limit 0.1%"
+      }
+    ],
+    "visualReview": "All six pixel advisories reviewed; no corresponding crop/layout/text defect. Highest difference 0.321%.",
+    "imageSemanticAdvisories": 0,
+    "mapSizeAdvisories": 0
+  },
+  "screenshots": [
+    "astro-stage3-clinic-mobile.png",
+    "astro-stage3-clinics-desktop.png",
+    "astro-stage3-condition-mobile.png",
+    "astro-stage3-home-desktop-full.png",
+    "astro-stage3-home-desktop.png",
+    "astro-stage3-home-mobile-full.png",
+    "astro-stage3-home-mobile.png"
+  ]
+}
