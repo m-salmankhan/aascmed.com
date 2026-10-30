@@ -60,7 +60,7 @@
     "@playwright/test": "^1.56.1",
     "@types/color": "^4",
     "@types/mapbox-gl": "^3.5.0",
-    "@types/node": "^25",
+    "@types/node": "^26",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "formdata-node": "^6.0.3",
