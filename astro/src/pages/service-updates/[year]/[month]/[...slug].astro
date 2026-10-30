@@ -1,0 +1,32 @@
+---
+// Resolves dated service updates and rejects URL dates that do not match the CMS record.
+import SitePage from '../../../../layouts/SitePage.astro';
+import { getServiceUpdateBySlug } from '../../../../server/content/loaders';
+import { pageContentMode, getPageSettings } from '../../../../server/pages/common';
+import { serviceUpdatePaths } from '../../../../server/pages/locations';
+import { serviceUpdatePath } from '../../../../../../src/shared/content/urls';
+
+/** Enumerate published calendar segments and slugs for static output.
+ * @returns Compact route parameters, without passing full records to getStaticPaths.
+ */
+export async function getStaticPaths() {
+  return serviceUpdatePaths();
+}
+const update = await getServiceUpdateBySlug(Astro.params.slug || '', pageContentMode());
+const requestedPath = `/service-updates/${Astro.params.year}/${Astro.params.month}/${Astro.params.slug}/`;
+if (!update || serviceUpdatePath(update) !== requestedPath) {
+  return Astro.rewrite('/404');
+}
+const settings = await getPageSettings(pageContentMode());
+---
+
+<SitePage
+  pathname={Astro.url.pathname}
+  {...settings}
+  title={update.title || 'Untitled'}
+  description={update.description || ''}
+  ogType="article"
+  articleSection="service-updates"
+  useTracking
+  view={{ kind: 'service-update', props: { serviceUpdate: update, pathname: Astro.url.pathname } }}
+/>

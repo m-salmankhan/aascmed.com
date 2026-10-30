@@ -54,6 +54,7 @@ export const mediaOrigins = [...origins];
 
 const config = {
   site: 'https://www.aascmed.com',
+  trailingSlash: 'always',
   root: '.',
   srcDir: './src',
   publicDir: '../static',

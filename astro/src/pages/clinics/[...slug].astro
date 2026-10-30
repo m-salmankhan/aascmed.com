@@ -1,0 +1,45 @@
+---
+// Resolves clinic detail pages using explicit slugs or the existing clinic-name fallback.
+import SitePage from '../../layouts/SitePage.astro';
+import { getClinicBySlug } from '../../server/content/loaders';
+import { pageContentMode, getPageSettings } from '../../server/pages/common';
+import { contentPaths } from '../../server/pages/content';
+import { socialCardPath } from '../../../../src/shared/media/social-cards.mjs';
+
+/** Enumerate published clinic paths for static output.
+ * @returns Compact slug parameters; SSR resolves each request directly instead.
+ */
+export async function getStaticPaths() {
+  return contentPaths('clinic', '/clinics/');
+}
+const mode = pageContentMode();
+const clinic = await getClinicBySlug(Astro.params.slug || '', mode);
+if (!clinic) {
+  return Astro.rewrite('/404');
+}
+const settings = await getPageSettings(mode);
+const latitude = clinic.location?.latitude;
+const longitude = clinic.location?.longitude;
+const leafSlug = (Astro.params.slug || '').split('/').at(-1);
+const hasMap = typeof latitude === 'number' && typeof longitude === 'number';
+const socialImagePath =
+  import.meta.env.PUBLIC_ASTRO_TARGET === 'static' && hasMap
+    ? socialCardPath({
+        kind: 'clinics',
+        slug: Astro.params.slug || '',
+        title: clinic.title,
+        mediaName: `${leafSlug}-${latitude}-${longitude}-map`,
+      })
+    : undefined;
+---
+
+<SitePage
+  pathname={Astro.url.pathname}
+  {...settings}
+  title={clinic.title || 'Untitled'}
+  description={clinic.description || ''}
+  appendBusinessNameToTitle={false}
+  useTracking
+  {socialImagePath}
+  view={{ kind: 'clinic', props: { clinic } }}
+/>

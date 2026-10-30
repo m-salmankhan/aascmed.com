@@ -1,4 +1,5 @@
 // Provides compact route parameters and display dates for shared content pages.
+import moment from 'moment';
 import { getPublishedRouteManifest, type PublishedRouteKind } from '../content/routes';
 
 /** Read only published route references for Astro's static path enumeration.
@@ -7,7 +8,7 @@ import { getPublishedRouteManifest, type PublishedRouteKind } from '../content/r
  * @returns Astro params containing only each route's relative slug.
  */
 export async function contentPaths(kind: PublishedRouteKind, prefix: string) {
-  const routes = await getPublishedRouteManifest();
+  const routes = await getPublishedRouteManifest(kind);
   return routes
     .filter((route) => route.kind === kind)
     .map((route) => ({
@@ -20,14 +21,9 @@ export async function contentPaths(kind: PublishedRouteKind, prefix: string) {
  * @returns Display date, or an empty string when the CMS supplied none.
  */
 export function blogDate(value: string | null | undefined): string {
-  if (!value) return '';
-  const date = new Date(`${value.slice(0, 10)}T00:00:00Z`);
-  if (!Number.isFinite(date.getTime())) return '';
-  const day = date.getUTCDate();
-  const suffix =
-    day % 100 >= 11 && day % 100 <= 13
-      ? 'th'
-      : ({ 1: 'st', 2: 'nd', 3: 'rd' } as Record<number, string>)[day % 10] || 'th';
-  const month = date.toLocaleString('en-GB', { month: 'long', timeZone: 'UTC' });
-  return `${day}${suffix} ${month} ${date.getUTCFullYear()}`;
+  if (!value) {
+    return '';
+  }
+  const date = moment.utc(value, moment.ISO_8601, true);
+  return date.isValid() ? date.format('Do MMMM YYYY') : '';
 }

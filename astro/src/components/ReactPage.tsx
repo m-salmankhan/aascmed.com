@@ -5,12 +5,16 @@ import {
   BlogArchiveView,
   ConditionsArchiveView,
   ProvidersArchiveView,
+  ClinicsArchiveView,
+  ServiceUpdatesArchiveView,
   ContactView,
   NotFoundView,
   PrivacyView,
 } from '../../../src/views/fixed-archive';
 import { BlogPostView } from '../../../src/views/blog-post';
 import { ConditionView } from '../../../src/views/condition';
+import { ClinicView } from '../../../src/views/clinic';
+import { ServiceUpdateView } from '../../../src/views/service-update';
 import { ProviderView } from '../../../src/views/provider';
 import { CurrentPathProvider } from '../../../src/shared/navigation/current-path';
 import { PublicConfigProvider } from '../../../src/shared/config/public-context';
@@ -20,6 +24,10 @@ import type { AnnouncementSettings, SiteSettings } from '../../../src/shared/con
 
 /** Serializable view selection and its corresponding shared-view inputs. */
 export type PageView =
+  | { kind: 'clinics-archive'; props: ComponentProps<typeof ClinicsArchiveView> }
+  | { kind: 'service-updates-archive'; props: ComponentProps<typeof ServiceUpdatesArchiveView> }
+  | { kind: 'clinic'; props: ComponentProps<typeof ClinicView> }
+  | { kind: 'service-update'; props: ComponentProps<typeof ServiceUpdateView> }
   | { kind: 'blog-archive'; props: ComponentProps<typeof BlogArchiveView> }
   | { kind: 'conditions-archive'; props: ComponentProps<typeof ConditionsArchiveView> }
   | { kind: 'providers-archive'; props: ComponentProps<typeof ProvidersArchiveView> }
@@ -52,6 +60,18 @@ export function ReactPage({
 }: ReactPageProps) {
   let content: React.ReactNode;
   switch (view.kind) {
+    case 'clinics-archive':
+      content = <ClinicsArchiveView {...view.props} />;
+      break;
+    case 'service-updates-archive':
+      content = <ServiceUpdatesArchiveView {...view.props} />;
+      break;
+    case 'clinic':
+      content = <ClinicView {...view.props} />;
+      break;
+    case 'service-update':
+      content = <ServiceUpdateView {...view.props} />;
+      break;
     case 'blog-archive':
       content = <BlogArchiveView {...view.props} />;
       break;

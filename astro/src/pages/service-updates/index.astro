@@ -1,0 +1,35 @@
+---
+// Renders service updates in the CMS's newest-first order.
+import SitePage from '../../layouts/SitePage.astro';
+import { getServiceUpdatePage, getServiceUpdates } from '../../server/content/loaders';
+import { pageContentMode, getPageSettings } from '../../server/pages/common';
+import { serviceUpdatePath } from '../../../../src/shared/content/urls';
+import { blogDate } from '../../server/pages/content';
+import type { ServiceUpdateViewItem } from '../../../../src/views/fixed-archive';
+const mode = pageContentMode();
+const [page, settings] = await Promise.all([getServiceUpdatePage(mode), getPageSettings(mode)]);
+const serviceUpdates: ServiceUpdateViewItem[] = [];
+for await (const update of getServiceUpdates(mode)) {
+  const slug = serviceUpdatePath(update);
+  if (slug) {
+    serviceUpdates.push({
+      slug,
+      title: update.title || 'Untitled',
+      date: blogDate(update.date),
+      description: update.description || '',
+    });
+  }
+}
+---
+
+<SitePage
+  pathname={Astro.url.pathname}
+  {...settings}
+  title={page?.heading || ''}
+  description={page?.metaDescription || ''}
+  useTracking
+  view={{
+    kind: 'service-updates-archive',
+    props: { heading: page?.heading || 'Service Updates', blocks: page?.text, serviceUpdates },
+  }}
+/>
