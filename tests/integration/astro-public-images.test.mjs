@@ -191,6 +191,7 @@ test('Astro static builds use astro:assets for CMS thumbnails and cache social c
   `;
   const fixtureConfig = `
   import base from './astro.config.static.mjs';
+  import { mediaOrigins } from './astro.config.shared.mjs';
   import { publicImagesIntegration } from './src/integrations/public-images.ts';
   import path from 'node:path';
   const integration = publicImagesIntegration({
@@ -198,6 +199,7 @@ test('Astro static builds use astro:assets for CMS thumbnails and cache social c
       const { getPublishedCollections } = await import('./src/server/content/loaders.ts');
       return getPublishedCollections({ pageSize: 2 });
     },
+    allowedMediaOrigins: mediaOrigins,
     stagingDir: path.resolve('.astro/public-images-fixture'),
     cacheDir: path.resolve('.astro/public-image-cache-fixture'),
   });

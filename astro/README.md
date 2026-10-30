@@ -51,4 +51,6 @@ The document integration test builds the real static/SSR layouts and checks meta
 
 The Node renderer in `src/shared/media/social-cards.mjs` composes branded Open Graph cards using the maintained font and logo. Gatsby retains its existing public card filenames through a compatibility adapter. Install root dependencies first; canvas and sharp are root-provided peers. Keep generated cache files outside public output.
 
+The shared Astro config reads the repository's `.env` files using Vite's loader; existing process variables take precedence. Use `NODE_ENV=development` for the local development settings. `GATSBY_STRAPI_API_URL` supplies the CMS origin. If uploads live on a separate CDN, list its full origin in `STRAPI_MEDIA_ORIGINS` (comma-separated, including any custom port). Both Astro images and social cards receive the same origins. There is no tenant hostname default or separate host-policy helper.
+
 The static image hook reads only the published blogs, conditions, and clinics needed for social cards. It stages those cards outside the public asset directory and reuses their small cache metadata between builds. Astro creates responsive CMS image outputs through `astro:assets` while pages render; each page owns the record it displays. Reviews are not fetched for social-card generation.

@@ -1,6 +1,5 @@
 // Stages public social cards before Astro emits the configured site output.
 import type { AstroIntegration } from 'astro';
-import { getPublicMediaHosts } from '../config/public-media-hosts.ts';
 import { copyFile, mkdir, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -10,6 +9,8 @@ import { buildPublishedSocialCards } from '../server/content/public-images.ts';
 export interface PublicImagesIntegrationOptions {
   /** Create lazy published streams; the hook consumes only blogs, conditions and clinics. */
   loadPublishedCollections: () => Promise<PublishedCollections>;
+  /** CMS/CDN origins shared with Astro image configuration, including custom ports. */
+  allowedMediaOrigins?: string[];
   /** Public Mapbox token used only to request clinic static maps during this build. */
   mapboxToken?: string;
   /** Brand title prefixed to clinic social-card titles. */
@@ -18,13 +19,6 @@ export interface PublicImagesIntegrationOptions {
   stagingDir?: string;
   /** Optional persistent private cache directory, outside public output. */
   cacheDir?: string;
-}
-
-/** Derive the social-card download allowlist from Astro's configured media origins.
- * @returns Unique lowercase hostnames that may provide CMS or Mapbox image bytes.
- */
-function mediaHostAllowlist(): string[] {
-  return [...new Set(getPublicMediaHosts().map(({ hostname }) => hostname))];
 }
 
 /** Register the static lifecycle hooks that create and copy published social cards.
@@ -53,7 +47,9 @@ export function publicImagesIntegration(
        * @returns Promise<void> after generated cards are staged for Astro's output copy hook.
        */
       'astro:build:start': async ({ logger }) => {
-        if (!isStaticBuild) return;
+        if (!isStaticBuild) {
+          return;
+        }
         generatedPaths = [];
         stagingPublicDir =
           options.stagingDir ||
@@ -72,7 +68,7 @@ export function publicImagesIntegration(
             publicDir: stagingPublicDir,
             cacheDir: imageCacheDir,
             mapboxToken: options.mapboxToken,
-            allowedMediaHosts: mediaHostAllowlist(),
+            allowedMediaOrigins: options.allowedMediaOrigins,
             siteTitle: options.siteTitle,
           },
         );
@@ -84,7 +80,9 @@ export function publicImagesIntegration(
        * @returns Promise<void> after cards are copied or partial copies are removed on error.
        */
       'astro:build:done': async ({ dir }) => {
-        if (!isStaticBuild) return;
+        if (!isStaticBuild) {
+          return;
+        }
         const copiedPaths: string[] = [];
         try {
           const outputDir = fileURLToPath(dir);

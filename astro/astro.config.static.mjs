@@ -1,47 +1,28 @@
-// Configures the static Astro site and published image generation before prerendering.
+// Builds public pages, native Astro image assets and published social cards.
 import { defineConfig } from 'astro/config';
-import react from '@astrojs/react';
-import { publishedSitemap } from './src/integrations/sitemap.ts';
-import { getPublicMediaHosts } from './src/config/public-media-hosts.ts';
+import shared, { mediaOrigins } from './astro.config.shared.mjs';
 import { publicImagesIntegration } from './src/integrations/public-images.ts';
+
 export default defineConfig({
-  site: 'https://www.aascmed.com',
-  root: '.',
-  srcDir: './src',
-  publicDir: '../static',
+  ...shared,
   outDir: './dist-static',
+  output: 'static',
   integrations: [
-    react({ jsxImportSource: '@emotion/react' }),
-    publishedSitemap(),
+    ...shared.integrations,
     publicImagesIntegration({
-      /** Create lazy published streams for this build's social cards.
-       * @returns Published collection iterators; only blog, condition and clinic streams are consumed.
+      /** Create lazy streams for the three published social-card families.
+       * @returns Collection iterators; unused families are never requested.
        */
       loadPublishedCollections: async () => {
-        const { getPublishedCollections } = await import(
-          './src/server/content/loaders.ts'
-        );
+        const { getPublishedCollections } = await import('./src/server/content/loaders.ts');
         return getPublishedCollections();
       },
-      mapboxToken:
-        process.env.PUBLIC_MAPBOX_API_KEY || process.env.GATSBY_MAPBOX_API_KEY,
+      allowedMediaOrigins: mediaOrigins,
+      mapboxToken: process.env.PUBLIC_MAPBOX_API_KEY || process.env.GATSBY_MAPBOX_API_KEY,
     }),
   ],
-  output: 'static',
-  image: {
-    remotePatterns: getPublicMediaHosts().map(
-      ({ protocol, hostname, port }) => ({
-        protocol,
-        hostname,
-        ...(port ? { port } : {}),
-        pathname: '/**',
-      }),
-    ),
-  },
-  build: { format: 'directory' },
   vite: {
+    ...shared.vite,
     define: { 'import.meta.env.PUBLIC_ASTRO_TARGET': JSON.stringify('static') },
-    resolve: { dedupe: ['react', 'react-dom', '@emotion/react'] },
-    ssr: { external: ['react', 'react-dom', '@emotion/react'] },
   },
 });
