@@ -15,3 +15,6 @@ astro/dist-ssr/
 astro/.astro/
 dist-astro-static/
 dist-astro-ssr/
+
+# Review screenshots belong in MR attachments or CI artifacts.
+/docs/screenshots/

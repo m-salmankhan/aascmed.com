@@ -52,18 +52,9 @@ UI_BASE_URL=http://127.0.0.1:4330/ UI_REFERENCE_URL=http://127.0.0.1:4329/ yarn 
 
 Run the compiled Node SSR entry with the same server environment and repeat representative media comparisons against its port. `tests/ui` already protects against unintended write requests. Application builds may emit the existing navigation duplicate-case warnings; the navigation behavior checks pass.
 
-## Screenshots
+## Review evidence
 
-These are real development-content Astro pages, captured after image loading with booking bubbles dismissed. Maps are unmasked. They are committed so they can be viewed in the GitHub mobile app.
-
-| Page | Evidence |
-| --- | --- |
-| Homepage desktop | [Viewport](screenshots/astro-stage3-home-desktop.png), [full page](screenshots/astro-stage3-home-desktop-full.png) |
-| Homepage mobile | [Viewport](screenshots/astro-stage3-home-mobile.png), [full page](screenshots/astro-stage3-home-mobile-full.png) |
-| Clinics archive desktop | [Full page](screenshots/astro-stage3-clinics-desktop.png) |
-| Clinic detail mobile | [Full page](screenshots/astro-stage3-clinic-mobile.png) |
-| Condition detail mobile | [Full page](screenshots/astro-stage3-condition-mobile.png) |
-
+Visual evidence for the development-content Astro pages is linked from [MR #152](https://github.com/m-salmankhan/aascmed.com/pull/152). Review screenshots belong in MR attachments or CI artifacts rather than the source tree. The evidence JSON files retain the historical capture filenames and validation results.
 
 ## Native responsive image review follow-up
 
@@ -73,4 +64,4 @@ At implementation commit `2d0ec7ca397e5a1adeced44fecebfa2fe5dd0d2e`, [regression
 
 The published `/blog/ili/` graphic previously overflowed its mobile column in Gatsby. It now fits, so that page's final geometry intentionally differs from the baseline. The final 390px viewport has 390px scroll width and no horizontal overflow. These follow-up results are separate from the original measurements above; [machine-readable evidence](screenshots/astro-responsive-evidence.json) records the exact revisions.
 
-![Astro mobile article with a responsive locally generated inline graphic](screenshots/astro-responsive-inline-mobile.png)
+The responsive mobile inline-image capture is linked from [MR #154](https://github.com/m-salmankhan/aascmed.com/pull/154).
