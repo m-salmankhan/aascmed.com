@@ -1,0 +1,11 @@
+{
+  "documentId": "provider-maaz",
+  "slug": "maaz-mohiuddin",
+  "description": "Allergy specialist",
+  "order": 2,
+  "image": { "url": "/uploads/provider.jpg", "alternativeText": "Dr. Maaz", "width": 400, "height": 500, "mime": "image/jpeg" },
+  "name": { "fullName": "Maaz Mohiuddin", "honorific": "Dr.", "qualificationLong": "Doctor of Medicine", "qualificationAbbr": "MD" },
+  "review": { "text": "Excellent care", "reviewer": "Patient", "date": "2026-01-10", "link": "https://example.test/review" },
+  "retirementNotice": { "retired": false, "text": [] },
+  "body": [{ "__component": "generic.rich-text", "text": [{ "type": "paragraph", "children": [{ "type": "text", "text": "Provider biography." }] }] }]
+}

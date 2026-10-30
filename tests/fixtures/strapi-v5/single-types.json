@@ -1,0 +1,12 @@
+{
+  "announcement": { "documentId": "announcement", "enabled": true, "type": "success", "message": [{ "type": "paragraph", "children": [{ "type": "text", "text": "Clinic update." }] }] },
+  "blog-archive": { "documentId": "blog-archive", "heading": "Blog Posts", "metaDescription": "Latest posts", "text": [{ "type": "paragraph", "children": [{ "type": "text", "text": "Intro" }] }] },
+  "conditions-archive": { "documentId": "conditions-archive", "heading": "Conditions", "metaDescription": "Conditions", "text": [] },
+  "clinics-archive": { "documentId": "clinics-archive", "heading": "Clinics", "metaDescription": "Locations", "text": [] },
+  "contact": { "documentId": "contact", "heading": "Contact Us", "metaDescription": "Contact", "text": [] },
+  "providers-page": { "documentId": "providers-page", "heading": "Our Providers", "metaDescription": "Providers", "text": [] },
+  "service-update-page": { "documentId": "service-update-page", "heading": "Service Updates", "metaDescription": "Updates", "text": [] },
+  "privacy-policy": { "documentId": "privacy-policy", "title": "Privacy Policy", "description": "Your privacy", "metaDescription": "Privacy", "text": [] },
+  "home-page": { "documentId": "home-page", "metaDescription": "Welcome", "hero": { "heading": "Care", "media": [{ "url": "/uploads/hero.jpg", "alternativeText": "Clinic" }] }, "feedback": { "sourceName": "Directory", "rating": 0.99 } },
+  "tracking-info": { "documentId": "tracking-info", "googleAnalyticsId": "GA-1", "googleTagManagerId": "GTM-1", "pixelId": "PX-1" }
+}

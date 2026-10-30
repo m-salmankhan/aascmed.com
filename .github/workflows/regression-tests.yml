@@ -89,6 +89,7 @@ jobs:
           node-version: 22
           cache: yarn
       - run: yarn install --frozen-lockfile
+      - run: yarn strapi:types:check
       - run: yarn test:unit
 
   infrastructure:
