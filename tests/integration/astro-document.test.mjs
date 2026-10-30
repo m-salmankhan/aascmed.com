@@ -72,7 +72,8 @@ test(
           process.execPath,
           ['node_modules/astro/bin/astro.mjs', 'build', '--config', config],
           {
-            env: { ...process.env, GATSBY_STRAPI_API_URL: cmsUrl },
+            env: { ...process.env, GATSBY_STRAPI_API_URL: cmsUrl,
+              STRAPI_TOKEN: 'fixture-document-token' },
             cwd: astroRoot,
             stdio: 'inherit',
           },
