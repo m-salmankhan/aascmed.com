@@ -30,6 +30,20 @@ const routes = [
   ['/clinics/example-clinic/', 'PUBLISHED CLINIC_BODY'],
   ['/service-updates/2026/03/notice/', 'PUBLISHED UPDATE_BODY'],
 ];
+/** Check that an embedded image fits its content column on desktop and mobile without JavaScript.
+ * @param page Browser displaying the synthetic article with its large inline image.
+ * @returns After both viewport geometries have been verified.
+ */
+async function assertInlineImageFits(page) {
+  for (const width of [390, 1280]) {
+    await page.setViewportSize({ width, height: 844 });
+    const fits = await page.getByRole('img', { name: 'Fixture inline image' }).evaluate((image) =>
+      image.getBoundingClientRect().width <= image.closest('div').getBoundingClientRect().width + 1,
+    );
+    assert.ok(fits, `inline image fits its content column at ${width}px`);
+  }
+}
+
 /** Scan every public build file for draft copy and server-only credentials.
  * @param directory Static output directory, traversed recursively.
  * @returns Nothing; any leaked marker or token fails with its public artifact path.
@@ -158,6 +172,7 @@ test(
           assert.ok(html.includes('G-FIXTURE'), 'public articles retain enabled analytics');
         }
         if (pathname === '/blog/article-1/') {
+          await assertInlineImageFits(page);
           const inline = page.getByRole('img', { name: 'Fixture inline image' });
           const src = await inline.getAttribute('src');
           assert.match(src, /^\/_astro\//, 'embedded CMS images are native local static assets');
@@ -209,6 +224,7 @@ test(
           `${pathname} saved draft is server-rendered without JavaScript`,
         );
         if (pathname === '/blog/article-1/') {
+          await assertInlineImageFits(page);
           const inline = page.getByRole('img', { name: 'Fixture inline image' });
           const src = await inline.getAttribute('src');
           assert.match(src, /^\/_image\/?\?/, 'preview uses the same native image service on demand');

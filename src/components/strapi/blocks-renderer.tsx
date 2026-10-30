@@ -22,7 +22,7 @@ function InlineImageBlock({ image }: { image: PreparedInlineImage }): React.Reac
     if (!image.responsive) {
         return <img src={image.url} alt={image.alternativeText || undefined} />;
     }
-    return <Image image={{
+    return <Image css={{ maxWidth: "100%", height: "auto" }} image={{
         src: image.url,
         alt: image.alternativeText || '',
         width: image.width,

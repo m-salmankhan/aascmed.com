@@ -229,6 +229,9 @@ export async function startFixtureCms() {
   })
     .png()
     .toBuffer();
+  const inlineImage = await sharp({
+    create: { width: 1200, height: 800, channels: 3, background: '#1C5E38' },
+  }).png().toBuffer();
   const requests = [];
   const unavailableResources = new Set();
   const server = createServer(async (request, response) => {
@@ -263,6 +266,11 @@ export async function startFixtureCms() {
       } else {
         response.end(JSON.stringify({ ok: true }));
       }
+      return;
+    }
+    if (url.pathname === '/media/inline.png') {
+      response.writeHead(200, { 'content-type': 'image/png' });
+      response.end(inlineImage);
       return;
     }
     if (url.pathname === '/media/fixture.png') {
@@ -341,7 +349,7 @@ export async function startFixtureCms() {
     });
     state.blogs[0].content[0].text.push({
       type: 'image',
-      image: { url: '/media/fixture.png', alternativeText: 'Fixture inline image', width: 32, height: 24, mime: 'image/png' },
+      image: { url: '/media/inline.png', alternativeText: 'Fixture inline image', width: 1200, height: 800, mime: 'image/png' },
       children: [{ type: 'text', text: '' }],
     });
     state.conditions[0].thumbnail = media;
