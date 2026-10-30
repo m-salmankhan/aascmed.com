@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { createServer } from "node:http";
+import { getPublishedRouteManifest } from "../../astro/src/server/content/routes.ts";
 import { clinicPath } from "../../src/shared/content/urls.ts";
 import {
   mapStrapiAnnouncement,
@@ -85,7 +86,6 @@ test("collection mappers normalize blog, provider, service update and review rec
       heading: "Post",
       slug: "post",
       date: "2026-01-01",
-      updatedAt: "2026-04-03T14:20:00.000Z",
       thumbnail: { url: "/uploads/post.jpg" },
       content: [],
     },
@@ -94,7 +94,6 @@ test("collection mappers normalize blog, provider, service update and review rec
   const provider = mapStrapiProvider(await fixture("provider"), "https://cms.example.test");
   const update = mapStrapiServiceUpdate(await fixture("service-update"));
   const review = mapStrapiReview(await fixture("review"));
-  assert.equal(blog.updatedAt, "2026-04-03T14:20:00.000Z");
   assert.equal(blog.id, "blog-1");
   assert.equal(blog.thumbnail?.src, "https://cms.example.test/uploads/post.jpg");
   assert.equal(provider.name?.qualificationAbbr, "MD");
@@ -613,4 +612,25 @@ test("SDK cross-origin redirects strip the server token", async () => {
     await new Promise((resolve) => source.close(resolve));
     await new Promise((resolve) => target.close(resolve));
   }
+});
+
+test("published route references request scalar fields without expanded page content", async () => {
+  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
+  const requests = [];
+  const routes = await withFetch(async (request) => {
+    const url = new URL(request.url);
+    requests.push(url);
+    assert.equal(url.searchParams.get("status"), "published");
+    assert.equal(url.searchParams.get("pagination[pageSize]"), "100");
+    assert.ok([...url.searchParams.keys()].every((key) => !key.startsWith("populate")));
+    const fields = [...url.searchParams].filter(([key]) => key.startsWith("fields")).map(([, value]) => value);
+    assert.ok(fields.includes("updatedAt"));
+    assert.ok(!fields.includes("body") && !fields.includes("content"));
+    const data = url.pathname.endsWith("/clinics")
+      ? [{ documentId: "clinic-ref", clinic_name: "Crest Hill", updatedAt: "2026-04-03T14:20:00.000Z" }]
+      : [];
+    return Response.json({ data, meta: { pagination: { pageCount: 1, total: data.length } } });
+  }, getPublishedRouteManifest);
+  assert.equal(requests.length, 5);
+  assert.deepEqual(routes, [{ pathname: "/clinics/crest-hill/", kind: "clinic", updatedAt: "2026-04-03T14:20:00.000Z" }]);
 });

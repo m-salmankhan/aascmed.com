@@ -22,7 +22,6 @@ type CommonContentFields = {
   title: string;
   description?: string;
   date: string | null;
-  updatedAt?: string;
 };
 /** One responsive image URL and its intrinsic pixel width. */
 type MediaCandidate = {
@@ -258,7 +257,6 @@ function common(entity: StrapiEntity, fallbackTitle = ""): CommonContentFields {
     title,
     description: string(entity.description) ?? undefined,
     date: string(entity.date) ?? null,
-    updatedAt: string(entity.updatedAt),
   };
 }
 /** Normalize a Strapi blog into the shared content contract.
