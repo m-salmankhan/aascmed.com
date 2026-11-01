@@ -30,7 +30,7 @@ const stylesHero = css({
     display: "flex",
     flexDirection: "column",
     justifyContent: "space-around",
-    padding: "2rem",
+    paddingBlock: "2rem",
     position: "relative",
     fontSize: fontBaseSize,
 });
