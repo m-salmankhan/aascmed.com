@@ -62,7 +62,7 @@
     "formdata-node": "^6.0.3",
     "gray-matter": "^4.0.3",
     "openapi-typescript": "7.10.1",
-    "pixelmatch": "^7.1.0",
+    "pixelmatch": "^8.0.0",
     "pngjs": "^7.0.0",
     "typescript": "5.9.3"
   },
