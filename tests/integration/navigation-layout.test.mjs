@@ -22,8 +22,9 @@ async function geometry(nav) {
     const rect = node => { const r = node.getBoundingClientRect(); return [r.x, r.y, r.width, r.height].map(n => Math.round(n * 10) / 10); };
     const list = element.querySelector('.desktop-links');
     const mobile = getComputedStyle(list).display === 'none';
-    const logo = [...element.querySelectorAll('.brand svg')].find(svg => getComputedStyle(svg).display !== 'none');
-    return { mobile, nav: rect(element), brand: rect(element.querySelector('.brand')), logo: rect(logo), list: rect(list),
+    const logos = [...element.querySelectorAll('.brand svg')].filter(svg => getComputedStyle(svg).display !== 'none');
+    const logo = logos[0];
+    return { mobile, logoCount: logos.length, logoSymbol: logo.querySelector('use').getAttribute('href').split('#').pop(), nav: rect(element), brand: rect(element.querySelector('.brand')), logo: rect(logo), list: rect(list),
       links: mobile ? [] : [...list.querySelectorAll('a')].map(rect), main: rect(document.querySelector('#main')) };
   });
 }
@@ -91,6 +92,7 @@ test('navigation has its final layout before fonts or hydration, at different ro
             }
             const before = await geometry(nav);
             const available = before.nav[2];
+            assert.equal(before.logoCount, 1, 'exactly one logo orientation is visible');
             assert.equal(before.mobile, available + 0.1 < navigationRowWidthRem * root, `CSS collapse at ${width}px / root ${root}px`);
             fonts.release();
             await page.evaluate(() => document.fonts.ready);
@@ -104,14 +106,17 @@ test('navigation has its final layout before fonts or hydration, at different ro
               assert.ok(before.list[0] >= before.nav[0] - 1 && before.list[0] + before.list[2] <= before.nav[0] + available + 1);
               const alongside = available >= (navigationRowWidthRem + navigationSizing.logoWidth + navigationSizing.headerGap) * root;
               if (alongside) {
+                assert.equal(before.logoSymbol, 'horizontal', 'side-by-side layout uses the horizontal logo');
                 assert.ok(Math.abs(before.list[1] + before.list[3] / 2 - (before.brand[1] + before.brand[3] / 2)) < 1, 'row beside logo when it fits');
                 assert.ok(Math.abs(before.logo[0] - before.nav[0]) < 1, 'logo aligns with the left content edge beside navigation');
               } else {
+                assert.equal(before.logoSymbol, 'stacked', 'centered layout uses the stacked logo');
                 assert.ok(before.list[1] >= before.brand[1] + before.brand[3], 'centered row below logo when it only fits there');
                 assert.ok(Math.abs(before.logo[0] + before.logo[2] / 2 - (before.nav[0] + available / 2)) < 1, 'logo stays centered above the row');
               }
               assert.ok(Math.abs(before.brand[2] - before.logo[2]) < 1, 'brand wrapper stays tight to the visible logo');
             } else {
+              assert.equal(before.logoSymbol, 'stacked', 'hamburger layout uses the stacked logo');
               assert.ok(Math.abs(before.logo[0] + before.logo[2] / 2 - (before.nav[0] + available / 2)) < 1, 'mobile logo stays centered');
               const summary = nav.locator('summary');
               const details = nav.locator('details');

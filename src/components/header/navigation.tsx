@@ -115,10 +115,6 @@ const stylesNavigation = css`
   /* Both sides of this boundary use the same generated width. No hydration
      state or font-load handler can choose a different initial layout. */
   @container (min-width: ${navigationRowWidthRem}rem) {
-    .brand {
-      .stacked { display: none; }
-      .horizontal { display: inline-block; vertical-align: middle; }
-    }
     .desktop-links {
       display: flex;
       flex: 0 0 auto;
@@ -134,6 +130,10 @@ const stylesNavigation = css`
   @container (min-width: ${navigationRightWidthRem}rem) {
     nav { justify-content: space-between; }
     .brand, .desktop-links { margin-inline: 0; }
+    .brand {
+      .stacked { display: none; }
+      .horizontal { display: inline-block; vertical-align: middle; }
+    }
   }
 `;
 
