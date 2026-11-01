@@ -1,16 +1,12 @@
 /*
 ===== GRID ====
 */
-// width in vw that containers should be
 import { keyframes } from "@emotion/react";
 
-export const containerWidths = {
-  xs: 90,
-  sm: 85,
-  md: 80,
-  lg: 70,
-  xl: 65,
-}
+/** Maximum width of shared page content; full-bleed backgrounds remain uncapped. */
+export const contentMaxWidth = "80rem";
+/** One gutter formula for centered and padded containers, relative to their parent. */
+export const contentGutter = `max(clamp(1rem, 3%, 3rem), (100% - ${contentMaxWidth}) / 2)`;
 
 export const gridSpacing = 2;
 export const defaultTotalColumnCount = 12;

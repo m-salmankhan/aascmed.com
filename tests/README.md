@@ -142,7 +142,9 @@ Astro integration tests live in `tests/integration/` and run with
 `yarn test:astro` after the single root `yarn install --frozen-lockfile`. Run
 `yarn typecheck` for the root Astro project. These tests build static and
 SSR output against a local CMS fixture and check the shared document,
-sitemaps, assets and runtime dependencies. Temporary page fixtures are removed
+sitemaps, assets and runtime dependencies. `node --test tests/integration/responsive-layout.test.mjs` checks production static/SSR builds, shared content alignment/full-bleed bounds, and navigation from 320px to 3440px with and without JavaScript. It serves the bundled Poppins font locally and exercises late font loading, enlarged text, keyboard focus, rapid menu reversals and reduced motion. The no-JS fallback uses CSS flex wrapping above a conservative 64rem container threshold and native details/summary below it; JavaScript refines layout from actual link widths.
+
+Temporary page fixtures are removed
 after each test; the application contains no Stage 1 proof page.
 
 Harness self-tests are separate from source tests. Run the Node checks for route,
