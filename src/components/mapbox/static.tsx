@@ -110,7 +110,7 @@ export const StaticMap: React.FC<MapBoxProps> = (props) => {
             ${mapSrc({ ...baseParameters, width: 400, height: 267 })} 400w,
             ${mapSrc({ ...baseParameters, width: 400, height: 267, retina: true })} 800w,
             ${mapSrc({ ...baseParameters, width: 600, height: 400, retina: true })} 1200w, `,
-        sizes: `(min-width: 60em) ${props.width ?? 90}vw, 90vw`,
+        sizes: props.sizes ?? `(min-width: 60em) ${props.width ?? 90}vw, 90vw`,
     }
 
     return (

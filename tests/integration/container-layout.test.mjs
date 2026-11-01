@@ -37,7 +37,7 @@ test('content widths grow smoothly to their cap while full-bleed sections remain
         await context.route('**/*', route => ['localhost', '127.0.0.1'].includes(new URL(route.request().url()).hostname)
           ? route.continue() : route.abort());
         const page = await context.newPage();
-        for (const path of ['/', '/privacy/']) {
+        for (const path of ['/', '/privacy/', '/clinics/']) {
           assert.equal((await page.goto(`${origin}${path}`, { waitUntil: 'domcontentloaded' })).status(), 200);
           if (javaScriptEnabled) await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
           let previous;
@@ -58,6 +58,38 @@ test('content widths grow smoothly to their cap while full-bleed sections remain
               assert.ok(growth >= -1 && growth <= width - previous.width + 1, `${label}: no breakpoint jumps`);
             }
             previous = { width, contentWidth: dimensions.content.width };
+            if (path === '/' || path === '/clinics/') {
+              const mapSizing = await page.locator('#main img.map').first().evaluate(image => {
+                const entries = [];
+                let depth = 0;
+                let start = 0;
+                for (let index = 0; index < image.sizes.length; index++) {
+                  const character = image.sizes[index];
+                  if (character === '(') depth++;
+                  if (character === ')') depth--;
+                  if (character === ',' && depth === 0) {
+                    entries.push(image.sizes.slice(start, index).trim());
+                    start = index + 1;
+                  }
+                }
+                entries.push(image.sizes.slice(start).trim());
+                const selected = entries.find(entry => {
+                  const media = entry.match(/^\(min-width: [\d.]+em\)/);
+                  return !media || matchMedia(media[0]).matches;
+                });
+                const probe = document.createElement('div');
+                probe.style.width = selected.replace(/^\(min-width: [\d.]+em\)\s*/, '');
+                probe.style.position = 'absolute';
+                document.body.append(probe);
+                const hinted = probe.getBoundingClientRect().width;
+                probe.remove();
+                return { hinted, actual: image.getBoundingClientRect().width };
+              });
+              assert.ok(mapSizing.hinted >= mapSizing.actual - 1,
+                `${label}: responsive map size must not understate its rendered width (${JSON.stringify(mapSizing)})`);
+              assert.ok(mapSizing.hinted <= mapSizing.actual + 33,
+                `${label}: responsive map size accounts for gutters and the content cap (${JSON.stringify(mapSizing)})`);
+            }
             if (path === '/') {
               const hero = await page.locator('header nav').first().evaluate(nav => {
                 const section = nav.closest('header').parentElement;
