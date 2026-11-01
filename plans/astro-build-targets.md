@@ -1,4 +1,4 @@
-> Historical stage-1 decisions. The current application now lives at the root with one package/lockfile, `yarn build` → `dist/`, and `yarn build:ssr` → `dist-ssr/`. See [current setup](../README.md); the original paths below describe the recorded proof.
+> Historical stage-1 decisions. The current application now lives at the root with one package/lockfile, `yarn build` → `dist/`, and `yarn build:ssr` → `dist-ssr/`. See [current setup](../docs/README.md); the original paths below describe the recorded proof.
 
 # Isolated Astro build targets (WEB-21)
 

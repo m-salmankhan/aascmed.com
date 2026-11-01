@@ -1,8 +1,22 @@
-# Social cards
+# Images and social cards
+
+## Social cards
 
 `social-cards.ts` renders branded Open Graph cards for the static Astro build. Public input/result types live in the same module. `assets/` contains the font, its license, and the logo; keep these paths together because the renderer resolves them relative to its module.
 
 The renderer preserves existing `/og-images/` URLs and keeps fingerprint/cache metadata outside public output. Native Astro image handling owns responsive CMS image transformations. Both are covered by image unit tests and an actual static-build integration.
+
+The static image hook reads published blogs, conditions and clinics for social cards, stages their output outside the public asset directory and reuses cache metadata between builds. Reviews are not fetched for social-card generation. Canvas and sharp are application dependencies.
+
+## Responsive CMS images
+
+Astro owns image fetching, transforms, responsive candidates, output files and disk caching. `src/server/content/astro-media.ts` passes native `width`, `layout` and `sizes` inputs to `getImage()` and converts the returned attributes for shared React image components. See the [framework-component use of getImage](https://docs.astro.build/en/guides/images/#generating-images-with-getimage).
+
+Each page prepares the record it displays and supplies the view's intended display width. Constrained layout generates density variants bounded by the source; lazy `sizes="auto"` lets the browser use the actual CSS slot. The hero uses full-width layout.
+
+`STRAPI_API_URL` supplies the CMS media origin. For uploads on another CDN, add full origins, including custom ports, to `STRAPI_MEDIA_ORIGINS`. Astro images and social cards share this allowlist; see the [environment inventory](../../../docs/environment-variables.md).
+
+Authorized remote uploads produce local `/_astro/` files during static builds and on-demand image URLs in SSR. Relative rich-text image URLs resolve against the CMS and use the same service. SVGs and static provider social images also have local build output. Integration tests verify remote-source pixels and files, including small thumbnails and wide images. Live Mapbox maps are a separate runtime integration.
 
 ## Netlify build cache
 

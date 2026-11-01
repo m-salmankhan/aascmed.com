@@ -144,8 +144,13 @@ Astro integration tests live in `tests/integration/` and run with
 SSR output against a local CMS fixture and check the shared document,
 sitemaps, assets and runtime dependencies. `node --test tests/integration/container-layout.test.mjs` serves both the production static build (Astro preview) and compiled SSR build, running the same home/privacy, JavaScript-enabled/disabled, 320px–5120px geometry matrix against each server. It verifies smooth content-width growth across the former breakpoints, the 80rem cap, shared padded/regular alignment, full-bleed backgrounds and absence of horizontal overflow. Navigation behaviour is outside this focused container regression.
 
-Temporary page fixtures are removed
-after each test; the application contains no Stage 1 proof page.
+The integration suite also checks route families, metadata, JSON-LD, tracking,
+headers and static assets. Browser checks cover hydration, navigation, notices,
+booking, carousels, timezone boundaries and synthetic form responses. Mutable
+draft checks create, edit, rename and delete records without rebuilding, then scan
+published artifacts for draft content and credentials. The runtime check verifies
+that Astro and shared UI resolve one React/Emotion installation. Temporary page
+fixtures are removed after each test.
 
 Harness self-tests are separate from source tests. Run the Node checks for route,
 target, visual-comparison and review-publication helpers with
