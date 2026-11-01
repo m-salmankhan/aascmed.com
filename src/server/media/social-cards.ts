@@ -2,7 +2,7 @@
 import { createCanvas, GlobalFonts, loadImage, type SKRSContext2D } from '@napi-rs/canvas';
 import sharp from 'sharp';
 import { createHash } from 'node:crypto';
-import { mkdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 /** Route families that have branded social cards. */
@@ -59,7 +59,7 @@ export interface SocialCardResult {
   wasCached: boolean;
 }
 
-/** Cached input fingerprints keyed by public card URL. */
+/** Input and output SHA-256 pairs keyed by public card URL. Old input-only entries miss safely. */
 type SocialCardCache = Record<string, string>;
 const WIDTH = 1200;
 const HEIGHT = 630;
@@ -496,16 +496,19 @@ export async function buildSocialCards(
         mediaBytes || Buffer.from('no-media'),
       ]),
     );
-    let exists = false;
+    let outputHash: string | undefined;
     try {
-      exists = (await stat(outputPath)).isFile();
+      outputHash = sha256(await readFile(outputPath));
     } catch {
       /* Cache miss. */
     }
-    const wasCached = exists && cache[cacheKey] === contentHash;
+    // The JPEG and metadata can come from different saves after a cache I/O failure.
+    // Verify both inputs and actual output bytes before accepting a restored card.
+    const wasCached = outputHash !== undefined &&
+      cache[cacheKey] === `${contentHash}:${outputHash}`;
     if (!wasCached) {
       await renderSocialCard(entry.title || 'Untitled', mediaBytes, outputPath);
-      cache[cacheKey] = contentHash;
+      cache[cacheKey] = `${contentHash}:${sha256(await readFile(outputPath))}`;
     }
     results.push({ kind, slug: entry.slug, imagePath, outputPath, wasCached });
   }

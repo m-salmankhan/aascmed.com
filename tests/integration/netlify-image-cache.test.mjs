@@ -22,6 +22,45 @@ const imageCachePaths = [
   '.astro/public-image-cache',
 ];
 
+async function moveDirectory(sourcePath, destinationPath, renamePath = rename) {
+  try {
+    await renamePath(sourcePath, destinationPath);
+  } catch (error) {
+    if (error.code !== 'EXDEV') throw error;
+    await cp(sourcePath, destinationPath, {
+      recursive: true,
+      preserveTimestamps: true,
+    });
+    await rm(sourcePath, { recursive: true, force: true });
+  }
+}
+
+test('cache backup and restore fall back to copy when rename crosses filesystems', async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), 'aasc-cache-exdev-'));
+  const originalPath = path.join(root, 'original');
+  const backupPath = path.join(root, 'backup');
+  const restoredPath = path.join(root, 'restored');
+  const payload = Buffer.from('cached image fixture');
+  const forceExdev = async () => {
+    throw Object.assign(new Error('simulated cross-device rename'), { code: 'EXDEV' });
+  };
+
+  try {
+    await mkdir(originalPath, { recursive: true });
+    await writeFile(path.join(originalPath, 'asset.bin'), payload);
+
+    await moveDirectory(originalPath, backupPath, forceExdev);
+    assert.deepEqual(await readFile(path.join(backupPath, 'asset.bin')), payload);
+    await assert.rejects(stat(originalPath), { code: 'ENOENT' });
+
+    await moveDirectory(backupPath, restoredPath, forceExdev);
+    assert.deepEqual(await readFile(path.join(restoredPath, 'asset.bin')), payload);
+    await assert.rejects(stat(backupPath), { code: 'ENOENT' });
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test('Netlify image cache restores native Astro assets and published social cards', async () => {
   await mkdir(path.join(repositoryRoot, '.astro'), { recursive: true });
   const fixtureDirectory = path.join(
@@ -72,6 +111,8 @@ test('Netlify image cache restores native Astro assets and published social card
         if (error.code === 'ENOENT') continue;
         throw error;
       }
+      // Record a completed backup before deleting a cross-filesystem source,
+      // so cleanup can recover even if that deletion is interrupted.
       try {
         await rename(originalPath, savedPath);
         backups.push({ originalPath, savedPath });
@@ -111,7 +152,7 @@ test('Netlify image cache restores native Astro assets and published social card
     for (const { originalPath, savedPath } of backups) {
       await rm(originalPath, { recursive: true, force: true });
       await mkdir(path.dirname(originalPath), { recursive: true });
-      await rename(savedPath, originalPath);
+      await moveDirectory(savedPath, originalPath);
     }
   }
 

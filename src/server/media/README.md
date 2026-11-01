@@ -12,7 +12,7 @@ The repository's local Netlify Build plugin explicitly restores these directorie
 - `.astro/public-images`: generated social-card JPEGs, needed to reuse their output.
 - `.astro/public-image-cache`: social-card fingerprints, needed to detect changed inputs.
 
-Both social-card directories must survive together. Only currently requested card paths are copied into `dist`; fingerprints and unused cached cards are not published. The plugin does not cache CMS responses, environment files, the entire dependency directory or `dist`.
+Both social-card directories must survive together. A reuse check validates the input fingerprint and the actual JPEG's SHA-256 checksum, so a partial save/restore cannot pair a new fingerprint with stale image bytes. Older input-only fingerprints cause a one-time regeneration. Only currently requested card paths are copied into `dist`; fingerprints and unused cached cards are not published. The plugin does not cache CMS responses, environment files, the entire dependency directory or `dist`.
 
 The first successful build with this plugin may still be cold. Later builds on the same Netlify cache line should log `[image-cache] Restored …`, Astro's `(reused cache entry)` or `(revalidated cache entry)`, and social-card reused/generated counts. New branch/PR caches can start cold or fall back to production; clearing the Netlify build cache also removes this state. See [Netlify cache behavior](https://docs.netlify.com/build/configure-builds/troubleshooting-tips/#build-cache-key-behavior).
 
