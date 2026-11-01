@@ -170,7 +170,7 @@ async function collect(records) {
   return result;
 }
 test("blog loader exposes its SDK resource, nested query and bounded pagination", async () => {
-  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
+  process.env.STRAPI_API_URL = "https://cms.example.test";
   const requests = [];
   const blogs = await withFetch(async (request) => {
     requests.push(request);
@@ -207,7 +207,7 @@ test("blog loader exposes its SDK resource, nested query and bounded pagination"
   );
 });
 test("collection iterators fetch the next bounded page only when advanced", async () => {
-  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
+  process.env.STRAPI_API_URL = "https://cms.example.test";
   const requests = [];
   await withFetch(async (request) => {
     requests.push(request);
@@ -236,7 +236,7 @@ test("collection iterators fetch the next bounded page only when advanced", asyn
   });
 });
 test("published collections stay lazy and expose SDK resources and population as consumed", async () => {
-  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test/custom/api";
+  process.env.STRAPI_API_URL = "https://cms.example.test/custom/api";
   const requests = [];
   await withFetch(async (request) => {
     requests.push(request);
@@ -279,7 +279,7 @@ test("published collections stay lazy and expose SDK resources and population as
   );
 });
 test("ordered collections preserve missing values last through explicit SDK filters", async () => {
-  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
+  process.env.STRAPI_API_URL = "https://cms.example.test";
   process.env.ASTRO_CONTENT_MODE = "draft";
   const requests = [];
   const respond = async (request) => {
@@ -351,7 +351,7 @@ test("ordered collections preserve missing values last through explicit SDK filt
   );
 });
 test("all CMS single loaders address their explicit SDK single resources", async () => {
-  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
+  process.env.STRAPI_API_URL = "https://cms.example.test";
   const paths = [];
   await withFetch(async (request) => {
     paths.push(new URL(request.url).pathname);
@@ -385,7 +385,7 @@ test("all CMS single loaders address their explicit SDK single resources", async
   ]);
 });
 test("detail loaders put status, slug filter, and population beside their SDK resources", async () => {
-  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
+  process.env.STRAPI_API_URL = "https://cms.example.test";
   process.env.ASTRO_CONTENT_MODE = "draft";
   const requests = [];
   await withFetch(async (request) => {
@@ -404,7 +404,7 @@ test("detail loaders put status, slug filter, and population beside their SDK re
   assert.equal(new URL(requests[1].url).searchParams.get("filters[slug][$eq]"), "update");
 });
 test("published collection reads start only when consumed, and draft mode is denied outside preview", async () => {
-  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
+  process.env.STRAPI_API_URL = "https://cms.example.test";
   delete process.env.ASTRO_CONTENT_MODE;
   let requests = 0;
   await assert.rejects(
@@ -426,7 +426,7 @@ test("published collection reads start only when consumed, and draft mode is den
   });
 });
 test("collection iterator stops at the safety cap and supports a configured batch size", async () => {
-  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
+  process.env.STRAPI_API_URL = "https://cms.example.test";
   let requests = 0;
   const client = createClient("published");
   await withFetch(async () => {
@@ -451,7 +451,7 @@ test("collection iterator stops at the safety cap and supports a configured batc
   );
 });
 test("clinic slug fallback handles hyphens and whitespace, prioritizes explicit slugs, and ignores renamed clinics", async () => {
-  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
+  process.env.STRAPI_API_URL = "https://cms.example.test";
   process.env.ASTRO_CONTENT_MODE = "draft";
   const clinics = [
     { documentId: "hyphen", slug: null, clinic_name: "Oak-Park" },
@@ -484,7 +484,7 @@ test("clinic slug fallback handles hyphens and whitespace, prioritizes explicit 
   }
 });
 test("clinic fallback stops after the page containing its route match", async () => {
-  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
+  process.env.STRAPI_API_URL = "https://cms.example.test";
   process.env.ASTRO_CONTENT_MODE = "draft";
   const requests = [];
   const clinic = await withFetch(async (request) => {
@@ -503,7 +503,7 @@ test("clinic fallback stops after the page containing its route match", async ()
   assert.equal(requests.length, 2, "the second fallback page is never requested");
 });
 test("published validation rejects unroutable content while draft records remain previewable", async () => {
-  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
+  process.env.STRAPI_API_URL = "https://cms.example.test";
   const respond = async () => Response.json({
     data: [{ documentId: "unroutable", slug: "", title: "Incomplete" }],
     meta: { pagination: { pageCount: 1 } },
@@ -519,7 +519,7 @@ test("published validation rejects unroutable content while draft records remain
   assert.equal(drafts[0].documentId, "unroutable");
 });
 test("single 404, malformed response and upstream errors retain distinct safe outcomes", async () => {
-  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
+  process.env.STRAPI_API_URL = "https://cms.example.test";
   await withFetch(async () => new Response("private body", { status: 404 }), async () => {
     assert.equal(await getPrivacyPolicy("published"), null);
   });
@@ -550,7 +550,7 @@ test("single 404, malformed response and upstream errors retain distinct safe ou
   delete process.env.STRAPI_TOKEN;
 });
 test("blank SDK credentials are configuration errors without network access", async () => {
-  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
+  process.env.STRAPI_API_URL = "https://cms.example.test";
   process.env.STRAPI_TOKEN = "   ";
   let requests = 0;
   try {
@@ -569,7 +569,7 @@ test("blank SDK credentials are configuration errors without network access", as
   }
 });
 test("SDK timeout aborts requests waiting for response headers", async (context) => {
-  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
+  process.env.STRAPI_API_URL = "https://cms.example.test";
   context.mock.timers.enable({ apis: ["setTimeout"] });
   let markStarted;
   const started = new Promise((resolve) => {
@@ -609,7 +609,7 @@ test("SDK cross-origin redirects strip the server token", async () => {
   await new Promise((resolve) => target.listen(0, "127.0.0.1", resolve));
   await new Promise((resolve) => source.listen(0, "127.0.0.1", resolve));
   const address = source.address();
-  process.env.GATSBY_STRAPI_API_URL = `http://127.0.0.1:${address.port}`;
+  process.env.STRAPI_API_URL = `http://127.0.0.1:${address.port}`;
   process.env.STRAPI_TOKEN = "redirect-fixture-secret";
   try {
     assert.equal((await getHomePage("published"))?.documentId, "redirected-home");
@@ -622,7 +622,7 @@ test("SDK cross-origin redirects strip the server token", async () => {
 });
 
 test("published route references request scalar fields without expanded page content", async () => {
-  process.env.GATSBY_STRAPI_API_URL = "https://cms.example.test";
+  process.env.STRAPI_API_URL = "https://cms.example.test";
   const requests = [];
   const routes = await withFetch(async (request) => {
     const url = new URL(request.url);

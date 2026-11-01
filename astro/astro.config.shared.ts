@@ -29,7 +29,7 @@ for (const source of cdnOrigins) {
     );
   }
 }
-const mediaSources = [process.env.GATSBY_STRAPI_API_URL, ...cdnOrigins];
+const mediaSources = [process.env.STRAPI_API_URL, ...cdnOrigins];
 const origins = new Set<string>();
 for (const source of mediaSources) {
   if (!source?.trim()) {

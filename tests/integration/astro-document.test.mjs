@@ -64,7 +64,7 @@ test(
           {
             env: {
               ...process.env,
-              GATSBY_STRAPI_API_URL: cmsUrl,
+              STRAPI_API_URL: cmsUrl,
               STRAPI_TOKEN: fixtureToken,
               ASTRO_CONTENT_MODE: 'published',
               STRAPI_MEDIA_ORIGINS: cmsUrl,
@@ -327,7 +327,7 @@ import SiteDocument from '../layouts/SiteDocument.astro';
           HOST: '127.0.0.1',
           PORT: String(portProbe),
           PREVIEW_FRAME_ORIGINS: 'https://editor.example.test:8443',
-          GATSBY_STRAPI_API_URL: cmsUrl,
+          STRAPI_API_URL: cmsUrl,
           STRAPI_TOKEN: fixtureToken,
           ASTRO_CONTENT_MODE: 'published',
         },

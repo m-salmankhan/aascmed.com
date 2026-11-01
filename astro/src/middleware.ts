@@ -12,7 +12,7 @@ export const onRequest = defineMiddleware(async (_context, next) => {
     response.headers.set('Cache-Control', 'private, no-store');
     response.headers.set('X-Robots-Tag', 'noindex, nofollow');
     const configuredParents = [
-      process.env.GATSBY_STRAPI_API_URL,
+      process.env.STRAPI_API_URL,
       ...(process.env.PREVIEW_FRAME_ORIGINS || '').split(','),
     ].filter((value) => value?.trim());
     const parentOrigins = configuredParents.map((value) => new URL(value!.trim()).origin);

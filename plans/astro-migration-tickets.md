@@ -1,8 +1,8 @@
 # Astro migration ticket index
 
-Approved 25 October 2026. Canonical design: [Astro migration plan](astro-migration-plan.md).
+Approved 25 October 2026; reordered 30 October 2026. Canonical designs: [Astro migration plan](astro-migration-plan.md) and [deferred preview platform plan](preview-platform-plan.md).
 
-Kaneo workspace: AASCMed. Project: Website Development (WEB). All migration tickets are assigned to Salman Khan and start in To Do.
+Kaneo workspace: AASCMed. Project: Website Development (WEB). Check current assignments and status on the board; historical creation-time statuses are not authoritative.
 
 ## Hierarchy and labels
 
@@ -16,10 +16,10 @@ Every migration item has the **Astro migration** label. Each stage parent and it
 
 1. Read the plan, ticket description, stage parent, and current incoming Kaneo Blocks relations before starting. This index is a creation-time snapshot; use current relations if the work has been deliberately re-planned.
 2. Start only after **every blocker is Done and its changes are available in the working branch**. In Review is not complete. Check the actual branch rather than trusting status alone.
-3. A stage parent is a completion gate: close it only when all children are Done, changes are integrated, and its exit criteria have evidence. Do not close parents just to unblock later work. The overall epic closes after all seven stages.
+3. A stage parent is a completion gate: close it only when all children are Done, changes are integrated, and its exit criteria have evidence. Do not close parents just to unblock later work. The overall epic closes when the public migration, retirement and deferred preview gates are complete.
 4. Independent siblings may proceed in parallel only when their own blockers are complete. Coordinate edits to shared files; a clear dependency graph does not remove merge-conflict risk.
 5. Follow behavior contracts and the architecture proof, not stale implementation guesses. Document and correct a mistaken dependency or file hint explicitly rather than silently bypassing it or widening scope.
-6. Deploy tasks require their validation prerequisites and retained rollback artifacts. The observation gate must include the agreed elapsed period and editor publishing cycle; it is not complete merely because deployment succeeded.
+6. Deploy tasks require their validation prerequisites and retained rollback artifacts. The public observation gate must include the agreed elapsed period and editor publishing cycle; it is not complete merely because deployment succeeded. Preview may be offline during retirement and does not block public cutover or WEB-46.
 
 Kaneo Blocks/blocked-by relations record ordering. They should **not** be treated as hard status-transition enforcement: the published status-update handler does not check blocker completion. These explicit ticket rules supply the delegation guardrail; no workflow automation or server-side enforcement has been installed. Sources: [Kaneo dependency guide](https://kaneo.app/guides/task-dependencies), [status-update implementation](https://github.com/usekaneo/kaneo/blob/main/apps/api/src/task/controllers/update-task-status.ts).
 
@@ -31,13 +31,13 @@ Kaneo Blocks/blocked-by relations record ordering. They should **not** be treate
 | 1: Architecture and styling proof | WEB-14 | A representative page works in static output and compiled Node SSR. Compatible versions, image boundary, hydration strategy and a clean Emotion/CSS decision are recorded without disrupting Gatsby. | WEB-12 |
 | 2: Prepare reusable components in Gatsby | WEB-15 | Framework-independent contracts and React views are consumed by Gatsby without visual/behavioral regressions. Gatsby queries/types remain in adapters. Only justified compatibility styling changes are included. | WEB-14 |
 | 3: Strapi loaders and Astro route parity | WEB-16 | All route families, media, metadata and interactions pass static/SSR parity checks. New draft URLs work without rebuilds; public output contains only published content. | WEB-15 |
-| 4: Deploy and switch authenticated preview | WEB-17 | Compiled Astro SSR is validated on the real preview infrastructure, editors can review fresh drafts, and the preview proxy is switched with a tested Gatsby rollback retained. | WEB-16 |
-| 5: Publish and cut over the public site | WEB-18 | Published-only Astro static artifacts are promoted atomically. Content webhooks, ordering, production smoke checks and rollback are verified without changing public URLs. | WEB-17 |
-| 6: Observe and retire Gatsby | WEB-19 | The observation period and editor publishing cycle pass, rollback retention is documented, and obsolete Gatsby dependencies/services/refresh wiring are removed with clean-install verification. | WEB-18 |
+| 4: Deferred new preview platform | WEB-17 | After WEB-46, provision and validate the new Traefik/Podman/Ansible preview with separate preview authentication; editors can review fresh drafts and recovery is exercised. | WEB-46 |
+| 5: Publish and cut over the public site | WEB-18 | Published-only Astro static artifacts are promoted atomically. Content webhooks, ordering, production smoke checks and rollback are verified without changing public URLs. | WEB-16 |
+| 6: Observe and retire Gatsby | WEB-19 | The observation period, editor publishing cycle and WEB-50 prerequisite pass; obsolete Gatsby dependencies and refresh wiring are removed with clean-install verification. | WEB-18 |
 
 ## Implementation tasks
 
-Every stage after stage 0 is gated by the preceding stage epic, including tasks with additional technical prerequisites. Dependencies below correspond to direct Blocks links, not merely prose suggestions.
+The stages retain their historical labels, but are no longer executed in numerical order: public cutover and retirement precede the deferred preview. Dependencies below summarize the revised plan; confirm direct Blocks links and current card descriptions on the board before starting.
 
 ### Stage 0: Baseline and migration contracts
 
@@ -87,16 +87,21 @@ Label: **Astro stage 3: Route migration**. Parent: **WEB-16**.
 | WEB-37 | Verify and refine hydration for reusable interactive components | WEB-15, WEB-35 |
 | WEB-38 | Validate full Astro static/SSR parity and content isolation | WEB-15, WEB-37, WEB-36 |
 
-### Stage 4: Deploy and switch authenticated preview
+### Stage 4: Deferred new preview platform
 
-Label: **Astro stage 4: Preview rollout**. Parent: **WEB-17**.
+Label: **Astro stage 4: Preview rollout**. Parent: **WEB-17**. These tasks are deferred until Gatsby retirement; the former parallel-Gatsby and Cloudflare Access/Tunnel proposals are superseded. See [the preview platform plan](preview-platform-plan.md) for repository ownership, design and acceptance criteria.
 
-| Ticket | Work | Direct blockers |
+| Ticket | Work | Prerequisite |
 | --- | --- | --- |
-| WEB-39 | Connect Strapi preview URLs and safe saved-draft refresh | WEB-16 |
-| WEB-40 | Deploy a protected Astro SSR candidate beside Gatsby preview | WEB-16, WEB-9 |
-| WEB-41 | Validate candidate preview security, freshness and reliability | WEB-16, WEB-39, WEB-40 |
-| WEB-42 | Switch editorial preview to Astro with a retained Gatsby rollback | WEB-16, WEB-41 |
+| WEB-51 | Establish deferred preview repository and reconcile closed migration work | WEB-46 |
+| WEB-39 | Connect Strapi preview URLs and safe saved-draft refresh | WEB-46, WEB-51 |
+| WEB-40 | Prepare the compiled Astro preview image and deployment integration | WEB-46, WEB-51 |
+| WEB-52 | Implement Strapi-backed login and independent preview JWT sessions | WEB-46, WEB-51 |
+| WEB-53 | Publish private auth image and pin release digests | WEB-46, WEB-40, WEB-52 |
+| WEB-54 | Automate new VPS with Ansible, Traefik and Podman Quadlets | WEB-46, WEB-51 |
+| WEB-55 | Write beginner VPS setup, deployment and recovery guide | WEB-46, WEB-53, WEB-54 |
+| WEB-41 | Validate new preview security, freshness and reliability on the actual host | WEB-46, WEB-39, WEB-40, WEB-53, WEB-54, WEB-55 |
+| WEB-42 | Complete editor acceptance and tested recovery for the new preview | WEB-46, WEB-41 |
 
 ### Stage 5: Publish and cut over the public site
 
@@ -104,8 +109,8 @@ Label: **Astro stage 5: Public cutover**. Parent: **WEB-18**.
 
 | Ticket | Work | Direct blockers |
 | --- | --- | --- |
-| WEB-43 | Prepare atomic published-only Astro deployments and content webhooks | WEB-17 |
-| WEB-44 | Promote Astro public output and verify production rollback | WEB-17, WEB-43 |
+| WEB-43 | Prepare atomic published-only Astro deployments and content webhooks | WEB-16 |
+| WEB-44 | Promote Astro public output and verify production rollback | WEB-16, WEB-43 |
 
 ### Stage 6: Observe and retire Gatsby
 
@@ -114,19 +119,17 @@ Label: **Astro stage 6: Retirement**. Parent: **WEB-19**.
 | Ticket | Work | Direct blockers |
 | --- | --- | --- |
 | WEB-45 | Complete the post-cutover observation and rollback-retention gate | WEB-18 |
-| WEB-46 | Remove obsolete Gatsby code and preview infrastructure after observation | WEB-18, WEB-45 |
+| WEB-50 | Complete the existing island prerequisite for Gatsby retirement | Check current board relations |
+| WEB-46 | Remove obsolete Gatsby code and preview infrastructure after observation | WEB-18, WEB-45, WEB-50 |
 
 ## Starting work
 
-**WEB-13** (capture baseline) is the first migration implementation task with no blockers. WEB-8, WEB-9 and WEB-10 can be handled independently at the same time. WEB-20 follows the baseline. Stage 1 opens when stage 0 is complete; scaffolding also consumes WEB-10's maintenance fixes.
+WEB-16 is complete. Proceed with the published-only public deployment work WEB-43 and WEB-44, then the observation gate WEB-45 and the existing WEB-50 island prerequisite, then WEB-46 retirement. The new WEB-17 preview work follows WEB-46; **WEB-46 must not depend on WEB-17**, or the sequence becomes cyclic. Preserve public publish webhooks and public rollback artifacts when retiring Gatsby; inventory legacy source, dependencies, generated outputs and preview refresh wiring before removal.
 
-The baseline/proof stages determine details such as actual hosting settings, compatible versions, performance budgets and the cleanest styling integration. Do not start wholesale style conversion or change public hosting architecture based only on a ticket title.
+The earlier website MRs #156, #157 and #158 and CMS MR #25 were closed without merge. Their branches remain available for selective reuse; they do not establish a deployed preview or integrated implementation. See [the preview platform plan](preview-platform-plan.md) for relevant commit references and the superseded Access proposal.
 
-## Counts and maintenance links
+## Maintenance links
 
-- 1 overall coordination epic, 7 stage epics, 28 implementation tasks (36 migration items).
-- 35 parent/subtask relations and 61 Blocks relations, including three dependencies on existing maintenance tickets.
-- WEB-8 blocks WEB-25; WEB-9 blocks WEB-40; WEB-10 blocks WEB-21.
-- The blocking graph was checked for cycles before creation. Recheck it when changing dependencies.
+The earlier creation-time task and dependency counts are superseded by the replan. Check the live board and direct Blocks relations before work, and recheck the graph for cycles when updating it.
 
 Ticket descriptions contain starting files, scope and acceptance checks. Keep this index updated if the approved delivery structure changes; keep detailed execution evidence in the relevant ticket or repository runbook.

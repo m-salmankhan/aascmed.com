@@ -21,7 +21,7 @@ React, ReactDOM and Emotion are supplied by the root package. Keep their Vite de
 
 ## CMS content
 
-`GATSBY_STRAPI_API_URL` and the server-only `STRAPI_TOKEN` configure the official Strapi client. Published reads leave caching to the server; draft reads send `no-store` and require `ASTRO_CONTENT_MODE=draft` on the protected preview deployment. Static builds reject draft requests. The SDK uses its public transport defaults, including its 10-second timeout until response headers arrive and normal fetch redirects. Errors are sanitized before reaching callers.
+`STRAPI_API_URL` and the server-only `STRAPI_TOKEN` configure the official Strapi client. `STRAPI_API_URL` is Astro-only and intentionally server-side. Gatsby and its existing preview continue to use `GATSBY_STRAPI_API_URL`; keep both settings during the migration. Add `STRAPI_API_URL` to the Astro build/server environment without removing or renaming Gatsby settings. See the [complete environment inventory](../docs/environment-variables.md) for values and deployment locations. Published reads leave caching to the server; draft reads send `no-store` and require `ASTRO_CONTENT_MODE=draft` on the protected preview deployment. Static builds reject draft requests. The SDK uses its public transport defaults, including its 10-second timeout until response headers arrive and normal fetch redirects. Errors are sanitized before reaching callers.
 
 Collection loaders are lazy async iterators:
 
@@ -53,7 +53,7 @@ The integration tests build the real static/SSR site against a synthetic local C
 
 The Node renderer in `src/shared/media/social-cards.mjs` composes branded Open Graph cards using the maintained font and logo. Gatsby retains its existing public card filenames through a compatibility adapter. Install root dependencies first; canvas and sharp are root-provided peers. Keep generated cache files outside public output.
 
-The shared Astro config reads the repository's `.env` files using Vite's loader; existing process variables take precedence. Use `yarn astro:static --mode development` for the local development settings. `GATSBY_STRAPI_API_URL` supplies the CMS origin. If uploads live on a separate CDN, list its full origin in `STRAPI_MEDIA_ORIGINS` (comma-separated, including any custom port). Both Astro images and social cards receive the same origins. There is no tenant hostname default or separate host-policy helper.
+The shared Astro config reads the repository's `.env` files using Vite's loader; existing process variables take precedence. Use `yarn astro:static --mode development` for the local development settings. `STRAPI_API_URL` supplies the CMS origin. If uploads live on a separate CDN, list its full origin in `STRAPI_MEDIA_ORIGINS` (comma-separated, including any custom port). Both Astro images and social cards receive the same origins. There is no tenant hostname default or separate host-policy helper.
 
 The static image hook reads only the published blogs, conditions, and clinics needed for social cards. It stages those cards outside the public asset directory and reuses their small cache metadata between builds. Astro creates responsive CMS image outputs through `astro:assets` while pages render; each page owns the record it displays. Reviews are not fetched for social-card generation.
 
