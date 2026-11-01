@@ -174,10 +174,19 @@ const stylesNavigation = css`
   noscript { display: none; }
   details { width: 100%; }
 
-  /* Conservative CSS fallback: native details works before/without JavaScript.
-     Flex wrapping places the full row beside or below the logo when it fits. */
+  /* Native details works without JavaScript. The full row sits beside or below
+     the logo when it fits, and enlarged text can wrap without clipping links. */
   @container (min-width: 64rem) {
-    .fallback-links { display: flex; width: max-content; margin-inline: auto; }
+    .fallback-links {
+      display: flex;
+      width: max-content;
+      max-width: 100%;
+      margin-inline: auto;
+      flex-wrap: wrap;
+      row-gap: 0.5rem;
+      overflow: visible;
+      li { white-space: normal; overflow-wrap: anywhere; }
+    }
     details { display: none; }
   }
 

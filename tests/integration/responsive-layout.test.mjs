@@ -155,6 +155,38 @@ test('capped content, full-bleed backgrounds and three navigation layouts retain
           await expect(toggle).toBeFocused();
           await expect(toggle).toHaveAttribute('aria-expanded', 'false');
         } else {
+          await page.evaluate(() => {
+            const style = document.createElement('style');
+            style.dataset.enlargedNavigation = '';
+            style.textContent = 'nav[aria-label="Main navigation"] li { font-size: 2rem; }';
+            document.head.append(style);
+          });
+          for (const width of [1152, 1440, 3440]) {
+            await page.setViewportSize({ width, height: 1000 });
+            const fallback = nav.locator('.fallback-links');
+            await expect(fallback).toBeVisible();
+            const bounds = await fallback.evaluate(list => ({
+              list: list.getBoundingClientRect().toJSON(),
+              nav: list.closest('nav').getBoundingClientRect().toJSON(),
+              clipped: list.scrollWidth > list.clientWidth + 1,
+              links: [...list.querySelectorAll('a')].map(link => link.getBoundingClientRect().toJSON()),
+            }));
+            assert.ok(bounds.list.left >= bounds.nav.left - 1 && bounds.list.right <= bounds.nav.right + 1,
+              `no-JS 200% text at ${width}: fallback stays inside the container`);
+            assert.equal(bounds.clipped, false, 'enlarged fallback text is not clipped');
+            assert.equal(bounds.links.length, 8);
+            assert.ok(bounds.links.every(link => link.left >= bounds.list.left - 1 && link.right <= bounds.list.right + 1
+              && link.top >= bounds.list.top - 1 && link.bottom <= bounds.list.bottom + 1), 'every link is fully visible');
+            assert.ok(new Set(bounds.links.map(link => Math.round(link.top))).size > 1, 'enlarged links wrap when the row cannot fit');
+            assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'no page overflow at 200% text');
+            const fallbackLinks = fallback.getByRole('link');
+            await fallbackLinks.first().focus();
+            for (let index = 0; index < 8; index++) {
+              await expect(fallbackLinks.nth(index)).toBeFocused();
+              await page.keyboard.press('Tab');
+            }
+          }
+          await page.locator('style[data-enlarged-navigation]').evaluate(style => style.remove());
           await page.setViewportSize({ width: 390, height: 1000 });
           await nav.locator('summary').click();
           await nav.getByRole('link', { name: 'Blog', exact: true }).click();
