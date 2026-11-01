@@ -621,6 +621,37 @@ test("SDK cross-origin redirects strip the server token", async () => {
   }
 });
 
+test('response-body stalls share the request deadline and are cancelled', async (context) => {
+  process.env.STRAPI_API_URL = 'https://cms.example.test';
+  context.mock.timers.enable({ apis: ['setTimeout'] });
+  let returnedHeaders;
+  let cancelled = false;
+  const headers = new Promise((resolve) => { returnedHeaders = resolve; });
+  await withFetch(async () => {
+    const response = new Response(new ReadableStream({
+      start(controller) { controller.enqueue(new TextEncoder().encode('{"data":')); },
+      cancel() { cancelled = true; },
+    }));
+    returnedHeaders();
+    return response;
+  }, async () => {
+    const pending = getHomePage('published');
+    await headers;
+    await new Promise((resolve) => setImmediate(resolve));
+    context.mock.timers.tick(10000);
+    await assert.rejects(pending, (error) => error instanceof StrapiRequestError && error.message === 'Strapi request timed out');
+    assert.equal(cancelled, true);
+  });
+});
+
+test('oversized CMS responses are rejected without exposing response bytes', async () => {
+  process.env.STRAPI_API_URL = 'https://cms.example.test';
+  await withFetch(async () => new Response('PRIVATE-CMS-BODY'.repeat(600000)), async () => {
+    await assert.rejects(getHomePage('published'), (error) => error instanceof StrapiRequestError &&
+      error.kind === 'invalid-response' && error.message === 'Strapi response exceeds the size limit');
+  });
+});
+
 test("published route references request scalar fields without expanded page content", async () => {
   process.env.STRAPI_API_URL = "https://cms.example.test";
   const requests = [];

@@ -6,6 +6,7 @@ Set these in the relevant Netlify build context (production or deploy preview), 
 | --- | --- | --- |
 | `STRAPI_API_URL` | CMS origin, normally the value previously used by Gatsby; for example `https://admin.aascmed.com`. Required; no Gatsby fallback. | Build-time CMS reads and media allowlist; SSR runtime reads and framing. |
 | `STRAPI_TOKEN` | Server-only Content API token scoped to published reads for the public site. A protected draft deployment needs its own appropriately scoped draft-read token. | Build/server secret; never use `PUBLIC_`. |
+| `STRAPI_TOKEN_FILE` | Absolute path to the private, read-only file containing the preview's restricted draft-read token, normally `/run/secrets/strapi_token`. The file must be nonempty and readable only by its owner. Never set it together with `STRAPI_TOKEN`. | SSR runtime only; required by the draft container entry point. Public static builds retain `STRAPI_TOKEN`. |
 | `PUBLIC_RUNTIME_API_BASE_URL` | Contact API origin, normally `https://api.aascmed.com` (also the default). Separate from Strapi. | Intentionally browser-visible; embedded at build time. |
 | `PUBLIC_MAPBOX_API_KEY` | Public Mapbox token for maps and clinic social cards. Set explicitly; no Gatsby fallback remains. | Browser-visible; embedded at build time and used by image generation. |
 | `ASTRO_CONTENT_MODE` | `published` or unset for public deployments. `draft` only on an authenticated SSR preview. Static builds reject draft reads. | Server content mode; does not install authentication. |

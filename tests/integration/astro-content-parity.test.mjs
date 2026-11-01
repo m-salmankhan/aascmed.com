@@ -199,10 +199,7 @@ test(
       staticServer = undefined;
       const beforeSsrBuild = cms.requests.length;
       await build('astro.config.ssr.ts', env);
-      assert.ok(
-        cms.requests.slice(beforeSsrBuild).every(({ query }) => query.status === 'published'),
-        'SSR build-time sitemap also excludes saved drafts',
-      );
+      assert.equal(cms.requests.length, beforeSsrBuild, 'SSR compilation makes no CMS calls');
       const port = await availablePort();
       const origin = `http://127.0.0.1:${port}`;
       previewServer = command(['dist-ssr/server/entry.mjs'], {
@@ -248,7 +245,7 @@ test(
       cms.draft['home-page'] = completeHome;
       cms.unavailableResources.add('blogs');
       const unavailable = await fetch(`${origin}/blog/article-1/`);
-      assert.equal(unavailable.status, 500, 'CMS failures do not masquerade as successful or missing pages');
+      assert.equal(unavailable.status, 503, 'CMS failures do not masquerade as successful or missing pages');
       assert.ok(!(await unavailable.text()).includes(fixtureToken), 'CMS failure responses omit credentials');
       cms.unavailableResources.clear();
       cms.draft.blogs.push({
@@ -331,13 +328,7 @@ test(
         );
       }
       const previewSitemap = await fetch(`${origin}/sitemap-0.xml`);
-      assert.equal(previewSitemap.status, 200);
-      const previewXml = await previewSitemap.text();
-      assert.ok(!previewXml.includes('draft-new') && !previewXml.includes('renamed-'));
-      assert.ok(
-        previewXml.includes('/blog/article-1/'),
-        'preview sitemap remains the published build artifact',
-      );
+      assert.equal(previewSitemap.status, 404, 'CMS-free preview images do not generate public sitemaps');
       await assertPublicArtifacts(path.join(astroRoot, 'dist'));
       await stop(previewServer);
       const publishedPort = await availablePort();
