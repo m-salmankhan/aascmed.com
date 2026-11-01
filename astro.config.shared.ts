@@ -2,6 +2,10 @@
 import type { AstroUserConfig } from 'astro';
 import { loadEnv } from 'vite';
 import react from '@astrojs/react';
+import { generateNavigationMetrics } from './scripts/generate-navigation-metrics.mjs';
+
+// Run before Vite resolves client modules, for dev, static and compiled SSR builds.
+await generateNavigationMetrics();
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { publishedSitemap } from './src/integrations/sitemap.ts';

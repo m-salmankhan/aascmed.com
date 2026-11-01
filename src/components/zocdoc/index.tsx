@@ -6,7 +6,8 @@ import {breakpointStrings} from "../../styles/breakpoints";
 import {FaIcons, IconStyles} from "../font-awesome";
 import {stylesScreenReaderText} from "../../styles/accessibility";
 
-export const ZocDocURL = "https://www.zocdoc.com/practice/allergy-asthma-and-sinus-centers-3233?lock=true&isNewPatient=false&referrerType=widget";
+import { ZocDocURL } from "../../config/booking.mts";
+export { ZocDocURL } from "../../config/booking.mts";
 
 const resetLinkStyles = css`
     text-decoration: none;

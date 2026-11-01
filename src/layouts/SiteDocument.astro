@@ -1,5 +1,6 @@
 ---
 // Defines the Astro HTML document, shared global styles, metadata, asset links and tracking tags.
+import navigationFont from '../server/media/assets/Poppins-ExtraBold.ttf?url';
 import { Global } from '@emotion/react';
 import { stylesGlobal } from '../styles/global';
 import type { SiteSettings, TrackingSettings } from '../content/models';
@@ -68,6 +69,8 @@ const jsonLd = structuredData ? serializeStructuredData(structuredData) : undefi
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalUrl} />
     {shouldNoIndex && <meta name="robots" content="noindex, nofollow" />}
+    <link rel="preload" href={navigationFont} as="font" type="font/ttf" crossorigin />
+    <style is:inline set:html={`/* Poppins copyright 2020 The Poppins Project Authors. SIL OFL 1.1: /assets/fonts/Poppins-OFL.txt */@font-face{font-family:"AASC Navigation";src:url("${navigationFont}") format("truetype");font-weight:800;font-style:normal;font-display:swap;}`} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;800&display=swap" />

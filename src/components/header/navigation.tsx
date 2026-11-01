@@ -1,406 +1,196 @@
-import React, { ComponentProps, MouseEventHandler, useEffect, useId, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { css } from "@emotion/react";
 import { SiteLink } from "../../navigation/link";
 import { stylesScreenReaderText } from "../../styles/accessibility";
 import { HorizontalLogo, StackedLogo } from "../logo";
 import { FaIcons, IconStyles } from "../font-awesome";
-import { bounceTransition, colours, gridSpacing } from "../../styles/theme";
-import { CSSInterpolation } from "@emotion/serialize";
-import { Global } from "@emotion/react";
-import { breakpointStrings, mediaBreakpoints } from "../../styles/breakpoints";
-import { cols, gridContainer } from "../../styles/grid";
+import { colours } from "../../styles/theme";
 import { useSiteMetadata } from "../../hooks/useSiteMetadata";
-import { ZocDocURL } from "../zocdoc";
+import { navigationItems, navigationSizing } from "./navigation-config.mts";
+import { navigationRowWidthRem, navigationItemWidthsRem } from "./generated-navigation-metrics.mts";
 
-type NavItemProps = ComponentProps<"li"> & {
-  link: string,
-  onLinkClicked?: MouseEventHandler<HTMLAnchorElement>,
-};
-const NavItem: React.FC<NavItemProps> = ({ link, onLinkClicked, children, ...props }) =>
-  <li {...props}>
-    {
-      (link.startsWith(`https://`)) ?
-        <a href={link} target="_BLANK" rel="noreferrer">{children}</a> :
-        <SiteLink href={link} activeClassName={"active"}>{children}</SiteLink>
-    }
-  </li>
-
-
-enum NavigationMenuStates {
-  EXPANDED = "expanding",
-  PRE_COLLAPSING = "pre-collapsing",
-  COLLAPSING = "collapsing",
-  COLLAPSED = "collapsed",
-  PRE_EXPANDING = "pre-expanding",
-  EXPANDING = "expanding",
+function NavigationLinks() {
+  return <>{navigationItems.map(({ href, label }, index) => <li key={href} style={{ width: `${navigationItemWidthsRem[index]}rem` }}>
+    {href.startsWith("https://")
+      ? <a href={href} target="_BLANK" rel="noreferrer">{label}</a>
+      : <SiteLink href={href} activeClassName="active">{label}</SiteLink>}
+  </li>)}</>;
 }
 
 const stylesSkipToMain = css(stylesScreenReaderText, css`
-  display: block;
-  background-color: #fff;
-  color: ${colours.brandPrimary};
-  box-shadow: 0 0 1rem rgba(0, 0, 0, 0.5);
-  border: 1px solid ${colours.brandPrimary};
-  font-weight: bold;
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 1;
-
   &:focus {
-    border: 0;
     clip-path: none;
     height: auto;
+    width: auto;
     margin: 0;
-    overflow: visible;
     padding: 1rem;
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
-    width: auto;
-    word-wrap: normal;
-    outline: none;
+    z-index: 2;
+    background: #fff;
+    color: ${colours.brandPrimary};
   }
 `);
 
-const stylesNav = css(
-  gridContainer(mediaBreakpoints.xl),
-  css`
-      justify-content: space-between;
-      align-items: center;
-    `
-);
+const stylesNavigation = css`
+  container-type: inline-size;
+  &, & * { font-family: "AASC Navigation", Poppins, sans-serif; }
+  font-size: ${navigationSizing.fontSize}rem;
+  line-height: 1.5;
+  /* Match the unhinted font advances measured at build time at any root size. */
+  text-rendering: geometricPrecision;
 
-const stylesToggleButton = css`
-  text-align: center;
-
-  ${breakpointStrings.md} {
-    display: none;
+  nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: ${navigationSizing.headerGap}rem;
   }
 
-  button {
-    font-size: 1rem;
-    text-transform: uppercase;
-    font-weight: bold;
-    border: none;
-    outline: none;
-    background: none;
-    color: white;
-    margin: 1rem auto;
-    cursor: pointer;
-    padding: 0.5rem;
+  .brand {
+    flex: 1 0 ${navigationSizing.logoWidth}rem;
+    max-width: 100%;
+    text-align: center;
+    svg { width: ${navigationSizing.logoWidth}rem; max-width: 100%; fill: #fff; }
+    .stacked { display: block; height: 10rem; margin-inline: auto; }
+    .horizontal { display: none; height: 5rem; }
+    a:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
+  }
 
-    svg {
-      width: 1rem;
-      height: 1rem;
-      fill: #fff;
-      vertical-align: middle;
-      margin-right: 0.5rem;
-      transition: transform 0.5s ease-in-out 0s;
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem ${navigationSizing.linkGap}rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    li {
+      flex: 0 0 auto;
+      width: max-content;
+      max-width: 100%;
+      margin: 0;
+      font-weight: 800;
+      letter-spacing: ${navigationSizing.letterSpacing}rem;
+      overflow-wrap: anywhere;
     }
-
-    &:focus {
-      background: #fff;
-      color: ${colours.brandPrimary};
-
-      svg {
-        fill: ${colours.brandPrimary};
-        transform: rotate(180deg);
-      }
-    }
-  }
-`;
-
-
-const stylesLogoLink = css(
-  cols(3, mediaBreakpoints.xl),
-  css`
-      svg {
-        width: 100%;
-        fill: #fff;
-        transition: transform 1s ${bounceTransition} 0s;
-      }
-    ;
-
-      &:focus, &:active {
-        svg {
-          transform: scale(0.8);
-        }
-      }
-
-      @media screen and (min-width: 0) {
-        padding-left: 0;
-      }
-    `
-);
-
-// only show one logo at a time
-const stylesHorizontalLogo: CSSInterpolation = css`
-  display: none;
-
-  ${breakpointStrings.xl} {
-    display: block;
-    height: 5em;
-  }
-`;
-
-const stylesStackedLogo = css`
-  margin: 0 auto ${gridSpacing}em;
-  display: block;
-
-  ${breakpointStrings.xl} {
-    display: none;
-  }
-`;
-
-const expandedHeight = "60em";
-const stylesNavContainer = cols(9, mediaBreakpoints.xl);
-const stylesNavigationUl = css`
-      padding: 0;
-      margin: 0 auto;
+    a {
+      display: inline-block;
+      width: 100%;
       text-align: center;
-      list-style: none;
-      overflow: hidden;
-      transition: max-height 1s ease-in-out 0s;
-
-      li {
-        font-weight: bold;
-        display: block;
-        letter-spacing: 0.025rem;
-        padding: ${gridSpacing / 4}em 0;
+      padding-block: 0.3125rem;
+      border-bottom: 0.3125rem solid transparent;
+      color: #fff;
+      text-decoration: none;
+      &.active { border-bottom-color: #fff; }
+      &:focus, &:hover, &:active {
+        color: ${colours.infoBlue};
+        background: ${colours.infoYellow};
+        border-bottom-color: ${colours.infoBlue};
       }
+    }
+  }
 
-      a, button {
-        display: inline-block;
-        color: #fff;
-        text-decoration: none;
-        background: transparent;
-        border: none;
-        border-bottom: 5px solid transparent;
-        vertical-align: middle;
-        padding: 5px 0;
+  .desktop-links { display: none; }
+  .mobile-menu { width: 100%; }
+  .mobile-menu ul { flex-direction: column; margin-top: 0.5rem; text-align: center; }
+  summary {
+    list-style: none;
+    cursor: pointer;
+    width: max-content;
+    margin-inline: auto;
+    padding: 0.5rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #fff;
+    svg { width: 1rem; height: 1rem; fill: currentColor; vertical-align: middle; margin-right: 0.5rem; }
+    &:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  }
+  summary::-webkit-details-marker { display: none; }
 
-        &.active, &.active:hover {
-          border-bottom: 5px solid white;
-        }
-
-        &:focus, &:hover, &:active {
-          outline: none;
-          border: none;
-          color: ${colours.infoBlue};
-          background: ${colours.infoYellow};
-          border-bottom: 5px solid ${colours.infoBlue};
-          text-decoration: none;
-        }
-      }
-
-      ${breakpointStrings.md} {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 0.25em ${gridSpacing / 2}em;
-        margin: 0;
-
-        li {
-          padding: 0;
-          white-space: nowrap;
-        }
-      }
-
-      ${breakpointStrings.xl} {
-        justify-content: flex-end;
-        padding-right: 0;
-      }
-
-      // Reset max-height so all content is visible
-      &.${NavigationMenuStates.EXPANDED} {
-        max-height: initial;
-      }
-
-      // Reset max-height so all content is visible
-      &.${NavigationMenuStates.PRE_COLLAPSING} {
-        max-height: ${expandedHeight};
-      }
-
-      // Change max-height to animate collapse
-      &.${NavigationMenuStates.COLLAPSING} {
-        max-height: 0;
-      }
-
-      // Hide from screen readers when animation complete
-      &.${NavigationMenuStates.COLLAPSED} {
-        display: none;
-        // Don't hide if screen size large
-        ${breakpointStrings.md} {
-          display: flex;
-        }
-      }
-
-      // Add max-height 0 again so that the transition can occur
-      &.${NavigationMenuStates.PRE_EXPANDING} {
-        max-height: 0;
-
-        // Don't change max-height on big screens
-        // This isn't really needed though; it will never be that big on horizontal layout
-        ${breakpointStrings.md} {
-          max-height: initial;
-        }
-      }
-
-      // Change max-height to animate expansion
-      &.${NavigationMenuStates.EXPANDING} {
-        max-height: ${expandedHeight};
-
-        // Don't change max-height on big screens
-        // This isn't really needed though; it will never be that big on horizontal layout
-        ${breakpointStrings.md} {
-          max-height: initial;
-        }
-      }
+  /* Both sides of this boundary use the same generated width. No hydration
+     state or font-load handler can choose a different initial layout. */
+  @container (min-width: ${navigationRowWidthRem}rem) {
+    .brand {
+      .stacked { display: none; }
+      .horizontal { display: inline-block; vertical-align: middle; }
+    }
+    .desktop-links {
+      display: flex;
+      flex: 0 0 auto;
+      width: ${navigationRowWidthRem}rem;
+      max-width: 100%;
+      margin-inline: auto;
+    }
+    .mobile-menu { display: none; }
+  }
 `;
 
 interface NavigationProps {
-  frontPage: boolean,
-  className?: string,
+  frontPage: boolean;
+  className?: string;
 }
 
-export const Navigation: React.FC<NavigationProps> = ({ frontPage, className }) => {
+/** Render CSS-first navigation with a generated content-width query and native menu.
+ * JavaScript only restores keyboard focus and resets an open menu across resize.
+ */
+export function Navigation({ frontPage, className }: NavigationProps) {
   const { title } = useSiteMetadata();
-  const [collapsedState, setCollapsedState] = useState(NavigationMenuStates.COLLAPSED);
-  const listId = useId();
-  const listRef = useRef<HTMLUListElement | null>(null);
-  const [jsEnabled, setJSEnabled] = useState(false);
+  const navRef = useRef<HTMLElement>(null);
+  const detailsRef = useRef<HTMLDetailsElement>(null);
+  const desktopRef = useRef<HTMLUListElement>(null);
 
-  // set JSEnabled to true
   useEffect(() => {
-    setJSEnabled(true);
-  }, [setJSEnabled]);
+    const nav = navRef.current;
+    const details = detailsRef.current;
+    const desktop = desktopRef.current;
+    if (!nav || !details || !desktop) return;
+    let mobile = getComputedStyle(details).display !== "none";
+    // CSS can hide a focused control before ResizeObserver runs and the browser
+    // then reports body as active. Remember focus so it can move to a visible link.
+    let focused = nav.contains(document.activeElement) ? document.activeElement : null;
+    const rememberFocus = (event: FocusEvent) => {
+      focused = event.target instanceof Element && nav.contains(event.target) ? event.target : null;
+    };
+    document.addEventListener("focusin", rememberFocus);
+    const observer = new ResizeObserver(() => {
+      const nextMobile = getComputedStyle(details).display !== "none";
+      if (nextMobile === mobile) return;
+      if (nextMobile && desktop.contains(focused)) details.querySelector("summary")?.focus();
+      if (!nextMobile) {
+        if (details.contains(focused)) desktop.querySelector("a")?.focus();
+        details.open = false;
+      }
+      mobile = nextMobile;
+    });
+    observer.observe(nav);
+    return () => {
+      observer.disconnect();
+      document.removeEventListener("focusin", rememberFocus);
+    };
+  }, []);
 
-  // progress the state after adding necessary styles for transition to occur
-  // These do not result in a transition event so the state must be forwarded here
-  useEffect(() => {
-    if (collapsedState === NavigationMenuStates.PRE_EXPANDING) {
-      setCollapsedState(NavigationMenuStates.EXPANDING);
-      return;
-    }
-
-    if (collapsedState === NavigationMenuStates.PRE_COLLAPSING) {
-      setCollapsedState(NavigationMenuStates.COLLAPSING);
-      return;
-    }
-  }, [collapsedState, setCollapsedState]);
-
-  const transitionEndHandler = () => {
-    switch (collapsedState) {
-      // This doesn't case a transition so there is no handler
-      case NavigationMenuStates.COLLAPSED:
-        break
-
-      // This doesn't case a transition so there is no handler
-      case NavigationMenuStates.EXPANDED:
-        break
-
-      // This doesn't case a transition so there is no handler
-      case NavigationMenuStates.PRE_EXPANDING:
-        break
-
-      // This doesn't case a transition so there is no handler
-      case NavigationMenuStates.PRE_COLLAPSING:
-        break
-
-      case NavigationMenuStates.EXPANDING:
-        setCollapsedState(NavigationMenuStates.EXPANDED);
-        break
-
-      case NavigationMenuStates.COLLAPSING:
-        setCollapsedState(NavigationMenuStates.COLLAPSED);
-        break
-    }
-  };
-
-  const toggleMenu = () => {
-    switch (collapsedState) {
-      case NavigationMenuStates.EXPANDED:
-        setCollapsedState(NavigationMenuStates.PRE_COLLAPSING);
-        break
-
-      // temporary state; changed immediately in useEffect()
-      case NavigationMenuStates.PRE_COLLAPSING:
-        break
-
-      case NavigationMenuStates.COLLAPSING:
-        setCollapsedState(NavigationMenuStates.EXPANDING);
-        break
-
-      case NavigationMenuStates.COLLAPSED:
-        setCollapsedState(NavigationMenuStates.PRE_EXPANDING);
-        break
-
-      // temporary state; changed immediately in useEffect()
-      case NavigationMenuStates.PRE_EXPANDING:
-        break
-
-      case NavigationMenuStates.EXPANDING:
-        setCollapsedState(NavigationMenuStates.COLLAPSING);
-        break
-
-    }
-  }
-
-  return (
-    <div className={className}>
-      <a css={stylesSkipToMain} href="#main">Skip to main content</a>
-      <nav css={stylesNav}>
-        <SiteLink css={stylesLogoLink} href="/">
-          <HorizontalLogo css={stylesHorizontalLogo} />
-          <StackedLogo css={stylesStackedLogo} />
-          {(frontPage) ?
-            <h1 css={stylesScreenReaderText}>{title}</h1> :
-            <span css={stylesScreenReaderText}>{title}</span>
-          }
-        </SiteLink>
-
-        <div className={"js-only"} css={stylesNavContainer}>
-          <div css={css(stylesToggleButton)}>
-            <button aria-expanded={collapsedState !== NavigationMenuStates.COLLAPSED}
-              onClick={toggleMenu} aria-controls={listId}>
-              <FaIcons iconStyle={IconStyles.SOLID} icon="bars" />
-              Menu
-            </button>
-          </div> 
-
-          <ul className={collapsedState} id={listId} ref={listRef} css={stylesNavigationUl}
-            onTransitionEnd={transitionEndHandler}
-            aria-hidden={collapsedState === NavigationMenuStates.COLLAPSED}>
-            <NavItem link="/conditions/">Patient Education</NavItem>
-            <NavItem link="/providers/">Our Team</NavItem>
-            <NavItem link="/clinics/">Locations</NavItem>
-            <NavItem link="/blog/">Blog</NavItem>
-            <NavItem link="https://allercorehealth.com/">AllerCore Health</NavItem>
-            <NavItem link="https://login.patientfusion.com">Patient Portal</NavItem>
-            <NavItem link={ZocDocURL}>Bookings</NavItem>
-            <NavItem link="/contact/">Contact</NavItem>
-          </ul>
-        </div>
-
-        <noscript css={stylesNavContainer}>
-          <Global styles={css`
-            .js-only {
-              display: none;
-            }
-          `} />
-          <ul className={NavigationMenuStates.EXPANDED} id={listId} ref={listRef} css={stylesNavigationUl}>
-            <NavItem link="/conditions/">Patient Education</NavItem>
-            <NavItem link="/providers/">Our Team</NavItem>
-            <NavItem link="/clinics/">Locations</NavItem>
-            <NavItem link="https://allercorehealth.com/">AllerCore Health</NavItem>
-            <NavItem link="https://login.patientfusion.com">Patient Portal</NavItem>
-            <NavItem link={ZocDocURL}>Bookings</NavItem>
-            <NavItem link="/contact/">Contact</NavItem>
-          </ul>
-        </noscript>
-
-      </nav>
-    </div>
-  )
+  return <div css={stylesNavigation} className={className}>
+    <a css={stylesSkipToMain} href="#main">Skip to main content</a>
+    <nav ref={navRef} aria-label="Main navigation">
+      <div className="brand"><SiteLink href="/">
+        <HorizontalLogo className="horizontal" />
+        <StackedLogo className="stacked" />
+        {frontPage ? <h1 css={stylesScreenReaderText}>{title}</h1> : <span css={stylesScreenReaderText}>{title}</span>}
+      </SiteLink></div>
+      <ul ref={desktopRef} className="desktop-links"><NavigationLinks /></ul>
+      <details ref={detailsRef} className="mobile-menu" suppressHydrationWarning onKeyDown={event => {
+        if (event.key === "Escape") {
+          event.currentTarget.open = false;
+          event.currentTarget.querySelector("summary")?.focus();
+        }
+      }}>
+        <summary><FaIcons iconStyle={IconStyles.SOLID} icon="bars" />Menu</summary>
+        <ul><NavigationLinks /></ul>
+      </details>
+    </nav>
+  </div>;
 }

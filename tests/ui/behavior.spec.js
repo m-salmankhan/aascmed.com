@@ -103,16 +103,17 @@ test("booking dismiss works by keyboard and the booking CTA hands off to Zocdoc"
 
 test("responsive menu opens, closes and supports keyboard navigation", async ({ page, baseURL }) => {
   await preparePage(page, baseURL);
-  const menu = page.getByRole("button", { name: "Menu", exact: true });
+  const menu = page.locator(".mobile-menu > summary");
+  const nativeMenu = page.locator(".mobile-menu");
   if (await menu.isVisible()) {
     await menu.click();
-    await expect(menu).toHaveAttribute("aria-expanded", "true");
+    await expect(nativeMenu).toHaveAttribute("open", "");
     await menu.click();
-    await expect(menu).toHaveAttribute("aria-expanded", "false");
+    await expect(nativeMenu).not.toHaveAttribute("open");
     await menu.click();
-    await expect(menu).toHaveAttribute("aria-expanded", "true");
+    await expect(nativeMenu).toHaveAttribute("open", "");
   }
-  const contact = page.locator('nav a[href="/contact/"]').first();
+  const contact = page.locator('nav a[href="/contact/"]:visible').first();
   await contact.focus();
   await contact.press("Enter");
   await expect(page).toHaveURL(new URL("/contact/", baseURL).href);
@@ -202,7 +203,9 @@ test.describe("without JavaScript", () => {
     const response = await page.goto(new URL("/conditions/", baseURL).href);
     expect(response.status()).toBe(200);
     await expect(page.locator("#main")).not.toHaveText("");
-    const team = page.locator('noscript a[href="/providers/"]').first();
+    const nativeMenu = page.locator('.mobile-menu');
+    if (await nativeMenu.isVisible()) await nativeMenu.locator('summary').click();
+    const team = page.locator('nav a[href="/providers/"]:visible').first();
     await expect(team).toBeVisible();
     await team.click();
     await expect(page).toHaveURL(new URL("/providers/", baseURL).href);

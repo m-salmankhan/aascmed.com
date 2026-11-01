@@ -152,6 +152,10 @@ published artifacts for draft content and credentials. The runtime check verifie
 that Astro and shared UI resolve one React/Emotion installation. Temporary page
 fixtures are removed after each test.
 
+`node --test tests/integration/navigation-layout.test.mjs` serves both static and SSR builds. It compares navigation, link and main-content bounds before the local navigation font loads, after font loading and after delayed hydration. It covers JavaScript enabled/disabled, 16/24/32px roots, five viewport widths, 200% zoom-equivalent viewport/DPR geometry, enlarged text, native keyboard toggles, reduced motion, Escape and focus across resize. This verifies first-render stability rather than only the settled layout.
+
+Navigation labels and relative sizing live in `src/components/header/navigation-config.mts`. Astro configuration automatically runs `scripts/generate-navigation-metrics.mjs` before dev, static and SSR builds. It shapes the bundled Poppins font with the existing Canvas dependency and emits the imported menu/individual-link widths in rem, including a small shaping allowance. Browser CSS uses matching geometric font rendering; intrinsic flex layout chooses right/centered placement and the generated container query selects the native hamburger. No browser download is required for generation, and no client measurement chooses layout. Restart the dev server after changing measurement inputs; builds always regenerate them.
+
 Harness self-tests are separate from source tests. Run the Node checks for route,
 target, visual-comparison and review-publication helpers with
 `yarn test:infrastructure:node`; run the browser harness checks with

@@ -106,21 +106,22 @@ test(
         'page',
       );
       await openHydrated(page, `${origin}/contact/`);
-      const toggle = page.getByRole('button', { name: 'Menu', exact: true });
-      await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+      const toggle = page.locator('.mobile-menu > summary');
+      const nativeMenu = page.locator('.mobile-menu');
+      await expect(nativeMenu).not.toHaveAttribute('open');
       await toggle.click();
-      await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+      await expect(nativeMenu).toHaveAttribute('open', '');
       await page.locator('nav').getByRole('link', { name: 'Blog', exact: true }).click();
       await page.waitForURL('**/blog/');
       await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
       await expect(
-        page.locator('nav').getByRole('link', { name: 'Blog', exact: true, includeHidden: true }),
+        page.locator('.mobile-menu a[href="/blog/"]'),
       ).toHaveAttribute('aria-current', 'page');
       await openHydrated(page, `${origin}/contact/`);
       await toggle.click();
-      await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+      await expect(nativeMenu).toHaveAttribute('open', '');
       await toggle.click();
-      await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+      await expect(nativeMenu).not.toHaveAttribute('open');
       const notice = page.locator('aside').filter({ hasText: 'PUBLISHED ANNOUNCEMENT' });
       await expect(notice).toBeVisible();
       await notice.getByRole('button', { name: 'Close', exact: true }).click();
