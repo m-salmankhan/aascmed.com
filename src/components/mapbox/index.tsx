@@ -5,6 +5,8 @@ export interface MapBoxProps {
     label: string
     alt?: string
     width?: number
+    /** Responsive image widths for static maps, including layout breakpoints. */
+    sizes?: string
     inView?: boolean
     zoom: number
 }

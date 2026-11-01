@@ -1,4 +1,4 @@
-import { css, Global } from "@emotion/react"
+import { css } from "@emotion/react"
 import { useState, useId, useRef, useEffect } from "react"
 import { MapBoxProps } from "."
 import { usePublicConfig } from "../../config/public-context";
@@ -27,7 +27,7 @@ const stylesStaticMap = css`
 
   &.noscript {
     img.init {
-        display: none;
+        visibility: hidden;
     }
   }
   
@@ -83,7 +83,7 @@ export const StaticMap: React.FC<MapBoxProps> = (props) => {
     useEffect(() => {
         if (!imageRef.current) return;
 
-        if (imageRef.current.complete) {
+        if (imageRef.current.complete && imageRef.current.naturalWidth > 0) {
             unBlurImage();
         }
     }, [imageRef, unBlurImage]);
@@ -110,24 +110,24 @@ export const StaticMap: React.FC<MapBoxProps> = (props) => {
             ${mapSrc({ ...baseParameters, width: 400, height: 267 })} 400w,
             ${mapSrc({ ...baseParameters, width: 400, height: 267, retina: true })} 800w,
             ${mapSrc({ ...baseParameters, width: 600, height: 400, retina: true })} 1200w, `,
-        sizes: `min-width(60em) ${props.width}vw, 90vw`,
+        sizes: props.sizes ?? `(min-width: 60em) ${props.width ?? 90}vw, 90vw`,
     }
 
     return (
         <div className={props.className + " noscript"} css={css(stylesStaticMap)}>
             <noscript>
                 <div className="lazy-container">
-                    <img alt={props.alt} className={`map ${ImageState.COMPLETED}`} src={image.src} srcSet={image.srcset} sizes={image.sizes} />
+                    <img loading="lazy" decoding="async" alt={props.alt} className={`map ${ImageState.COMPLETED}`} src={image.src} srcSet={image.srcset} sizes={image.sizes} />
                 </div>
             </noscript>
             <div id={id} className={`lazy-container`}>
                 {
                     (props.inView === undefined ? true : props.inView) &&
-                    <img ref={imageRef} onLoad={unBlurImage} className={`map ${loaded}`} src={image.src} srcSet={image.srcset} alt={props.alt} sizes={image.sizes} />
+                    <img loading="lazy" decoding="async" ref={imageRef} onLoad={unBlurImage} className={`map ${loaded}`} src={image.src} srcSet={image.srcset} alt={props.alt} sizes={image.sizes} />
                 }
                 {
                     loaded !== ImageState.COMPLETED &&
-                    <img className={`lazy-preview ${loaded}`} src={previewSrc} alt={props.alt} onTransitionEnd={removePreviewImg} />
+                    <img loading="lazy" decoding="async" className={`lazy-preview ${loaded}`} src={previewSrc} alt={props.alt} onTransitionEnd={removePreviewImg} />
                 }
             </div>
         </div>

@@ -7,6 +7,16 @@ import { SiteLink } from "../../navigation/link";
 import { Thumbnail } from "../thumbnails";
 import { IconStyles } from "../font-awesome";
 import { MapBoxProps } from "../mapbox";
+import { contentMaxWidth, gridSpacing } from "../../styles/theme";
+
+// Include the archive's negative margins, then subtract each card's grid padding.
+// This also safely covers the slightly narrower homepage row without negative margins.
+const practiceMapRowWidth = `calc(min(${contentMaxWidth}, calc(100vw - 2 * clamp(1rem, 3vw, 3rem))) + ${gridSpacing}rem)`;
+const practiceMapSizes = [
+    `(min-width: ${mediaBreakpoints.lg}em) calc(${practiceMapRowWidth} / 4 - ${gridSpacing}rem)`,
+    `(min-width: ${mediaBreakpoints.md}em) calc(${practiceMapRowWidth} / 2 - ${gridSpacing}rem)`,
+    `calc(${practiceMapRowWidth} - ${gridSpacing}rem)`,
+].join(", ");
 
 export interface PracticeSummary {
     slug: string,
@@ -53,7 +63,7 @@ const PracticeArchiveListItem: React.FC<PracticeListItemProps> = ({ className, p
         label: practice.clinic_name,
         zoom: 16,
         inView: inView,
-        width: 15,
+        sizes: practiceMapSizes,
     }
     return (
         <li className={className} css={stylesPracticeArchiveListItem}>

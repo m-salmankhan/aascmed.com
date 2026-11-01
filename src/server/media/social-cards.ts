@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 /** Route families that have branded social cards. */
 export type SocialCardKind = 'blog' | 'conditions' | 'clinics';
 
-/** Clinic coordinates used to request the background map. */
+/** Clinic coordinates retained for stable public card URLs. */
 export interface MapLocation {
   latitude: number;
   longitude: number;
@@ -35,7 +35,6 @@ export interface PublicImageBuildOptions {
   publicDir: string;
   cacheDir: string;
   fetch?: typeof fetch;
-  mapboxToken?: string;
   /** Approved CMS/CDN origins, including protocol and any custom port. */
   allowedMediaOrigins?: string[];
 }
@@ -166,48 +165,25 @@ export function socialCardPath(entry: SocialCardEntry): string {
     : basenameFromSource(entry.backgroundImage)));
   return `/og-images/${entry.kind}/${[...segments.slice(0, -1), `${segments.at(-1)}-${name}.jpg`].join('/')}`;
 }
-/** Construct the Mapbox static-map request used for a clinic card.
- * @param latitude Clinic latitude in degrees, between -90 and 90.
- * @param longitude Clinic longitude in degrees, between -180 and 180.
- * @param token Public Mapbox token used only on this build-time request.
- * @returns The static-map request URL; callers must not serialize it.
- */
-function mapboxStaticUrl(latitude: number, longitude: number, token: string): string {
-  if (
-    !Number.isFinite(latitude) ||
-    latitude < -90 ||
-    latitude > 90 ||
-    !Number.isFinite(longitude) ||
-    longitude < -180 ||
-    longitude > 180
-  ) {
-    throw new Error('Clinic map coordinates are invalid');
-  }
-  const marker = `pin-l+1C5E38(${longitude},${latitude})`;
-  return `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/static/${marker}/${longitude},${latitude},18/${WIDTH}x${HEIGHT}@2x?access_token=${encodeURIComponent(token)}`;
-}
 /** Read and validate a local image or an allowlisted remote image with a bounded response body.
  * @param source Local file path or remote image URL.
  * @param fetcher Fetch implementation used for remote requests, including deterministic fixtures.
  * @param [allowedMediaOrigins=[]] Exact HTTP(S) origins accepted for CMS media, including any configured port.
- * @param [allowMapbox=false] Whether this request came from a generated clinic-map URL.
  * @returns Validated image bytes accepted by Sharp.
  */
 async function fetchImage(
   source: string,
   fetcher: typeof fetch,
   allowedMediaOrigins: string[] = [],
-  allowMapbox = false,
 ): Promise<Buffer> {
   let bytes: Buffer;
   if (/^[a-z][a-z0-9+.-]*:\/\//i.test(source)) {
     const url = new URL(source);
     const hostname = url.hostname.toLowerCase();
     const isLoopback = ['localhost', '127.0.0.1', '[::1]'].includes(hostname);
+    // Mapbox images stay on Mapbox; never bake them into local social cards.
     const hostIsAllowed =
-      (url.origin === 'https://api.mapbox.com' && allowMapbox) ||
-      (hostname !== 'api.mapbox.com' &&
-        allowedMediaOrigins.includes(url.origin));
+      hostname !== 'api.mapbox.com' && allowedMediaOrigins.includes(url.origin);
     if (!hostIsAllowed) {
       throw new Error(`Remote image host is not allowed: ${hostname}`);
     }
@@ -462,26 +438,13 @@ export async function buildSocialCards(
     outputPaths.add(absoluteOutputPath);
     const cacheKey = `${kind}:${slug}:${mediaName}`;
     let mediaBytes: Buffer | undefined;
-    const mapLocation = entry.mapLocation;
-    const mapboxToken = options.mapboxToken;
-    const isMapboxMap =
-      !entry.backgroundImage && !!mapLocation && !!mapboxToken;
-    const backgroundImage =
-      entry.backgroundImage ||
-      (isMapboxMap && mapLocation && mapboxToken
-        ? mapboxStaticUrl(
-            mapLocation.latitude,
-            mapLocation.longitude,
-            mapboxToken,
-          )
-        : undefined);
+    const backgroundImage = entry.backgroundImage;
     if (backgroundImage) {
       try {
         mediaBytes = await fetchImage(
           backgroundImage,
           fetcher,
           options.allowedMediaOrigins,
-          isMapboxMap,
         );
       } catch {
         /* Missing media uses the branded fallback. */

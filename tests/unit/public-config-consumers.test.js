@@ -29,3 +29,16 @@ test("the contact client uses its explicitly supplied runtime API", async () => 
   finally { global.fetch = original; }
   assert.equal(url, "https://runtime.example/contact/");
 });
+
+test("static maps use caller sizes in both the main image and no-JavaScript fallback", () => {
+  const sizes = "(min-width: 90em) 300px, (min-width: 60em) 600px, 90vw";
+  const html = renderToStaticMarkup(React.createElement(StaticMap, {
+    label: "Aurora", latitude: 1, longitude: 2, zoom: 10, width: 15, sizes,
+  }));
+  const maps = html.match(/<img\b[^>]*class="map [^"]*"[^>]*>/g);
+  assert.equal(maps.length, 2);
+  for (const map of maps) {
+    assert.ok(map.includes(`sizes="${sizes}"`));
+    assert.ok(map.includes('loading="lazy"'));
+  }
+});

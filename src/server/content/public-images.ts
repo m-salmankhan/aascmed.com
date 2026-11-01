@@ -98,9 +98,9 @@ export async function buildPublishedSocialCards(
   return buildSocialCards(entries(), options);
 }
 
-/** Return Mapbox coordinates only when both normalized values are numeric.
- * @param clinic Published clinic whose location can supply a social-card map.
- * @returns Coordinates for a map card, or undefined when the record has no complete location.
+/** Retain clinic coordinates in existing social-card URLs without downloading a map.
+ * @param clinic Published clinic whose location identifies its existing social-card URL.
+ * @returns Coordinates for the card URL, or undefined when the record has no complete location.
  */
 function clinicMapLocation(clinic: ClinicRecord): MapLocation | undefined {
   const latitude = clinic.location?.latitude;

@@ -185,7 +185,6 @@ test('shared social cards preserve paths, orientation, cache keys and remote-fet
         .then(({ width, height }) => [width, height]),
       [1200, 630],
     );
-    const mapboxToken = 'pk-fixture-not-for-output';
     let mapboxCalledForMap = false;
     const mapCard = await buildSocialCards(
       [
@@ -199,34 +198,22 @@ test('shared social cards preserve paths, orientation, cache keys and remote-fet
       {
         publicDir,
         cacheDir,
-        mapboxToken,
-        fetch: async (input) => {
-          const url = new URL(String(input));
-          mapboxCalledForMap =
-            url.hostname === 'api.mapbox.com' &&
-            url.searchParams.get('access_token') === mapboxToken;
-          return new Response(await readFile(sourcePath), {
-            headers: { 'content-type': 'image/svg+xml' },
-          });
+        fetch: async () => {
+          mapboxCalledForMap = true;
+          throw new Error('unexpected build-time map request');
         },
       },
     );
     assert.equal(
       mapboxCalledForMap,
-      true,
-      'only generated clinic map assets may use the fixed Mapbox host',
-    );
-    assert.equal(
-      (await readFile(mapCard[0].outputPath)).includes(
-        Buffer.from(mapboxToken),
-      ),
       false,
+      'clinic social cards use the branded fallback without downloading Mapbox imagery',
     );
-    assert.equal(
-      (
-        await readFile(path.join(cacheDir, 'social-cards.json'), 'utf8')
-      ).includes(mapboxToken),
-      false,
+    assert.deepEqual(
+      await sharp(mapCard[0].outputPath)
+        .metadata()
+        .then(({ width, height }) => [width, height]),
+      [1200, 630],
     );
     let arbitraryMapboxFetch = false;
     const arbitraryMapboxCard = await buildSocialCards(
@@ -241,6 +228,7 @@ test('shared social cards preserve paths, orientation, cache keys and remote-fet
       {
         publicDir,
         cacheDir,
+        allowedMediaOrigins: ['https://api.mapbox.com'],
         fetch: async () => {
           arbitraryMapboxFetch = true;
           throw new Error('unexpected fetch');
@@ -250,7 +238,7 @@ test('shared social cards preserve paths, orientation, cache keys and remote-fet
     assert.equal(
       arbitraryMapboxFetch,
       false,
-      'arbitrary CMS URLs cannot use the Mapbox host',
+      'Mapbox imagery is never downloaded even if its origin is allowlisted',
     );
     assert.equal(arbitraryMapboxCard[0].wasCached, false);
     const configuredOrigin = 'https://cms.example.test:8443';
@@ -306,7 +294,7 @@ test('shared social cards preserve paths, orientation, cache keys and remote-fet
       'an unconfigured port must never be requested',
     );
     console.log(
-      'Public image fixtures passed: deterministic social-card bytes, cache behavior, safe paths, private cache placement, and Mapbox token isolation.',
+      'Public image fixtures passed: deterministic social-card bytes, cache behavior, safe paths, private cache placement, and no build-time Mapbox downloads.',
     );
   } finally {
     await rm(root, { recursive: true, force: true });
