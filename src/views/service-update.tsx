@@ -16,8 +16,8 @@ import {
   PrimaryButton,
   stylesBtnSecondary,
   stylesButton,
+  stylesButtonGroup,
 } from '../components/buttons';
-import { gridSpacing } from '../styles/theme';
 import { StrapiBlocksRenderer } from '../components/strapi/blocks-renderer';
 import { SiteLink } from '../navigation/link';
 import type { ServiceUpdateRecord } from '../content/models';
@@ -64,19 +64,18 @@ export function ServiceUpdateView({ serviceUpdate, pathname }: ServiceUpdateView
           <Columns>
             <MainCol>
               {serviceUpdate.body && <StrapiBlocksRenderer content={serviceUpdate.body as any[]} />}
-              <footer>
+              <footer css={stylesButtonGroup}>
                 {jsEnabled ? (
                   <PrimaryButton
                     onClick={() => {
                       history.back();
                       return false;
                     }}
-                    css={{ marginRight: gridSpacing / 2 + 'em' }}
                   >
                     Go back
                   </PrimaryButton>
                 ) : (
-                  <PrimaryAnchor css={{ marginRight: gridSpacing / 2 + 'em' }} href="/">
+                  <PrimaryAnchor href="/">
                     Return to home
                   </PrimaryAnchor>
                 )}

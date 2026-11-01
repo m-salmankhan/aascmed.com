@@ -2,7 +2,7 @@ import React, { ReactNode } from "react";
 import {
     PrimaryAnchor, SecondaryAnchor,
     stylesBtnSecondary,
-    stylesButton
+    stylesButton, stylesButtonGroup
 } from "../buttons";
 import { SiteLink } from "../../navigation/link";
 import { colours, gridSpacing } from "../../styles/theme";
@@ -17,7 +17,7 @@ interface ShortCodeProps {
     className?: string,
 }
 
-const stylesButtonList = css({
+const stylesButtonList = css(stylesButtonGroup, {
     margin: `${gridSpacing / 2}em 0`,
 });
 
@@ -29,15 +29,11 @@ const stylesFAQBtn = css({
     }
 });
 
-const stylesContactBtn = css({
-    margin: `${gridSpacing / 2}em`
-});
-
 export const ButtonList: React.FC<ShortCodeProps> = ({ className, children }) =>
     <nav className={className} css={stylesButtonList}>
         {children}
         <PrimaryAnchor href={"#faq"} css={stylesFAQBtn}>Skip to FAQ</PrimaryAnchor>
-        <SiteLink css={[stylesButton, stylesBtnSecondary, stylesContactBtn]} href={"/contact/"}>Get in Touch</SiteLink>
+        <SiteLink css={[stylesButton, stylesBtnSecondary]} href={"/contact/"}>Get in Touch</SiteLink>
         <SecondaryAnchor href={ZocDocURL} target={"_BLANK"} rel={"noopener"}>Book online with ZocDoc</SecondaryAnchor>
     </nav>
 
@@ -51,8 +47,10 @@ export const ContactBanner: React.FC<ShortCodeProps> = ({ className, children })
         description={"If you have any questions, get in touch with us! You can contact us by telephone on (815) 729 9900 or by email at info@aascmed.com. Or you can fill in our contact form."}
     >
         {children}
-        <SiteLink css={[stylesButton, stylesBtnSecondary, { marginRight: `${gridSpacing / 2}em` }]} href={"/contact/"}>Contact Us</SiteLink>
-        <SecondaryAnchor href={ZocDocURL} target="_BLANK" rel="noopener">Book online with ZocDoc</SecondaryAnchor>
+        <nav css={stylesButtonGroup} aria-label="Contact and booking">
+            <SiteLink css={[stylesButton, stylesBtnSecondary]} href={"/contact/"}>Contact Us</SiteLink>
+            <SecondaryAnchor href={ZocDocURL} target="_BLANK" rel="noopener">Book online with ZocDoc</SecondaryAnchor>
+        </nav>
     </CalloutBanner>
 
 const stylesInfoNotice: CSSInterpolation = {
