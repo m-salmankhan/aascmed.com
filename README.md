@@ -4,7 +4,7 @@ Astro is the default application at the repository root. Public deployments are 
 
 ## Install and run
 
-Use Node 22.23.4 or newer (see `.node-version`) and Yarn 1.22.22:
+Use the latest Node 22.x release (see `.node-version`; the application requires at least 22.23.4) and Yarn 1.22.22:
 
 ```sh
 yarn install --frozen-lockfile
@@ -15,6 +15,8 @@ yarn preview
 ```
 
 `yarn build` writes the public site to `dist/`. Netlify uses the committed `netlify.toml`: **build command `yarn build`, publish directory `dist`, base directory empty/repository root**. Set `STRAPI_API_URL`, `STRAPI_TOKEN`, `PUBLIC_RUNTIME_API_BASE_URL` and `PUBLIC_MAPBOX_API_KEY` in the relevant Netlify build context. `ASTRO_CONTENT_MODE` defaults to published; do not set it to draft for public deployments. See [the complete environment inventory](docs/environment-variables.md).
+
+Netlify and CI use the major version in `.node-version`, automatically selecting current 22.x releases rather than a fixed patch. CI checks for the latest matching release.
 
 Netlify explicitly preserves Astro image assets and both social-card cache directories through the local plugin in `netlify/plugins/image-cache`. The first build may be cold; subsequent cache restoration and image reuse are reported in build logs. See [image-cache behavior and troubleshooting](src/server/media/README.md#netlify-build-cache).
 

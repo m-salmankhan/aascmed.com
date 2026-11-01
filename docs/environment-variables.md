@@ -19,7 +19,7 @@ The removed Gatsby variables (`GATSBY_STRAPI_API_URL`, `GATSBY_API_BASE_URL`, `G
 ## Optional tools and process settings
 
 - `HOST` and `PORT`: compiled Node SSR listen settings. For a local check, use `HOST=127.0.0.1` and a free port. The default adapter settings otherwise apply; these do not secure the server.
-- `NODE_ENV` and `NODE_OPTIONS`: normally supplied by commands/hosting; optional Node mode/memory tuning. Netlify's `NODE_VERSION=22.23.4` is pinned in `netlify.toml` and `.node-version` records the minimum local runtime.
+- `NODE_ENV` and `NODE_OPTIONS`: normally supplied by commands/hosting; optional Node mode/memory tuning. Netlify and CI read `.node-version` (`22`), which selects current Node 22.x releases without a patch pin. CI explicitly checks for the latest matching release. The `package.json` engine range keeps the required minimum (22.23.4); it does not pin the installed version.
 - Historical `scripts/migrate-*.js` commands use `STRAPI_URL` (default `http://localhost:1337`) and an appropriately scoped `STRAPI_TOKEN`. These commands write CMS content and are not deployment steps. Optional `DEBUG` enables verbose conditions/providers logging; any nonempty `SKIP_FAQ` skips FAQ import for conditions.
 - Manual browser regression comparisons need `UI_BASE_URL` and distinct matched-content `UI_REFERENCE_URL`; optional `UI_SITEMAP_PATH` defaults to `/sitemap-index.xml`.
 
