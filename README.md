@@ -16,6 +16,8 @@ yarn preview
 
 `yarn build` writes the public site to `dist/`. Netlify uses the committed `netlify.toml`: **build command `yarn build`, publish directory `dist`, base directory empty/repository root**. Set `STRAPI_API_URL`, `STRAPI_TOKEN`, `PUBLIC_RUNTIME_API_BASE_URL` and `PUBLIC_MAPBOX_API_KEY` in the relevant Netlify build context. `ASTRO_CONTENT_MODE` defaults to published; do not set it to draft for public deployments. See [the complete environment inventory](docs/environment-variables.md).
 
+Netlify explicitly preserves Astro image assets and both social-card cache directories through the local plugin in `netlify/plugins/image-cache`. The first build may be cold; subsequent cache restoration and image reuse are reported in build logs. See [image-cache behavior and troubleshooting](src/server/media/README.md#netlify-build-cache).
+
 Review this branch's Netlify deploy preview before merging. The repository configuration takes effect for the branch, while the live main deployment remains unchanged until it is promoted. Check any Netlify UI context overrides and remove old Gatsby build plugins/settings if still configured there. The public publish/unpublish build webhook is a separate CMS/hosting integration and must be preserved; this source change does not reconfigure it. Keep the previous immutable public deployment available for rollback. If rolling back to a pre-removal commit, restore its Gatsby build command/output and retained Gatsby environment settings as well.
 
 For the separate Node target:
