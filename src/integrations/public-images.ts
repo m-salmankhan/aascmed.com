@@ -11,8 +11,6 @@ export interface PublicImagesIntegrationOptions {
   loadPublishedCollections: () => Promise<PublishedCollections>;
   /** CMS/CDN origins shared with Astro image configuration, including custom ports. */
   allowedMediaOrigins?: string[];
-  /** Public Mapbox token used only to request clinic static maps during this build. */
-  mapboxToken?: string;
   /** Brand title prefixed to clinic social-card titles. */
   siteTitle?: string;
   /** Optional private staging directory for generated public assets. */
@@ -22,7 +20,7 @@ export interface PublicImagesIntegrationOptions {
 }
 
 /** Register the static lifecycle hooks that create and copy published social cards.
- * @param options Published collection loader, optional Mapbox token, title and private staging/cache paths.
+ * @param options Published collection loader, title and private staging/cache paths.
  * @returns Astro integration that prepares cards for static output; responsive media uses astro:assets at page render.
  */
 export function publicImagesIntegration(
@@ -67,7 +65,6 @@ export function publicImagesIntegration(
           {
             publicDir: stagingPublicDir,
             cacheDir: imageCacheDir,
-            mapboxToken: options.mapboxToken,
             allowedMediaOrigins: options.allowedMediaOrigins,
             siteTitle: options.siteTitle,
           },

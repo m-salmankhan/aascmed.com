@@ -13,7 +13,6 @@ export default defineConfig({
     publicImagesIntegration({
       loadPublishedCollections: getPublishedCollections,
       allowedMediaOrigins: mediaOrigins,
-      mapboxToken: process.env.PUBLIC_MAPBOX_API_KEY,
     }),
   ],
   vite: {
