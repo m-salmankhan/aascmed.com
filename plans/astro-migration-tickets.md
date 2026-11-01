@@ -91,19 +91,19 @@ Label: **Astro stage 3: Route migration**. Parent: **WEB-16**.
 | WEB-37 | Verify and refine hydration for reusable interactive components | WEB-15, WEB-35 |
 | WEB-38 | Validate full Astro static/SSR parity and content isolation | WEB-15, WEB-37, WEB-36 |
 
-### Stage 4: Deferred new preview platform
+### Stage 4: New preview platform
 
-Label: **Astro stage 4: Preview rollout**. Parent: **WEB-17**. These tasks are deferred until Gatsby retirement; the former parallel-Gatsby and Cloudflare Access/Tunnel proposals are superseded. See [the preview platform plan](preview-platform-plan.md) for repository ownership, design and acceptance criteria.
+Label: **Astro stage 4: Preview rollout**. Parent: **WEB-17**. WEB-46 Gatsby retirement is Done and merged; preview implementation follows the current direct blockers below. The former parallel-Gatsby, Cloudflare Access/Tunnel and laptop/manual-deployment proposals are superseded. The owner manually provisions a VPS; trusted CI runs Ansible for bootstrap and automatic deployment after merges to `main`. Terraform is out of scope for now. See [the preview platform plan](preview-platform-plan.md) for repository ownership, CI trust/release contracts and replacement-server acceptance.
 
 | Ticket | Work | Prerequisite |
 | --- | --- | --- |
-| WEB-51 | Establish deferred preview repository and reconcile closed migration work | WEB-46 |
+| WEB-51 | Establish preview repository, automatic CI deployment contracts and reconcile closed work | WEB-46 |
 | WEB-39 | Connect Strapi preview URLs and safe saved-draft refresh | WEB-46, WEB-51 |
 | WEB-40 | Prepare the compiled Astro preview image and deployment integration | WEB-46, WEB-51 |
 | WEB-52 | Implement Strapi-backed login and independent preview JWT sessions | WEB-46, WEB-51 |
-| WEB-53 | Publish private auth image and pin release digests | WEB-46, WEB-40, WEB-52 |
-| WEB-54 | Automate new VPS with Ansible, Traefik and Podman Quadlets | WEB-46, WEB-51 |
-| WEB-55 | Write beginner VPS setup, deployment and recovery guide | WEB-46, WEB-53, WEB-54 |
+| WEB-53 | Publish private auth image and automatically record release digests for CI deployment | WEB-46, WEB-40, WEB-52 |
+| WEB-54 | Run Ansible, Traefik and Podman Quadlet bootstrap/deployment automatically in CI | WEB-46, WEB-51 |
+| WEB-55 | Write beginner provider/CI setup, automatic deployment and recovery guide | WEB-46, WEB-53, WEB-54 |
 | WEB-41 | Validate new preview security, freshness and reliability on the actual host | WEB-46, WEB-39, WEB-40, WEB-53, WEB-54, WEB-55 |
 | WEB-42 | Complete editor acceptance and tested recovery for the new preview | WEB-46, WEB-41 |
 
@@ -128,7 +128,7 @@ Label: **Astro stage 6: Retirement**. Parent: **WEB-19**.
 
 ## Starting work
 
-WEB-16 is complete. Proceed with the published-only public deployment work WEB-43 and WEB-44, then the observation gate WEB-45 and the existing WEB-50 island prerequisite, then WEB-46 retirement. The new WEB-17 preview work follows WEB-46; **WEB-46 must not depend on WEB-17**, or the sequence becomes cyclic. Preserve public publish webhooks and public rollback artifacts when retiring Gatsby; inventory legacy source, dependencies, generated outputs and preview refresh wiring before removal.
+WEB-16 and WEB-46 are complete and their changes are integrated. On 1 November the owner accepted public Astro without a Gatsby rollback requirement and authorized starting WEB-17. Begin with WEB-51, then follow the current incoming Blocks relations; this does not mark any preview implementation or actual-host acceptance complete. The earlier public-observation sequence above is dependency history, not a new blocker overriding that acceptance. **WEB-46 must not depend on WEB-17**, or the sequence becomes cyclic. Preserve public publish webhooks independently of preview work.
 
 The earlier website MRs #156, #157 and #158 and CMS MR #25 were closed without merge. Their branches remain available for selective reuse; they do not establish a deployed preview or integrated implementation. See [the preview platform plan](preview-platform-plan.md) for relevant commit references and the superseded Access proposal.
 
