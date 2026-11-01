@@ -22,7 +22,8 @@ async function geometry(nav) {
     const rect = node => { const r = node.getBoundingClientRect(); return [r.x, r.y, r.width, r.height].map(n => Math.round(n * 10) / 10); };
     const list = element.querySelector('.desktop-links');
     const mobile = getComputedStyle(list).display === 'none';
-    return { mobile, nav: rect(element), brand: rect(element.querySelector('.brand')), list: rect(list),
+    const logo = [...element.querySelectorAll('.brand svg')].find(svg => getComputedStyle(svg).display !== 'none');
+    return { mobile, nav: rect(element), brand: rect(element.querySelector('.brand')), logo: rect(logo), list: rect(list),
       links: mobile ? [] : [...list.querySelectorAll('a')].map(rect), main: rect(document.querySelector('#main')) };
   });
 }
@@ -102,9 +103,16 @@ test('navigation has its final layout before fonts or hydration, at different ro
               assert.ok(row.every(y => Math.abs(y - row[0]) < 1), 'normal text stays on a single row');
               assert.ok(before.list[0] >= before.nav[0] - 1 && before.list[0] + before.list[2] <= before.nav[0] + available + 1);
               const alongside = available >= (navigationRowWidthRem + navigationSizing.logoWidth + navigationSizing.headerGap) * root;
-              if (alongside) assert.ok(Math.abs(before.list[1] + before.list[3] / 2 - (before.brand[1] + before.brand[3] / 2)) < 1, 'row beside logo when it fits');
-              else assert.ok(before.list[1] >= before.brand[1] + before.brand[3], 'centered row below logo when it only fits there');
+              if (alongside) {
+                assert.ok(Math.abs(before.list[1] + before.list[3] / 2 - (before.brand[1] + before.brand[3] / 2)) < 1, 'row beside logo when it fits');
+                assert.ok(Math.abs(before.logo[0] - before.nav[0]) < 1, 'logo aligns with the left content edge beside navigation');
+              } else {
+                assert.ok(before.list[1] >= before.brand[1] + before.brand[3], 'centered row below logo when it only fits there');
+                assert.ok(Math.abs(before.logo[0] + before.logo[2] / 2 - (before.nav[0] + available / 2)) < 1, 'logo stays centered above the row');
+              }
+              assert.ok(Math.abs(before.brand[2] - before.logo[2]) < 1, 'brand wrapper stays tight to the visible logo');
             } else {
+              assert.ok(Math.abs(before.logo[0] + before.logo[2] / 2 - (before.nav[0] + available / 2)) < 1, 'mobile logo stays centered');
               const summary = nav.locator('summary');
               const details = nav.locator('details');
               await expect(details).toHaveAttribute('open', '');

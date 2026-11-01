@@ -7,7 +7,7 @@ import { FaIcons, IconStyles } from "../font-awesome";
 import { colours } from "../../styles/theme";
 import { useSiteMetadata } from "../../hooks/useSiteMetadata";
 import { navigationItems, navigationSizing } from "./navigation-config.mts";
-import { navigationRowWidthRem, navigationItemWidthsRem } from "./generated-navigation-metrics.mts";
+import { navigationRowWidthRem, navigationRightWidthRem, navigationItemWidthsRem } from "./generated-navigation-metrics.mts";
 
 function NavigationLinks() {
   return <>{navigationItems.map(({ href, label }, index) => <li key={href} style={{ width: `${navigationItemWidthsRem[index]}rem` }}>
@@ -50,8 +50,9 @@ const stylesNavigation = css`
   }
 
   .brand {
-    flex: 1 0 ${navigationSizing.logoWidth}rem;
+    flex: 0 0 ${navigationSizing.logoWidth}rem;
     max-width: 100%;
+    margin-inline: auto;
     text-align: center;
     svg { width: ${navigationSizing.logoWidth}rem; max-width: 100%; fill: #fff; }
     .stacked { display: block; height: 10rem; margin-inline: auto; }
@@ -126,6 +127,13 @@ const stylesNavigation = css`
       margin-inline: auto;
     }
     .mobile-menu { display: none; }
+  }
+
+  /* Keep spare space between the tight logo and menu wrappers. When the row
+     cannot fit, their auto margins center each wrapper on its own flex line. */
+  @container (min-width: ${navigationRightWidthRem}rem) {
+    nav { justify-content: space-between; }
+    .brand, .desktop-links { margin-inline: 0; }
   }
 `;
 

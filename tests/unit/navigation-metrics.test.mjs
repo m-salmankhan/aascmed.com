@@ -10,3 +10,10 @@ test('menu threshold responds to changed labels, font size and spacing', () => {
   assert.ok(measureNavigation(navigationItems, { ...navigationSizing, fontSize: 1.5 }).rowWidthRem > original);
   assert.ok(measureNavigation(navigationItems, { ...navigationSizing, linkGap: 2, letterSpacing: 0.05 }).rowWidthRem > original);
 });
+
+test('a wider logo changes the side-by-side boundary without changing the hamburger boundary', () => {
+  const original = measureNavigation();
+  const widerLogo = measureNavigation(navigationItems, { ...navigationSizing, logoWidth: 24 });
+  assert.ok(widerLogo.rightWidthRem > original.rightWidthRem);
+  assert.equal(widerLogo.rowWidthRem, original.rowWidthRem);
+});
