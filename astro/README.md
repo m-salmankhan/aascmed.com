@@ -21,7 +21,7 @@ React, ReactDOM and Emotion are supplied by the root package. Keep their Vite de
 
 ## CMS content
 
-`STRAPI_API_URL` and the server-only `STRAPI_TOKEN` configure the official Strapi client. `STRAPI_API_URL` replaces the old `GATSBY_STRAPI_API_URL` name and is intentionally server-only. Before merging or deploying, provision `STRAPI_API_URL` in local environment files, CI/build settings, and preview hosting; the old name is no longer read. Rename your own private environment entries without committing them. Published reads leave caching to the server; draft reads send `no-store` and require `ASTRO_CONTENT_MODE=draft` on the protected preview deployment. Static builds reject draft requests. The SDK uses its public transport defaults, including its 10-second timeout until response headers arrive and normal fetch redirects. Errors are sanitized before reaching callers.
+`STRAPI_API_URL` and the server-only `STRAPI_TOKEN` configure the official Strapi client. `STRAPI_API_URL` is Astro-only and intentionally server-side. Gatsby and its existing preview continue to use `GATSBY_STRAPI_API_URL`; keep both settings during the migration. Add `STRAPI_API_URL` to the Astro build/server environment without removing or renaming Gatsby settings. See the [complete environment inventory](../docs/environment-variables.md) for values and deployment locations. Published reads leave caching to the server; draft reads send `no-store` and require `ASTRO_CONTENT_MODE=draft` on the protected preview deployment. Static builds reject draft requests. The SDK uses its public transport defaults, including its 10-second timeout until response headers arrive and normal fetch redirects. Errors are sanitized before reaching callers.
 
 Collection loaders are lazy async iterators:
 

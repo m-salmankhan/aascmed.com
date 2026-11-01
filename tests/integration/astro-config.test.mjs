@@ -49,6 +49,7 @@ test('Astro config derives and deduplicates CMS/media image origins from environ
           NODE_ENV: 'production',
           STRAPI_TOKEN: 'fixture-config-token',
           STRAPI_API_URL: 'https://cms.config-test.example/api',
+          GATSBY_STRAPI_API_URL: 'https://gatsby-only.config-test.example',
           STRAPI_MEDIA_ORIGINS:
             'https://cdn.config-test.example:8443, https://cms.config-test.example, https://cdn.config-test.example:8443/',
         },
@@ -68,7 +69,7 @@ test('Astro config derives and deduplicates CMS/media image origins from environ
         'https://cdn.config-test.example:8443',
         'https://cms.config-test.example',
       ],
-      'process environment overrides env-file settings and duplicate origins collapse',
+      'Astro uses its own CMS setting when Gatsby is also configured; process values override files and duplicate origins collapse',
     );
     assert.deepEqual(
       remotePatterns
