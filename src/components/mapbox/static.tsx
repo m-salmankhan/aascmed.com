@@ -1,7 +1,7 @@
 import { css, Global } from "@emotion/react"
 import { useState, useId, useRef, useEffect } from "react"
 import { MapBoxProps } from "."
-import { usePublicConfig } from "../../shared/config/public-context";
+import { usePublicConfig } from "../../config/public-context";
 
 interface StaticMapBoxParameters {
     label: string

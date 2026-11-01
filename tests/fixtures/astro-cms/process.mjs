@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:http';
-export const astroRoot = fileURLToPath(new URL('../../../astro/', import.meta.url));
+export const astroRoot = fileURLToPath(new URL('../../../', import.meta.url));
 const node = process.execPath;
 /** Reserve an ephemeral loopback port for an actual Astro server.
  * @returns Available local port after closing the short-lived probe.
@@ -37,7 +37,10 @@ export function command(args, env) {
  * @returns After a successful build; failures include the relevant diagnostics.
  */
 export async function build(config, env) {
-  const process = command(['node_modules/astro/bin/astro.mjs', 'build', '--config', config], env);
+  const args = ['node_modules/astro/bin/astro.mjs', 'build'];
+  // Exercise the same default config selection as the root yarn build command.
+  if (config !== 'astro.config.ts') args.push('--config', config);
+  const process = command(args, env);
   const exit = await new Promise((resolve, reject) => {
     process.child.once('error', reject);
     process.child.once('exit', resolve);

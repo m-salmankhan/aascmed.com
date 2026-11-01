@@ -9,7 +9,7 @@ import { Contents } from "../components/posts/contents";
 import { ShareButtons } from "../components/social-media/share";
 import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 import { Image } from "../components/media/image";
-import type { BlogRecord } from "../shared/content/models";
+import type { BlogRecord } from "../content/models";
 import { extractTableOfContents } from "../utils/strapi-toc";
 
 /** Normalized blog record and browser pathname required by the detail page. */
@@ -43,9 +43,9 @@ export function BlogPostView({ blog, pathname }: BlogPostViewProps) {
           <MainCol>
             {blog.thumbnail && <div css={css`
               width: 100%; margin: 1.5em auto;
-              .gatsby-image-wrapper, picture { width: 100%; height: 20em; }
+              picture { width: 100%; height: 20em; }
               img { width: 100%; height: 20em; }
-              .gatsby-image-wrapper img, picture img { height: 100%; }
+              picture img { height: 100%; }
             `}><Image image={blog.thumbnail} alt="" fit="cover" /></div>}
             {content && <BlogContent content={content as any[]} />}
             <footer><ShareButtons pageTitle={title} path={pathname} /></footer>

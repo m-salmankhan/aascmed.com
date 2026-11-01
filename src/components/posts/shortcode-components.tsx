@@ -4,7 +4,7 @@ import {
     stylesBtnSecondary,
     stylesButton
 } from "../buttons";
-import { SiteLink } from "../../shared/navigation/link";
+import { SiteLink } from "../../navigation/link";
 import { colours, gridSpacing } from "../../styles/theme";
 import { css } from "@emotion/react";
 import { CSSInterpolation } from "@emotion/serialize";

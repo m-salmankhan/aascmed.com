@@ -2,7 +2,7 @@
 import React from "react";
 import { BlocksRenderer, type BlocksContent } from "@strapi/blocks-react-renderer";
 import { Image } from "../media/image";
-import type { MediaDescriptor } from "../../shared/content/models";
+import type { MediaDescriptor } from "../../content/models";
 import { DynamicHeading } from "../headings";
 import { ContactBanner, ButtonList } from "../posts/shortcode-components";
 import { StrapiFAQ } from "./faq";

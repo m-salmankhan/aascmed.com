@@ -1,4 +1,4 @@
-import { useSiteData } from "../shared/data/site-data";
+import { useSiteData } from "../data/site-data";
 
 export const useSiteMetadata = () => {
     const { siteSettings } = useSiteData();

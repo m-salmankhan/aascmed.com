@@ -8,8 +8,8 @@ import { InfoNotice } from "../components/posts/shortcode-components";
 import { ShareButtons } from "../components/social-media/share";
 import { Image } from "../components/media/image";
 import { StrapiBlocksRenderer, StrapiDynamicZoneRenderer } from "../components/strapi/blocks-renderer";
-import { SiteLink } from "../shared/navigation/link";
-import type { ProviderRecord } from "../shared/content/models";
+import { SiteLink } from "../navigation/link";
+import type { ProviderRecord } from "../content/models";
 
 /** Normalized provider data and browser pathname for sharing links. */
 export interface ProviderViewProps { provider: ProviderRecord; pathname: string }

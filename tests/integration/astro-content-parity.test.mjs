@@ -96,14 +96,13 @@ test(
       STRAPI_MEDIA_ORIGINS: cms.origin,
       ASTRO_CONTENT_MODE: 'draft',
       PUBLIC_MAPBOX_API_KEY: '',
-      GATSBY_MAPBOX_API_KEY: '',
       PUBLIC_RUNTIME_API_BASE_URL: 'https://example.com',
     };
     let staticServer;
     let previewServer;
     let browser;
     try {
-      await build('astro.config.static.ts', env);
+      await build('astro.config.ts', env);
       assert.ok(cms.requests.length > 0);
       assert.ok(
         cms.requests.every(({ query }) => query.status === 'published'),
@@ -115,8 +114,8 @@ test(
         ),
         'actual static pages consume more than the first CMS page',
       );
-      await assertPublicArtifacts(path.join(astroRoot, 'dist-static'));
-      const sitemap = await readFile(path.join(astroRoot, 'dist-static/sitemap-0.xml'), 'utf8');
+      await assertPublicArtifacts(path.join(astroRoot, 'dist'));
+      const sitemap = await readFile(path.join(astroRoot, 'dist/sitemap-0.xml'), 'utf8');
       for (const [pathname] of routes) {
         assert.ok(
           sitemap.includes(`https://www.aascmed.com${pathname}`),
@@ -139,7 +138,7 @@ test(
           'node_modules/astro/bin/astro.mjs',
           'preview',
           '--config',
-          'astro.config.static.ts',
+          'astro.config.ts',
           '--host',
           '127.0.0.1',
           '--port',
@@ -339,7 +338,7 @@ test(
         previewXml.includes('/blog/article-1/'),
         'preview sitemap remains the published build artifact',
       );
-      await assertPublicArtifacts(path.join(astroRoot, 'dist-static'));
+      await assertPublicArtifacts(path.join(astroRoot, 'dist'));
       await stop(previewServer);
       const publishedPort = await availablePort();
       const publishedOrigin = `http://127.0.0.1:${publishedPort}`;

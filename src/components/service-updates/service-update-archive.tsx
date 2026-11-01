@@ -3,7 +3,7 @@ import { css } from "@emotion/react";
 import React from "react";
 import { cols, gridContainer } from "../../styles/grid";
 import { mediaBreakpoints } from "../../styles/breakpoints";
-import { SiteLink } from "../../shared/navigation/link";
+import { SiteLink } from "../../navigation/link";
 import { colours, gridSpacing } from "../../styles/theme";
 import Color from "color";
 

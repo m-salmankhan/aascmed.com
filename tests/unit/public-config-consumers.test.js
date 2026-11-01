@@ -10,7 +10,7 @@ require.extensions[".ts"] = require.extensions[".tsx"] = compile;
 
 const React = require("react");
 const { renderToStaticMarkup } = require("react-dom/server");
-const { PublicConfigProvider } = require("../../src/shared/config/public-context.tsx");
+const { PublicConfigProvider } = require("../../src/config/public-context.tsx");
 const { StaticMap } = require("../../src/components/mapbox/static.tsx");
 const { API } = require("../../src/api/index.ts");
 

@@ -1,7 +1,5 @@
 node_modules/
 .cache/
-public
-src/gatsby-types.d.ts
 .env.*
 playwright-report/
 test-results/
@@ -10,11 +8,12 @@ all-pages-test-results/
 retry-test-results/
 final-test-results/
 ui-results.json
-astro/dist-static/
-astro/dist-ssr/
-astro/.astro/
-dist-astro-static/
-dist-astro-ssr/
 
 # Review screenshots belong in MR attachments or CI artifacts.
 /docs/screenshots/
+
+# Astro build output and local environment files.
+dist/
+dist-ssr/
+.astro/
+.env

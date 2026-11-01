@@ -12,7 +12,7 @@ const stylesThumbnail = (iconSize: number, showOverlay: boolean, elipse: boolean
     overflow: hidden;
     transition: transform .25s ease 0s;
 
-    .gatsby-image-wrapper, img {
+    img {
         width: 100%;
         height: 100%;
         object-fit: cover;

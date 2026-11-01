@@ -14,7 +14,7 @@ complete website coverage. No performance budget is enforced.
 | Functional journeys | Responsive menu open/close/keyboard navigation and history; all five archive-to-detail families; article contents targets; review-carousel next/back; missing-page HTTP 404 and home link; core content/fallback navigation with JavaScript disabled. | Hydration, routing, anchor IDs, carousel controls or fallback routing broke. |
 | Contact | Native required validation; exact synthetic payload/success on contact, home and clinic pages (including the fixed clinic field); field errors preserving input and successful retry; server-error notice rather than false success. | The form's client-side state machine or request contract broke. No email is sent. |
 | Integration smoke | Booking script request, keyboard dismissal, Zocdoc handoff URL; real Mapbox initialization, nonzero canvas dimensions, marker click and clinic popup. | The website's integration boundary stopped working. This does not verify a completed external appointment or live map-tile accuracy. |
-| Infrastructure self-tests | Route/target validation, visual threshold and dimensions; Gatsby-free readiness; deliberate content/image/background/layout changes; malformed JSON/PNG and blocked writes; PR comment formatting, clean/different/failed reports, stale PRs and API failures. | A change weakened the harness or its advisory-versus-failing policy. These tests need neither the CMS nor deployed sites; GitHub API calls are simulated. |
+| Infrastructure self-tests | Route/target validation, visual threshold and dimensions; page readiness; deliberate content/image/background/layout changes; malformed JSON/PNG and blocked writes; PR comment formatting, clean/different/failed reports, stale PRs and API failures. | A change weakened the harness or its advisory-versus-failing policy. These tests need neither the CMS nor deployed sites; GitHub API calls are simulated. |
 
 Current inventory: 65 routes (including 404), covering nine fixed routes and all
 five dynamic page families. Each route is compared at both viewport sizes.
@@ -37,8 +37,8 @@ script during SSR before its controls are interactive.
 It scrolls visible content images into view and waits for decoding
 and lazy-map previews to disappear before returning to the top.
 Actual navigation, form, carousel and map tests prove their own interactive
-readiness. An Astro candidate needs the same public behavior/HTML contract, not
-a Gatsby runtime or a test-specific framework adapter.
+readiness. A site candidate needs the same public behavior/HTML contract, not
+a framework-specific runtime or a test-specific adapter.
 
 Both sides supply canonical SEO URLs unchanged. Only same-site link origins are
 normalized for comparison so a localhost/preview origin does not cause false
@@ -139,8 +139,8 @@ yarn test:unit
 ```
 
 Astro integration tests live in `tests/integration/` and run with
-`yarn test:astro`. Install Astro dependencies with
-`yarn --cwd astro install --frozen-lockfile` first. These tests build static and
+`yarn test:astro` after the single root `yarn install --frozen-lockfile`. Run
+`yarn typecheck` for the root Astro project. These tests build static and
 SSR output against a local CMS fixture and check the shared document,
 sitemaps, assets and runtime dependencies. Temporary page fixtures are removed
 after each test; the application contains no Stage 1 proof page.
@@ -160,7 +160,7 @@ $env:UI_REFERENCE_URL = "http://localhost:9001/"
 yarn test:ui
 ```
 
-The same URLs can point to public deployments built with Gatsby or Astro.
+The same URLs can point to a retained public reference and the current Astro deployment.
 `UI_SITEMAP_PATH` optionally overrides `/sitemap-index.xml` for **both** sites;
 it can also identify a direct URL-set sitemap instead of an index.
 
@@ -178,7 +178,7 @@ infrastructure job runs `yarn test:infrastructure:node` and
 harness, **not a deployed PR's application behavior**.
 
 The website suite is **on demand**, not a required network/CMS-heavy check on
-every commit. A fresh Gatsby build alone took about 4 minutes locally; full-site
+every commit. A fresh production site build took about 4 minutes locally; full-site
 comparisons add multiple minutes, live fonts/maps and a reference deployment.
 For a quick PR review, same-repository PRs get a top-level instruction comment: after the
 Netlify deploy preview for the current head is ready, comment `/regression-check`.

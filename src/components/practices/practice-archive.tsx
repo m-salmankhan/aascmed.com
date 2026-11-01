@@ -3,7 +3,7 @@ import { H2, H3, SectionHeader, stylesBigH1 } from "../headings";
 import { css } from "@emotion/react";
 import { cols, gridContainer } from "../../styles/grid";
 import { mediaBreakpoints } from "../../styles/breakpoints";
-import { SiteLink } from "../../shared/navigation/link";
+import { SiteLink } from "../../navigation/link";
 import { Thumbnail } from "../thumbnails";
 import { IconStyles } from "../font-awesome";
 import { MapBoxProps } from "../mapbox";

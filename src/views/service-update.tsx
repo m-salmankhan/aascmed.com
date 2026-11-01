@@ -19,9 +19,9 @@ import {
 } from '../components/buttons';
 import { gridSpacing } from '../styles/theme';
 import { StrapiBlocksRenderer } from '../components/strapi/blocks-renderer';
-import { SiteLink } from '../shared/navigation/link';
-import type { ServiceUpdateRecord } from '../shared/content/models';
-import { serviceUpdatePath } from '../shared/content/urls';
+import { SiteLink } from '../navigation/link';
+import type { ServiceUpdateRecord } from '../content/models';
+import { serviceUpdatePath } from '../content/urls';
 
 /** Normalized service-update data and browser pathname for sharing links. */
 export interface ServiceUpdateViewProps {
