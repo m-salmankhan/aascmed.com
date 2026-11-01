@@ -142,7 +142,7 @@ Astro integration tests live in `tests/integration/` and run with
 `yarn test:astro` after the single root `yarn install --frozen-lockfile`. Run
 `yarn typecheck` for the root Astro project. These tests build static and
 SSR output against a local CMS fixture and check the shared document,
-sitemaps, assets and runtime dependencies. `node --test tests/integration/container-layout.test.mjs` checks production static/SSR output on home and privacy, with and without JavaScript, from 320px to 5120px. It verifies smooth content-width growth across the former breakpoints, the 80rem cap, shared padded/regular alignment, full-bleed backgrounds and absence of horizontal overflow. Navigation behaviour is outside this focused container regression.
+sitemaps, assets and runtime dependencies. `node --test tests/integration/container-layout.test.mjs` serves both the production static build (Astro preview) and compiled SSR build, running the same home/privacy, JavaScript-enabled/disabled, 320px–5120px geometry matrix against each server. It verifies smooth content-width growth across the former breakpoints, the 80rem cap, shared padded/regular alignment, full-bleed backgrounds and absence of horizontal overflow. Navigation behaviour is outside this focused container regression.
 
 Temporary page fixtures are removed
 after each test; the application contains no Stage 1 proof page.
