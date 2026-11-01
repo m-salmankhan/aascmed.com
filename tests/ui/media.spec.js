@@ -1,5 +1,5 @@
 const { test, expect } = require("./fixtures");
-const { preparePage, readSitemap } = require("./helpers");
+const { preparePage, readSitemap, checkResponsiveNavigation } = require("./helpers");
 const { assertRouteInventory } = require("./contracts");
 const { comparePages } = require("./comparison");
 
@@ -27,16 +27,7 @@ test("condition thumbnails retain hover, keyboard focus, and navigation", async 
 });
 
 test("navigation remains usable at each viewport", async ({ page, baseURL }) => {
-  await preparePage(page, baseURL);
-  const menu = page.getByRole("button", { name: "Menu", exact: true });
-  if (await menu.isVisible()) {
-    await expect(menu).toHaveAttribute("aria-expanded", "false");
-    await menu.click();
-    await expect(menu).toHaveAttribute("aria-expanded", "true");
-  }
-  await page.locator('nav a[href="/providers/"]').first().click();
-  await expect(page).toHaveURL(new URL("/providers/", baseURL).href);
-  await expect(page.locator("#main")).toBeVisible();
+  await checkResponsiveNavigation(page, baseURL);
 });
 
 test("hero background covers the complete hero before and after scrolling", async ({ page, baseURL }) => {

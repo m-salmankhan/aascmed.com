@@ -5,3 +5,5 @@ export const navigationRowWidthRem = 56.4;
 export const navigationRightWidthRem = 74.41;
 /** Stable per-link slots prevent font loading from moving the menu. */
 export const navigationItemWidthsRem = [9.77,5.41,5.39,2.52,9.07,7.57,5.16,4.51] as const;
+/** Stable toggle slot includes its uppercase label, icon, gap and padding. */
+export const navigationToggleWidthRem = 5.59;

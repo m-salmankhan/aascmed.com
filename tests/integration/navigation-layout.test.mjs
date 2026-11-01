@@ -25,7 +25,7 @@ async function geometry(nav) {
     const logos = [...element.querySelectorAll('.brand svg')].filter(svg => getComputedStyle(svg).display !== 'none');
     const logo = logos[0];
     return { mobile, logoCount: logos.length, logoSymbol: logo.querySelector('use').getAttribute('href').split('#').pop(), nav: rect(element), brand: rect(element.querySelector('.brand')), logo: rect(logo), list: rect(list),
-      links: mobile ? [] : [...list.querySelectorAll('a')].map(rect), main: rect(document.querySelector('#main')) };
+      summary: mobile ? rect(element.querySelector('summary')) : null, links: mobile ? [] : [...list.querySelectorAll('a')].map(rect), main: rect(document.querySelector('#main')) };
   });
 }
 
@@ -180,6 +180,26 @@ test('navigation has its final layout before fonts or hydration, at different ro
             await expect(nativeMenu).not.toHaveAttribute('open');
             await cdp.send('Emulation.setDeviceMetricsOverride', { width: 640, height: 500, deviceScaleFactor: 2, mobile: false });
             await expect(summary).toBeFocused();
+          }
+          if (javaScriptEnabled && root === 16) {
+            // Regression: native open on mobile, resize before hydration, then
+            // hydrate on desktop. Shrinking back must not resurrect that menu.
+            await cdp.send('Emulation.clearDeviceMetricsOverride');
+            await page.setViewportSize({ width: 390, height: 844 });
+            scripts = gate(); fonts = gate();
+            await page.goto(`${origin}/privacy/`, { waitUntil: 'commit' });
+            await expect(page.locator('#main')).toBeAttached();
+            await page.locator('summary').focus();
+            await page.keyboard.press('Enter');
+            await expect(page.locator('.mobile-menu')).toHaveAttribute('open', '');
+            await page.setViewportSize({ width: 1440, height: 1000 });
+            await expect(page.locator('.desktop-links')).toBeVisible();
+            fonts.release(); scripts.release();
+            await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
+            await expect(page.locator('.mobile-menu')).not.toHaveAttribute('open');
+            await page.setViewportSize({ width: 390, height: 844 });
+            await expect(page.locator('summary')).toBeVisible();
+            await expect(page.locator('.mobile-menu')).not.toHaveAttribute('open');
           }
           assert.deepEqual(errors, [], 'no client/hydration errors');
           gates.forEach(item => item.release());

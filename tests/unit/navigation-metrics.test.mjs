@@ -7,7 +7,9 @@ test('menu threshold responds to changed labels, font size and spacing', () => {
   const original = measureNavigation().rowWidthRem;
   const longerLabels = navigationItems.map((item, index) => index === 0 ? { ...item, label: 'Patient Education and Resources' } : item);
   assert.ok(measureNavigation(longerLabels).rowWidthRem > original);
-  assert.ok(measureNavigation(navigationItems, { ...navigationSizing, fontSize: 1.5 }).rowWidthRem > original);
+  const largerFont = measureNavigation(navigationItems, { ...navigationSizing, fontSize: 1.5 });
+  assert.ok(largerFont.rowWidthRem > original);
+  assert.ok(largerFont.toggleWidthRem > measureNavigation().toggleWidthRem);
   assert.ok(measureNavigation(navigationItems, { ...navigationSizing, linkGap: 2, letterSpacing: 0.05 }).rowWidthRem > original);
 });
 

@@ -12,6 +12,14 @@ export const navigationItems = [
   { href: "/contact/", label: "Contact" },
 ] as const;
 
+/** Native toggle content and dimensions, also measured before rendering. */
+export const navigationToggle = {
+  label: "Menu",
+  iconWidth: 1,
+  iconGap: 0.5,
+  padding: 0.5,
+} as const;
+
 /** Font-relative dimensions shared by generated measurements and browser CSS. */
 export const navigationSizing = {
   fontSize: 1,

@@ -1,16 +1,17 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { css } from "@emotion/react";
 import { SiteLink } from "../../navigation/link";
 import { stylesScreenReaderText } from "../../styles/accessibility";
 import { HorizontalLogo, StackedLogo } from "../logo";
 import { FaIcons, IconStyles } from "../font-awesome";
-import { colours } from "../../styles/theme";
+import { bounceTransition, colours, gridSpacing } from "../../styles/theme";
+import { useAnimatedNavigation } from "./use-animated-navigation";
 import { useSiteMetadata } from "../../hooks/useSiteMetadata";
-import { navigationItems, navigationSizing } from "./navigation-config.mts";
-import { navigationRowWidthRem, navigationRightWidthRem, navigationItemWidthsRem } from "./generated-navigation-metrics.mts";
+import { navigationItems, navigationSizing, navigationToggle } from "./navigation-config.mts";
+import { navigationRowWidthRem, navigationRightWidthRem, navigationItemWidthsRem, navigationToggleWidthRem } from "./generated-navigation-metrics.mts";
 
-function NavigationLinks() {
-  return <>{navigationItems.map(({ href, label }, index) => <li key={href} style={{ width: `${navigationItemWidthsRem[index]}rem` }}>
+function NavigationLinks({ measured = false }: { measured?: boolean }) {
+  return <>{navigationItems.map(({ href, label }, index) => <li key={href} style={measured ? { width: `${navigationItemWidthsRem[index]}rem` } : undefined}>
     {href.startsWith("https://")
       ? <a href={href} target="_BLANK" rel="noreferrer">{label}</a>
       : <SiteLink href={href} activeClassName="active">{label}</SiteLink>}
@@ -18,18 +19,29 @@ function NavigationLinks() {
 }
 
 const stylesSkipToMain = css(stylesScreenReaderText, css`
+  display: block;
+  background-color: #fff;
+  color: ${colours.brandPrimary};
+  box-shadow: 0 0 1rem rgba(0, 0, 0, 0.5);
+  border: 1px solid ${colours.brandPrimary};
+  font-weight: bold;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1;
   &:focus {
+    border: 0;
     clip-path: none;
     height: auto;
-    width: auto;
     margin: 0;
+    overflow: visible;
     padding: 1rem;
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
-    z-index: 2;
-    background: #fff;
-    color: ${colours.brandPrimary};
+    width: auto;
+    word-wrap: normal;
+    outline: none;
   }
 `);
 
@@ -54,7 +66,8 @@ const stylesNavigation = css`
     max-width: 100%;
     margin-inline: auto;
     text-align: center;
-    svg { width: ${navigationSizing.logoWidth}rem; max-width: 100%; fill: #fff; }
+    svg { width: ${navigationSizing.logoWidth}rem; max-width: 100%; fill: #fff; transition: transform 1s ${bounceTransition}; }
+    a:focus svg, a:active svg { transform: scale(0.8); }
     .stacked { display: block; height: 10rem; margin-inline: auto; }
     .horizontal { display: none; height: 5rem; }
     a:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
@@ -74,7 +87,7 @@ const stylesNavigation = css`
       width: max-content;
       max-width: 100%;
       margin: 0;
-      font-weight: 800;
+      font-weight: bold;
       letter-spacing: ${navigationSizing.letterSpacing}rem;
       overflow-wrap: anywhere;
     }
@@ -86,8 +99,9 @@ const stylesNavigation = css`
       border-bottom: 0.3125rem solid transparent;
       color: #fff;
       text-decoration: none;
-      &.active { border-bottom-color: #fff; }
+      &.active, &.active:hover { border-bottom-color: #fff; }
       &:focus, &:hover, &:active {
+        outline: none;
         color: ${colours.infoBlue};
         background: ${colours.infoYellow};
         border-bottom-color: ${colours.infoBlue};
@@ -96,21 +110,43 @@ const stylesNavigation = css`
   }
 
   .desktop-links { display: none; }
-  .mobile-menu { width: 100%; }
-  .mobile-menu ul { flex-direction: column; margin-top: 0.5rem; text-align: center; }
+  .mobile-menu { width: 100%; line-height: 1.5625; }
+  .mobile-menu-content {
+    transition: max-height 1s ease-in-out;
+    &[data-animating] { overflow: hidden; }
+  }
+  .mobile-menu ul { display: flow-root; margin: 0; text-align: center; }
+  .mobile-menu li {
+    display: flex;
+    justify-content: center;
+    width: auto;
+    margin: ${gridSpacing / 3}em 0;
+    padding: ${gridSpacing / 4}em 0;
+  }
+  .mobile-menu a { width: auto; min-width: 0; max-width: 100%; vertical-align: middle; }
   summary {
     list-style: none;
     cursor: pointer;
-    width: max-content;
-    margin-inline: auto;
-    padding: 0.5rem;
-    font-weight: 800;
+    width: ${navigationToggleWidthRem}rem;
+    max-width: 100%;
+    white-space: nowrap;
+    margin: 1rem auto;
+    padding: ${navigationToggle.padding}rem;
+    font-weight: bold;
     text-transform: uppercase;
     color: #fff;
-    svg { width: 1rem; height: 1rem; fill: currentColor; vertical-align: middle; margin-right: 0.5rem; }
+    svg { width: ${navigationToggle.iconWidth}rem; height: ${navigationToggle.iconWidth}rem; fill: currentColor; vertical-align: middle; margin-right: ${navigationToggle.iconGap}rem; transition: transform 0.5s ease-in-out; }
+    &:focus {
+      background: #fff;
+      color: ${colours.brandPrimary};
+      svg { transform: rotate(180deg); }
+    }
     &:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
   }
   summary::-webkit-details-marker { display: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .brand svg, summary svg, .mobile-menu-content { transition: none; }
+  }
 
   /* Both sides of this boundary use the same generated width. No hydration
      state or font-load handler can choose a different initial layout. */
@@ -143,7 +179,7 @@ interface NavigationProps {
 }
 
 /** Render CSS-first navigation with a generated content-width query and native menu.
- * JavaScript only restores keyboard focus and resets an open menu across resize.
+ * JavaScript preserves the original menu animation and manages keyboard focus.
  */
 export function Navigation({ frontPage, className }: NavigationProps) {
   const { title } = useSiteMetadata();
@@ -151,35 +187,7 @@ export function Navigation({ frontPage, className }: NavigationProps) {
   const detailsRef = useRef<HTMLDetailsElement>(null);
   const desktopRef = useRef<HTMLUListElement>(null);
 
-  useEffect(() => {
-    const nav = navRef.current;
-    const details = detailsRef.current;
-    const desktop = desktopRef.current;
-    if (!nav || !details || !desktop) return;
-    let mobile = getComputedStyle(details).display !== "none";
-    // CSS can hide a focused control before ResizeObserver runs and the browser
-    // then reports body as active. Remember focus so it can move to a visible link.
-    let focused = nav.contains(document.activeElement) ? document.activeElement : null;
-    const rememberFocus = (event: FocusEvent) => {
-      focused = event.target instanceof Element && nav.contains(event.target) ? event.target : null;
-    };
-    document.addEventListener("focusin", rememberFocus);
-    const observer = new ResizeObserver(() => {
-      const nextMobile = getComputedStyle(details).display !== "none";
-      if (nextMobile === mobile) return;
-      if (nextMobile && desktop.contains(focused)) details.querySelector("summary")?.focus();
-      if (!nextMobile) {
-        if (details.contains(focused)) desktop.querySelector("a")?.focus();
-        details.open = false;
-      }
-      mobile = nextMobile;
-    });
-    observer.observe(nav);
-    return () => {
-      observer.disconnect();
-      document.removeEventListener("focusin", rememberFocus);
-    };
-  }, []);
+  useAnimatedNavigation(navRef, detailsRef, desktopRef);
 
   return <div css={stylesNavigation} className={className}>
     <a css={stylesSkipToMain} href="#main">Skip to main content</a>
@@ -189,15 +197,10 @@ export function Navigation({ frontPage, className }: NavigationProps) {
         <StackedLogo className="stacked" />
         {frontPage ? <h1 css={stylesScreenReaderText}>{title}</h1> : <span css={stylesScreenReaderText}>{title}</span>}
       </SiteLink></div>
-      <ul ref={desktopRef} className="desktop-links"><NavigationLinks /></ul>
-      <details ref={detailsRef} className="mobile-menu" suppressHydrationWarning onKeyDown={event => {
-        if (event.key === "Escape") {
-          event.currentTarget.open = false;
-          event.currentTarget.querySelector("summary")?.focus();
-        }
-      }}>
-        <summary><FaIcons iconStyle={IconStyles.SOLID} icon="bars" />Menu</summary>
-        <ul><NavigationLinks /></ul>
+      <ul ref={desktopRef} className="desktop-links"><NavigationLinks measured /></ul>
+      <details ref={detailsRef} className="mobile-menu" suppressHydrationWarning>
+        <summary><FaIcons iconStyle={IconStyles.SOLID} icon="bars" />{navigationToggle.label}</summary>
+        <div className="mobile-menu-content"><ul><NavigationLinks /></ul></div>
       </details>
     </nav>
   </div>;
