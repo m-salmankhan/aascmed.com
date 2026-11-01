@@ -32,7 +32,7 @@ Collection ties/defaults now retain Gatsby's numeric CMS source order; stable do
 
 Cold SSR testing found that a 315px card could select a 6,584px AVIF, taking 39.4 seconds to transform. The initial validation revision used a temporary 1,920px ceiling. The image review follow-up removes that ceiling and the handwritten candidate list: native Astro layouts now generate candidates from each view's display-width input, and standard lazy `sizes="auto"` selects the actual CSS slot. Full-width heroes use Astro's full-width layout. Actual remote-image tests verify a 300px square produces thumbnail-sized density variants while a wide image can produce 2,400px output, all saved locally by Astro.
 
-That audit also found a published rich-text image bypassing processing. Embedded blocks now receive native responsive attributes before React rendering, and provider social images have local static output. The Gatsby renderer's existing fallback remains intact. See [current image architecture](../README.md#responsive-cms-images) for the native API boundary; the recorded measurements below describe the original validation revision.
+That audit also found a published rich-text image bypassing processing. Embedded blocks now receive native responsive attributes before React rendering, and provider social images have local static output. The Gatsby renderer's existing fallback remains intact. See [current image architecture](../src/server/media/README.md#responsive-cms-images) for the native API boundary; the recorded measurements below describe the original validation revision.
 
 ## Deliberate differences and limits
 
@@ -42,7 +42,7 @@ The public homepage omits legacy Netlify Identity login hooks. Authentication an
 
 ## Reproduce
 
-Install root dependencies and Chromium with the documented Node version in [Astro setup](../README.md). Run `yarn test:unit`, `yarn typecheck` and `yarn test:astro`. The integration suite uses its own synthetic CMS and blocks external browser requests.
+Install root dependencies and Chromium with the documented Node version in [Astro setup](README.md). Run `yarn test:unit`, `yarn typecheck` and `yarn test:astro`. The integration suite uses its own synthetic CMS and blocks external browser requests.
 
 For matched-content comparisons, build Gatsby `main` and this Astro branch using the same development CMS version and public Runtime API/Mapbox settings. Configure `STRAPI_MEDIA_ORIGINS` from the upload origins returned by that CMS, then run `yarn astro:static --mode development` and `yarn astro:ssr:build --mode development`. Serve the Gatsby baseline and static Astro output on distinct loopback ports; run:
 
