@@ -1,6 +1,6 @@
 # Gatsby to Astro migration plan
 
-Status: approved 25 October 2026; delivery order and preview architecture revised 30 October 2026. The current sequence is WEB-16 → public cutover WEB-18 → observation WEB-45 and island prerequisite WEB-50 → Gatsby retirement WEB-46 → new preview WEB-17. See [the deferred preview platform plan](preview-platform-plan.md). On 1 November the owner requested a review MR removing Gatsby and promoting Astro to the root before testing Netlify deploy preview. Preparing that branch does not establish production cutover, observation or WEB-50 completion. The current branch layout/build commands are in the [development guide](../docs/README.md).
+Status: approved 25 October 2026; delivery order and preview architecture revised 30 October, with automatic CI deployment clarified on 1 November 2026. WEB-46 Gatsby retirement is Done and merged; the owner accepts public Astro without a Gatsby rollback requirement and has authorized starting WEB-17 according to current board dependencies. The earlier public-observation/retirement sequence below remains historical context. See [the preview platform plan](preview-platform-plan.md) for the current deployment contract and the [development guide](../docs/README.md) for root application build commands.
 
 ## Recommendation
 
@@ -207,9 +207,9 @@ Use the same route source for static production and SSR preview, with separate b
 
 Exit: every route family works in both modes, fresh draft slugs work without an application build, and content/visual/metadata parity passes against the baseline.
 
-### Phase 4 — Deferred: new editorial preview after retirement
+### Phase 4 — New editorial preview after retirement
 
-The original parallel-Gatsby preview and proxy-switch plan is superseded. Following WEB-46, implement the new VPS, private repository, Traefik/Podman/Ansible and independent preview authentication in the [preview platform plan](preview-platform-plan.md). Cloudflare Access and Tunnel are not in the selected design. The legacy preview may be offline during the transition, and neither public cutover nor Gatsby retirement waits for this phase.
+The original parallel-Gatsby preview and proxy-switch plan is superseded. WEB-46 is now Done and merged. Implement the new VPS, private repository, Traefik/Podman/Ansible and independent preview authentication in the [preview platform plan](preview-platform-plan.md). As corrected by the owner on 1 November, trusted CI runs Ansible and deploys automatically after merges to `main`; laptop-based/manual releases are superseded. The owner provisions the VPS and registers its SSH identity/access in CI once; the same automation must configure a blank replacement host. Terraform is out of scope for now. Cloudflare Access and Tunnel are not in the selected design. The legacy preview may be offline during the transition, and neither public cutover nor Gatsby retirement waits for this phase.
 
 Test login/expiry/logout, CMS iframe use, saved-draft creation/changes/deletion, incomplete content, assets, maps and forms. Verify no draft data is anonymously accessible or publicly cached; exercise CMS/auth outages and measure startup, memory, latency and freshness on the actual host. A direct tab is a fallback when browser cookie restrictions block an iframe. Retain compatible deployment artifacts for recovery; rollback does not require Gatsby preview.
 
