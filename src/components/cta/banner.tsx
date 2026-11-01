@@ -58,6 +58,7 @@ const stylesContentSection = css({
 const stylesButtonsSection = css({
   display: "flex",
   flexDirection: "column",
+  flexWrap: "wrap",
   gap: `${gridSpacing / 2}em`,
   width: "100%",
 

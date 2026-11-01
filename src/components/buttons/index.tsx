@@ -1,9 +1,12 @@
 import { CSSInterpolation } from "@emotion/serialize";
-import { bounceTransition, colours } from "../../styles/theme";
+import { bounceTransition, colours, gridSpacing } from "../../styles/theme";
 import React from "react";
 
 export const stylesButton: CSSInterpolation = {
     display: "inline-block",
+    boxSizing: "border-box",
+    maxWidth: "100%",
+    overflowWrap: "anywhere",
     fontSize: "1rem",
     fontWeight: "bold",
     textDecoration: "none",
@@ -19,6 +22,14 @@ export const stylesButton: CSSInterpolation = {
     "&:focus": {
         transform: "scale(0.8)",
     },
+}
+
+// Keep space between actions even when they wrap onto separate lines.
+export const stylesButtonGroup: CSSInterpolation = {
+    display: "flex",
+    flexWrap: "wrap",
+    alignItems: "center",
+    gap: `${gridSpacing / 2}em`,
 }
 
 export const stylesBtnPrimary: CSSInterpolation = {
