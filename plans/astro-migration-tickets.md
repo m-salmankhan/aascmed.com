@@ -1,3 +1,7 @@
+# Owner-requested review branch, 1 November 2026
+
+The owner requested Gatsby source retirement and a root Astro application in an MR for Netlify deploy-preview testing before merge. This authorizes preparing the cleanup branch ahead of the earlier retirement gates; public promotion, observation, external webhook/credential cleanup, and WEB-50 remain unverified follow-up work. See the [current build instructions](../README.md). The dependency history below remains planning context.
+
 # Astro migration ticket index
 
 Approved 25 October 2026; reordered 30 October 2026. Canonical designs: [Astro migration plan](astro-migration-plan.md) and [deferred preview platform plan](preview-platform-plan.md).

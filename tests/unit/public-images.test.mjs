@@ -1,4 +1,4 @@
-// Deterministic fixtures for shared social-card rendering, caching and path safety.
+// Deterministic fixtures for Astro social-card rendering, caching and path safety.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -9,14 +9,11 @@ import {
   stat,
   writeFile,
 } from 'node:fs/promises';
-import { createRequire } from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
 import sharp from 'sharp';
-import { buildSocialCards } from '../../src/shared/media/social-cards.mjs';
+import { buildSocialCards } from '../../src/server/media/social-cards.ts';
 test('shared social cards preserve paths, orientation, cache keys and remote-fetch boundaries', async () => {
-  const require = createRequire(import.meta.url);
-  const gatsbyGenerator = require('../../gatsby/og-image-generator.js');
   const root = await mkdtemp(path.join(os.tmpdir(), 'aasc-public-images-'));
   const publicDir = path.join(root, 'public');
   const cacheDir = path.join(root, 'cache');
@@ -129,7 +126,7 @@ test('shared social cards preserve paths, orientation, cache keys and remote-fet
     );
     const streamedPublicDir = path.join(root, 'streamed-public');
     /** Supply the next card only after the preceding output exists, then repeat a path across an async boundary.
-     * @yields {import('../../src/shared/media/social-cards.mjs').SocialCardEntry} One card input at a time.
+     * @yields {import('../../src/server/media/social-cards.ts').SocialCardEntry} One card input at a time.
      */
     async function* streamedEntries() {
       yield { kind: 'blog', slug: 'streamed', title: 'First streamed card' };
@@ -307,18 +304,6 @@ test('shared social cards preserve paths, orientation, cache keys and remote-fet
       unconfiguredOriginFetched,
       false,
       'an unconfigured port must never be requested',
-    );
-    const gatsbyOutput = path.join(root, 'gatsby-adapter.jpg');
-    await gatsbyGenerator.generateOGImage({
-      title: 'Gatsby adapter fixture',
-      backgroundImagePath: sourcePath,
-      outputPath: gatsbyOutput,
-    });
-    assert.deepEqual(
-      await sharp(gatsbyOutput)
-        .metadata()
-        .then(({ width, height }) => [width, height]),
-      [1200, 630],
     );
     console.log(
       'Public image fixtures passed: deterministic social-card bytes, cache behavior, safe paths, private cache placement, and Mapbox token isolation.',

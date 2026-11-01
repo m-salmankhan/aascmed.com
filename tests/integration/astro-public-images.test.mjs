@@ -9,10 +9,10 @@ import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import sharp from 'sharp';
 test('Astro static builds use astro:assets for CMS thumbnails and cache social cards', async () => {
-  /** @typedef {import('../../astro/src/server/content/loaders.ts').PublishedCollections} PublishedCollections */
+  /** @typedef {import('../../src/server/content/loaders.ts').PublishedCollections} PublishedCollections */
   const astroRoot = path.resolve(
     path.dirname(fileURLToPath(import.meta.url)),
-    '../../astro',
+    '../..',
   );
   const fixtureSrcDir = path.join(astroRoot, '.astro', 'public-images-pages-fixture');
   const routePath = path.join(fixtureSrcDir, 'pages', 'public-image-fixture.astro');
@@ -175,7 +175,7 @@ test('Astro static builds use astro:assets for CMS thumbnails and cache social c
   const fixtureRoute = `
   ---
   import { getBlogs } from '../../../src/server/content/loaders.ts';
-  import { Image } from '../../../../src/components/media/image.tsx';
+  import { Image } from '../../../src/components/media/image.tsx';
   import { getResponsiveMediaDescriptor } from '../../../src/server/content/astro-media.ts';
   let sourceMedia;
   for await (const blog of getBlogs('published', { pageSize: 2 })) {
@@ -195,7 +195,7 @@ test('Astro static builds use astro:assets for CMS thumbnails and cache social c
   </body></html>
   `;
   const fixtureConfig = `
-  import base from './astro.config.static.ts';
+  import base from './astro.config.ts';
   import { mediaOrigins } from './astro.config.shared.ts';
   import { publicImagesIntegration } from './src/integrations/public-images.ts';
   import path from 'node:path';

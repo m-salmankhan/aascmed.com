@@ -1,6 +1,6 @@
 # Gatsby to Astro migration plan
 
-Status: approved 25 October 2026; delivery order and preview architecture revised 30 October 2026. The current sequence is WEB-16 → public cutover WEB-18 → observation WEB-45 and island prerequisite WEB-50 → Gatsby retirement WEB-46 → new preview WEB-17. See [the deferred preview platform plan](preview-platform-plan.md).
+Status: approved 25 October 2026; delivery order and preview architecture revised 30 October 2026. The current sequence is WEB-16 → public cutover WEB-18 → observation WEB-45 and island prerequisite WEB-50 → Gatsby retirement WEB-46 → new preview WEB-17. See [the deferred preview platform plan](preview-platform-plan.md). On 1 November the owner requested a review MR removing Gatsby and promoting Astro to the root before testing Netlify deploy preview. Preparing that branch does not establish production cutover, observation or WEB-50 completion. The current branch layout/build commands are in the [root README](../README.md).
 
 ## Recommendation
 

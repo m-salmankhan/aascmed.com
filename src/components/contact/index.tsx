@@ -8,7 +8,7 @@ import { ErrorNotice, SuccessNotice } from "../forms/notices";
 import { Loading } from "../loading";
 import { stylesH4 } from "../headings";
 import {useGTag} from "../../hooks/useGTag";
-import { usePublicConfig } from "../../shared/config/public-context";
+import { usePublicConfig } from "../../config/public-context";
 
 
 enum FormState {

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { SiteLink } from "../../shared/navigation/link";
+import { SiteLink } from "../../navigation/link";
 import { colours, gridSpacing } from "../../styles/theme";
 import Color from "color";
 import { breakpointStrings, mediaBreakpoints } from "../../styles/breakpoints";

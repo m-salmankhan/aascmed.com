@@ -5,8 +5,8 @@ import { readFile, rm, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { publicImagesIntegration } from '../../astro/src/integrations/public-images.ts';
-import { buildPublishedSocialCards } from '../../astro/src/server/content/public-images.ts';
+import { publicImagesIntegration } from '../../src/integrations/public-images.ts';
+import { buildPublishedSocialCards } from '../../src/server/content/public-images.ts';
 
 test('social-card generation streams records and preserves nested paths', async () => {
   const originalCwd = process.cwd();

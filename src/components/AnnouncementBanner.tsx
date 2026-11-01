@@ -5,7 +5,7 @@ import { SuccessNotice } from './forms/notices';
 import { InfoNotice } from './forms/notices';
 import { css } from '@emotion/react';
 import { StrapiBlocksRenderer } from './strapi/blocks-renderer';
-import type { AnnouncementSettings } from '../shared/content/models';
+import type { AnnouncementSettings } from '../content/models';
 
 const dismissKey = 'announcementDismissed';
 

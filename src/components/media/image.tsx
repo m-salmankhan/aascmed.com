@@ -2,7 +2,7 @@ import React from "react";
 import type { ImgHTMLAttributes } from "react";
 import { css } from "@emotion/react";
 import type { Interpolation, Theme } from "@emotion/react";
-import type { MediaDescriptor } from "../../shared/content/models";
+import type { MediaDescriptor } from "../../content/models";
 
 /** CSS object-fit values supported by shared media renderers. */
 type ImageFit = "cover" | "contain" | "fill";

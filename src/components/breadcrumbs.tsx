@@ -1,5 +1,5 @@
 import React from "react";
-import {SiteLink} from "../shared/navigation/link";
+import {SiteLink} from "../navigation/link";
 import {css} from "@emotion/react";
 import Color from "color";
 import {colours, gridSpacing} from "../styles/theme";

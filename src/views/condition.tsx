@@ -7,7 +7,7 @@ import { Article } from "../components/posts/article";
 import { Contents } from "../components/posts/contents";
 import { ShareButtons } from "../components/social-media/share";
 import { StrapiDynamicZoneRenderer } from "../components/strapi/blocks-renderer";
-import type { ConditionRecord } from "../shared/content/models";
+import type { ConditionRecord } from "../content/models";
 import { extractTableOfContents } from "../utils/strapi-toc";
 
 /** Normalized condition data and browser pathname for sharing links. */

@@ -55,8 +55,8 @@ test("standalone links without an active class still announce the current page",
     fileName: filename,
   }).outputText;
   const modules = {
-    link: compileTsx(path.resolve("src/shared/navigation/link.tsx")),
-    currentPath: compileTsx(path.resolve("src/shared/navigation/current-path.tsx")),
+    link: compileTsx(path.resolve("src/navigation/link.tsx")),
+    currentPath: compileTsx(path.resolve("src/navigation/current-path.tsx")),
   };
   const script = `(() => {
     const cache = {};
@@ -85,10 +85,9 @@ test("standalone links without an active class still announce the current page",
   await expect(blog).not.toHaveAttribute("class");
 });
 
-test("readiness works without Gatsby markers and waits for interactive dismissal", async ({ page }) => {
+test("page readiness waits for interactive dismissal", async ({ page }) => {
   await preparePage(page, url);
   await expect(page.getByRole("button", { name: "Dismiss", exact: true })).toHaveCount(0);
-  expect(await page.evaluate(() => performance.getEntriesByName("onInitialClientRender").length)).toBe(0);
   expect(await semanticImages(page)).toEqual([{ alt: "Clinic", loading: "lazy", draggable: false }]);
 });
 

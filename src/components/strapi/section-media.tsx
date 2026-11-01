@@ -7,7 +7,7 @@ import { mediaBreakpoints, breakpointStrings } from "../../styles/breakpoints";
 import { colours } from "../../styles/theme";
 import { FaIcons, IconStyles } from "../font-awesome";
 import { stylesScreenReaderText } from "../../styles/accessibility";
-import type { MediaDescriptor } from "../../shared/content/models";
+import type { MediaDescriptor } from "../../content/models";
 import { Image } from "../media/image";
 
 export interface SectionMediaItem {

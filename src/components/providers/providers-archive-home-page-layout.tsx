@@ -5,7 +5,7 @@ import { cols, gridContainer } from "../../styles/grid";
 import { mediaBreakpoints } from "../../styles/breakpoints";
 import { SectionHeader, stylesBigH1, stylesH1, stylesH2 } from "../headings";
 import { IconStyles } from "../font-awesome";
-import { SiteLink } from "../../shared/navigation/link";
+import { SiteLink } from "../../navigation/link";
 import { colours, gridSpacing } from "../../styles/theme";
 import { Thumbnail } from "../thumbnails";
 import Color from "color";

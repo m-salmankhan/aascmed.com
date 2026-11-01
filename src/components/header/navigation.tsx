@@ -1,6 +1,6 @@
 import React, { ComponentProps, MouseEventHandler, useEffect, useId, useRef, useState } from "react";
 import { css } from "@emotion/react";
-import { SiteLink } from "../../shared/navigation/link";
+import { SiteLink } from "../../navigation/link";
 import { stylesScreenReaderText } from "../../styles/accessibility";
 import { HorizontalLogo, StackedLogo } from "../logo";
 import { FaIcons, IconStyles } from "../font-awesome";

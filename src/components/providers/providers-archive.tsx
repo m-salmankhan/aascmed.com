@@ -3,7 +3,7 @@ import { ProviderSummary } from "./index";
 import { css } from "@emotion/react";
 import { cols, gridContainer } from "../../styles/grid";
 import { H2 } from "../headings";
-import { SiteLink } from "../../shared/navigation/link";
+import { SiteLink } from "../../navigation/link";
 import { Thumbnail } from "../thumbnails";
 import { IconStyles } from "../font-awesome";
 import { breakpointStrings, mediaBreakpoints } from "../../styles/breakpoints";

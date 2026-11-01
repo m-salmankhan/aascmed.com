@@ -52,12 +52,11 @@ test(
       ASTRO_CONTENT_MODE: 'published',
       PUBLIC_RUNTIME_API_BASE_URL: `${cms.origin}/runtime`,
       PUBLIC_MAPBOX_API_KEY: '',
-      GATSBY_MAPBOX_API_KEY: '',
     };
     let server;
     let browser;
     try {
-      await build('astro.config.static.ts', env);
+      await build('astro.config.ts', env);
       await build('astro.config.ssr.ts', env);
       const port = await availablePort();
       const origin = `http://127.0.0.1:${port}`;

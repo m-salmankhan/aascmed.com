@@ -3,8 +3,8 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { createServer } from "node:http";
-import { getPublishedRouteManifest } from "../../astro/src/server/content/routes.ts";
-import { clinicPath } from "../../src/shared/content/urls.ts";
+import { getPublishedRouteManifest } from "../../src/server/content/routes.ts";
+import { clinicPath } from "../../src/content/urls.ts";
 import {
   mapStrapiAnnouncement,
   mapStrapiBlog,
@@ -16,12 +16,12 @@ import {
   mapStrapiReview,
   mapStrapiServiceUpdate,
   mapStrapiTrackingInfo,
-} from "../../astro/src/server/content/mapping.ts";
+} from "../../src/server/content/mapping.ts";
 import {
   createClient,
   readRecords,
   StrapiRequestError,
-} from "../../astro/src/server/content/strapi.ts";
+} from "../../src/server/content/strapi.ts";
 import {
   getAnnouncement,
   getBlogArchive,
@@ -41,7 +41,7 @@ import {
   getServiceUpdatePage,
   getServiceUpdates,
   getTrackingInfo,
-} from "../../astro/src/server/content/loaders.ts";
+} from "../../src/server/content/loaders.ts";
 /** Load a representative Strapi fixture by its filename stem.
  * @param {string} name Fixture filename without the JSON extension.
  * @returns {Promise<object>} Parsed fixture data.
@@ -193,7 +193,7 @@ test("blog loader exposes its SDK resource, nested query and bounded pagination"
     assert.equal(url.searchParams.get("status"), "published");
     assert.equal(url.searchParams.get("pagination[pageSize]"), "100");
     assert.equal(url.searchParams.get("sort[0]"), "date:desc");
-    assert.equal(url.searchParams.get("sort[1]"), "id:asc", "date ties retain Gatsby CMS source order");
+    assert.equal(url.searchParams.get("sort[1]"), "id:asc", "date ties retain Strapi query order");
     assert.equal(url.searchParams.get("populate[thumbnail]"), "true");
     assert.equal(
       url.searchParams.get("populate[content][on][clinics.map][populate]"),

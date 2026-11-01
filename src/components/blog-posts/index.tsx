@@ -3,7 +3,7 @@ import { css } from "@emotion/react";
 import React from "react";
 import { cols, gridContainer } from "../../styles/grid";
 import { mediaBreakpoints } from "../../styles/breakpoints";
-import { SiteLink } from "../../shared/navigation/link";
+import { SiteLink } from "../../navigation/link";
 import { bounceTransition, colours, gridSpacing } from "../../styles/theme";
 import Color from "color";
 
@@ -49,7 +49,7 @@ const stylesLi = css(
             transition: `transform 1s ${bounceTransition} 0s`,
 
 
-            ".gatsby-image-wrapper, img": {
+            "img": {
                 width: "100%",
                 height: "100%",
             },

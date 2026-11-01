@@ -10,20 +10,8 @@ import {
   serviceUpdatePath,
   sortByDateDescending,
   sortByOrder,
-} from "../../src/shared/content/urls.ts";
-import {
-  mapGatsbyBlog,
-  mapGatsbyClinic,
-  mapGatsbyCondition,
-  mapGatsbyMedia,
-  mapGatsbyProvider,
-  mapGatsbyServiceUpdate,
-  mapGatsbyAnnouncement,
-  mapGatsbySiteSettings,
-  mapGatsbyTrackingSettings,
-  isJsonValue,
-} from "../../src/shared/content/gatsby-adapter.ts";
-import { validateContentRecord } from "../../src/shared/content/validation.ts";
+} from "../../src/content/urls.ts";
+import { validateContentRecord } from "../../src/content/validation.ts";
 
 test("detail URL helpers reproduce representative captured routes", async () => {
   const capturedRoutes = JSON.parse(await readFile(new URL("../ui/routes.json", import.meta.url), "utf8"));
@@ -71,16 +59,6 @@ test("published validation requires routable records while drafts tolerate incom
   assert.deepEqual(validateContentRecord(
     { id: "post-1", title: "Post", slug: "draft#section" }, "blog", "published",
   ), ["a valid URL for this content record is required"]);
-  const missingTitles = [
-    ["blog", mapGatsbyBlog({ id: "1", slug: "post" })],
-    ["condition", mapGatsbyCondition({ id: "2", slug: "condition" })],
-    ["provider", mapGatsbyProvider({ id: "3", slug: "provider" })],
-    ["clinic", mapGatsbyClinic({ id: "4", slug: "clinic" })],
-    ["serviceUpdate", mapGatsbyServiceUpdate({ id: "5", slug: "update", date: "2025-02-14" })],
-  ];
-  for (const [family, record] of missingTitles) {
-    assert.deepEqual(validateContentRecord(record, family, "published"), ["title is required"]);
-  }
 });
 
 test("ordering helpers preserve query order for ties and place missing or invalid dates last", () => {
@@ -93,129 +71,14 @@ test("ordering helpers preserve query order for ties and place missing or invali
   ]).map(({ id }) => id), ["new", "same-a", "old", "missing", "bad", "rollover"]);
 });
 
-test("Gatsby adapters keep blocks and media serializable and omit absent optional content", () => {
-  const block = { type: "paragraph", children: [{ type: "text", text: "Draft text" }] };
-  const mapped = mapGatsbyBlog({
-    id: "blog-1",
-    slug: "sample-post",
-    title: "Sample post",
-    internal: { content: JSON.stringify({ content: [block], body: "not an array" }) },
-    thumbnail: {
-      altText: "Cover",
-      mime: "image/jpeg",
-      localFile: { childImageSharp: { gatsbyImageData: { images: { fallback: { src: "/cover.jpg", width: 640, height: 360 } } } } },
-    },
-  });
-  assert.deepEqual(mapped.content, [block]);
-  assert.equal("body" in mapped, false);
-  assert.deepEqual(mapped.thumbnail, { src: "/cover.jpg", alt: "Cover", width: 640, height: 360, mimeType: "image/jpeg", aspectRatio: 640 / 360 });
-  assert.deepEqual(mapGatsbyMedia({ url: "/source.jpg" }), { src: "/source.jpg", alt: "" });
-  assert.equal("internal" in mapped, false);
-  assert.equal(isJsonValue(mapped), true);
-
-  const retirementText = [{ type: "paragraph", children: [{ type: "text", text: "Retired" }] }];
-  const provider = mapGatsbyProvider({
-    id: "provider-1",
-    name: { fullName: "Dr Example", honorific: null },
-    retirementNotice: { retired: true },
-    review: { text: null, reviewer: "Patient", date: null },
-    internal: { content: JSON.stringify({ retirementNotice: { text: retirementText } }) },
-  });
-  assert.equal(provider.title, "Dr Example");
-  assert.equal(provider.body, undefined);
-  assert.deepEqual(provider.retirementNotice, { retired: true, text: retirementText });
-  assert.deepEqual(provider.name, { fullName: "Dr Example" });
-  assert.deepEqual(provider.review, { reviewer: "Patient" });
-  const sparseProvider = mapGatsbyProvider({ id: "provider-2", name: { fullName: null }, retirementNotice: null, review: null });
-  assert.equal(sparseProvider.title, "");
-  assert.deepEqual(validateContentRecord(sparseProvider, "provider", "published"), [
-    "title is required",
-    "a valid URL for this content record is required",
-  ]);
-  assert.equal(isJsonValue(sparseProvider), true);
-  const clinic = mapGatsbyClinic({ id: "clinic-1", clinic_name: "Crest Hill", hours: [null, { day: "Monday", opening_hours: { start_time: "09:00" } }] });
-  assert.equal(clinic.clinicName, "Crest Hill");
-  assert.equal(clinic.hours?.length, 1);
-  assert.deepEqual(clinic.hours?.[0]?.openingHours, { startTime: "09:00" });
-  assert.equal(mapGatsbyClinic({ id: "clinic-2", hours: null }).hours, undefined);
-  assert.equal(isJsonValue(provider), true);
-  assert.equal(isJsonValue(clinic), true);
-});
-
-test("shared Gatsby settings adapters produce plain values and preserve announcement blocks", () => {
-  const message = [{ type: "paragraph", children: [{ type: "text", text: "We are open." }] }];
-  assert.deepEqual(mapGatsbySiteSettings({ title: "AASC", siteUrl: "https://www.aascmed.com", twitterHandle: "@AASC" }), {
-    title: "AASC", url: "https://www.aascmed.com", twitterHandle: "@AASC",
-  });
-  assert.deepEqual(mapGatsbyTrackingSettings({ googleAnalyticsId: "G-TEST", googleTagManagerId: null, pixelId: "123" }), {
-    googleAnalyticsId: "G-TEST", googleTagManagerId: "", pixelId: "123",
-  });
-  assert.deepEqual(mapGatsbyAnnouncement({
-    enabled: true,
-    type: "success",
-    internal: { content: JSON.stringify({ message }) },
-  }), { enabled: true, type: "success", message });
-  assert.deepEqual(mapGatsbyAnnouncement({ enabled: true, type: "unexpected", internal: { content: "invalid" } }), {
-    enabled: true, type: "info",
-  });
-});
-
-test("shared query consumers stay free of Gatsby static queries", async () => {
-  const files = [
-    "../../src/components/AnnouncementBanner.tsx",
-    "../../src/components/contact/index.tsx",
-    "../../src/components/social-media/share.tsx",
-    "../../src/hooks/useSiteMetadata.ts",
-  ];
-  for (const file of files) {
-    const source = await readFile(new URL(file, import.meta.url), "utf8");
-    assert.doesNotMatch(source, /useStaticQuery|from ["']gatsby["'].*graphql|\bgraphql\s*`/, file);
-  }
-
-});
-
-test("Gatsby responsive image candidates map into plain descriptors with crop dimensions", () => {
-  const media = mapGatsbyMedia({
-    name: "Doctor portrait",
-    mime: "image/webp",
-    localFile: { childImageSharp: { gatsbyImageData: { images: { fallback: {
-      src: "/doctor-400.webp", width: 400, height: 400,
-      srcSet: "/doctor-200.webp 200w, /doctor-400.webp 400w",
-    } } } } },
-  });
-  assert.deepEqual(media, {
-    src: "/doctor-400.webp", alt: "Doctor portrait", width: 400, height: 400,
-    mimeType: "image/webp", srcSet: "/doctor-200.webp 200w, /doctor-400.webp 400w",
-    sources: [{ src: "/doctor-200.webp", width: 200 }, { src: "/doctor-400.webp", width: 400 }],
-    aspectRatio: 1,
-  });
-});
-
-test("Gatsby image adapters preserve constrained slot sizes and encoded picture sources", () => {
-  const media = mapGatsbyMedia({
-    localFile: { childImageSharp: { gatsbyImageData: { images: {
-      fallback: { src: "/card.jpg", width: 400, height: 250, srcSet: "/card.jpg 400w", sizes: "(min-width: 1200px) 400px, 100vw" },
-      sources: [
-        { type: "image/avif", srcSet: "/card.avif 400w", sizes: "(min-width: 1200px) 400px, 100vw" },
-        { type: "image/webp", srcSet: "/card.webp 400w", sizes: "(min-width: 1200px) 400px, 100vw" },
-      ],
-    } } } },
-  });
-  assert.equal(media?.sizes, "(min-width: 1200px) 400px, 100vw");
-  assert.deepEqual(media?.formats, [
-    { type: "image/avif", srcSet: "/card.avif 400w", sizes: "(min-width: 1200px) 400px, 100vw" },
-    { type: "image/webp", srcSet: "/card.webp 400w", sizes: "(min-width: 1200px) 400px, 100vw" },
-  ]);
-});
-
-test("blog hero gives picture and image a fixed crop box", async () => {
+test("blog hero picture and image retain a fixed crop box", async () => {
   const source = await readFile(new URL("../../src/views/blog-post.tsx", import.meta.url), "utf8");
-  assert.match(source, /\.gatsby-image-wrapper, picture \{\s*width: 100%;\s*height: 20em;/);
+  assert.match(source, /picture \{\s*width: 100%;\s*height: 20em;/);
   assert.match(source, /img \{\s*width: 100%;\s*height: 20em;/);
-  assert.match(source, /\.gatsby-image-wrapper img, picture img \{\s*height: 100%;/);
+  assert.match(source, /picture img \{\s*height: 100%;/);
 });
-test("shared model declarations stay free of framework nodes, GraphQL query types, and credentials", async () => {
-  const modelText = await readFile(new URL("../../src/shared/content/models.ts", import.meta.url), "utf8");
+test("content models stay free of framework nodes, GraphQL query types, and credentials", async () => {
+  const modelText = await readFile(new URL("../../src/content/models.ts", import.meta.url), "utf8");
   const declarations = modelText.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, "");
-  assert.doesNotMatch(declarations, /Queries\.|GatsbyImageData|localFile|ReactNode|\btoken\b|\bpassword\b/i);
+  assert.doesNotMatch(declarations, /GraphQL|localFile|ReactNode|\btoken\b|\bpassword\b/i);
 });

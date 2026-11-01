@@ -5,7 +5,7 @@ import { cols, gridContainer } from "../../styles/grid";
 import { mediaBreakpoints } from "../../styles/breakpoints";
 import { H3, stylesH1 } from "../headings";
 import { Logo } from "../logo";
-import { SiteLink } from "../../shared/navigation/link";
+import { SiteLink } from "../../navigation/link";
 import { HorizontalCalloutBanner } from "../cta/horizontal-banner";
 
 const stylesFooter = css`

@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 const args = process.argv.slice(2);
 const refreshIndex = args.indexOf("--refresh");
 const committedSpec = fileURLToPath(
-  new URL("../astro/src/server/content/generated/specification.json", import.meta.url),
+  new URL("../src/server/content/generated/specification.json", import.meta.url),
 );
 /** Download a CMS build's exported schema for an explicit refresh.
  * @param source Absolute URL of the CMS OpenAPI JSON endpoint.
@@ -54,7 +54,7 @@ function removeVolatileDefaults(value) {
 }
 removeVolatileDefaults(spec);
 const output = fileURLToPath(
-  new URL("../astro/src/server/content/generated/types.d.ts", import.meta.url),
+  new URL("../src/server/content/generated/types.d.ts", import.meta.url),
 );
 const content =
   "// Types for the Strapi Content API, generated from its OpenAPI specification.\n" +

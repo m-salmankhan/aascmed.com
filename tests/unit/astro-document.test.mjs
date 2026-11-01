@@ -5,7 +5,7 @@ import {
   canonicalPathUrl,
   socialImageUrl,
   serializeStructuredData,
-} from '../../astro/src/server/document-metadata.ts';
+} from '../../src/server/document-metadata.ts';
 test('canonical metadata retains the public host and route trailing slash', () => {
   assert.equal(canonicalPathUrl('/blog/example/'), 'https://www.aascmed.com/blog/example/');
   assert.equal(canonicalPathUrl('contact/'), 'https://www.aascmed.com/contact/');

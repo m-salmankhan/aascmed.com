@@ -10,8 +10,8 @@ import { ContactForm } from "../components/contact";
 import { Article } from "../components/posts/article";
 import { useSiteMetadata } from "../hooks/useSiteMetadata";
 import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
-import { clinicPath } from "../shared/content/urls";
-import type { ClinicRecord } from "../shared/content/models";
+import { clinicPath } from "../content/urls";
+import type { ClinicRecord } from "../content/models";
 
 /** Optional normalized clinic record used to render a clinic detail page. */
 export interface ClinicViewProps { clinic?: ClinicRecord }

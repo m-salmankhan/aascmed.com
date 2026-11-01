@@ -4,7 +4,7 @@ import { css } from "@emotion/react";
 import { cols, gridContainer } from "../../styles/grid";
 import { mediaBreakpoints } from "../../styles/breakpoints";
 import { IconStyles } from "../font-awesome";
-import { SiteLink } from "../../shared/navigation/link";
+import { SiteLink } from "../../navigation/link";
 import { gridSpacing } from "../../styles/theme";
 import { Thumbnail } from "../thumbnails";
 

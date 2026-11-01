@@ -8,7 +8,7 @@ import { colours } from "../../styles/theme";
 import { stylesH5 } from "../headings";
 import { Logo } from "../logo";
 import { StaticMap } from "./static";
-import { usePublicConfig } from "../../shared/config/public-context";
+import { usePublicConfig } from "../../config/public-context";
 
 const stylesMapPopUp = css`
   text-align: center;

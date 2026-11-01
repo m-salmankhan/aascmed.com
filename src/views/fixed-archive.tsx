@@ -1,7 +1,7 @@
 import React from "react";
 import { css } from "@emotion/react";
-import { SiteLink } from "../shared/navigation/link";
-import type { JsonValue, MediaDescriptor, ProviderRecord } from "../shared/content/models";
+import { SiteLink } from "../navigation/link";
+import type { JsonValue, MediaDescriptor, ProviderRecord } from "../content/models";
 import { Layout } from "../components/layouts/default";
 import { Container } from "../components/containers";
 import { Breadcrumbs } from "../components/breadcrumbs";

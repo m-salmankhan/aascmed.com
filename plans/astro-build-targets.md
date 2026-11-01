@@ -1,3 +1,5 @@
+> Historical stage-1 decisions. The current application now lives at the root with one package/lockfile, `yarn build` → `dist/`, and `yarn build:ssr` → `dist-ssr/`. See [current setup](../README.md); the original paths below describe the recorded proof.
+
 # Isolated Astro build targets (WEB-21)
 
 Astro lives in its own package and lockfile so Gatsby's root dependency resolution, commands, generated `public/`, and deployment defaults remain unchanged. Both targets use `static/` as their public asset directory, preserving ownership of `_headers`, `_redirects`, and existing files; Gatsby's generated output is never reused.
