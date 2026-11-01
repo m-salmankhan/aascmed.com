@@ -1,4 +1,4 @@
-import { colours, fontBaseSize, fontFamily, fontWeightBase, fontWeightBold, gridSpacing } from "./theme";
+import { colours, fontFamily, fontWeightBase, fontWeightBold, gridSpacing } from "./theme";
 import { CSSInterpolation } from "@emotion/serialize";
 
 export const stylesGlobal: CSSInterpolation = {
@@ -7,7 +7,7 @@ export const stylesGlobal: CSSInterpolation = {
         margin: 0,
         height: "100%",
         fontFamily: fontFamily,
-        fontSize: fontBaseSize,
+        fontSize: "100%",
         fontWeight: fontWeightBase,
         background: colours.bodyBackground,
         scrollBehavior: "smooth",
@@ -40,6 +40,11 @@ export const stylesGlobal: CSSInterpolation = {
 
     p: {
         marginBottom: "1.5em",
+    },
+
+    // Large user font preferences must not push long heading words out of view.
+    "h1, h2, h3, h4, h5, h6": {
+        overflowWrap: "anywhere",
     },
 
     strong: {

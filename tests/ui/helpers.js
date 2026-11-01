@@ -113,6 +113,21 @@ async function pageContract(page) {
   });
 }
 
+/** Shared mobile/desktop journey used by the media suite and local integration. */
+async function checkResponsiveNavigation(page, baseURL) {
+  await preparePage(page, baseURL);
+  const menu = page.locator('.mobile-menu > summary');
+  const nativeMenu = page.locator('.mobile-menu');
+  if (await menu.isVisible()) {
+    await expect(nativeMenu).not.toHaveAttribute('open');
+    await menu.click();
+    await expect(nativeMenu).toHaveAttribute('open', '');
+  }
+  await page.locator('nav a[href="/providers/"]:visible').first().click();
+  await expect(page).toHaveURL(new URL('/providers/', baseURL).href);
+  await expect(page.locator('#main')).toBeVisible();
+}
+
 async function readSitemap(request, baseURL) {
   const path = process.env.UI_SITEMAP_PATH || "/sitemap-index.xml";
   const response = await request.get(new URL(path, baseURL).href);
@@ -130,4 +145,4 @@ async function readSitemap(request, baseURL) {
   return paths;
 }
 
-module.exports = { imageSelector, installSafety, openPage, preparePage, dismissBooking, semanticImages, pageContract, readSitemap };
+module.exports = { checkResponsiveNavigation, imageSelector, installSafety, openPage, preparePage, dismissBooking, semanticImages, pageContract, readSitemap };

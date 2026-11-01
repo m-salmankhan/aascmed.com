@@ -19,7 +19,7 @@ export const fontFamily = "Poppins, sans-serif";
 export const fontWeightBase = 300;
 export const fontWeightBold = 800;
 export const fontWeightHeadings = 800;
-export const fontBaseSize = "16px";
+export const fontBaseSize = "1rem";
 
 /*
 ===== Colours ====
