@@ -1,7 +1,6 @@
 ## Issue / Kaneo
 
-- ID: <!-- e.g. ABC-123 -->
-- Link: <!-- paste the Kaneo link -->
+- Ticket: <!-- e.g. [ABC-123](https://tracker.example/tasks/ABC-123); use the actual ticket URL, or the ID alone if no URL is available. -->
 
 ## Description
 
