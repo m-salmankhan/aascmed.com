@@ -19,6 +19,15 @@ export const stylesGlobal: CSSInterpolation = {
         boxSizing: "border-box",
     },
 
+    // Preserve the user's system selection colours in high-contrast mode.
+    "@media (forced-colors: none)": {
+        "::selection": {
+            backgroundColor: colours.darkGreen,
+            color: "#fff",
+            textShadow: "none",
+        },
+    },
+
     a: {
         color: colours.brandPrimary,
     },
