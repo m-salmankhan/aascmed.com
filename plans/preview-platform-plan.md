@@ -49,7 +49,7 @@ Use GitHub's encrypted repository secrets directly for the SSH private key and r
 
 Stage Strapi/Cloudflare credentials with their matching release so a failed update can restore a compatible working set. Never roll the global preview signing key back; rotation invalidates old sessions. Disable credential rollback when replacing a known-compromised token, and fail closed if the replacement cannot be validated. For normal rotations, verify the new dependency (including actual DNS-01 issuance/renewal for the DNS token) before revoking the old value.
 
-The beginner guide must separate the one-time provider/CI setup from automatic operation: creating the VPS, adding the public key, verifying its identity, registering protected settings/secrets, reading CI results, dry-run limits, retries, updates, rotation and recovery. Explain inventory, playbooks, roles, handlers and Vault in plain language. Provide concrete CI actions and expected results; laptop commands may be optional troubleshooting aids, never prerequisites for deployment.
+The beginner guide must separate the one-time provider/CI setup from automatic operation: creating the VPS, adding the public key, verifying its identity, registering repository settings/secrets, reading CI results, dry-run limits, retries, updates, rotation and recovery. Explain inventory, playbooks, roles, handlers and secret files in plain language. Provide concrete CI actions and expected results; laptop commands may be optional troubleshooting aids, never prerequisites for deployment.
 
 ## Delivery and recovery
 
