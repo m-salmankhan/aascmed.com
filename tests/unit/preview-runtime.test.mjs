@@ -56,10 +56,19 @@ test('readiness reads a small draft response with the mounted token and returns 
       return Response.json({ data: [] });
     };
     assert.equal((await previewReadiness()).status, 200);
-    globalThis.fetch = async () => new Response('private upstream body', { status: 503 });
-    const failed = await previewReadiness();
-    assert.equal(failed.status, 503);
-    assert.equal(await failed.text(), 'not ready');
+    globalThis.fetch = async () => Response.json({ data: [{ documentId: 'saved-draft' }] });
+    assert.equal((await previewReadiness()).status, 200);
+    for (const status of [401, 503]) {
+      let cancelled = false;
+      globalThis.fetch = async () => new Response(new ReadableStream({
+        start(controller) { controller.enqueue(new TextEncoder().encode('private upstream body')); },
+        cancel() { cancelled = true; },
+      }), { status });
+      const failed = await previewReadiness();
+      assert.equal(failed.status, 503);
+      assert.equal(await failed.text(), 'not ready');
+      assert.equal(cancelled, true, `Unread HTTP ${status} body is cancelled before returning`);
+    }
   } finally {
     globalThis.fetch = fetcher;
     for (const key of ['STRAPI_TOKEN', 'STRAPI_TOKEN_FILE', 'STRAPI_API_URL', 'ASTRO_CONTENT_MODE']) {
