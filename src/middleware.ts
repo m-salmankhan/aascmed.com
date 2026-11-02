@@ -1,6 +1,7 @@
 // Keeps protected preview responses private and out of search indexes.
 import { defineMiddleware } from 'astro:middleware';
 import { previewReadiness } from './server/preview-readiness.ts';
+import { previewOrigins } from './server/preview-origins.ts';
 
 /** Apply the preview response policy after Astro renders the requested route.
  * @param context Astro request context; route matching remains Astro's responsibility.
@@ -24,12 +25,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   if (preview) {
     response.headers.set('Cache-Control', 'private, no-store');
     response.headers.set('X-Robots-Tag', 'noindex, nofollow');
-    const configuredParents = [
-      process.env.STRAPI_API_URL,
-      ...(process.env.PREVIEW_FRAME_ORIGINS || '').split(','),
-    ].filter((value) => value?.trim());
-    const parentOrigins = configuredParents.map((value) => new URL(value!.trim()).origin);
-    const frameAncestors = ["'self'", ...new Set(parentOrigins)].join(' ');
+    const frameAncestors = ["'self'", ...previewOrigins()].join(' ');
     response.headers.set('Content-Security-Policy', `frame-ancestors ${frameAncestors}`);
   }
   return response;
