@@ -8,7 +8,6 @@ import { generateNavigationMetrics } from './scripts/generate-navigation-metrics
 await generateNavigationMetrics();
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
-import { publishedSitemap } from './src/integrations/sitemap.ts';
 
 const repositoryRoot = fileURLToPath(new URL('./', import.meta.url));
 const { values } = parseArgs({
@@ -58,7 +57,7 @@ const config = {
   root: '.',
   srcDir: './src',
   publicDir: './static',
-  integrations: [react(), publishedSitemap()],
+  integrations: [react()],
   image: {
     remotePatterns: mediaOrigins.map((origin) => {
       const url = new URL(origin);
