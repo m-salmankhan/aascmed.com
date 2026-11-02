@@ -11,7 +11,7 @@ Set these in the relevant Netlify build context (production or deploy preview), 
 | `PUBLIC_MAPBOX_API_KEY` | Public Mapbox token for maps and clinic social cards. Set explicitly; no Gatsby fallback remains. | Browser-visible; embedded at build time and used by image generation. |
 | `ASTRO_CONTENT_MODE` | `published` or unset for public deployments. `draft` only on an authenticated SSR preview. Static builds reject draft reads. | Server content mode; does not install authentication. |
 | `STRAPI_MEDIA_ORIGINS` | Optional comma-separated extra upload/CDN origins including ports. No paths/queries/fragments. Empty if uploads use the CMS origin. | Build-time allowlist; the CMS origin is included automatically. |
-| `PREVIEW_FRAME_ORIGINS` | Optional comma-separated extra editor origins. The configured CMS origin and preview itself are already permitted. | SSR runtime framing policy. |
+| `PREVIEW_FRAME_ORIGINS` | Optional comma-separated extra editor origins. The configured CMS origin and preview itself are already permitted. | SSR framing and the exact parent origins allowed to request saved-draft refresh. |
 
 Changing an embedded browser value requires a new build. Mapbox tokens are public tokens with appropriate URL restrictions. CMS tokens stay server-side and are never embedded in page props, browser variables or generated image assets.
 

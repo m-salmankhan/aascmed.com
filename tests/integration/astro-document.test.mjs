@@ -81,6 +81,7 @@ test(
       });
     }
     let app;
+    let cmsParent;
     const fixturePath = new URL(
       '../../src/pages/verification-document-fixture.astro',
       import.meta.url,
@@ -185,6 +186,7 @@ import SiteDocument from '../layouts/SiteDocument.astro';
         !fixtureHtml.includes('<script>untrusted</script>'),
         'authored JSON-LD cannot create executable markup',
       );
+      assert.doesNotMatch(fixtureHtml, /preview-cms-origins|preview-refresh/, 'public pages do not load preview refresh');
       const fixtureJson = fixtureHtml.match(
         /<script type="application\/ld\+json">([\s\S]*?)<\/script>/,
       )?.[1];
@@ -305,6 +307,7 @@ import SiteDocument from '../layouts/SiteDocument.astro';
       }
       const staticSitemap = await readFile(path.join(staticOutputDir, 'sitemap-0.xml'), 'utf8');
       assertSitemapMetadata(staticSitemap);
+      assert.ok(!staticSitemap.includes('preview-unavailable'), 'editor-only help is not advertised in the public sitemap');
       assert.ok(
         staticSitemap.includes('https://www.aascmed.com/verification-document-fixture/'),
         'Astro discovers fixed pages automatically',
@@ -322,12 +325,20 @@ import SiteDocument from '../layouts/SiteDocument.astro';
           server.close(() => resolve(port));
         });
       });
+      const base = `http://127.0.0.1:${portProbe}`;
+      const parentHtml = `<iframe src="${base}/"></iframe><iframe name="sibling" srcdoc=""></iframe><script>window.previewReady=0;addEventListener('message',event=>{if(event.data?.type==='previewReady')window.previewReady++})</script>`;
+      cmsParent = createServer((_request, response) => {
+        response.writeHead(200, { 'Content-Type': 'text/html' });
+        response.end(parentHtml);
+      });
+      await new Promise((resolve) => cmsParent.listen(0, '127.0.0.1', resolve));
+      const editorOrigin = `http://127.0.0.1:${cmsParent.address().port}`;
       app = spawn(process.execPath, ['dist-ssr/server/entry.mjs'], {
         env: {
           ...process.env,
           HOST: '127.0.0.1',
           PORT: String(portProbe),
-          PREVIEW_FRAME_ORIGINS: 'https://editor.example.test:8443',
+          PREVIEW_FRAME_ORIGINS: `https://editor.example.test:8443,${editorOrigin}`,
           STRAPI_API_URL: cmsUrl,
           STRAPI_TOKEN: fixtureToken,
           ASTRO_CONTENT_MODE: 'published',
@@ -335,7 +346,6 @@ import SiteDocument from '../layouts/SiteDocument.astro';
         cwd: astroRoot,
         stdio: 'ignore',
       });
-      const base = `http://127.0.0.1:${portProbe}`;
       let response;
       for (let attempt = 0; attempt < 60; attempt++) {
         try {
@@ -370,6 +380,12 @@ import SiteDocument from '../layouts/SiteDocument.astro';
           ssrHtml.indexOf('application/ld+json') < ssrHtml.indexOf('</head>'),
         'document metadata is rendered in the server response head',
       );
+      assert.match(ssrHtml, /name="preview-cms-origins"/);
+      const refreshUrl = /<script[^>]+src="([^"]*preview-refresh[^\"]*)"/.exec(ssrHtml)?.[1];
+      assert.ok(refreshUrl, 'the compiled preview loads its saved-refresh module');
+      const refreshAsset = await fetch(`${base}${refreshUrl}`);
+      assert.equal(refreshAsset.status, 200);
+      assert.match(await refreshAsset.text(), /strapiUpdate/);
       for (const trackingCase of trackingCases) {
         const preview = await fetch(`${base}/${trackingCase.name}/`);
         assert.equal(preview.status, 200);
@@ -391,6 +407,51 @@ import SiteDocument from '../layouts/SiteDocument.astro';
       assert.equal(sitemapResponse.status, 404, 'the preview server does not publish a sitemap');
       assert.doesNotMatch(await sitemapResponse.text(), /<urlset|<sitemapindex/);
       assert.equal((await fetch(`${base}/sitemap-index.xml`)).status, 404);
+      const previewBrowser = await chromium.launch();
+      try {
+        const context = await previewBrowser.newContext();
+        await context.route('**/*', (route) => ['127.0.0.1', 'localhost'].includes(new URL(route.request().url()).hostname)
+          ? route.continue() : route.fulfill({ status: 204, body: '' }));
+        const page = await context.newPage();
+        const noReload = (frame) => page.waitForEvent('framenavigated', { predicate: (candidate) => candidate === frame, timeout: 400 }).then(() => false, () => true);
+        const browserErrors = [];
+        page.on('console', (message) => { if (message.type() === 'error') browserErrors.push(message.text()); });
+        page.on('pageerror', (error) => browserErrors.push(error.message));
+        await page.goto(base);
+        await page.waitForSelector('astro-island:not([ssr])');
+        let unchanged = noReload(page.mainFrame());
+        await page.evaluate(() => window.postMessage({ type: 'strapiUpdate' }, window.location.origin));
+        assert.ok(await unchanged, 'a hydrated direct tab ignores spoofed saved-update messages');
+
+        await page.goto(editorOrigin);
+        await page.waitForFunction(() => window.previewReady === 1, null, { timeout: 5000 }).catch(async () => {
+          const frames = await Promise.all(page.frames().map((frame) => frame.evaluate(() => ({
+            url: location.href, direct: parent === window, ready: window.previewReady,
+            origins: document.querySelector('meta[name="preview-cms-origins"]')?.content,
+            scripts: [...document.scripts].map((script) => script.src).filter((src) => src.includes('preview-refresh')),
+          }))));
+          throw new Error(`Preview handshake failed: ${browserErrors.join('; ')} ${JSON.stringify(frames)}`);
+        });
+        let child = page.frames().find((frame) => frame.parentFrame() === page.mainFrame() && frame.name() !== 'sibling');
+        await child.waitForSelector('astro-island:not([ssr])');
+        unchanged = noReload(child);
+        await page.frames().find((frame) => frame.name() === 'sibling').evaluate((target) => window.parent.frames[0].postMessage({ type: 'strapiUpdate' }, target), base);
+        assert.ok(await unchanged, 'an approved-origin sibling cannot impersonate the parent');
+        const refreshed = page.waitForEvent('framenavigated', { predicate: (frame) => frame === child });
+        await page.evaluate((target) => window.frames[0].postMessage({ type: 'strapiUpdate' }, target), base);
+        await refreshed;
+        await page.waitForFunction(() => window.previewReady === 2);
+
+        await page.goto(base);
+        await page.setContent(parentHtml);
+        child = page.frames().find((frame) => frame.parentFrame() === page.mainFrame() && frame.name() !== 'sibling');
+        await child.waitForSelector('astro-island:not([ssr])');
+        unchanged = noReload(child);
+        await page.evaluate((target) => window.frames[0].postMessage({ type: 'strapiUpdate' }, target), base);
+        assert.ok(await unchanged, 'a parent outside the CMS origin list cannot reload preview');
+      } finally {
+        await previewBrowser.close();
+      }
       assert.ok(
         observedCmsRequests.every((url) => url.query.status === 'published'),
         'the published-mode fixture never reads drafts',
@@ -402,6 +463,7 @@ import SiteDocument from '../layouts/SiteDocument.astro';
         await exited;
       }
       await cms.close();
+      if (cmsParent) await new Promise((resolve) => cmsParent.close(resolve));
       for (const file of trackingFixtures) {
         await unlink(file);
       }
