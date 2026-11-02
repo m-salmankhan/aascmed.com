@@ -1,0 +1,103 @@
+name: Preview image
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+env:
+  IMAGE: ghcr.io/m-salmankhan/aascmed.com-preview
+  STRAPI_API_URL: ${{ vars.STRAPI_API_URL }}
+  STRAPI_MEDIA_ORIGINS: ${{ vars.STRAPI_MEDIA_ORIGINS }}
+  PUBLIC_RUNTIME_API_BASE_URL: ${{ vars.PUBLIC_RUNTIME_API_BASE_URL }}
+  PUBLIC_MAPBOX_API_KEY: ${{ vars.PUBLIC_MAPBOX_API_KEY }}
+
+jobs:
+  check:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .node-version
+          check-latest: true
+      - run: yarn install --frozen-lockfile --non-interactive
+      - run: yarn test:unit && yarn typecheck
+      - name: Build preview without CMS credentials
+        run: docker build -f Dockerfile.preview -t "$IMAGE:$GITHUB_SHA" --build-arg STRAPI_API_URL --build-arg STRAPI_MEDIA_ORIGINS --build-arg PUBLIC_RUNTIME_API_BASE_URL --build-arg PUBLIC_MAPBOX_API_KEY .
+      - name: Check the actual container with synthetic CMS data
+        run: node scripts/check-preview-image.mjs docker "$IMAGE:$GITHUB_SHA"
+
+  publish:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'm-salmankhan/aascmed.com'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .node-version
+          check-latest: true
+      - run: yarn install --frozen-lockfile --non-interactive
+      - run: yarn test:unit && yarn typecheck
+      - name: Require the public CMS origin used by the image allowlist
+        run: |
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          const url = new URL(process.env.STRAPI_API_URL);
+          assert.ok(url.protocol === 'https:' && !url.username && !url.password && !url.search && !url.hash);
+          JS
+      - name: Build preview without CMS credentials
+        run: docker build -f Dockerfile.preview -t "$IMAGE:$GITHUB_SHA" --build-arg STRAPI_API_URL --build-arg STRAPI_MEDIA_ORIGINS --build-arg PUBLIC_RUNTIME_API_BASE_URL --build-arg PUBLIC_MAPBOX_API_KEY .
+      - name: Check the actual container with synthetic CMS data
+        run: node scripts/check-preview-image.mjs docker "$IMAGE:$GITHUB_SHA"
+      - name: Refuse to publish into an existing public package
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/check-preview-package.mjs before-push
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - run: docker push "$IMAGE:$GITHUB_SHA"
+      - name: Confirm private visibility before recording the release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/check-preview-package.mjs after-push
+      - name: Record the published image for deployment
+        run: |
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import { execFileSync } from 'node:child_process';
+          import { writeFileSync } from 'node:fs';
+          const repository = 'm-salmankhan/aascmed.com';
+          const prefix = `${process.env.IMAGE}@sha256:`;
+          const [image] = JSON.parse(execFileSync('docker', ['image', 'inspect', `${process.env.IMAGE}:${process.env.GITHUB_SHA}`], { encoding: 'utf8' }));
+          const reference = image.RepoDigests.find((value) => value.startsWith(prefix));
+          assert.ok(reference && reference.length === prefix.length + 64 && /^[0-9a-f]{64}$/.test(reference.slice(prefix.length)));
+          const runId = Number(process.env.GITHUB_RUN_ID);
+          const runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT);
+          assert.ok(Number.isSafeInteger(runId) && runId > 0 && Number.isSafeInteger(runAttempt) && runAttempt > 0);
+          assert.ok(process.env.GITHUB_REPOSITORY === repository && /^[0-9a-f]{40}$/.test(process.env.GITHUB_SHA));
+          writeFileSync('build.json', JSON.stringify({ version: 1, component: 'astro', repository, commit: process.env.GITHUB_SHA, image: reference, runId, runAttempt }) + '\n');
+          JS
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: preview-build-manifest
+          path: build.json
+          if-no-files-found: error
+          overwrite: true
+          retention-days: 30

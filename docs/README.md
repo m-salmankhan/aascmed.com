@@ -52,6 +52,12 @@ For a local container check, run `podman build -f Dockerfile.preview -t localhos
 
 This target does not include a deployed authentication gateway. Draft mode requires a protected deployment; setting `ASTRO_CONTENT_MODE=draft` does not provide authentication. The old Gatsby preview deployment and its `deploy-preview.yml` workflow were retired. Replacement infrastructure and editor setup remain [planned preview-platform work](../plans/preview-platform-plan.md).
 
+## Automatic preview image publication
+
+`preview-image.yml` tests the code and the real container. Pull requests get read-only checks. Successful pushes to `main` publish the tested container privately as `ghcr.io/m-salmankhan/aascmed.com-preview` and record its exact image digest and source commit. Publication refuses an existing public package and confirms the new image is private before notifying deployment.
+
+After that build has finished successfully, `notify-preview.yml` automatically requests deployment from the preview repository. It does not check out code, execute build artifacts or receive VPS credentials. Merge the preview repository's deployment workflow first and register the one-time GitHub App connection described in the [environment inventory](environment-variables.md). Runtime secrets remain in the preview repository's protected deployment settings.
+
 ## Further documentation
 
 - [Environment variables](environment-variables.md): build, browser and server settings.
