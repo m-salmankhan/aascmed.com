@@ -42,7 +42,7 @@ try {
   cms.unavailableResources.add('blogs');
   assert.equal((await fetch(`${origin}/_health/ready`)).status, 503, 'CMS outages fail readiness');
   run('stop', '-t', '10', name);
-  assert.notEqual(JSON.parse(run('inspect', name))[0].State.ExitCode, 137, 'SIGTERM does not need a forced kill');
+  assert.equal(JSON.parse(run('inspect', name))[0].State.ExitCode, 0, 'SIGTERM drains the server and exits cleanly');
   let missingFileRejected = false;
   try { run('run', '--rm', '--network', 'none', '-e', 'STRAPI_API_URL=https://cms.example.test', image); } catch (error) { missingFileRejected = /Preview startup failed/.test(String(error.stderr)); }
   assert.ok(missingFileRejected, 'draft container refuses a missing secret file');
