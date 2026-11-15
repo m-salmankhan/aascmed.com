@@ -11,7 +11,7 @@ export const IconStyles = {
     REGULAR: regular,
     SOLID: solid,
 } as const;
-/** Append an SVG symbol fragment to a sprite URL for Gatsby/Vite-compatible references.
+/** Append an SVG symbol fragment to a sprite URL for Vite-compatible references.
  * @param url Imported public sprite URL.
  * @param symbol Sprite symbol identifier without a leading `#`.
  * @returns The sprite URL followed by its symbol fragment.

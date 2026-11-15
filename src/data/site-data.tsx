@@ -1,4 +1,5 @@
 import React, { createContext, ReactNode, useContext } from "react";
+import { siteSettings } from "../config/site";
 import type { SiteSettings } from "../content/models";
 
 /** Framework-neutral site metadata needed by shared site components. */
@@ -8,7 +9,7 @@ export interface SiteData {
 }
 
 const defaultSiteData: SiteData = {
-  siteSettings: { title: "Untitled Site", url: "" },
+  siteSettings,
 };
 
 const SiteDataContext = createContext<SiteData>(defaultSiteData);

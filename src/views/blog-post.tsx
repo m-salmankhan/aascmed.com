@@ -64,7 +64,7 @@ export function BlogPostView({ blog, pathname }: BlogPostViewProps) {
 function BlogContent({ content }: BlogContentProps) {
   return <>
     {content.map((component, index) => {
-      const type = component.__component || component.strapi_component;
+      const type = component.__component;
       if (type === "generic.rich-text" && component.text) return <StrapiBlocksRenderer key={index} content={component.text} />;
       if (type === "generic.contact-booking-cta") return <ContactBanner key={index} />;
       return null;

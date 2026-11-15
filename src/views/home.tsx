@@ -22,7 +22,7 @@ import { SectionHeader, stylesBigH1 } from "../components/headings";
 import { PatientFormsBanner } from "../components/patient-forms/cta-banner";
 import { HorizontalCalloutBanner } from "../components/cta/horizontal-banner";
 
-/** Plain, JSON-safe homepage data. React nodes and Gatsby data stay out of the view boundary. */
+/** Plain, JSON-safe homepage data. React nodes stay out of the view boundary. */
 export interface HomeSection {
   heading: string;
   /** Strapi Blocks content in its serializable JSON form. */

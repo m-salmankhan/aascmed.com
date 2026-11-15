@@ -11,7 +11,7 @@ export function extractPlainText(content: any[]): string {
     const textParts: string[] = [];
     
     for (const component of content) {
-        const componentType = component.__component || component.strapi_component;
+        const componentType = component.__component;
         
         if (componentType === 'generic.rich-text' && component.text) {
             for (const block of component.text) {

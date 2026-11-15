@@ -19,7 +19,7 @@ export function extractTableOfContents(content: any[]): ContentsPageItem[] {
     // First pass: find the minimum heading level used
     let minLevel = 6;
     for (const component of content) {
-        const componentType = component.__component || component.strapi_component;
+        const componentType = component.__component;
         if (componentType === 'generic.rich-text' && component.text) {
             for (const block of component.text) {
                 if (block.type === 'heading' && block.level) {
@@ -31,7 +31,7 @@ export function extractTableOfContents(content: any[]): ContentsPageItem[] {
     
     // Second pass: extract headings, treating minLevel as "top level"
     for (const component of content) {
-        const componentType = component.__component || component.strapi_component;
+        const componentType = component.__component;
         
         // Handle FAQ component - add to TOC
         if (componentType === 'generic.faq') {
