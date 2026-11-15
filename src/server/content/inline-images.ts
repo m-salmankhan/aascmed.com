@@ -13,12 +13,15 @@ export async function prepareInlineImages(
   mode: ContentMode,
   width: number,
 ): Promise<void> {
+  // Resolve the CMS client once for this tree, lazily when an image needs it.
+  let origin: string | undefined;
+  async function visit(content: unknown): Promise<void> {
   if (!content || typeof content !== 'object') {
     return;
   }
   if (Array.isArray(content)) {
     for (const child of content) {
-      await prepareInlineImages(child, mode, width);
+      await visit(child);
     }
     return;
   }
@@ -28,7 +31,7 @@ export async function prepareInlineImages(
     if (typeof image.url !== 'string') {
       return;
     }
-    const origin = new URL(createClient(mode).baseURL).origin;
+    origin ??= new URL(createClient(mode).baseURL).origin;
     const prepared = await getResponsiveMediaDescriptor(
       {
         src: new URL(image.url, origin).href,
@@ -50,6 +53,8 @@ export async function prepareInlineImages(
     return;
   }
   for (const child of Object.values(block)) {
-    await prepareInlineImages(child, mode, width);
+    await visit(child);
   }
+  }
+  await visit(content);
 }

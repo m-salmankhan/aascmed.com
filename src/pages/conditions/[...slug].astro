@@ -7,14 +7,16 @@ import { getConditionBySlug } from '../../server/content/loaders';
 import { getPageSettings, pageContentMode } from '../../server/pages/common';
 import { contentPaths } from '../../server/pages/content';
 import { socialCardPath } from '../../server/media/social-cards.ts';
-/** Enumerate compact published condition route parameters for static output.
+/** Enumerate full published condition route parameters for static output.
  * @returns Slugs for published condition pages.
  */
 export async function getStaticPaths() {
   return contentPaths('condition', '/conditions/');
 }
 const mode = pageContentMode();
-const condition = await getConditionBySlug(Astro.params.slug || '', mode);
+const condition = import.meta.env.PUBLIC_ASTRO_TARGET === 'static'
+  ? Astro.props.record
+  : await getConditionBySlug(Astro.params.slug || '', mode);
 if (!condition) return Astro.rewrite('/404');
 const settings = await getPageSettings(mode);
 const socialImagePath =

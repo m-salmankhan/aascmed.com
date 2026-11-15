@@ -17,11 +17,21 @@ export function pageContentMode(): ContentMode {
  * @param mode Published or protected preview publication state.
  * @returns Serializable settings consumed by the shared page and document.
  */
-export async function getPageSettings(mode: ContentMode) {
+async function loadPageSettings(mode: ContentMode) {
   const [announcement, trackingSettings] = await Promise.all([
     getAnnouncement(mode),
     getTrackingInfo(mode),
   ]);
   await prepareInlineImages(announcement, mode, 1200);
   return { announcement, trackingSettings };
+}
+
+let buildSettings: ReturnType<typeof loadPageSettings> | undefined;
+
+export function getPageSettings(mode: ContentMode) {
+  if (import.meta.env.PUBLIC_ASTRO_TARGET !== 'static') return loadPageSettings(mode);
+  return buildSettings ??= loadPageSettings('published').catch(error => {
+    buildSettings = undefined;
+    throw error;
+  });
 }
