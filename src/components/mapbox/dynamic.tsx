@@ -50,15 +50,10 @@ export const MapBox: React.FC<MapBoxProps> = (props) => {
     const [jsEnabled, setJsEnabled] = useState(false);
     useEffect(() => {
         setJsEnabled(true);
-    }, [jsEnabled]);
+    }, []);
 
     const mapContainer = useRef<HTMLDivElement | null>(null);
     const map = useRef<mapboxgl.Map | null>(null);
-    const [lng, setLng] = useState(props.longitude);
-    const [lat, setLat] = useState(props.latitude);
-    const [zoom, setZoom] = useState(props.zoom);
-
-
     useEffect(() => {
         if (!jsEnabled) return; // no way to show the interactive map without JS
         if (map.current) return; // initialize map only once
@@ -69,16 +64,10 @@ export const MapBox: React.FC<MapBoxProps> = (props) => {
             container: mapContainer.current as HTMLElement,
             accessToken: mapboxAccessToken,
             style: 'mapbox://styles/mapbox/streets-v12',
-            center: [lng, lat],
-            zoom: zoom
+            center: [props.longitude, props.latitude],
+            zoom: props.zoom
         });
         map.current = mapboxMap;
-
-        mapboxMap.on('move', () => {
-            setLng(parseFloat(mapboxMap.getCenter().lng.toFixed(4)));
-            setLat(parseFloat(mapboxMap.getCenter().lat.toFixed(4)));
-            setZoom(parseFloat(mapboxMap.getZoom().toFixed(2)));
-        });
 
         new mapboxgl.Marker({ color: '#1C5E38' })
             .setLngLat([props.longitude, props.latitude])
@@ -91,7 +80,7 @@ export const MapBox: React.FC<MapBoxProps> = (props) => {
             popupRoots.clear();
             map.current = null;
         };
-    }, [map, mapContainer, setLng, setLat, setZoom, jsEnabled, mapboxAccessToken]);
+    }, [jsEnabled, mapboxAccessToken, props.longitude, props.latitude, props.zoom, props.label]);
 
     if (jsEnabled) {
         return (

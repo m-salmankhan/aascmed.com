@@ -1,5 +1,5 @@
 import { css } from "@emotion/react"
-import { useState, useId, useRef, useEffect } from "react"
+import { useState, useId, useRef, useEffect, useCallback } from "react"
 import { MapBoxProps } from "."
 import { usePublicConfig } from "../../config/public-context";
 
@@ -13,8 +13,10 @@ interface StaticMapBoxParameters {
     zoom: number
     accessToken: string
 }
-const mapSrc = ({ label, latitude, longitude, width, height, retina, zoom, accessToken }: StaticMapBoxParameters) =>
-    `https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/pin-l-${label}+1C5E38(${longitude},${latitude})/${longitude},${latitude},${zoom},0/${width}x${height}${retina ? "@2x" : ""}?access_token=${accessToken}`;
+const mapSrc = ({ label, latitude, longitude, width, height, retina, zoom, accessToken }: StaticMapBoxParameters) => {
+    const pinLabel = /^[a-z0-9]$/i.test(label[0] || '') ? `-${label[0].toLowerCase()}` : '';
+    return `https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/pin-l${pinLabel}+1C5E38(${longitude},${latitude})/${longitude},${latitude},${zoom},0/${width}x${height}${retina ? "@2x" : ""}?access_token=${accessToken}`;
+};
 
 enum ImageState {
     INITIAL = "init",
@@ -71,9 +73,9 @@ export const StaticMap: React.FC<MapBoxProps> = (props) => {
     const [loaded, setLoaded] = useState(ImageState.INITIAL);
     const id = useId();
 
-    const unBlurImage = () => {
+    const unBlurImage = useCallback(() => {
         setLoaded(ImageState.LOADED);
-    }
+    }, []);
 
     const removePreviewImg = () => {
         setLoaded(ImageState.COMPLETED);
@@ -86,7 +88,7 @@ export const StaticMap: React.FC<MapBoxProps> = (props) => {
         if (imageRef.current.complete && imageRef.current.naturalWidth > 0) {
             unBlurImage();
         }
-    }, [imageRef, unBlurImage]);
+    }, [unBlurImage, props.inView]);
 
 
     const previewSrc = "/assets/map-lazy.jpg";
@@ -94,7 +96,7 @@ export const StaticMap: React.FC<MapBoxProps> = (props) => {
     const baseParameters: StaticMapBoxParameters = {
         width: 600,
         height: 400,
-        label: props.label[0].toLocaleLowerCase(),
+        label: props.label,
         longitude: props.longitude,
         latitude: props.latitude,
         retina: false,
@@ -114,7 +116,7 @@ export const StaticMap: React.FC<MapBoxProps> = (props) => {
     }
 
     return (
-        <div className={props.className + " noscript"} css={css(stylesStaticMap)}>
+        <div className={[props.className, "noscript"].filter(Boolean).join(" ")} css={css(stylesStaticMap)}>
             <noscript>
                 <div className="lazy-container">
                     <img loading="lazy" decoding="async" alt={props.alt} className={`map ${ImageState.COMPLETED}`} src={image.src} srcSet={image.srcset} sizes={image.sizes} />
