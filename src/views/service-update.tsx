@@ -26,6 +26,7 @@ import { serviceUpdatePath } from '../content/urls';
 export interface ServiceUpdateViewProps {
   serviceUpdate: ServiceUpdateRecord;
   pathname: string;
+  /** Required label computed server-side with formatServiceUpdateDate. */
   dateLabel: string;
 }
 
