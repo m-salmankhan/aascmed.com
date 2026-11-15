@@ -325,6 +325,9 @@ export async function getProviderBySlug(
   validateRouteRecord(record, "provider", mode);
   return record;
 }
+// shortcut: slugless published clinics may lag five seconds, remove when every clinic has a slug.
+const clinicFallbacks = new Map<string, { expires: number; records: Promise<ClinicRecord[]> }>();
+
 /** Find a clinic by slug and fall back to its name-derived route when no explicit slug matches.
  * @param slug Requested clinic route slug.
  * @param mode Content state requested from Strapi.
@@ -349,22 +352,37 @@ export async function getClinicBySlug(
     validateRouteRecord(record, "clinic", mode);
     return record;
   }
-  for await (const entity of readRecords(client.collection("clinics"), {
-    status: mode,
-    sort: ["id:asc"],
-    populate: clinicPopulate,
-  })) {
-    const clinic = mapStrapiClinic(entity);
-    if (
-      !clinic.slug &&
-      clinic.clinicName &&
-      clinicPath({ slug: null, clinicName: clinic.clinicName }) === `/clinics/${slug}/`
-    ) {
-      validateRouteRecord(clinic, "clinic", mode);
-      return clinic;
+  async function* sluglessClinics() {
+    for await (const item of readRecords(client.collection('clinics'), {
+      status: mode, sort: ['id:asc'], populate: clinicPopulate,
+    })) {
+      const clinic = mapStrapiClinic(item);
+      if (!clinic.slug) yield clinic;
     }
   }
-  return null;
+  const matches = (clinic: ClinicRecord) => clinic.clinicName && clinicPath(clinic) === `/clinics/${slug}/`;
+  if (mode === 'draft') {
+    for await (const clinic of sluglessClinics()) {
+      if (matches(clinic)) return clinic;
+    }
+    return null;
+  }
+  const key = client.baseURL;
+  let cached = clinicFallbacks.get(key);
+  if (!cached || cached.expires <= Date.now()) {
+    const records = (async () => {
+      const clinics: ClinicRecord[] = [];
+      for await (const clinic of sluglessClinics()) clinics.push(clinic);
+      return clinics;
+    })();
+    cached = { expires: Date.now() + 5000, records };
+    clinicFallbacks.set(key, cached);
+    const entry = cached;
+    records.catch(() => { if (clinicFallbacks.get(key) === entry) clinicFallbacks.delete(key); });
+  }
+  const clinic = (await cached.records).find(matches) ?? null;
+  if (clinic) validateRouteRecord(clinic, 'clinic', mode);
+  return clinic;
 }
 /** Find one service update by its route slug.
  * @param slug Requested service update slug.
@@ -400,69 +418,35 @@ export async function getAnnouncement(mode: ContentMode): Promise<AnnouncementSe
   const entity = await readSingle(client.single("announcement"), { status: mode });
   return entity ? mapStrapiAnnouncement(entity) : null;
 }
-/** Load and normalize the blog archive page.
- * @param mode Content state requested from Strapi.
- * @returns Mapped page or null when missing; upstream failures throw.
- */
-export async function getBlogArchive(mode: ContentMode): Promise<ContentPageRecord | null> {
+
+
+
+
+
+const pageTypes = {
+  getBlogArchive: "blog-archive",
+  getConditionsArchive: "conditions-archive",
+  getClinicsArchive: "clinics-archive",
+  getContact: "contact",
+  getProvidersPage: "providers-page",
+  getServiceUpdatePage: "service-update-page",
+  getPrivacyPolicy: "privacy-policy",
+};
+
+async function loadPage(kind: keyof typeof pageTypes, mode: ContentMode): Promise<ContentPageRecord | null> {
   const client = createClient(mode);
-  const entity = await readSingle(client.single("blog-archive"), { status: mode });
+  const entity = await readSingle(client.single(pageTypes[kind]), { status: mode });
   return entity ? mapStrapiPage(entity) : null;
 }
-/** Load and normalize the conditions archive page.
- * @param mode Content state requested from Strapi.
- * @returns Mapped page or null when missing; upstream failures throw.
- */
-export async function getConditionsArchive(mode: ContentMode): Promise<ContentPageRecord | null> {
-  const client = createClient(mode);
-  const entity = await readSingle(client.single("conditions-archive"), { status: mode });
-  return entity ? mapStrapiPage(entity) : null;
-}
-/** Load and normalize the clinics archive page.
- * @param mode Content state requested from Strapi.
- * @returns Mapped page or null when missing; upstream failures throw.
- */
-export async function getClinicsArchive(mode: ContentMode): Promise<ContentPageRecord | null> {
-  const client = createClient(mode);
-  const entity = await readSingle(client.single("clinics-archive"), { status: mode });
-  return entity ? mapStrapiPage(entity) : null;
-}
-/** Load and normalize the contact page.
- * @param mode Content state requested from Strapi.
- * @returns Mapped page or null when missing; upstream failures throw.
- */
-export async function getContact(mode: ContentMode): Promise<ContentPageRecord | null> {
-  const client = createClient(mode);
-  const entity = await readSingle(client.single("contact"), { status: mode });
-  return entity ? mapStrapiPage(entity) : null;
-}
-/** Load and normalize the providers page.
- * @param mode Content state requested from Strapi.
- * @returns Mapped page or null when missing; upstream failures throw.
- */
-export async function getProvidersPage(mode: ContentMode): Promise<ContentPageRecord | null> {
-  const client = createClient(mode);
-  const entity = await readSingle(client.single("providers-page"), { status: mode });
-  return entity ? mapStrapiPage(entity) : null;
-}
-/** Load and normalize the service updates page.
- * @param mode Content state requested from Strapi.
- * @returns Mapped page or null when missing; upstream failures throw.
- */
-export async function getServiceUpdatePage(mode: ContentMode): Promise<ContentPageRecord | null> {
-  const client = createClient(mode);
-  const entity = await readSingle(client.single("service-update-page"), { status: mode });
-  return entity ? mapStrapiPage(entity) : null;
-}
-/** Load and normalize the privacy policy page.
- * @param mode Content state requested from Strapi.
- * @returns Mapped page or null when missing; upstream failures throw.
- */
-export async function getPrivacyPolicy(mode: ContentMode): Promise<ContentPageRecord | null> {
-  const client = createClient(mode);
-  const entity = await readSingle(client.single("privacy-policy"), { status: mode });
-  return entity ? mapStrapiPage(entity) : null;
-}
+
+export const getBlogArchive = (mode: ContentMode) => loadPage("getBlogArchive", mode);
+export const getConditionsArchive = (mode: ContentMode) => loadPage("getConditionsArchive", mode);
+export const getClinicsArchive = (mode: ContentMode) => loadPage("getClinicsArchive", mode);
+export const getContact = (mode: ContentMode) => loadPage("getContact", mode);
+export const getProvidersPage = (mode: ContentMode) => loadPage("getProvidersPage", mode);
+export const getServiceUpdatePage = (mode: ContentMode) => loadPage("getServiceUpdatePage", mode);
+export const getPrivacyPolicy = (mode: ContentMode) => loadPage("getPrivacyPolicy", mode);
+
 /** Load the homepage with its display sections and their media populated.
  * @param mode Content state requested from Strapi.
  * @returns Mapped homepage or null when missing; upstream failures throw.

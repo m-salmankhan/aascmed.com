@@ -4,9 +4,10 @@ import { PrivacyPage } from '../components/pages/PrivacyPage';
 import { prepareInlineImages } from '../server/content/inline-images';
 import SitePage from '../layouts/SitePage.astro';
 import { getPrivacyPolicy } from '../server/content/loaders';
-import { getPageSettings, pageContentMode } from '../server/pages/common';
+import { getPageContext, pageContentMode } from '../server/pages/common';
 const mode = pageContentMode();
-const [page, settings] = await Promise.all([getPrivacyPolicy(mode), getPageSettings(mode)]);
+const [record, context] = await Promise.all([getPrivacyPolicy(mode), getPageContext(Astro.url.pathname, mode)]);
+const page = structuredClone(record);
 const lastUpdated =
   page?.updatedAt && Number.isFinite(Date.parse(page.updatedAt))
     ? new Date(page.updatedAt).toISOString().split('T')[0].replace(/-/g, '.')
@@ -15,8 +16,7 @@ await prepareInlineImages(page, mode, 1200);
 ---
 
 <SitePage
-  pathname={Astro.url.pathname}
-  trackingSettings={settings.trackingSettings}
+  {...context.document}
   title={page?.title || ''}
   description={page?.description || ''}
   ogType="article"
@@ -24,8 +24,7 @@ await prepareInlineImages(page, mode, 1200);
 >
   <PrivacyPage
     client:load
-    pathname={Astro.url.pathname}
-    announcement={settings.announcement}
+    {...context.view}
     heading={page?.title || 'Privacy Policy'}
     blocks={page?.text}
     {lastUpdated}

@@ -3,19 +3,18 @@
 import { HomePage } from '../components/pages/HomePage';
 import { prepareInlineImages } from '../server/content/inline-images';
 import SitePage from '../layouts/SitePage.astro';
-import { getPageSettings, pageContentMode } from '../server/pages/common';
+import { getPageContext, pageContentMode } from '../server/pages/common';
 import { getHomePageData } from '../server/pages/home';
 const mode = pageContentMode();
-const [{ props, description }, settings] = await Promise.all([
+const [{ props, description }, context] = await Promise.all([
   getHomePageData(mode),
-  getPageSettings(mode),
+  getPageContext(Astro.url.pathname, mode),
 ]);
 await prepareInlineImages(props, mode, 600);
 ---
 
 <SitePage
-  pathname={Astro.url.pathname}
-  trackingSettings={settings.trackingSettings}
+  {...context.document}
   title="Allergy, Asthma and Sinus Centers in Illinois"
   description={description}
   appendBusinessNameToTitle={false}
@@ -24,8 +23,7 @@ await prepareInlineImages(props, mode, 600);
 >
   <HomePage
     client:load
-    pathname={Astro.url.pathname}
-    announcement={settings.announcement}
+    {...context.view}
     {...props}
   />
 </SitePage>

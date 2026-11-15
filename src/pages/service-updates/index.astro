@@ -4,12 +4,13 @@ import { ServiceUpdatesArchivePage } from '../../components/pages/ServiceUpdates
 import { prepareInlineImages } from '../../server/content/inline-images';
 import SitePage from '../../layouts/SitePage.astro';
 import { getServiceUpdatePage, getServiceUpdates } from '../../server/content/loaders';
-import { pageContentMode, getPageSettings } from '../../server/pages/common';
+import { pageContentMode, getPageContext } from '../../server/pages/common';
 import { serviceUpdatePath } from '../../content/urls';
 import { blogDate } from '../../server/pages/content';
 import type { ServiceUpdateViewItem } from '../../views/fixed-archive';
 const mode = pageContentMode();
-const [page, settings] = await Promise.all([getServiceUpdatePage(mode), getPageSettings(mode)]);
+const [record, context] = await Promise.all([getServiceUpdatePage(mode), getPageContext(Astro.url.pathname, mode)]);
+const page = structuredClone(record);
 const serviceUpdates: ServiceUpdateViewItem[] = [];
 for await (const update of getServiceUpdates(mode)) {
   const slug = serviceUpdatePath(update);
@@ -26,16 +27,14 @@ await prepareInlineImages(page, mode, 1200);
 ---
 
 <SitePage
-  pathname={Astro.url.pathname}
-  trackingSettings={settings.trackingSettings}
+  {...context.document}
   title={page?.heading || ''}
   description={page?.metaDescription || ''}
   useTracking
 >
   <ServiceUpdatesArchivePage
     client:load
-    pathname={Astro.url.pathname}
-    announcement={settings.announcement}
+    {...context.view}
     heading={page?.heading || 'Service Updates'}
     blocks={page?.text}
     {serviceUpdates}

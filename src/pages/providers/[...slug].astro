@@ -6,7 +6,7 @@ import { ProviderPage } from '../../components/pages/ProviderPage';
 import { prepareInlineImages } from '../../server/content/inline-images';
 import SitePage from '../../layouts/SitePage.astro';
 import { getProviderBySlug } from '../../server/content/loaders';
-import { getPageSettings, pageContentMode } from '../../server/pages/common';
+import { getPageContext, pageContentMode } from '../../server/pages/common';
 import { contentPaths } from '../../server/pages/content';
 import { getResponsiveMediaDescriptor } from '../../server/content/astro-media';
 /** Enumerate full published provider route parameters for static output.
@@ -16,11 +16,12 @@ export async function getStaticPaths() {
   return contentPaths('provider', '/providers/');
 }
 const mode = pageContentMode();
-const provider = import.meta.env.PUBLIC_ASTRO_TARGET === 'static'
+const record = import.meta.env.PUBLIC_ASTRO_TARGET === 'static'
   ? Astro.props.record
   : await getProviderBySlug(Astro.params.slug || '', mode);
+const provider = structuredClone(record);
 if (!provider) return Astro.rewrite('/404');
-const settings = await getPageSettings(mode);
+const context = await getPageContext(Astro.url.pathname, mode);
 let socialImagePath = provider.image?.src;
 if (provider.image && import.meta.env.PUBLIC_ASTRO_TARGET === 'static') {
   // Social metadata uses a local portrait at the existing social-card display width.
@@ -55,8 +56,7 @@ await prepareInlineImages(provider, mode, 800);
 ---
 
 <SitePage
-  pathname={Astro.url.pathname}
-  trackingSettings={settings.trackingSettings}
+  {...context.document}
   {title}
   description={provider.description || ''}
   useTracking
@@ -65,8 +65,7 @@ await prepareInlineImages(provider, mode, 800);
 >
   <ProviderPage
     client:load
-    pathname={Astro.url.pathname}
-    announcement={settings.announcement}
+    {...context.view}
     {provider}
   />
 </SitePage>

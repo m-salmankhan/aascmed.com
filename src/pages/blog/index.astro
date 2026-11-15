@@ -4,13 +4,14 @@ import { BlogArchivePage } from '../../components/pages/BlogArchivePage';
 import { prepareInlineImages } from '../../server/content/inline-images';
 import SitePage from '../../layouts/SitePage.astro';
 import { getBlogArchive, getBlogs } from '../../server/content/loaders';
-import { getPageSettings, pageContentMode } from '../../server/pages/common';
+import { getPageContext, pageContentMode } from '../../server/pages/common';
 import { blogDate } from '../../server/pages/content';
 import { blogPath } from '../../content/urls';
 import { getResponsiveMediaDescriptor } from '../../server/content/astro-media';
 import type { BlogViewItem } from '../../views/fixed-archive';
 const mode = pageContentMode();
-const [page, settings] = await Promise.all([getBlogArchive(mode), getPageSettings(mode)]);
+const [record, context] = await Promise.all([getBlogArchive(mode), getPageContext(Astro.url.pathname, mode)]);
+const page = structuredClone(record);
 const blogs: BlogViewItem[] = [];
 for await (const blog of getBlogs(mode)) {
   const thumbnail = blog.thumbnail
@@ -28,8 +29,7 @@ await prepareInlineImages(page, mode, 1200);
 ---
 
 <SitePage
-  pathname={Astro.url.pathname}
-  trackingSettings={settings.trackingSettings}
+  {...context.document}
   title={page?.heading || ''}
   description={page?.metaDescription || ''}
   useTracking
@@ -37,8 +37,7 @@ await prepareInlineImages(page, mode, 1200);
 >
   <BlogArchivePage
     client:load
-    pathname={Astro.url.pathname}
-    announcement={settings.announcement}
+    {...context.view}
     heading={page?.heading || 'Blog'}
     blocks={page?.text}
     {blogs}
