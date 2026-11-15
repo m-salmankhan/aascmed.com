@@ -9,12 +9,14 @@ export interface PublicConfig {
  * @param values Public runtime API base URL and map display key.
  * @returns Browser-safe settings with the default runtime API URL when absent.
  */
-export function createPublicConfig(values: {
-  runtimeApiBaseUrl?: string;
-  mapboxAccessToken?: string;
-} = {}): PublicConfig {
+export function createPublicConfig(
+  values: {
+    runtimeApiBaseUrl?: string;
+    mapboxAccessToken?: string;
+  } = {},
+): PublicConfig {
   return {
-    runtimeApiBaseUrl: values.runtimeApiBaseUrl || "https://api.aascmed.com",
-    mapboxAccessToken: values.mapboxAccessToken || "",
+    runtimeApiBaseUrl: values.runtimeApiBaseUrl || 'https://api.aascmed.com',
+    mapboxAccessToken: values.mapboxAccessToken || '',
   };
 }

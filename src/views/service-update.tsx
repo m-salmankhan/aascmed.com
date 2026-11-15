@@ -34,7 +34,11 @@ export interface ServiceUpdateViewProps {
  * @param props Service-update record and current browser pathname.
  * @returns The update layout with date, rich text, and browser-aware back navigation.
  */
-export function ServiceUpdateView({ serviceUpdate, pathname, dateLabel }: ServiceUpdateViewProps) {
+export function ServiceUpdateView({
+  serviceUpdate,
+  pathname,
+  dateLabel,
+}: ServiceUpdateViewProps) {
   const [jsEnabled, setJsEnabled] = React.useState(false);
   React.useEffect(() => setJsEnabled(true), []);
   const title = serviceUpdate.title || 'Untitled';
@@ -61,7 +65,9 @@ export function ServiceUpdateView({ serviceUpdate, pathname, dateLabel }: Servic
           <p>{dateLabel}</p>
           <Columns>
             <MainCol>
-              {serviceUpdate.body && <StrapiBlocksRenderer content={serviceUpdate.body as any[]} />}
+              {serviceUpdate.body && (
+                <StrapiBlocksRenderer content={serviceUpdate.body as any[]} />
+              )}
               <footer css={stylesButtonGroup}>
                 {jsEnabled ? (
                   <PrimaryButton
@@ -73,11 +79,12 @@ export function ServiceUpdateView({ serviceUpdate, pathname, dateLabel }: Servic
                     Go back
                   </PrimaryButton>
                 ) : (
-                  <PrimaryAnchor href="/">
-                    Return to home
-                  </PrimaryAnchor>
+                  <PrimaryAnchor href="/">Return to home</PrimaryAnchor>
                 )}
-                <SiteLink href="/contact/" css={[stylesButton, stylesBtnSecondary]}>
+                <SiteLink
+                  href="/contact/"
+                  css={[stylesButton, stylesBtnSecondary]}
+                >
                   Get in touch
                 </SiteLink>
               </footer>

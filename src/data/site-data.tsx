@@ -1,6 +1,6 @@
-import React, { createContext, ReactNode, useContext } from "react";
-import { siteSettings } from "../config/site";
-import type { SiteSettings } from "../content/models";
+import React, { createContext, ReactNode, useContext } from 'react';
+import { siteSettings } from '../config/site';
+import type { SiteSettings } from '../content/models';
 
 /** Framework-neutral site metadata needed by shared site components. */
 export interface SiteData {
@@ -18,8 +18,15 @@ const SiteDataContext = createContext<SiteData>(defaultSiteData);
  * @param props Normalized site values and optional React children.
  * @returns The children inside the site-data context provider.
  */
-export function SiteDataProvider(props: { value: SiteData; children?: ReactNode }): React.ReactElement {
-  return <SiteDataContext.Provider value={props.value}>{props.children}</SiteDataContext.Provider>;
+export function SiteDataProvider(props: {
+  value: SiteData;
+  children?: ReactNode;
+}): React.ReactElement {
+  return (
+    <SiteDataContext.Provider value={props.value}>
+      {props.children}
+    </SiteDataContext.Provider>
+  );
 }
 
 /** Read shared site data from the nearest provider.

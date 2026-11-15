@@ -35,7 +35,10 @@ interface AnnouncementBannerProps {
  * @param props Normalized public announcement content and optional styling class.
  * @returns A dismissible notice, or no markup after it is disabled or dismissed.
  */
-const AnnouncementBanner = ({ announcement, className }: AnnouncementBannerProps) => {
+const AnnouncementBanner = ({
+  announcement,
+  className,
+}: AnnouncementBannerProps) => {
   const [dismissed, setDismissed] = useState(false);
   useEffect(() => {
     setDismissed(wasDismissed());
@@ -66,8 +69,14 @@ const AnnouncementBanner = ({ announcement, className }: AnnouncementBannerProps
 
   return (
     <aside className={className}>
-      <Component css={announcementStyles} onDismiss={onDismiss} transitionType="shrinkUp">
-        {announcement.message && <StrapiBlocksRenderer content={announcement.message} />}
+      <Component
+        css={announcementStyles}
+        onDismiss={onDismiss}
+        transitionType="shrinkUp"
+      >
+        {announcement.message && (
+          <StrapiBlocksRenderer content={announcement.message} />
+        )}
       </Component>
     </aside>
   );

@@ -6,7 +6,10 @@ import SitePage from '../layouts/SitePage.astro';
 import { getPrivacyPolicy } from '../server/content/loaders';
 import { getPageContext, pageContentMode } from '../server/pages/common';
 const mode = pageContentMode();
-const [record, context] = await Promise.all([getPrivacyPolicy(mode), getPageContext(Astro.url.pathname, mode)]);
+const [record, context] = await Promise.all([
+  getPrivacyPolicy(mode),
+  getPageContext(Astro.url.pathname, mode),
+]);
 const page = structuredClone(record);
 const lastUpdated =
   page?.updatedAt && Number.isFinite(Date.parse(page.updatedAt))

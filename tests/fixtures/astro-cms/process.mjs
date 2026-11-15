@@ -21,7 +21,11 @@ export async function availablePort() {
  * @returns Child process plus its captured build/server diagnostics.
  */
 export function command(args, env) {
-  const child = spawn(node, args, { cwd: astroRoot, env, stdio: ['ignore', 'pipe', 'pipe'] });
+  const child = spawn(node, args, {
+    cwd: astroRoot,
+    env,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
   let output = '';
   child.stdout.on('data', (chunk) => {
     output += chunk;

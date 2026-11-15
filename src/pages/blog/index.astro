@@ -10,12 +10,18 @@ import { blogPath } from '../../content/urls';
 import { getResponsiveMediaDescriptor } from '../../server/content/astro-media';
 import type { BlogViewItem } from '../../views/fixed-archive';
 const mode = pageContentMode();
-const [record, context] = await Promise.all([getBlogArchive(mode), getPageContext(Astro.url.pathname, mode)]);
+const [record, context] = await Promise.all([
+  getBlogArchive(mode),
+  getPageContext(Astro.url.pathname, mode),
+]);
 const page = structuredClone(record);
 const blogs: BlogViewItem[] = [];
 for await (const blog of getBlogs(mode)) {
   const thumbnail = blog.thumbnail
-    ? await getResponsiveMediaDescriptor(blog.thumbnail, { width: 400, aspectRatio: 400 / 250 })
+    ? await getResponsiveMediaDescriptor(blog.thumbnail, {
+        width: 400,
+        aspectRatio: 400 / 250,
+      })
     : blog.thumbnail;
   blogs.push({
     slug: blogPath(blog.slug) || '/blog/',

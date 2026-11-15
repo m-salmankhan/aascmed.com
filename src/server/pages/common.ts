@@ -11,8 +11,7 @@ export function isStaticTarget(): boolean {
  * @returns Published mode or draft mode for an explicitly configured SSR deployment.
  */
 export function pageContentMode(): ContentMode {
-  return !isStaticTarget() &&
-    process.env.ASTRO_CONTENT_MODE === 'draft'
+  return !isStaticTarget() && process.env.ASTRO_CONTENT_MODE === 'draft'
     ? 'draft'
     : 'published';
 }
@@ -33,12 +32,13 @@ async function loadPageSettings(mode: ContentMode) {
 let buildSettings: ReturnType<typeof loadPageSettings> | undefined;
 
 export function getPageSettings(mode: ContentMode) {
-  if (isStaticTarget() && mode !== 'published') throw new Error('Static pages require published settings');
+  if (isStaticTarget() && mode !== 'published')
+    throw new Error('Static pages require published settings');
   if (!import.meta.env.PROD || !isStaticTarget()) return loadPageSettings(mode);
-  return buildSettings ??= loadPageSettings('published').catch(error => {
+  return (buildSettings ??= loadPageSettings('published').catch((error) => {
     buildSettings = undefined;
     throw error;
-  });
+  }));
 }
 
 /** Shared document and hydrated-view context for every content route. */

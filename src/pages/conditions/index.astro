@@ -3,13 +3,19 @@
 import { ConditionsArchivePage } from '../../components/pages/ConditionsArchivePage';
 import { prepareInlineImages } from '../../server/content/inline-images';
 import SitePage from '../../layouts/SitePage.astro';
-import { getConditionsArchive, getConditions } from '../../server/content/loaders';
+import {
+  getConditionsArchive,
+  getConditions,
+} from '../../server/content/loaders';
 import { getPageContext, pageContentMode } from '../../server/pages/common';
 import { conditionPath } from '../../content/urls';
 import { getResponsiveMediaDescriptor } from '../../server/content/astro-media';
 import type { ConditionViewItem } from '../../views/fixed-archive';
 const mode = pageContentMode();
-const [record, context] = await Promise.all([getConditionsArchive(mode), getPageContext(Astro.url.pathname, mode)]);
+const [record, context] = await Promise.all([
+  getConditionsArchive(mode),
+  getPageContext(Astro.url.pathname, mode),
+]);
 const page = structuredClone(record);
 const conditions: ConditionViewItem[] = [];
 for await (const condition of getConditions(mode)) {

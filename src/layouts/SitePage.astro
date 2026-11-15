@@ -7,11 +7,19 @@ import type { TrackingSettings } from '../content/models';
 type DocumentProps = import('astro/types').ComponentProps<typeof SiteDocument>;
 
 /** Page metadata layered over the document's shared site identity. */
-interface Props extends Omit<DocumentProps, 'siteSettings' | 'trackingSettings'> {
+interface Props extends Omit<
+  DocumentProps,
+  'siteSettings' | 'trackingSettings'
+> {
   trackingSettings?: TrackingSettings | null;
   articleSection?: string;
 }
-const { trackingSettings, articleSection, useTracking = true, ...document } = Astro.props;
+const {
+  trackingSettings,
+  articleSection,
+  useTracking = true,
+  ...document
+} = Astro.props;
 ---
 
 <SiteDocument
@@ -20,6 +28,10 @@ const { trackingSettings, articleSection, useTracking = true, ...document } = As
   siteSettings={siteSettings}
   trackingSettings={trackingSettings ?? undefined}
 >
-  {articleSection && <meta slot="head" name="article:section" content={articleSection} />}
+  {
+    articleSection && (
+      <meta slot="head" name="article:section" content={articleSection} />
+    )
+  }
   <slot />
 </SiteDocument>

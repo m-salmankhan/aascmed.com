@@ -1,9 +1,9 @@
-import React from "react";
-import { css } from "@emotion/react";
-import { Container } from "../containers";
-import { PrimaryAnchor, SecondaryAnchor } from "../buttons";
-import { colours, gridSpacing } from "../../styles/theme";
-import { CalloutBanner } from "./banner";
+import React from 'react';
+import { css } from '@emotion/react';
+import { Container } from '../containers';
+import { PrimaryAnchor, SecondaryAnchor } from '../buttons';
+import { colours, gridSpacing } from '../../styles/theme';
+import { CalloutBanner } from './banner';
 
 interface HorizontalCalloutBannerProps {
   className?: string;
@@ -32,18 +32,20 @@ const stylesCompactInContainer = css({
 });
 
 const stylesSecondaryOnDark = css({
-  backgroundColor: "transparent",
+  backgroundColor: 'transparent',
   color: colours.bodyBackground,
   borderColor: colours.bodyBackground,
 
-  "&:hover, &:focus": {
+  '&:hover, &:focus': {
     backgroundColor: colours.bodyBackground,
     color: colours.brandPrimary,
     borderColor: colours.bodyBackground,
   },
 });
 
-export const HorizontalCalloutBanner: React.FC<HorizontalCalloutBannerProps> = ({
+export const HorizontalCalloutBanner: React.FC<
+  HorizontalCalloutBannerProps
+> = ({
   className,
   title,
   description,
@@ -65,15 +67,15 @@ export const HorizontalCalloutBanner: React.FC<HorizontalCalloutBannerProps> = (
     >
       <PrimaryAnchor
         href={primaryButtonUrl}
-        target={"_blank"}
-        rel={"noopener noreferrer"}
+        target={'_blank'}
+        rel={'noopener noreferrer'}
       >
         {primaryButtonLabel}
       </PrimaryAnchor>
       <SecondaryAnchor
         href={secondaryButtonUrl}
-        target={"_blank"}
-        rel={"noopener noreferrer"}
+        target={'_blank'}
+        rel={'noopener noreferrer'}
         css={stylesSecondaryOnDark}
       >
         {secondaryButtonLabel}
@@ -85,7 +87,7 @@ export const HorizontalCalloutBanner: React.FC<HorizontalCalloutBannerProps> = (
     <section
       className={className}
       css={[stylesSection, compactInContainer && stylesSectionCompact]}
-      aria-label={"Call to action"}
+      aria-label={'Call to action'}
     >
       {useContainer ? <Container>{banner}</Container> : banner}
     </section>

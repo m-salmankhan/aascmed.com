@@ -9,7 +9,11 @@ type ProviderPageProps = PageContextProps & ComponentProps<typeof ProviderView>;
  * @param props Normalized provider record, current pathname and optional announcement.
  * @returns One React tree for server rendering and browser hydration.
  */
-export function ProviderPage({ pathname, announcement, ...props }: ProviderPageProps) {
+export function ProviderPage({
+  pathname,
+  announcement,
+  ...props
+}: ProviderPageProps) {
   return (
     <ReactPage pathname={pathname} announcement={announcement}>
       <ProviderView {...props} pathname={pathname} />

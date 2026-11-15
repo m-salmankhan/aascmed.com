@@ -9,7 +9,11 @@ type PrivacyPageProps = PageContextProps & ComponentProps<typeof PrivacyView>;
  * @param props Policy heading, blocks and update date, pathname and optional announcement.
  * @returns One React tree for server rendering and browser hydration.
  */
-export function PrivacyPage({ pathname, announcement, ...props }: PrivacyPageProps) {
+export function PrivacyPage({
+  pathname,
+  announcement,
+  ...props
+}: PrivacyPageProps) {
   return (
     <ReactPage pathname={pathname} announcement={announcement}>
       <PrivacyView {...props} />

@@ -1,14 +1,20 @@
-import React from "react";
-import { css } from "@emotion/react";
-import { CarouselProvider, Slide, Slider, ButtonBack, ButtonNext } from "pure-react-carousel";
-import "pure-react-carousel/dist/react-carousel.es.css";
-import { cols, gridContainer } from "../../styles/grid";
-import { mediaBreakpoints, breakpointStrings } from "../../styles/breakpoints";
-import { colours } from "../../styles/theme";
-import { FaIcons, IconStyles } from "../font-awesome";
-import { stylesScreenReaderText } from "../../styles/accessibility";
-import type { MediaDescriptor } from "../../content/models";
-import { Image } from "../media/image";
+import React from 'react';
+import { css } from '@emotion/react';
+import {
+  CarouselProvider,
+  Slide,
+  Slider,
+  ButtonBack,
+  ButtonNext,
+} from 'pure-react-carousel';
+import 'pure-react-carousel/dist/react-carousel.es.css';
+import { cols, gridContainer } from '../../styles/grid';
+import { mediaBreakpoints, breakpointStrings } from '../../styles/breakpoints';
+import { colours } from '../../styles/theme';
+import { FaIcons, IconStyles } from '../font-awesome';
+import { stylesScreenReaderText } from '../../styles/accessibility';
+import type { MediaDescriptor } from '../../content/models';
+import { Image } from '../media/image';
 
 export interface SectionMediaItem {
   mime?: string | null;
@@ -19,77 +25,84 @@ export interface SectionMediaItem {
 }
 
 /** Filter to only valid image/video items */
-export const filterValidMedia = (media?: SectionMediaItem[] | null): SectionMediaItem[] => {
+export const filterValidMedia = (
+  media?: SectionMediaItem[] | null,
+): SectionMediaItem[] => {
   if (!media) return [];
   return media.filter(
-    (m) => m.mime?.startsWith("image/") || m.mime?.startsWith("video/")
+    (m) => m.mime?.startsWith('image/') || m.mime?.startsWith('video/'),
   );
 };
 
 const stylesMediaContainer = css({
-  width: "100%",
-  borderRadius: "8px",
-  overflow: "hidden",
+  width: '100%',
+  borderRadius: '8px',
+  overflow: 'hidden',
 
   img: {
-    borderRadius: "8px",
+    borderRadius: '8px',
   },
 
   video: {
-    width: "100%",
-    borderRadius: "8px",
+    width: '100%',
+    borderRadius: '8px',
   },
 });
 
 const stylesCarouselNav = css({
-  display: "flex",
-  justifyContent: "center",
-  gap: "1em",
-  marginTop: "0.5em",
+  display: 'flex',
+  justifyContent: 'center',
+  gap: '1em',
+  marginTop: '0.5em',
 
   button: {
-    background: "transparent",
+    background: 'transparent',
     border: `2px solid ${colours.brandPrimary}`,
-    borderRadius: "50%",
-    width: "2.5em",
-    height: "2.5em",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    cursor: "pointer",
-    transition: "background 0.2s ease",
+    borderRadius: '50%',
+    width: '2.5em',
+    height: '2.5em',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    transition: 'background 0.2s ease',
 
     svg: {
-      width: "1em",
-      height: "1em",
+      width: '1em',
+      height: '1em',
       fill: colours.brandPrimary,
     },
 
-    "&:hover, &:focus": {
+    '&:hover, &:focus': {
       background: colours.brandPrimary,
       svg: {
-        fill: "#fff",
+        fill: '#fff',
       },
     },
 
-    "&:disabled": {
+    '&:disabled': {
       opacity: 0.3,
-      cursor: "default",
+      cursor: 'default',
     },
   },
 });
 
 const MediaItem: React.FC<{ item: SectionMediaItem }> = ({ item }) => {
-  const isVideo = item.mime?.startsWith("video/");
-  const isImage = item.mime?.startsWith("image/");
-  const alt = item.name || "";
+  const isVideo = item.mime?.startsWith('video/');
+  const isImage = item.mime?.startsWith('image/');
+  const alt = item.name || '';
 
   if (isImage && item.image) {
     return <>{item.image}</>;
   }
 
   if (isImage && item.descriptor) {
-    return <Image image={item.descriptor} css={css({ width: "100%", height: "auto", borderRadius: "8px" })} />;
+    return (
+      <Image
+        image={item.descriptor}
+        css={css({ width: '100%', height: 'auto', borderRadius: '8px' })}
+      />
+    );
   }
 
   if (isVideo) {
@@ -100,7 +113,12 @@ const MediaItem: React.FC<{ item: SectionMediaItem }> = ({ item }) => {
 
   if (isImage && item.url) {
     const src = item.url;
-    return <Image image={{ src, alt }} css={css({ width: "100%", height: "auto", borderRadius: "8px" })} />;
+    return (
+      <Image
+        image={{ src, alt }}
+        css={css({ width: '100%', height: 'auto', borderRadius: '8px' })}
+      />
+    );
   }
 
   return null;
@@ -111,7 +129,10 @@ interface SectionMediaProps {
   className?: string;
 }
 
-export const SectionMedia: React.FC<SectionMediaProps> = ({ media, className }) => {
+export const SectionMedia: React.FC<SectionMediaProps> = ({
+  media,
+  className,
+}) => {
   if (media.length === 0) return null;
 
   if (media.length === 1) {
@@ -158,24 +179,17 @@ export const SectionMedia: React.FC<SectionMediaProps> = ({ media, className }) 
  * media sits to the right. On mobile, stacks vertically.
  */
 const stylesSectionRow = css(gridContainer(), {
-  alignItems: "flex-start",
+  alignItems: 'flex-start',
 });
 
-const stylesLeftColumn = css(
-  cols(12),
-  cols(7, mediaBreakpoints.md),
-);
+const stylesLeftColumn = css(cols(12), cols(7, mediaBreakpoints.md));
 
-const stylesMediaColumn = css(
-  cols(12),
-  cols(5, mediaBreakpoints.md),
-  {
-    [`${breakpointStrings.md}`]: {
-      display: "flex",
-      alignItems: "center",
-    },
+const stylesMediaColumn = css(cols(12), cols(5, mediaBreakpoints.md), {
+  [`${breakpointStrings.md}`]: {
+    display: 'flex',
+    alignItems: 'center',
   },
-);
+});
 
 interface SectionWithMediaProps {
   /** The left-side content (heading, text, etc.) */

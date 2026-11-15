@@ -6,7 +6,11 @@ import { ProviderPage } from '../../components/pages/ProviderPage';
 import { prepareInlineImages } from '../../server/content/inline-images';
 import SitePage from '../../layouts/SitePage.astro';
 import { getProviderBySlug } from '../../server/content/loaders';
-import { getPageContext, pageContentMode, isStaticTarget } from '../../server/pages/common';
+import {
+  getPageContext,
+  pageContentMode,
+  isStaticTarget,
+} from '../../server/pages/common';
 import { contentPaths } from '../../server/pages/content';
 import { getResponsiveMediaDescriptor } from '../../server/content/astro-media';
 /** Enumerate full published provider route parameters for static output.
@@ -49,7 +53,9 @@ if (provider.review?.date) {
   provider.review.date = formatReviewDate(provider.review.date);
 }
 const honorific =
-  provider.name?.honorific && provider.name.honorific !== 'None' ? provider.name.honorific : '';
+  provider.name?.honorific && provider.name.honorific !== 'None'
+    ? provider.name.honorific
+    : '';
 const title = `${honorific} ${provider.name?.fullName || 'Untitled'}`.trim();
 await prepareInlineImages(provider, mode, 800);
 ---
@@ -61,9 +67,5 @@ await prepareInlineImages(provider, mode, 800);
   ogType="profile"
   {socialImagePath}
 >
-  <ProviderPage
-    client:load
-    {...context.view}
-    {provider}
-  />
+  <ProviderPage client:load {...context.view} {provider} />
 </SitePage>

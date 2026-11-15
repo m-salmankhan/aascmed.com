@@ -23,7 +23,11 @@ interface ReactPageProps extends PageContextProps {
  * @param props Page children, current pathname and optional announcement.
  * @returns The children and optional banner inside the shared providers.
  */
-export function ReactPage({ pathname, announcement, children }: ReactPageProps) {
+export function ReactPage({
+  pathname,
+  announcement,
+  children,
+}: ReactPageProps) {
   return (
     <PublicConfigProvider value={astroPublicConfig}>
       <SiteDataProvider value={{ siteSettings }}>

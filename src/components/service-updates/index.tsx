@@ -1,5 +1,3 @@
-import {ServiceUpdateArchive} from "./service-update-archive";
+import { ServiceUpdateArchive } from './service-update-archive';
 
-export {
-    ServiceUpdateArchive,
-}
+export { ServiceUpdateArchive };

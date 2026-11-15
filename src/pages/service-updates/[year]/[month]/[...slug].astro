@@ -5,7 +5,11 @@ import { ServiceUpdatePage } from '../../../../components/pages/ServiceUpdatePag
 import { prepareInlineImages } from '../../../../server/content/inline-images';
 import SitePage from '../../../../layouts/SitePage.astro';
 import { getServiceUpdateBySlug } from '../../../../server/content/loaders';
-import { pageContentMode, getPageContext, isStaticTarget } from '../../../../server/pages/common';
+import {
+  pageContentMode,
+  getPageContext,
+  isStaticTarget,
+} from '../../../../server/pages/common';
 import { serviceUpdatePaths } from '../../../../server/pages/locations';
 import { serviceUpdatePath } from '../../../../content/urls';
 

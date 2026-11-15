@@ -1,10 +1,15 @@
-const { test, expect } = require("@playwright/test");
-const { preparePage, pageContract, semanticImages, installSafety } = require("../ui/helpers");
-const fs = require("node:fs");
-const ts = require("typescript");
-const path = require("node:path");
+const { test, expect } = require('@playwright/test');
+const {
+  preparePage,
+  pageContract,
+  semanticImages,
+  installSafety,
+} = require('../ui/helpers');
+const fs = require('node:fs');
+const ts = require('typescript');
+const path = require('node:path');
 
-const url = "https://fixture.test/";
+const url = 'https://fixture.test/';
 const fixture = `<!doctype html><html lang="en-US"><head>
   <title>Fixture</title><meta name="description" content="Fixture description">
   <link rel="canonical" href="https://www.aascmed.com/">
@@ -31,32 +36,52 @@ const fixture = `<!doctype html><html lang="en-US"><head>
   </script></body></html>`;
 
 test.beforeEach(async ({ context }) => {
-  await context.route(url, route => route.fulfill({ contentType: "text/html", body: fixture }));
-  await context.route("https://offsiteschedule.zocdoc.com/plugin/embed",
-    route => route.fulfill({ contentType: "application/javascript", body: "" }));
-  await context.route("https://www.zocdoc.com/practice/test",
-    route => route.fulfill({ contentType: "text/html", body: "<h1>Unwanted premature navigation</h1>" }));
+  await context.route(url, (route) =>
+    route.fulfill({ contentType: 'text/html', body: fixture }),
+  );
+  await context.route(
+    'https://offsiteschedule.zocdoc.com/plugin/embed',
+    (route) =>
+      route.fulfill({ contentType: 'application/javascript', body: '' }),
+  );
+  await context.route('https://www.zocdoc.com/practice/test', (route) =>
+    route.fulfill({
+      contentType: 'text/html',
+      body: '<h1>Unwanted premature navigation</h1>',
+    }),
+  );
 });
 
-test("standalone links without an active class still announce the current page", async ({ page }) => {
-  await page.route("http://navigation.fixture.test/**", route =>
-    route.fulfill({ contentType: "text/html", body: '<main id="root"></main>' }));
-  await page.goto("http://navigation.fixture.test/blog/");
-  await page.addScriptTag({ path: path.resolve("node_modules/react/umd/react.development.js") });
-  await page.addScriptTag({ path: path.resolve("node_modules/react-dom/umd/react-dom.development.js") });
+test('standalone links without an active class still announce the current page', async ({
+  page,
+}) => {
+  await page.route('http://navigation.fixture.test/**', (route) =>
+    route.fulfill({
+      contentType: 'text/html',
+      body: '<main id="root"></main>',
+    }),
+  );
+  await page.goto('http://navigation.fixture.test/blog/');
+  await page.addScriptTag({
+    path: path.resolve('node_modules/react/umd/react.development.js'),
+  });
+  await page.addScriptTag({
+    path: path.resolve('node_modules/react-dom/umd/react-dom.development.js'),
+  });
 
-  const compileTsx = filename => ts.transpileModule(fs.readFileSync(filename, "utf8"), {
-    compilerOptions: {
-      jsx: ts.JsxEmit.React,
-      module: ts.ModuleKind.CommonJS,
-      target: ts.ScriptTarget.ES2022,
-      esModuleInterop: true,
-    },
-    fileName: filename,
-  }).outputText;
+  const compileTsx = (filename) =>
+    ts.transpileModule(fs.readFileSync(filename, 'utf8'), {
+      compilerOptions: {
+        jsx: ts.JsxEmit.React,
+        module: ts.ModuleKind.CommonJS,
+        target: ts.ScriptTarget.ES2022,
+        esModuleInterop: true,
+      },
+      fileName: filename,
+    }).outputText;
   const modules = {
-    link: compileTsx(path.resolve("src/navigation/link.tsx")),
-    currentPath: compileTsx(path.resolve("src/navigation/current-path.tsx")),
+    link: compileTsx(path.resolve('src/navigation/link.tsx')),
+    currentPath: compileTsx(path.resolve('src/navigation/current-path.tsx')),
   };
   const script = `(() => {
     const cache = {};
@@ -80,108 +105,164 @@ test("standalone links without an active class still announce the current page",
   })();`;
   await page.addScriptTag({ content: script });
 
-  const blog = page.getByRole("link", { name: "Footer Blog" });
-  await expect(blog).toHaveAttribute("aria-current", "page");
-  await expect(blog).not.toHaveAttribute("class");
+  const blog = page.getByRole('link', { name: 'Footer Blog' });
+  await expect(blog).toHaveAttribute('aria-current', 'page');
+  await expect(blog).not.toHaveAttribute('class');
 });
 
-test("page readiness waits for interactive dismissal", async ({ page }) => {
+test('page readiness waits for interactive dismissal', async ({ page }) => {
   await preparePage(page, url);
-  await expect(page.getByRole("button", { name: "Dismiss", exact: true })).toHaveCount(0);
-  expect(await semanticImages(page)).toEqual([{ alt: "Clinic", loading: "lazy", draggable: false }]);
+  await expect(
+    page.getByRole('button', { name: 'Dismiss', exact: true }),
+  ).toHaveCount(0);
+  expect(await semanticImages(page)).toEqual([
+    { alt: 'Clinic', loading: 'lazy', draggable: false },
+  ]);
 });
 
-test("contract detects text, metadata, heading, link and structured-data mutations", async ({ page }) => {
+test('contract detects text, metadata, heading, link and structured-data mutations', async ({
+  page,
+}) => {
   await preparePage(page, url);
   const original = await pageContract(page);
-  expect(original.metadata.title).toBe("Fixture");
+  expect(original.metadata.title).toBe('Fixture');
   for (const [selector, attribute, value] of [
-    ["#main p", null, "Changed content"],
-    ['meta[name="description"]', "content", "Changed description"],
-    ["h1", null, "Changed heading"],
-    ['#main a', "href", "/wrong/"],
+    ['#main p', null, 'Changed content'],
+    ['meta[name="description"]', 'content', 'Changed description'],
+    ['h1', null, 'Changed heading'],
+    ['#main a', 'href', '/wrong/'],
     ['script[type="application/ld+json"]', null, '{"@type":"Wrong"}'],
-    ['input[name="clinic"]', "value", "Wrong clinic"],
+    ['input[name="clinic"]', 'value', 'Wrong clinic'],
   ]) {
-    await page.evaluate(({ selector, attribute, value }) => {
-      const element = document.querySelector(selector);
-      if (attribute) element.setAttribute(attribute, value);
-      else element.textContent = value;
-    }, { selector, attribute, value });
+    await page.evaluate(
+      ({ selector, attribute, value }) => {
+        const element = document.querySelector(selector);
+        if (attribute) element.setAttribute(attribute, value);
+        else element.textContent = value;
+      },
+      { selector, attribute, value },
+    );
     expect(await pageContract(page)).not.toEqual(original);
     await preparePage(page, url);
   }
 });
 
-test("safety guard blocks all unhandled mutations including popup pages", async ({ context, page }) => {
+test('safety guard blocks all unhandled mutations including popup pages', async ({
+  context,
+  page,
+}) => {
   const violations = await installSafety(context);
   await page.goto(url);
   await page.evaluate(async () => {
-    await fetch("/unexpected-contact/", { method: "POST", body: "{}" }).catch(() => {});
+    await fetch('/unexpected-contact/', { method: 'POST', body: '{}' }).catch(
+      () => {},
+    );
   });
   const popup = await context.newPage();
   await popup.goto(url);
   await popup.evaluate(async () => {
-    await fetch("/delete/", { method: "DELETE" }).catch(() => {});
+    await fetch('/delete/', { method: 'DELETE' }).catch(() => {});
   });
-  expect(violations).toEqual(["POST https://fixture.test/unexpected-contact/", "DELETE https://fixture.test/delete/"]);
+  expect(violations).toEqual([
+    'POST https://fixture.test/unexpected-contact/',
+    'DELETE https://fixture.test/delete/',
+  ]);
 });
 
-test("semantic image checks detect alt and loading regressions on ordinary HTML images", async ({ page }) => {
+test('semantic image checks detect alt and loading regressions on ordinary HTML images', async ({
+  page,
+}) => {
   await preparePage(page, url);
   const original = await semanticImages(page);
-  await page.locator('img[alt="Clinic"]').evaluate(image => {
-    image.removeAttribute("alt");
-    image.loading = "eager";
+  await page.locator('img[alt="Clinic"]').evaluate((image) => {
+    image.removeAttribute('alt');
+    image.loading = 'eager';
   });
   expect(await semanticImages(page)).not.toEqual(original);
 });
 
-test("invalid structured data fails rather than disappearing from the contract", async ({ page }) => {
+test('invalid structured data fails rather than disappearing from the contract', async ({
+  page,
+}) => {
   await preparePage(page, url);
-  await page.locator('script[type="application/ld+json"]').evaluate(script => { script.textContent = "invalid JSON"; });
+  await page
+    .locator('script[type="application/ld+json"]')
+    .evaluate((script) => {
+      script.textContent = 'invalid JSON';
+    });
   await expect(pageContract(page)).rejects.toThrow(/JSON/);
 });
 
-test("contracts ignore non-rendered asset and fallback markup in content and link labels", async ({ page }) => {
-  const body = fixture.replace('<a href="/contact/">Contact</a>',
-    '<a href="/clinics/test/">Clinic<script type="application/json">{"loader":"one"}</script><style>.unused { color: red }</style><noscript><img src="/fallback-one.png" alt="Fallback one"></noscript></a>');
-  await page.route(url, route => route.fulfill({ contentType: "text/html", body }));
+test('contracts ignore non-rendered asset and fallback markup in content and link labels', async ({
+  page,
+}) => {
+  const body = fixture.replace(
+    '<a href="/contact/">Contact</a>',
+    '<a href="/clinics/test/">Clinic<script type="application/json">{"loader":"one"}</script><style>.unused { color: red }</style><noscript><img src="/fallback-one.png" alt="Fallback one"></noscript></a>',
+  );
+  await page.route(url, (route) =>
+    route.fulfill({ contentType: 'text/html', body }),
+  );
   await preparePage(page, url);
   const original = await pageContract(page);
-  await page.locator("#main noscript").evaluate(element => {
-    element.textContent = '<picture><img src="/fallback-two.png" alt="Fallback two"></picture>';
+  await page.locator('#main noscript').evaluate((element) => {
+    element.textContent =
+      '<picture><img src="/fallback-two.png" alt="Fallback two"></picture>';
   });
-  await page.locator('#main script[type="application/json"]').evaluate(element => {
-    element.textContent = '{"loader":"two"}';
-  });
+  await page
+    .locator('#main script[type="application/json"]')
+    .evaluate((element) => {
+      element.textContent = '{"loader":"two"}';
+    });
   const updated = await pageContract(page);
   expect(updated.content).toBe(original.content);
   expect(updated.links).toEqual(original.links);
-  expect(original.content).not.toContain("Fallback");
-  expect(original.links.find(link => link.href === "/clinics/test/").text).toBe("Clinic");
+  expect(original.content).not.toContain('Fallback');
+  expect(
+    original.links.find((link) => link.href === '/clinics/test/').text,
+  ).toBe('Clinic');
 });
 
-test("reference differences are advisory and retain contract and image evidence", async ({ page, context }, testInfo) => {
-  const { comparePages } = require("../ui/comparison");
+test('reference differences are advisory and retain contract and image evidence', async ({
+  page,
+  context,
+}, testInfo) => {
+  const { comparePages } = require('../ui/comparison');
   const reference = await context.newPage();
   await preparePage(reference, url);
   await preparePage(page, url);
   await page.evaluate(() => {
-    document.body.style.background = "red";
-    document.querySelector("#main p").textContent = "Changed content";
-    document.querySelector('img[alt="Clinic"]').alt = "Updated clinic";
+    document.body.style.background = 'red';
+    document.querySelector('#main p').textContent = 'Changed content';
+    document.querySelector('img[alt="Clinic"]').alt = 'Updated clinic';
   });
   await comparePages(reference, page, testInfo);
-  const differences = testInfo.annotations.filter(annotation => annotation.type === "reference-difference");
-  expect(differences.map(annotation => annotation.description)).toEqual(
-    expect.arrayContaining(["Content/metadata/links/forms", "Image semantics", expect.stringContaining("Changed pixels")]));
-  expect(testInfo.attachments.map(attachment => attachment.name)).toEqual(
-    expect.arrayContaining(["reference-contract", "candidate-contract", "reference", "candidate", "difference"]));
+  const differences = testInfo.annotations.filter(
+    (annotation) => annotation.type === 'reference-difference',
+  );
+  expect(differences.map((annotation) => annotation.description)).toEqual(
+    expect.arrayContaining([
+      'Content/metadata/links/forms',
+      'Image semantics',
+      expect.stringContaining('Changed pixels'),
+    ]),
+  );
+  expect(testInfo.attachments.map((attachment) => attachment.name)).toEqual(
+    expect.arrayContaining([
+      'reference-contract',
+      'candidate-contract',
+      'reference',
+      'candidate',
+      'difference',
+    ]),
+  );
 });
 
-test("layout dimension differences are advisory and retain both screenshots", async ({ page, context }, testInfo) => {
-  const { comparePages } = require("../ui/comparison");
+test('layout dimension differences are advisory and retain both screenshots', async ({
+  page,
+  context,
+}, testInfo) => {
+  const { comparePages } = require('../ui/comparison');
   const reference = await context.newPage();
   await preparePage(reference, url);
   await preparePage(page, url);
@@ -190,27 +271,47 @@ test("layout dimension differences are advisory and retain both screenshots", as
   });
   await comparePages(reference, page, testInfo);
   expect(testInfo.annotations).toContainEqual({
-    type: "reference-difference", description: expect.stringContaining("Screenshot dimensions"),
+    type: 'reference-difference',
+    description: expect.stringContaining('Screenshot dimensions'),
   });
-  expect(testInfo.attachments.map(attachment => attachment.name)).toEqual(
-    expect.arrayContaining(["reference", "candidate"]));
+  expect(testInfo.attachments.map((attachment) => attachment.name)).toEqual(
+    expect.arrayContaining(['reference', 'candidate']),
+  );
 });
 
-test("unchanged pages have no reference-difference annotations", async ({ page, context }, testInfo) => {
-  const { comparePages } = require("../ui/comparison");
+test('unchanged pages have no reference-difference annotations', async ({
+  page,
+  context,
+}, testInfo) => {
+  const { comparePages } = require('../ui/comparison');
   const reference = await context.newPage();
   await preparePage(reference, url);
   await preparePage(page, url);
   await comparePages(reference, page, testInfo);
-  expect(testInfo.annotations.filter(annotation => annotation.type === "reference-difference")).toEqual([]);
+  expect(
+    testInfo.annotations.filter(
+      (annotation) => annotation.type === 'reference-difference',
+    ),
+  ).toEqual([]);
 });
 
-test("comparison errors are not converted into advisory differences", async ({ page, context }, testInfo) => {
-  const { comparePages } = require("../ui/comparison");
+test('comparison errors are not converted into advisory differences', async ({
+  page,
+  context,
+}, testInfo) => {
+  const { comparePages } = require('../ui/comparison');
   const reference = await context.newPage();
   await preparePage(reference, url);
   await preparePage(page, url);
-  await page.locator('script[type="application/ld+json"]').evaluate(script => { script.textContent = "invalid JSON"; });
+  await page
+    .locator('script[type="application/ld+json"]')
+    .evaluate((script) => {
+      script.textContent = 'invalid JSON';
+    });
   await expect(comparePages(reference, page, testInfo)).rejects.toThrow(/JSON/);
-  expect(testInfo.annotations.filter(annotation => annotation.type === "reference-difference")).toEqual([]);
+  expect(
+    testInfo.annotations.filter(
+      (annotation) => annotation.type === 'reference-difference',
+    ),
+  ).toEqual([]);
 });

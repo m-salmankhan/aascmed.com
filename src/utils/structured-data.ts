@@ -7,5 +7,5 @@ export type StructuredData = StructuredDataEntry | StructuredDataEntry[];
  * @returns JSON text with literal less-than signs escaped; parsing recovers the original data.
  */
 export function serializeStructuredData(value: StructuredData): string {
-  return JSON.stringify(value).replace(/</g, "\\u003c");
+  return JSON.stringify(value).replace(/</g, '\\u003c');
 }

@@ -3,22 +3,10 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "jsxImportSource": "@emotion/react",
-    "types": [
-      "astro/client",
-      "@emotion/react",
-      "node"
-    ],
+    "types": ["astro/client", "@emotion/react", "node"],
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": false
   },
-  "include": [
-    ".astro/types.d.ts",
-    "src/**/*",
-    "astro.config*.ts"
-  ],
-  "exclude": [
-    "dist",
-    "dist-ssr",
-    "node_modules"
-  ]
+  "include": [".astro/types.d.ts", "src/**/*", "astro.config*.ts"],
+  "exclude": ["dist", "dist-ssr", "node_modules"]
 }

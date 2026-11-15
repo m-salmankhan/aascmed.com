@@ -9,7 +9,11 @@ type ClinicPageProps = PageContextProps & ComponentProps<typeof ClinicView>;
  * @param props Normalized clinic record, current pathname and optional announcement.
  * @returns One React tree for server rendering and browser hydration.
  */
-export function ClinicPage({ pathname, announcement, ...props }: ClinicPageProps) {
+export function ClinicPage({
+  pathname,
+  announcement,
+  ...props
+}: ClinicPageProps) {
   return (
     <ReactPage pathname={pathname} announcement={announcement}>
       <ClinicView {...props} />

@@ -1,27 +1,66 @@
 // Provides compact route parameters and display dates for shared content pages.
 import { formatOrdinalDate } from '../../utils/dates';
-import { getBlogs, getClinics, getConditions, getProviders } from '../content/loaders';
-import { blogPath, clinicPath, conditionPath, providerPath } from '../../content/urls';
-import type { BlogRecord, ClinicRecord, ConditionRecord, ProviderRecord } from '../../content/models';
+import {
+  getBlogs,
+  getClinics,
+  getConditions,
+  getProviders,
+} from '../content/loaders';
+import {
+  blogPath,
+  clinicPath,
+  conditionPath,
+  providerPath,
+} from '../../content/urls';
+import type {
+  BlogRecord,
+  ClinicRecord,
+  ConditionRecord,
+  ProviderRecord,
+} from '../../content/models';
 
-type StaticRecords = { blog: BlogRecord; clinic: ClinicRecord; condition: ConditionRecord; provider: ProviderRecord };
-const collections = { blog: getBlogs, clinic: getClinics, condition: getConditions, provider: getProviders };
-const paths: { [K in keyof StaticRecords]: (record: StaticRecords[K]) => string | null } = {
-  blog: record => blogPath(record.slug),
+type StaticRecords = {
+  blog: BlogRecord;
+  clinic: ClinicRecord;
+  condition: ConditionRecord;
+  provider: ProviderRecord;
+};
+const collections = {
+  blog: getBlogs,
+  clinic: getClinics,
+  condition: getConditions,
+  provider: getProviders,
+};
+const paths: {
+  [K in keyof StaticRecords]: (record: StaticRecords[K]) => string | null;
+} = {
+  blog: (record) => blogPath(record.slug),
   clinic: clinicPath,
-  condition: record => conditionPath(record.slug),
-  provider: record => providerPath(record.slug),
+  condition: (record) => conditionPath(record.slug),
+  provider: (record) => providerPath(record.slug),
 };
 
 /** Pass full published records to static routes so rendering needs no detail re-fetch. */
-export async function contentPaths<K extends keyof StaticRecords>(kind: K, prefix: string) {
-  const result: { params: { slug: string }; props: { record: StaticRecords[K] } }[] = [];
+export async function contentPaths<K extends keyof StaticRecords>(
+  kind: K,
+  prefix: string,
+) {
+  const result: {
+    params: { slug: string };
+    props: { record: StaticRecords[K] };
+  }[] = [];
   const seen = new Set<string>();
-  for await (const record of collections[kind]('published') as AsyncIterable<StaticRecords[K]>) {
+  for await (const record of collections[kind]('published') as AsyncIterable<
+    StaticRecords[K]
+  >) {
     const pathname = paths[kind](record);
-    if (!pathname || seen.has(pathname)) throw new Error(`Invalid or duplicate published ${kind} route`);
+    if (!pathname || seen.has(pathname))
+      throw new Error(`Invalid or duplicate published ${kind} route`);
     seen.add(pathname);
-    result.push({ params: { slug: pathname.slice(prefix.length).replace(/\/$/, '') }, props: { record } });
+    result.push({
+      params: { slug: pathname.slice(prefix.length).replace(/\/$/, '') },
+      props: { record },
+    });
   }
   return result;
 }

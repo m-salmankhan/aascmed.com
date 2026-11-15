@@ -9,7 +9,11 @@ type ContactPageProps = PageContextProps & ComponentProps<typeof ContactView>;
  * @param props Contact copy, clinic summaries and choices, pathname and optional announcement.
  * @returns One React tree for server rendering and browser hydration.
  */
-export function ContactPage({ pathname, announcement, ...props }: ContactPageProps) {
+export function ContactPage({
+  pathname,
+  announcement,
+  ...props
+}: ContactPageProps) {
   return (
     <ReactPage pathname={pathname} announcement={announcement}>
       <ContactView {...props} />

@@ -1,10 +1,6 @@
 // Builds cacheable social cards from the public CMS streams.
 import type { ClinicRecord } from '../../content/models.ts';
-import {
-  blogPath,
-  clinicPath,
-  conditionPath,
-} from '../../content/urls.ts';
+import { blogPath, clinicPath, conditionPath } from '../../content/urls.ts';
 import {
   buildSocialCards,
   type MapLocation,
@@ -20,8 +16,10 @@ export type PublishedImageCollections = Pick<
   'blogs' | 'clinics' | 'conditions'
 >;
 
-export interface PublishedSocialCardOptions
-  extends Omit<PublicImageBuildOptions, 'fetch'> {
+export interface PublishedSocialCardOptions extends Omit<
+  PublicImageBuildOptions,
+  'fetch'
+> {
   siteTitle?: string;
 }
 
