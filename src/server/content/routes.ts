@@ -34,7 +34,7 @@ function textField(value: unknown): string | null {
  * @returns Small route/date references; invalid routes, duplicates or upstream failures throw.
  * API responses arrive in batches of at most 100 references, independently of full page loaders.
  */
-async function loadPublishedRouteManifest(
+export async function getPublishedRouteManifest(
   kind?: PublishedRouteKind,
 ): Promise<PublishedRouteManifestEntry[]> {
   const client = createClient('published');
@@ -109,21 +109,4 @@ async function loadPublishedRouteManifest(
     throw new Error('Published content contains duplicate routes');
   }
   return routes;
-}
-
-const buildManifests = new Map<string, Promise<PublishedRouteManifestEntry[]>>();
-
-/** Share the published manifest within this build process; failed reads remain retryable. */
-export async function getPublishedRouteManifest(kind?: PublishedRouteKind): Promise<PublishedRouteManifestEntry[]> {
-  const key = createClient('published').baseURL;
-  let pending = buildManifests.get(key);
-  if (!pending) {
-    pending = loadPublishedRouteManifest().catch(error => {
-      buildManifests.delete(key);
-      throw error;
-    });
-    buildManifests.set(key, pending);
-  }
-  const routes = await pending;
-  return routes.filter(route => !kind || route.kind === kind);
 }

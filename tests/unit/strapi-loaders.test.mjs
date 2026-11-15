@@ -639,10 +639,6 @@ test("published route references request scalar fields without expanded page con
     return Response.json({ data, meta: { pagination: { pageCount: 1, total: data.length } } });
   }, getPublishedRouteManifest);
   assert.equal(requests.length, 5);
-  const cached = await getPublishedRouteManifest();
-  assert.deepEqual(cached, routes);
-  assert.deepEqual(await getPublishedRouteManifest('clinic'), routes);
-  assert.equal(requests.length, 5, 'manifest reuse makes no additional CMS reads');
   assert.deepEqual(routes, [{ pathname: "/clinics/crest-hill/", kind: "clinic", updatedAt: "2026-04-03T14:20:00.000Z" }]);
 });
 
@@ -662,5 +658,17 @@ test('published clinic fallback scans fresh data and keeps explicit slugs author
     assert.equal((await getClinicBySlug('new-name', 'published'))?.documentId, 'fallback');
     explicit = true;
     assert.equal((await getClinicBySlug('old-name', 'published'))?.documentId, 'explicit');
+  });
+});
+
+test('route manifests read fresh CMS records on consecutive calls', async () => {
+  process.env.STRAPI_API_URL = 'https://fresh-routes.example.test';
+  let slug = 'first';
+  await withFetch(async () => Response.json({
+    data: [{ documentId: 'blog', slug }], meta: { pagination: { pageCount: 1, total: 1 } },
+  }), async () => {
+    assert.equal((await getPublishedRouteManifest('blog'))[0].pathname, '/blog/first/');
+    slug = 'second';
+    assert.equal((await getPublishedRouteManifest('blog'))[0].pathname, '/blog/second/');
   });
 });
