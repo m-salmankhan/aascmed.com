@@ -43,7 +43,7 @@ export function ContactForm(props: ContactFormProps): React.ReactElement {
     const submitting = useRef(false);
 
 
-    const formSubmisisonHandler: FormEventHandler<HTMLFormElement> = async (event) => {
+    const handleSubmit: FormEventHandler<HTMLFormElement> = async (event) => {
         event.preventDefault();
         if (submitting.current) return;
         submitting.current = true;
@@ -109,7 +109,7 @@ export function ContactForm(props: ContactFormProps): React.ReactElement {
                 <ErrorNotice css={css`margin-bottom: 1em;`}>{errorMsg}</ErrorNotice>
 
             }
-            <form css={formState == FormState.SUBMITTING ? css`display: none;` : Boolean} className={props.className} onSubmit={formSubmisisonHandler}>
+            <form css={formState == FormState.SUBMITTING ? css`display: none;` : Boolean} className={props.className} onSubmit={handleSubmit}>
                 <TextInput
                     type={"text"}
                     label={"Subject"}
