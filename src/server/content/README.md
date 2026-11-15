@@ -27,3 +27,7 @@ The default batch size is 100, configurable from 1 to 100. Constructing `getPubl
 - [Generated types](generated/README.md) documents the checked-in CMS schema and regeneration commands.
 - [Page boundaries](../pages/README.md) explains how routes consume loaders and pass display props to React views.
 - `astro-media.ts`, `inline-images.ts` and `public-images.ts` prepare CMS media for the [native image and social-card pipeline](../media/README.md).
+
+## Static build reuse
+
+Static routes receive full published records from `getStaticPaths`; shared page settings and the route manifest are memoised within their build process. SSR page settings and detail lookups remain per request, including drafts. Inline image preparation creates one CMS client per content tree. Keeping these existing loaders avoids a Content Layer migration while preserving the same validation and draft/publication rules in both targets.

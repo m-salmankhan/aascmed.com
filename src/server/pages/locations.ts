@@ -2,7 +2,9 @@
 import type { ClinicRecord } from '../../content/models';
 import type { PracticeSummary } from '../../components/practices/practice-archive';
 import { clinicPath } from '../../content/urls';
-import { getPublishedRouteManifest } from '../content/routes';
+import { getServiceUpdates } from '../content/loaders';
+import { serviceUpdatePath } from '../../content/urls';
+import type { ServiceUpdateRecord } from '../../content/models';
 
 /** Map one normalized clinic to its archive/contact card values.
  * @param clinic Published or preview clinic with optional address/contact fields.
@@ -20,13 +22,16 @@ export function clinicSummary(clinic: ClinicRecord): PracticeSummary {
   };
 }
 
-/** Enumerate published dated update parameters without retaining expanded content.
- * @returns Year, month and relative slug for Astro static route generation.
- */
+/** Pass full published updates with their calendar route parameters to static pages. */
 export async function serviceUpdatePaths() {
-  const routes = await getPublishedRouteManifest('service-update');
-  return routes.map(({ pathname }) => {
+  const result: { params: { year: string; month: string; slug: string }; props: { record: ServiceUpdateRecord } }[] = [];
+  const seen = new Set<string>();
+  for await (const record of getServiceUpdates('published')) {
+    const pathname = serviceUpdatePath(record);
+    if (!pathname || seen.has(pathname)) throw new Error('Invalid or duplicate published service-update route');
+    seen.add(pathname);
     const [, , year, month, ...segments] = pathname.replace(/\/$/, '').split('/');
-    return { params: { year, month, slug: segments.join('/') } };
-  });
+    result.push({ params: { year, month, slug: segments.join('/') }, props: { record } });
+  }
+  return result;
 }
