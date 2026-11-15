@@ -621,6 +621,18 @@ test("SDK cross-origin redirects strip the server token", async () => {
   }
 });
 
+test('route manifests read fresh CMS records on consecutive calls', async () => {
+  process.env.STRAPI_API_URL = 'https://fresh-routes.example.test';
+  let slug = 'first';
+  await withFetch(async () => Response.json({
+    data: [{ documentId: 'blog', slug }], meta: { pagination: { pageCount: 1, total: 1 } },
+  }), async () => {
+    assert.equal((await getPublishedRouteManifest('blog'))[0].pathname, '/blog/first/');
+    slug = 'second';
+    assert.equal((await getPublishedRouteManifest('blog'))[0].pathname, '/blog/second/');
+  });
+});
+
 test("published route references request scalar fields without expanded page content", async () => {
   process.env.STRAPI_API_URL = "https://cms.example.test";
   const requests = [];
@@ -658,17 +670,5 @@ test('published clinic fallback scans fresh data and keeps explicit slugs author
     assert.equal((await getClinicBySlug('new-name', 'published'))?.documentId, 'fallback');
     explicit = true;
     assert.equal((await getClinicBySlug('old-name', 'published'))?.documentId, 'explicit');
-  });
-});
-
-test('route manifests read fresh CMS records on consecutive calls', async () => {
-  process.env.STRAPI_API_URL = 'https://fresh-routes.example.test';
-  let slug = 'first';
-  await withFetch(async () => Response.json({
-    data: [{ documentId: 'blog', slug }], meta: { pagination: { pageCount: 1, total: 1 } },
-  }), async () => {
-    assert.equal((await getPublishedRouteManifest('blog'))[0].pathname, '/blog/first/');
-    slug = 'second';
-    assert.equal((await getPublishedRouteManifest('blog'))[0].pathname, '/blog/second/');
   });
 });
