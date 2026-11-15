@@ -68,7 +68,7 @@ export function ContactForm(props: ContactFormProps): React.ReactElement {
             source_url: window.location.href,
         }).then(res => {
             // no error messages
-            if (res === undefined) {
+            if (res.ok) {
                 setFormState(FormState.SUCCESS);
                 setFormData(undefined);
                 window.gtag?.("event", "generate_lead", {
