@@ -30,4 +30,6 @@ The default batch size is 100, configurable from 1 to 100. Constructing `getPubl
 
 ## Static build reuse
 
-Static routes receive full published records from `getStaticPaths`; shared page settings and the route manifest are memoised within their build process. SSR page settings and detail lookups remain per request, including drafts. Inline image preparation creates one CMS client per content tree. Keeping these existing loaders avoids a Content Layer migration while preserving the same validation and draft/publication rules in both targets.
+Static routes receive full published records from `getStaticPaths`; shared page settings are memoised only in production static builds. Astro dev and SSR read fresh settings, and route manifests are not memoised. SSR page settings and detail lookups remain per request, including drafts. Inline image preparation creates one CMS client per content tree. Keeping these existing loaders avoids a Content Layer migration while preserving the same validation and draft/publication rules in both targets.
+
+Static paths and the social-card integration each read their own collection pass. Do not share consumable async iterators across these hooks.
