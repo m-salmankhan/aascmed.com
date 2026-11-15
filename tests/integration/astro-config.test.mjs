@@ -2,10 +2,25 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { writeFileSync, unlinkSync } from 'node:fs';
+import { readFileSync, writeFileSync, unlinkSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+test('legacy admin redirect and frame policy use the custom CMS domain', () => {
+  const repoRoot = path.resolve(
+    path.dirname(fileURLToPath(import.meta.url)),
+    '../..',
+  );
+  assert.match(
+    readFileSync(path.join(repoRoot, 'static/_redirects'), 'utf8'),
+    /^\/admin https:\/\/admin\.aascmed\.com\/admin\/ 301$/m,
+  );
+  assert.doesNotMatch(
+    readFileSync(path.join(repoRoot, 'static/_headers'), 'utf8'),
+    /strapiapp\.com/,
+  );
+});
 
 test('Astro config derives and deduplicates CMS/media image origins from environment', () => {
   const repoRoot = path.resolve(

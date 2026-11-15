@@ -1,2 +1,2 @@
 /*
-  Content-Security-Policy: frame-ancestors 'self' https://*.aascmed.com https://wise-positivity-21c2bd6b3f.strapiapp.com *aascmed.netlify.app
+  Content-Security-Policy: frame-ancestors 'self' https://*.aascmed.com *aascmed.netlify.app
