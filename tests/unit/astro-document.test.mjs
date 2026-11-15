@@ -46,7 +46,9 @@ test('a contact lead queues exactly one complete Google tag command', async () =
   const document = readFileSync(new URL('../../src/layouts/SiteDocument.astro', import.meta.url), 'utf8');
   const contact = readFileSync(new URL('../../src/components/contact/index.tsx', import.meta.url), 'utf8');
   const bootstrap = document.match(/window.gtag = function \(\) \{[\s\S]*?\};/)[0];
-  const command = contact.match(/window.gtag\?\.\("event", "generate_lead", \{[\s\S]*?\}\);/)[0];
+  const commandPattern = /window.gtag\?\.\(\s*["']event["'],\s*["']generate_lead["'],\s*\{[\s\S]*?\}\s*,?\s*\);/;
+  const command = contact.match(commandPattern)[0];
+  assert.ok(command.replaceAll('"', "'").replace(/\}\);$/, "},\n);").match(commandPattern));
   const window = { dataLayer: [] };
   const formData = new Map([['new_patient', '1'], ['clinic', 'Aurora']]);
   runInNewContext(bootstrap + command, { window, formData });
