@@ -1,5 +1,6 @@
 ---
 // Resolves dated service updates and rejects URL dates that do not match the CMS record.
+import { formatServiceUpdateDate } from '../../../../utils/dates';
 import { ServiceUpdatePage } from '../../../../components/pages/ServiceUpdatePage';
 import { prepareInlineImages } from '../../../../server/content/inline-images';
 import SitePage from '../../../../layouts/SitePage.astro';
@@ -37,5 +38,6 @@ await prepareInlineImages(update, pageContentMode(), 1200);
     pathname={Astro.url.pathname}
     announcement={settings.announcement}
     serviceUpdate={update}
+    dateLabel={formatServiceUpdateDate(update.date)}
   />
 </SitePage>

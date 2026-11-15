@@ -2,7 +2,6 @@ import React, { ReactNode, useId } from "react";
 import { css } from "@emotion/react";
 import { colours } from "../../styles/theme";
 import { ErrorNotice } from "./notices";
-import Color from "color";
 import { inputBorderWidths, inputFocusShadow, inputMargins, inputPadding, stylesLabel } from "./index";
 
 interface InputProps extends Omit<React.ComponentPropsWithoutRef<"input">, "type" | "id"> {
@@ -40,7 +39,7 @@ const stylesTextInputs = (error: boolean) => css`
     
     &::placeholder {
       font-weight: bold;
-      color: ${Color(colours.brandSecondary).desaturate(1).toString()}
+      color: ${colours.secondaryMuted}
     }
     
   }

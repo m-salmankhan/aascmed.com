@@ -4,7 +4,6 @@ import { bounceTransition, colours } from "../../styles/theme";
 import { FaIcons, IconStyles } from "../font-awesome";
 import { MapBoxProps } from "../mapbox";
 import { StaticMap } from "../mapbox/static";
-import Color from "color";
 
 const stylesThumbnail = (iconSize: number, showOverlay: boolean, elipse: boolean) => css`
     border-radius: ${elipse ? "50%" : "inherit"};
@@ -31,7 +30,7 @@ const stylesThumbnail = (iconSize: number, showOverlay: boolean, elipse: boolean
         width: 100%;
         height: 100%;
         background: rgba(0, 0, 0, 0.9);
-        background: linear-gradient(to top right, ${Color(colours.brandPrimary).darken(0.3).fade(0.1).toString()}, ${Color(colours.brandSecondary).darken(0.3).fade(0.1).toString()});
+        background: linear-gradient(to top right, ${colours.primaryOverlay}, ${colours.secondaryOverlay});
         opacity: ${showOverlay ? 1 : 0};
         transition: opacity .25s ease-in-out 0s;
 
@@ -63,7 +62,7 @@ const stylesThumbnail = (iconSize: number, showOverlay: boolean, elipse: boolean
   
     a:focus &, a:active & {
         .overlay {
-            background: linear-gradient(to top right, ${Color(colours.brandPrimary).darken(0.8).fade(0.1).toString()}, ${Color(colours.brandSecondary).darken(0.3).fade(0.1).toString()});
+            background: linear-gradient(to top right, ${colours.primaryDarkOverlay}, ${colours.secondaryOverlay});
             .icon {
               fill: ${colours.infoYellow};
             }
