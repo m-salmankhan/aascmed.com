@@ -57,7 +57,7 @@
     "@playwright/test": "^1.56.1",
     "@types/color": "^4",
     "@types/mapbox-gl": "^3.5.0",
-    "@types/node": "25.0.0",
+    "@types/node": "26.6.6",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "formdata-node": "^6.0.3",
