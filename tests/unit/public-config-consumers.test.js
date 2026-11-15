@@ -8,6 +8,13 @@ const compile = (module, filename) => module._compile(ts.transpileModule(fs.read
 }).outputText, filename);
 require.extensions[".ts"] = require.extensions[".tsx"] = compile;
 
+// Vite's asset URL imports are opaque strings in these server-rendered unit tests.
+const Module = require('node:module');
+const load = Module._load;
+Module._load = function (request, parent, isMain) {
+  if (request.endsWith('?url')) return request.slice(0, -4);
+  return load.call(this, request, parent, isMain);
+};
 const React = require("react");
 const { renderToStaticMarkup } = require("react-dom/server");
 const { PublicConfigProvider } = require("../../src/config/public-context.tsx");
@@ -41,4 +48,19 @@ test("static maps use caller sizes in both the main image and no-JavaScript fall
     assert.ok(map.includes(`sizes="${sizes}"`));
     assert.ok(map.includes('loading="lazy"'));
   }
+});
+
+const { StrapiFAQ } = require('../../src/components/strapi/faq.tsx');
+test('FAQ JSON-LD escapes closing script tags and includes nested answer text', () => {
+  const text = '</script><script>alert(1)</script>';
+  const questions = [{ question: 'Safe?', answer: [{ type: 'paragraph', children: [
+    { type: 'text', text: 'Read ' },
+    { type: 'link', url: '/', children: [{ type: 'text', text }] },
+  ] }] }];
+  const html = renderToStaticMarkup(React.createElement(StrapiFAQ, { questions }));
+  const scripts = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)];
+  assert.equal(scripts.length, 1);
+  assert.ok(!scripts[0][1].includes('<'));
+  assert.equal(JSON.parse(scripts[0][1]).mainEntity[0].acceptedAnswer.text, 'Read ' + text);
+  assert.ok(!html.includes('<script>alert(1)'));
 });
