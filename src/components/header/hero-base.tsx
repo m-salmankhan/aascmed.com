@@ -1,4 +1,5 @@
-import React, { HTMLProps, useEffect, useRef, useState } from "react";
+import { observeParallax, parallaxValues } from "./parallax";
+import React, { HTMLProps, useEffect, useRef } from "react";
 import { css } from "@emotion/react";
 import { PaddedContainer } from "../containers";
 import { colours, fontBaseSize, gridSpacing } from "../../styles/theme";
@@ -11,12 +12,6 @@ interface HeroProps extends Omit<HTMLProps<HTMLDivElement>, "media"> {
     media?: React.ReactNode,
     image?: React.ReactNode,
     navigation?: React.ReactNode,
-}
-
-// what variables the parallax effect is made of
-interface ParallaxParameters {
-    textTranslation: number,
-    backgroundOpacity: number
 }
 
 const stylesHero = css({
@@ -88,46 +83,24 @@ const stylesHeroOverlay = css({
     willChange: "opacity",
 })
 
-const getParallaxValues = (height: number): ParallaxParameters => {
-    const percentage = window.scrollY / height;
-    const backgroundOpacity = Math.min(Math.pow(percentage, 1 - percentage), 1);
-    const textTranslation = (backgroundOpacity === 1) ? 100 : percentage * 30;
-    return {
-        backgroundOpacity,
-        textTranslation,
-    }
-}
-
 export const HeroBase: React.FC<HeroProps> = ({ heading, textContent, media, image, navigation, children }) => {
     const headerRef = useRef<HTMLElement | null>(null);
-    const [parallax, setParallax] = useState<ParallaxParameters>({ textTranslation: 0, backgroundOpacity: 0 });
+    const contentRef = useRef<HTMLDivElement | null>(null);
+    const overlayRef = useRef<HTMLDivElement | null>(null);
 
-    // Parallax Effect
-    useEffect(() => {
-        const updateParallax = () => {
-            if (!headerRef.current)
-                return;
-
-            const header = headerRef.current as HTMLElement;
-            const heroHeight = header.scrollHeight;
-            requestAnimationFrame(() => setParallax(getParallaxValues(heroHeight)));
-        }
-
-        addEventListener("scroll", updateParallax);
-        addEventListener("resize", updateParallax);
-
-        return () => {
-            removeEventListener("scroll", updateParallax);
-            removeEventListener("resize", updateParallax);
-        }
-    }, [headerRef, setParallax]);
+    useEffect(() => observeParallax(window, reducedMotion => {
+        if (!headerRef.current || !contentRef.current || !overlayRef.current) return;
+        const values = parallaxValues(window.scrollY, headerRef.current.scrollHeight);
+        contentRef.current.style.transform = reducedMotion ? 'none' : `translate3d(0, -${values.textTranslation}%, 0)`;
+        overlayRef.current.style.opacity = reducedMotion ? '0' : String(values.backgroundOpacity);
+    }), []);
 
     return (
         <PaddedContainer css={stylesHero}>
             <header ref={headerRef}>
                 {image && <div css={stylesHeroBackgroundImage}>{image}</div>}
                 {navigation}
-                <div className="translate" css={css(stylesHeroContent)} style={{ transform: `translate3d(0, -${parallax.textTranslation}%, 0)` }}>
+                <div ref={contentRef} className="translate" css={css(stylesHeroContent)}>
                     <div css={media ? css({ display: 'flex', gap: '2em', alignItems: 'center', flexWrap: 'wrap', [`@media screen and (min-width: ${breakpointStrings.md})`]: { flexWrap: 'nowrap' } }) : undefined}>
                         <div css={media ? css({ flex: '1 1 60%' }) : undefined}>
                             {children}
@@ -138,7 +111,7 @@ export const HeroBase: React.FC<HeroProps> = ({ heading, textContent, media, ima
                     </div>
                 </div>
                 <div />
-                <div css={stylesHeroOverlay} style={{ opacity: parallax.backgroundOpacity }} />
+                <div ref={overlayRef} css={stylesHeroOverlay} />
             </header>
         </PaddedContainer>
     );

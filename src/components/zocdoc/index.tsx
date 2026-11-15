@@ -1,3 +1,4 @@
+import { thresholdTracker } from "./scroll-threshold";
 import React, {HTMLProps, MouseEventHandler, useEffect, useRef, useState} from "react";
 import {stylesH3} from "../headings";
 import {css} from "@emotion/react";
@@ -248,10 +249,13 @@ export const ZocDoc = () => {
     const zocDocRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
+        const track = thresholdTracker(600);
         const callBack = () => {
-            setCollapse(window.scrollY > 600);
-        }
-        window.addEventListener("scroll", callBack);
+            const next = track(window.scrollY);
+            if (next !== undefined) setCollapse(next);
+        };
+        window.addEventListener("scroll", callBack, { passive: true });
+        callBack();
 
         return () => {
             window.removeEventListener("scroll", callBack);
