@@ -81,7 +81,7 @@ test('notice variants share the default fade and valid overflow styles', () => {
 
 test('contact submits from its async handler once even before React rerenders', async () => {
   const { ContactForm } = require('../../src/components/contact/index.tsx');
-  const original = { useState: React.useState, useRef: React.useRef, useContext: React.useContext, FormData: global.FormData, window: global.window, contact: API.prototype.contact, log: console.log };
+  const original = { useState: React.useState, useRef: React.useRef, useContext: React.useContext, FormData: global.FormData, window: global.window, fetch: global.fetch, log: console.log };
   const updates = [];
   let calls = 0;
   let resolve;
@@ -91,7 +91,7 @@ test('contact submits from its async handler once even before React rerenders', 
   global.FormData = class extends Map { constructor() { super([['fullname', 'Example'], ['clinic', 'Clinic']]); } };
   global.window = { location: { href: 'https://www.aascmed.com/contact/' } };
   console.log = () => {};
-  API.prototype.contact = fields => { calls++; assert.equal(fields.full_name, 'Example'); return new Promise(done => { resolve = done; }); };
+  global.fetch = async (_url, options) => { calls++; assert.equal(JSON.parse(options.body).full_name, 'Example'); await new Promise(done => { resolve = done; }); return new Response(null, { status: 200 }); };
   try {
     const tree = ContactForm({ clinic: 'Clinic' });
     const form = tree.props.children.find(child => typeof child?.props?.onSubmit === 'function');
@@ -104,6 +104,6 @@ test('contact submits from its async handler once even before React rerenders', 
     assert.ok(updates.includes(2), 'success state set without an effect');
   } finally {
     React.useState = original.useState; React.useRef = original.useRef; React.useContext = original.useContext;
-    global.FormData = original.FormData; global.window = original.window; API.prototype.contact = original.contact; console.log = original.log;
+    global.FormData = original.FormData; global.window = original.window; global.fetch = original.fetch; console.log = original.log;
   }
 });
