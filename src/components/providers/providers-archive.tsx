@@ -7,7 +7,6 @@ import { SiteLink } from "../../navigation/link";
 import { Thumbnail } from "../thumbnails";
 import { IconStyles } from "../font-awesome";
 import { breakpointStrings, mediaBreakpoints } from "../../styles/breakpoints";
-import Color from "color";
 import { colours, gridSpacing } from "../../styles/theme";
 import { stylesBtnSecondary, stylesButton } from "../buttons";
 
@@ -52,7 +51,7 @@ const stylesProviderHeader = css(
         outline: none;
         
         .degree {
-          color: ${Color(colours.brandPrimary).desaturate(1).toString()}
+          color: ${colours.primaryMuted}
         }
         
         &:hover, &:focus, &:active {

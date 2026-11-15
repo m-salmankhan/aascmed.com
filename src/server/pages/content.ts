@@ -1,5 +1,5 @@
 // Provides compact route parameters and display dates for shared content pages.
-import moment from 'moment';
+import { formatOrdinalDate } from '../../utils/dates';
 import { getBlogs, getClinics, getConditions, getProviders } from '../content/loaders';
 import { blogPath, clinicPath, conditionPath, providerPath } from '../../content/urls';
 import type { BlogRecord, ClinicRecord, ConditionRecord, ProviderRecord } from '../../content/models';
@@ -31,9 +31,5 @@ export async function contentPaths<K extends keyof StaticRecords>(kind: K, prefi
  * @returns Display date, or an empty string when the CMS supplied none.
  */
 export function blogDate(value: string | null | undefined): string {
-  if (!value) {
-    return '';
-  }
-  const date = moment.utc(value, moment.ISO_8601, true);
-  return date.isValid() ? date.format('Do MMMM YYYY') : '';
+  return formatOrdinalDate(value);
 }
