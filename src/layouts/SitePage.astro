@@ -11,11 +11,12 @@ interface Props extends Omit<DocumentProps, 'siteSettings' | 'trackingSettings'>
   trackingSettings?: TrackingSettings | null;
   articleSection?: string;
 }
-const { trackingSettings, articleSection, ...document } = Astro.props;
+const { trackingSettings, articleSection, useTracking = true, ...document } = Astro.props;
 ---
 
 <SiteDocument
   {...document}
+  {useTracking}
   siteSettings={siteSettings}
   trackingSettings={trackingSettings ?? undefined}
 >
