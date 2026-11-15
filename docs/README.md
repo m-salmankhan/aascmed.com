@@ -54,7 +54,9 @@ This target does not include a deployed authentication gateway. Draft mode requi
 
 ## Automatic preview image publication
 
-`preview-image.yml` tests the code and the real container. Pull requests get read-only checks. Successful pushes to `main` publish the tested container privately as `ghcr.io/m-salmankhan/aascmed.com-preview` and record its exact image digest and source commit. Publication refuses an existing public package and confirms the new image is private before notifying deployment.
+`preview-image.yml` tests the code and the real container. Pull requests get read-only checks. Successful pushes to `main` publish the tested container as `ghcr.io/m-salmankhan/aascmed.com-preview` and record its exact image digest and source commit. The package must independently report private visibility before and after the push.
+
+Before the first main build, provision `aascmed.com-preview` under the personal account with an empty bootstrap image, using a classic PAT with `write:packages` and no source repository label. In the package settings, confirm **Private**, then grant `m-salmankhan/aascmed.com` **Write** under **Manage Actions access**. Keep access separate from the public repository's inherited permissions. The workflow token can publish subsequent images. A disposable first push using the public repository's Actions token created an anonymously readable package. [GitHub Packages access settings](https://docs.github.com/en/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility)
 
 After that build has finished successfully, `notify-preview.yml` automatically requests deployment from the preview repository. It does not check out code, execute build artifacts or receive VPS credentials. Merge the preview repository's deployment workflow first and register the one-time GitHub App connection described in the [environment inventory](environment-variables.md). Runtime secrets remain in the preview repository's protected deployment settings.
 
