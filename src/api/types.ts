@@ -22,7 +22,14 @@ export interface ContactFormFieldErrors {
     source_url?: string[]
 }
 
-/** Show field_errors first when present; error is the fallback for failures without field errors. */
+export interface ContactFormErrorResponse {
+    error?: string
+    field_errors?: ContactFormFieldErrors
+}
+
+export type ContactFormFailure = "timeout" | "network" | "rejected" | "server";
+
+/** Field errors take precedence over the server error, then the failure reason's UI copy. */
 export type ContactFormResult =
     | { ok: true }
-    | { ok: false; error: string; field_errors?: ContactFormFieldErrors };
+    | ({ ok: false; reason: ContactFormFailure } & ContactFormErrorResponse);

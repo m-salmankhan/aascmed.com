@@ -2,13 +2,21 @@ import { Checkbox, DropdownInput, TextArea, TextInput } from "../forms";
 import React, { FormEventHandler, useEffect, useRef, useState } from "react";
 import { PrimaryButton } from "../buttons";
 import { css } from "@emotion/react";
-import { API, contactErrorMessage } from "../../api";
-import { ContactFormFieldErrors } from "../../api/types";
+import { API } from "../../api";
+import { ContactFormFailure, ContactFormFieldErrors } from "../../api/types";
 import { ErrorNotice, SuccessNotice } from "../forms/notices";
 import { Loading } from "../loading";
 import { stylesH4 } from "../headings";
 import { usePublicConfig } from "../../config/public-context";
 
+
+const contactErrorMessage = "An unexpected error occurred. Please try again or email us at info@aascmed.com if the problem persists.";
+const failureMessages: Record<ContactFormFailure, string> = {
+    timeout: "We couldn't confirm your message was sent. Please call the clinic, or check your email before sending again.",
+    network: contactErrorMessage,
+    rejected: contactErrorMessage,
+    server: contactErrorMessage,
+};
 
 enum FormState {
     DEFAULT,
@@ -81,11 +89,9 @@ export function ContactForm(props: ContactFormProps): React.ReactElement {
             if (res.field_errors) {
                 setFieldErrors(res.field_errors);
                 setFormState(FormState.DEFAULT);
-            } else if (res.error) {
-                setFormState(FormState.ERROR);
-                setErrorMsg(res.error);
             } else {
                 setFormState(FormState.ERROR);
+                setErrorMsg(res.error || failureMessages[res.reason]);
             }
         }).catch(e => {
             console.error(e);
