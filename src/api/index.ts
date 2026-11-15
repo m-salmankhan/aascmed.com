@@ -1,6 +1,6 @@
 import type { ContactFormFields, ContactFormFieldErrors, ContactFormResult } from "./types";
 
-const defaultError = "An unexpected error occurred. Please try again or email us at info@aascmed.com if the problem persists.";
+export const contactErrorMessage = "An unexpected error occurred. Please try again or email us at info@aascmed.com if the problem persists.";
 const fieldNames = ["subject", "full_name", "email_address", "phone_number", "message", "clinic", "new_patient", "disclaimer", "source_url"] as const;
 const isRecord = (value: unknown): value is Record<string, unknown> =>
     typeof value === "object" && value !== null && !Array.isArray(value);
@@ -38,15 +38,15 @@ export class API {
             }
             return {
                 ok: false,
-                error: isRecord(detail) && typeof detail.error === "string" && detail.error ? detail.error : defaultError,
+                error: isRecord(detail) && typeof detail.error === "string" && detail.error ? detail.error : contactErrorMessage,
                 ...(Object.keys(field_errors).length ? { field_errors } : {}),
             };
         } catch (error) {
             return {
                 ok: false,
                 error: error instanceof Error && error.name === "TimeoutError"
-                    ? "The request timed out. Please try again or contact the clinic directly."
-                    : defaultError,
+                    ? "We couldn't confirm your message was sent. Please call the clinic, or check your email before sending again."
+                    : contactErrorMessage,
             };
         }
     }

@@ -2,7 +2,7 @@ import { Checkbox, DropdownInput, TextArea, TextInput } from "../forms";
 import React, { FormEventHandler, useEffect, useRef, useState } from "react";
 import { PrimaryButton } from "../buttons";
 import { css } from "@emotion/react";
-import { API } from "../../api";
+import { API, contactErrorMessage } from "../../api";
 import { ContactFormFieldErrors } from "../../api/types";
 import { ErrorNotice, SuccessNotice } from "../forms/notices";
 import { Loading } from "../loading";
@@ -33,7 +33,7 @@ export function ContactForm(props: ContactFormProps): React.ReactElement {
     const [formState, setFormState] = useState(FormState.DEFAULT);
     const [formData, setFormData] = useState<FormData | undefined>(undefined);
     const [fieldErrors, setFieldErrors] = useState<ContactFormFieldErrors | undefined>();
-    const [errorMsg, setErrorMsg] = useState("An unexpected error occurred. Please try again or email us at info@aascmed.com if the problem persists.");
+    const [errorMsg, setErrorMsg] = useState(contactErrorMessage);
     const formRef = useRef<HTMLFormElement>(null);
 
     const gtag = useGTag();
