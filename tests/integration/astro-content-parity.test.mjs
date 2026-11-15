@@ -114,6 +114,10 @@ test(
         ),
         'actual static pages consume more than the first CMS page',
       );
+      for (const pathname of ['/api/announcement', '/api/tracking-info']) {
+        assert.equal(cms.requests.filter(request => request.pathname === pathname).length, 1, `${pathname} read once per static build`);
+      }
+      assert.ok(cms.requests.every(({ query }) => !query.filters?.slug), 'static pages use supplied records rather than per-slug detail queries');
       await assertPublicArtifacts(path.join(astroRoot, 'dist'));
       const sitemap = await readFile(path.join(astroRoot, 'dist/sitemap-0.xml'), 'utf8');
       for (const [pathname] of routes) {

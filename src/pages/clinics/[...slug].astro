@@ -9,13 +9,15 @@ import { contentPaths } from '../../server/pages/content';
 import { socialCardPath } from '../../server/media/social-cards.ts';
 
 /** Enumerate published clinic paths for static output.
- * @returns Compact slug parameters; SSR resolves each request directly instead.
+ * @returns Full records and slug parameters; SSR resolves each request directly instead.
  */
 export async function getStaticPaths() {
   return contentPaths('clinic', '/clinics/');
 }
 const mode = pageContentMode();
-const clinic = await getClinicBySlug(Astro.params.slug || '', mode);
+const clinic = import.meta.env.PUBLIC_ASTRO_TARGET === 'static'
+  ? Astro.props.record
+  : await getClinicBySlug(Astro.params.slug || '', mode);
 if (!clinic) {
   return Astro.rewrite('/404');
 }
