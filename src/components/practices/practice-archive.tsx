@@ -139,6 +139,7 @@ export const PracticeArchiveList: React.FC<PracticeArchiveListProps> = (
 
     observerRef.current = observer;
     observer.observe(componentRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- WEB-74 baseline: retain the existing observer/animation lifecycle in this tooling PR.
   }, [observerRef, componentRef, setInView]);
 
   return (

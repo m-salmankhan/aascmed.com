@@ -59,6 +59,7 @@ export const PatientFeedback: React.FC<PatientFeedbackProps> = ({
         };
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- WEB-74 baseline: retain the existing observer/animation lifecycle in this tooling PR.
   }, [sectionRef, intersectionObserverRef]);
 
   return (

@@ -93,6 +93,7 @@ jobs:
       - run: yarn strapi:types:check
       - run: yarn typecheck
       - run: yarn lint
+      - run: yarn format:check
       - run: yarn test:unit
       - run: yarn playwright install --with-deps chromium
       - run: yarn test:astro

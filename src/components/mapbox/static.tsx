@@ -82,6 +82,7 @@ export const StaticMap: React.FC<MapBoxProps> = (props) => {
   const [loaded, setLoaded] = useState(ImageState.INITIAL);
   const id = useId();
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- WEB-77 fixes this legacy map lifecycle.
   const unBlurImage = () => {
     setLoaded(ImageState.LOADED);
   };

@@ -73,6 +73,7 @@ export const StarIcon: React.FC<StarIconProps> = ({
       setVisible(false);
       timeoutId.current = null;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- WEB-74 baseline: retain the existing observer/animation lifecycle in this tooling PR.
   }, [enabled, timeoutId, setVisible]);
 
   switch (style) {

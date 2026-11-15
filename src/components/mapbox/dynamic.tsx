@@ -98,6 +98,7 @@ export const MapBox: React.FC<MapBoxProps> = (props) => {
       popupRoots.clear();
       map.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- WEB-77 fixes this legacy map lifecycle.
   }, [
     map,
     mapContainer,

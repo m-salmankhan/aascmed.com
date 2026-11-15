@@ -106,6 +106,7 @@ export function ContactForm(props: ContactFormProps): React.ReactElement {
         console.error(e);
         setFormState(FormState.ERROR);
       });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- WEB-67/WEB-72 remove this legacy submit effect.
   }, [formState, formData, runtimeApiBaseUrl]);
 
   return (
