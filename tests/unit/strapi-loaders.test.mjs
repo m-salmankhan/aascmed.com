@@ -672,3 +672,15 @@ test('published clinic fallback scans fresh data and keeps explicit slugs author
     assert.equal((await getClinicBySlug('old-name', 'published'))?.documentId, 'explicit');
   });
 });
+
+test('route manifests read fresh CMS records on consecutive calls', async () => {
+  process.env.STRAPI_API_URL = 'https://fresh-routes.example.test';
+  let slug = 'first';
+  await withFetch(async () => Response.json({
+    data: [{ documentId: 'blog', slug }], meta: { pagination: { pageCount: 1, total: 1 } },
+  }), async () => {
+    assert.equal((await getPublishedRouteManifest('blog'))[0].pathname, '/blog/first/');
+    slug = 'second';
+    assert.equal((await getPublishedRouteManifest('blog'))[0].pathname, '/blog/second/');
+  });
+});
