@@ -7,7 +7,6 @@ import { ContactFormFieldErrors } from "../../api/types";
 import { ErrorNotice, SuccessNotice } from "../forms/notices";
 import { Loading } from "../loading";
 import { stylesH4 } from "../headings";
-import {useGTag} from "../../hooks/useGTag";
 import { usePublicConfig } from "../../config/public-context";
 
 
@@ -36,12 +35,9 @@ export function ContactForm(props: ContactFormProps): React.ReactElement {
     const [errorMsg, setErrorMsg] = useState("An unexpected error occurred. Please try again or email us at info@aascmed.com if the problem persists.");
     const formRef = useRef<HTMLFormElement>(null);
 
-    const gtag = useGTag();
-
     useEffect(() => {
         if (formState !== FormState.SUCCESS) return;
-        const fbq = (window as typeof window & { fbq?: (...args: string[]) => void }).fbq;
-        fbq?.("track", "Contact");
+        window.fbq?.("track", "Contact");
     }, [formState]);
     // update state variables. actual api call happens on rerender
     const formSubmisisonHandler: FormEventHandler<HTMLFormElement> = (event) => {
@@ -55,8 +51,6 @@ export function ContactForm(props: ContactFormProps): React.ReactElement {
 
     // submit form here.
     useEffect(() => {
-        console.log(gtag())
-
         if (formData === undefined) return;
         if (formState !== FormState.SUBMITTING) return;
 
@@ -73,12 +67,11 @@ export function ContactForm(props: ContactFormProps): React.ReactElement {
             disclaimer: !!(formData.get("disclaimer")?.valueOf()),
             source_url: window.location.href,
         }).then(res => {
-            console.log(res)
             // no error messages
             if (res === undefined) {
                 setFormState(FormState.SUCCESS);
                 setFormData(undefined);
-                gtag("event", "generate_lead", {
+                window.gtag?.("event", "generate_lead", {
                     new_customer: !!(formData.get("new_patient")?.valueOf()),
                     clinic: (formData.get("clinic")?.toString() || "unselected")
                 });
