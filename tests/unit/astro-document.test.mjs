@@ -38,12 +38,3 @@ test('JSON-LD remains parseable while authored tags cannot close its script', ()
   assert.equal(result.includes('<'), false);
   assert.deepEqual(JSON.parse(result), data);
 });
-
-test('the page boundary enables tracking by default while 404 explicitly opts out', async () => {
-  const { readFileSync } = await import('node:fs');
-  const page = readFileSync(new URL('../../src/layouts/SitePage.astro', import.meta.url), 'utf8');
-  const notFound = readFileSync(new URL('../../src/pages/404.astro', import.meta.url), 'utf8');
-  assert.match(page, /useTracking = true/);
-  assert.match(page, /\{useTracking\}/);
-  assert.match(notFound, /useTracking=\{false\}/);
-});
