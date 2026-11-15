@@ -8,6 +8,12 @@ const compile = (module, filename) => module._compile(ts.transpileModule(fs.read
 }).outputText, filename);
 require.extensions[".ts"] = require.extensions[".tsx"] = compile;
 
+const Module = require('node:module');
+const load = Module._load;
+Module._load = function (request, parent, isMain) {
+  if (request.endsWith('?url')) return request.slice(0, -4);
+  return load.call(this, request, parent, isMain);
+};
 const React = require("react");
 const { renderToStaticMarkup } = require("react-dom/server");
 const { PublicConfigProvider } = require("../../src/config/public-context.tsx");
@@ -40,5 +46,64 @@ test("static maps use caller sizes in both the main image and no-JavaScript fall
   for (const map of maps) {
     assert.ok(map.includes(`sizes="${sizes}"`));
     assert.ok(map.includes('loading="lazy"'));
+  }
+});
+
+const { TextInput, TextArea } = require('../../src/components/forms/text-like-inputs.tsx');
+const { Checkbox } = require('../../src/components/forms/checkbox.tsx');
+const { Notice, ErrorNotice, SuccessNotice, InfoNotice } = require('../../src/components/forms/notices.tsx');
+
+test('form-only props stay on wrappers and labels rather than native inputs', () => {
+  for (const Component of [TextInput, TextArea, Checkbox]) {
+    const html = renderToStaticMarkup(React.createElement(Component, {
+      label: 'Name', error: 'Invalid', className: 'field-wrapper', name: 'example', required: true,
+      ...(Component === TextInput ? { type: 'text' } : {}),
+    }));
+    const control = html.match(/<(?:input|textarea)\b[^>]*>/)[0];
+    assert.doesNotMatch(control, /(?:label|error|class)="/);
+    assert.match(control, /name="example"/);
+    assert.match(control, /required=""/);
+    assert.match(html, /class="field-wrapper /);
+    assert.match(html, /Invalid/);
+  }
+});
+
+test('notice variants share the default fade and valid overflow styles', () => {
+  for (const Component of [ErrorNotice, SuccessNotice, InfoNotice]) {
+    const html = renderToStaticMarkup(React.createElement(Component, null, 'Message'));
+    assert.match(html, /overflow-y:inherit/);
+    assert.doesNotMatch(html, /overflow-Y/);
+    assert.match(html, /Message/);
+  }
+  const shrink = renderToStaticMarkup(React.createElement(Notice, { variant: 'info', transitionType: 'shrinkUp' }, 'Message'));
+  assert.match(shrink, /overflow-y:hidden/);
+});
+
+test('contact submits from its async handler once even before React rerenders', async () => {
+  const { ContactForm } = require('../../src/components/contact/index.tsx');
+  const original = { useState: React.useState, useRef: React.useRef, useContext: React.useContext, FormData: global.FormData, window: global.window, contact: API.prototype.contact, log: console.log };
+  const updates = [];
+  let calls = 0;
+  let resolve;
+  React.useState = value => [value, next => updates.push(next)];
+  React.useRef = value => ({ current: value });
+  React.useContext = () => ({ runtimeApiBaseUrl: 'https://runtime.example' });
+  global.FormData = class extends Map { constructor() { super([['fullname', 'Example'], ['clinic', 'Clinic']]); } };
+  global.window = { location: { href: 'https://www.aascmed.com/contact/' } };
+  console.log = () => {};
+  API.prototype.contact = fields => { calls++; assert.equal(fields.full_name, 'Example'); return new Promise(done => { resolve = done; }); };
+  try {
+    const tree = ContactForm({ clinic: 'Clinic' });
+    const form = tree.props.children.find(child => typeof child?.props?.onSubmit === 'function');
+    const event = { preventDefault() {}, currentTarget: {} };
+    const pending = form.props.onSubmit(event);
+    await form.props.onSubmit(event);
+    assert.equal(calls, 1);
+    resolve(undefined);
+    await pending;
+    assert.ok(updates.includes(2), 'success state set without an effect');
+  } finally {
+    React.useState = original.useState; React.useRef = original.useRef; React.useContext = original.useContext;
+    global.FormData = original.FormData; global.window = original.window; API.prototype.contact = original.contact; console.log = original.log;
   }
 });

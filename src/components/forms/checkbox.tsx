@@ -29,18 +29,18 @@ const stylesCheckboxInput = (error: boolean) => css`
   }
 `;
 
-export const Checkbox: React.FC<CheckboxProps> = (props) => {
+export const Checkbox: React.FC<CheckboxProps> = ({ label, error, className, ...props }) => {
   const id = useId();
 
   return (
-    <div css={stylesCheckboxInput(!!props.error)} className={props.className}>
+    <div css={stylesCheckboxInput(!!error)} className={className}>
       {
-        props.error &&
-        <ErrorNotice css={css`margin-bottom: 1em;`}>{props.error}</ErrorNotice>
+        error &&
+        <ErrorNotice css={css`margin-bottom: 1em;`}>{error}</ErrorNotice>
       }
 
       <input id={id} type={"checkbox"} {...props} />
-      <label css={stylesLabel(!!props.error)} htmlFor={id}>{props.label} {props.required && "(required)"}</label>
+      <label css={stylesLabel(!!error)} htmlFor={id}>{label} {props.required && "(required)"}</label>
     </div>
   );
 }

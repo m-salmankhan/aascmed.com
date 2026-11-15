@@ -1,5 +1,5 @@
 import { Checkbox, DropdownInput, TextArea, TextInput } from "../forms";
-import React, { FormEventHandler, useEffect, useRef, useState } from "react";
+import React, { FormEventHandler, useRef, useState } from "react";
 import { PrimaryButton } from "../buttons";
 import { css } from "@emotion/react";
 import { API } from "../../api";
@@ -31,53 +31,39 @@ type ContactFormProps = { className?: string } & (
 export function ContactForm(props: ContactFormProps): React.ReactElement {
     const { runtimeApiBaseUrl } = usePublicConfig();
     const [formState, setFormState] = useState(FormState.DEFAULT);
-    const [formData, setFormData] = useState<FormData | undefined>(undefined);
     const [fieldErrors, setFieldErrors] = useState<ContactFormFieldErrors | undefined>();
     const [errorMsg, setErrorMsg] = useState("An unexpected error occurred. Please try again or email us at info@aascmed.com if the problem persists.");
-    const formRef = useRef<HTMLFormElement>(null);
+    const submitting = useRef(false);
 
     const gtag = useGTag();
 
-    useEffect(() => {
-        if (formState !== FormState.SUCCESS) return;
-        const fbq = (window as typeof window & { fbq?: (...args: string[]) => void }).fbq;
-        fbq?.("track", "Contact");
-    }, [formState]);
-    // update state variables. actual api call happens on rerender
-    const formSubmisisonHandler: FormEventHandler<HTMLFormElement> = (event) => {
+    const formSubmisisonHandler: FormEventHandler<HTMLFormElement> = async (event) => {
         event.preventDefault();
-        if (!formRef.current) return;
+        if (submitting.current) return;
+        submitting.current = true;
+        const formData = new FormData(event.currentTarget);
         setFieldErrors(undefined);
         setFormState(FormState.SUBMITTING);
-        setFormData(new FormData(formRef.current));
-        return false;
-    }
-
-    // submit form here.
-    useEffect(() => {
-        console.log(gtag())
-
-        if (formData === undefined) return;
-        if (formState !== FormState.SUBMITTING) return;
-
         const api = new API(runtimeApiBaseUrl);
 
-        api.contact({
-            subject: (formData.get("subject")?.toString() || ""),
-            full_name: (formData.get("fullname")?.toString() || ""),
-            email_address: (formData.get("email")?.toString() || ""),
-            phone_number: (formData.get("phone")?.toString() || ""),
-            clinic: (formData.get("clinic")?.toString() || ""),
-            message: (formData.get("message")?.toString() || ""),
-            newPatient: !!(formData.get("new_patient")?.valueOf()),
-            disclaimer: !!(formData.get("disclaimer")?.valueOf()),
-            source_url: window.location.href,
-        }).then(res => {
+        try {
+            const res = await api.contact({
+                subject: (formData.get("subject")?.toString() || ""),
+                full_name: (formData.get("fullname")?.toString() || ""),
+                email_address: (formData.get("email")?.toString() || ""),
+                phone_number: (formData.get("phone")?.toString() || ""),
+                clinic: (formData.get("clinic")?.toString() || ""),
+                message: (formData.get("message")?.toString() || ""),
+                newPatient: !!(formData.get("new_patient")?.valueOf()),
+                disclaimer: !!(formData.get("disclaimer")?.valueOf()),
+                source_url: window.location.href,
+            });
             console.log(res)
             // no error messages
             if (res === undefined) {
                 setFormState(FormState.SUCCESS);
-                setFormData(undefined);
+                const fbq = (window as typeof window & { fbq?: (...args: string[]) => void }).fbq;
+                fbq?.("track", "Contact");
                 gtag("event", "generate_lead", {
                     new_customer: !!(formData.get("new_patient")?.valueOf()),
                     clinic: (formData.get("clinic")?.toString() || "unselected")
@@ -94,11 +80,13 @@ export function ContactForm(props: ContactFormProps): React.ReactElement {
             } else {
                 setFormState(FormState.ERROR);
             }
-        }).catch(e => {
+        } catch (e) {
             console.error(e);
             setFormState(FormState.ERROR);
-        })
-    }, [formState, formData, runtimeApiBaseUrl]);
+        } finally {
+            submitting.current = false;
+        }
+    };
 
     return (
         <>
@@ -119,7 +107,7 @@ export function ContactForm(props: ContactFormProps): React.ReactElement {
                 <ErrorNotice css={css`margin-bottom: 1em;`}>{errorMsg}</ErrorNotice>
 
             }
-            <form css={formState == FormState.SUBMITTING ? css`display: none;` : Boolean} ref={formRef} className={props.className} onSubmit={formSubmisisonHandler}>
+            <form css={formState == FormState.SUBMITTING ? css`display: none;` : Boolean} className={props.className} onSubmit={formSubmisisonHandler}>
                 <TextInput
                     type={"text"}
                     label={"Subject"}
