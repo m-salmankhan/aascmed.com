@@ -59,14 +59,14 @@ jobs:
           const url = new URL(process.env.STRAPI_API_URL);
           assert.ok(url.protocol === 'https:' && !url.username && !url.password && !url.search && !url.hash);
           JS
+      - name: Require a pre-existing private package before publishing
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/check-preview-package.mjs
       - name: Build preview without CMS credentials
         run: docker build -f Dockerfile.preview -t "$IMAGE:$GITHUB_SHA" --build-arg STRAPI_API_URL --build-arg STRAPI_MEDIA_ORIGINS --build-arg PUBLIC_RUNTIME_API_BASE_URL --build-arg PUBLIC_MAPBOX_API_KEY .
       - name: Check the actual container with synthetic CMS data
         run: node scripts/check-preview-image.mjs docker "$IMAGE:$GITHUB_SHA"
-      - name: Refuse to publish into an existing public package
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: node scripts/check-preview-package.mjs before-push
       - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
           registry: ghcr.io
@@ -76,7 +76,7 @@ jobs:
       - name: Confirm private visibility before recording the release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: node scripts/check-preview-package.mjs after-push
+        run: node scripts/check-preview-package.mjs
       - name: Record the published image for deployment
         run: |
           node --input-type=module <<'JS'

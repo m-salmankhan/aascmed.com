@@ -2,13 +2,12 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { requirePrivatePackage } from '../../scripts/check-preview-package.mjs';
 
-test('publication allows private packages or first creation, then requires confirmed private visibility', () => {
-  requirePrivatePackage(200, { visibility: 'private' }, true);
-  requirePrivatePackage(200, { visibility: 'private' }, false);
-  requirePrivatePackage(404, null, true);
-  for (const before of [true, false]) {
-    for (const visibility of ['public', 'internal', undefined]) assert.throws(() => requirePrivatePackage(200, { visibility }, before));
-    for (const status of [401, 403, 500]) assert.throws(() => requirePrivatePackage(status, null, before));
+test('publication requires a verified private package, including before the first push', () => {
+  requirePrivatePackage(200, { visibility: 'private' });
+  for (const visibility of ['public', 'internal', undefined]) {
+    assert.throws(() => requirePrivatePackage(200, { visibility }));
   }
-  assert.throws(() => requirePrivatePackage(404, null, false));
+  for (const status of [401, 403, 404, 500]) {
+    assert.throws(() => requirePrivatePackage(status, null));
+  }
 });
