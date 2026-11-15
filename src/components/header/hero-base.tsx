@@ -1,3 +1,4 @@
+import { observeParallax, parallaxValues } from "./parallax";
 import React, { HTMLProps, useEffect, useRef } from "react";
 import { css } from "@emotion/react";
 import { PaddedContainer } from "../containers";
@@ -11,12 +12,6 @@ interface HeroProps extends Omit<HTMLProps<HTMLDivElement>, "media"> {
     media?: React.ReactNode,
     image?: React.ReactNode,
     navigation?: React.ReactNode,
-}
-
-// what variables the parallax effect is made of
-interface ParallaxParameters {
-    textTranslation: number,
-    backgroundOpacity: number
 }
 
 const stylesHero = css({
@@ -88,54 +83,17 @@ const stylesHeroOverlay = css({
     willChange: "opacity",
 })
 
-const getParallaxValues = (height: number): ParallaxParameters => {
-    const percentage = Math.min(Math.max(window.scrollY / Math.max(height, 1), 0), 1);
-    const backgroundOpacity = Math.min(Math.pow(percentage, 1 - percentage), 1);
-    const textTranslation = (backgroundOpacity === 1) ? 100 : percentage * 30;
-    return {
-        backgroundOpacity,
-        textTranslation,
-    }
-}
-
 export const HeroBase: React.FC<HeroProps> = ({ heading, textContent, media, image, navigation, children }) => {
     const headerRef = useRef<HTMLElement | null>(null);
     const contentRef = useRef<HTMLDivElement | null>(null);
     const overlayRef = useRef<HTMLDivElement | null>(null);
 
-    useEffect(() => {
-        const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
-        let frame: number | undefined;
-        const update = () => {
-            frame = undefined;
-            if (!headerRef.current || !contentRef.current || !overlayRef.current) return;
-            const values = getParallaxValues(headerRef.current.scrollHeight);
-            contentRef.current.style.transform = `translate3d(0, -${values.textTranslation}%, 0)`;
-            overlayRef.current.style.opacity = String(values.backgroundOpacity);
-        };
-        const schedule = () => {
-            if (motion.matches || frame !== undefined) return;
-            frame = window.requestAnimationFrame(update);
-        };
-        const motionChanged = () => {
-            if (frame !== undefined) window.cancelAnimationFrame(frame);
-            frame = undefined;
-            if (motion.matches) {
-                if (contentRef.current) contentRef.current.style.transform = 'none';
-                if (overlayRef.current) overlayRef.current.style.opacity = '0';
-            } else schedule();
-        };
-        window.addEventListener('scroll', schedule, { passive: true });
-        window.addEventListener('resize', schedule);
-        motion.addEventListener('change', motionChanged);
-        motionChanged();
-        return () => {
-            window.removeEventListener('scroll', schedule);
-            window.removeEventListener('resize', schedule);
-            motion.removeEventListener('change', motionChanged);
-            if (frame !== undefined) window.cancelAnimationFrame(frame);
-        };
-    }, []);
+    useEffect(() => observeParallax(window, reducedMotion => {
+        if (!headerRef.current || !contentRef.current || !overlayRef.current) return;
+        const values = parallaxValues(window.scrollY, headerRef.current.scrollHeight);
+        contentRef.current.style.transform = reducedMotion ? 'none' : `translate3d(0, -${values.textTranslation}%, 0)`;
+        overlayRef.current.style.opacity = reducedMotion ? '0' : String(values.backgroundOpacity);
+    }), []);
 
     return (
         <PaddedContainer css={stylesHero}>
