@@ -1,0 +1,12 @@
+node_modules/
+dist*/
+.astro/
+yarn.lock
+src/server/content/generated/
+src/components/header/generated-navigation-metrics.mts
+static/
+test-results/
+playwright-report/
+
+# shortcut: conditional inline scripts confuse the Astro formatter, remove when its parser supports SiteDocument.
+src/layouts/SiteDocument.astro

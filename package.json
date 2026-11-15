@@ -14,18 +14,21 @@
     "serve": "astro preview",
     "typecheck": "astro check",
     "test:ui": "playwright test",
-    "test:unit": "node --test tests/unit/content-contracts.test.mjs tests/unit/navigation.test.js tests/unit/navigation-metrics.test.mjs tests/unit/public-config.test.mjs tests/unit/public-config-consumers.test.js tests/unit/strapi-loaders.test.mjs tests/unit/astro-document.test.mjs tests/unit/public-images.test.mjs tests/unit/public-image-build.test.mjs tests/unit/netlify-image-cache.test.js tests/unit/social-card-cache-save.test.mjs",
-    "test:astro": "node --test --test-concurrency=1 tests/integration/astro-config.test.mjs tests/integration/astro-document.test.mjs tests/integration/astro-runtime.test.mjs tests/integration/astro-public-images.test.mjs tests/integration/astro-hydration.test.mjs tests/integration/container-layout.test.mjs tests/integration/navigation-layout.test.mjs tests/integration/navigation-interactions.test.mjs tests/integration/astro-content-parity.test.mjs tests/integration/netlify-image-cache.test.mjs",
+    "test:unit": "node --test \"tests/unit/*.test.*\"",
+    "test:astro": "node --test --test-concurrency=1 \"tests/integration/*.test.mjs\"",
     "strapi:types": "node scripts/generate-strapi-openapi.mjs",
     "strapi:types:check": "node scripts/generate-strapi-openapi.mjs --check",
-    "test:infrastructure:node": "node --test tests/infrastructure/contracts.test.js tests/infrastructure/review.test.js tests/infrastructure/targets.test.js",
+    "test:infrastructure:node": "node --test \"tests/infrastructure/*.test.js\"",
     "test:infrastructure:browser": "playwright test --config playwright.infrastructure.config.js",
     "test:infrastructure": "yarn test:infrastructure:node && yarn test:infrastructure:browser",
     "test:smoke": "playwright test tests/ui/behavior.spec.js",
     "dev": "astro dev",
     "preview": "astro preview",
     "build:ssr": "astro build --config astro.config.ssr.ts",
-    "start:ssr": "node dist-ssr/server/entry.mjs"
+    "start:ssr": "node dist-ssr/server/entry.mjs",
+    "lint": "eslint src scripts tests *.ts *.js *.mjs",
+    "format": "prettier --write \"src/**/*.{ts,tsx,mts,astro}\" \"tests/**/*.{js,mjs}\" \"scripts/*.{js,mjs}\" \"*.{ts,js,mjs,json}\" \".github/workflows/*.yml\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,mts,astro}\" \"tests/**/*.{js,mjs}\" \"scripts/*.{js,mjs}\" \"*.{ts,js,mjs,json}\" \".github/workflows/*.yml\""
   },
   "dependencies": {
     "@astrojs/node": "10.1.4",
@@ -60,12 +63,19 @@
     "@types/node": "26.6.6",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
+    "eslint": "10",
+    "eslint-plugin-astro": "1",
+    "eslint-plugin-jsx-a11y": "6",
+    "eslint-plugin-react-hooks": "7",
     "formdata-node": "^6.0.3",
     "gray-matter": "^4.0.3",
     "openapi-typescript": "7.13.0",
     "pixelmatch": "^8.0.0",
     "pngjs": "^7.0.0",
-    "typescript": "5.9.3"
+    "prettier": "3",
+    "prettier-plugin-astro": "0.14",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8"
   },
   "engines": {
     "node": ">=22.23.4"
