@@ -18,14 +18,17 @@
     "test:astro": "node --test --test-concurrency=1 \"tests/integration/*.test.mjs\"",
     "strapi:types": "node scripts/generate-strapi-openapi.mjs",
     "strapi:types:check": "node scripts/generate-strapi-openapi.mjs --check",
-    "test:infrastructure:node": "node --test tests/infrastructure/contracts.test.js tests/infrastructure/review.test.js tests/infrastructure/targets.test.js",
+    "test:infrastructure:node": "node --test \"tests/infrastructure/*.test.js\"",
     "test:infrastructure:browser": "playwright test --config playwright.infrastructure.config.js",
     "test:infrastructure": "yarn test:infrastructure:node && yarn test:infrastructure:browser",
     "test:smoke": "playwright test tests/ui/behavior.spec.js",
     "dev": "astro dev",
     "preview": "astro preview",
     "build:ssr": "astro build --config astro.config.ssr.ts",
-    "start:ssr": "node dist-ssr/server/entry.mjs"
+    "start:ssr": "node dist-ssr/server/entry.mjs",
+    "lint": "eslint src scripts tests *.ts *.js *.mjs",
+    "format": "prettier --write \"src/**/*.{ts,tsx,mts,astro}\" \"tests/**/*.{js,mjs}\" \"scripts/*.{js,mjs}\" \"*.{ts,js,mjs,json}\" \".github/workflows/*.yml\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,mts,astro}\" \"tests/**/*.{js,mjs}\" \"scripts/*.{js,mjs}\" \"*.{ts,js,mjs,json}\" \".github/workflows/*.yml\""
   },
   "dependencies": {
     "@astrojs/node": "10.1.4",
@@ -60,7 +63,14 @@
     "openapi-typescript": "7.13.0",
     "pixelmatch": "^8.0.0",
     "pngjs": "^7.0.0",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "eslint": "10.15.0",
+    "typescript-eslint": "8.72.2",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "eslint-plugin-jsx-a11y": "6.10.2",
+    "eslint-plugin-astro": "1.7.0",
+    "prettier": "3.10.1",
+    "prettier-plugin-astro": "0.14.1"
   },
   "engines": {
     "node": ">=22.23.4"
