@@ -33,7 +33,8 @@ async function submitContact(page) {
     (item) =>
       new URL(item.url()).pathname === '/runtime/contact/' && item.request().method() === 'POST',
   );
-  await form.getByRole('button', { name: 'Send Message', exact: true }).click();
+  // Two native submissions in the same task must share one in-flight delivery.
+  await form.evaluate(node => { node.requestSubmit(); node.requestSubmit(); });
   return response;
 }
 test(

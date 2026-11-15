@@ -10,6 +10,7 @@ interface NoticeProps {
   className?: string
   children: ReactNode
   onDismiss?: () => void
+  /** Dismiss by collapsing height (shrinkUp) unless fade is explicitly requested. */
   transitionType?: TransitionType
 }
 
@@ -20,7 +21,7 @@ enum NoticeStates {
 }
 
 const stylesNotice = (state: NoticeStates, transitionType?: TransitionType) => {
-  const cleanedTransitionType = transitionType || "fade";
+  const cleanedTransitionType = transitionType || "shrinkUp";
 
   let opacity: string;
   let transform: string;
