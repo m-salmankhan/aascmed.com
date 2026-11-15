@@ -247,6 +247,30 @@ export async function* getReviews(
     yield mapStrapiReview(entity);
   }
 }
+type DetailRecords = { blog: BlogRecord; condition: ConditionRecord; provider: ProviderRecord; serviceUpdate: ServiceUpdateRecord };
+const detailTypes = {
+  blog: { collection: 'blogs', populate: blogPopulate, map: mapStrapiBlog },
+  condition: { collection: 'conditions', populate: conditionPopulate, map: mapStrapiCondition },
+  provider: { collection: 'providers', populate: providerPopulate, map: mapStrapiProvider },
+  serviceUpdate: { collection: 'service-updates', populate: undefined, map: mapStrapiServiceUpdate },
+};
+
+async function getDetail<K extends keyof DetailRecords>(kind: K, slug: string, mode: ContentMode): Promise<DetailRecords[K] | null> {
+  if (!slug.trim()) return null;
+  const client = createClient(mode);
+  const type = detailTypes[kind];
+  const entity = await readFirst(client.collection(type.collection), {
+    status: mode,
+    filters: { slug: { $eq: slug } },
+    ...(type.populate ? { populate: type.populate } : {}),
+    pagination: { page: 1, pageSize: 1 },
+  });
+  if (!entity) return null;
+  const record = type.map(entity, new URL(client.baseURL).origin) as DetailRecords[K];
+  validateRouteRecord(record, kind, mode);
+  return record;
+}
+
 /** Find one blog by its route slug using the published/draft collection query.
  * @param slug Requested blog slug.
  * @param mode Content state requested from Strapi.
@@ -256,22 +280,7 @@ export async function getBlogBySlug(
   slug: string,
   mode: ContentMode,
 ): Promise<BlogRecord | null> {
-  if (!slug.trim()) {
-    return null;
-  }
-  const client = createClient(mode);
-  const entity = await readFirst(client.collection("blogs"), {
-    status: mode,
-    filters: { slug: { $eq: slug } },
-    populate: blogPopulate,
-    pagination: { page: 1, pageSize: 1 },
-  });
-  if (!entity) {
-    return null;
-  }
-  const record = mapStrapiBlog(entity, new URL(client.baseURL).origin);
-  validateRouteRecord(record, "blog", mode);
-  return record;
+  return getDetail("blog", slug, mode);
 }
 /** Find one condition by its route slug.
  * @param slug Requested condition slug.
@@ -282,22 +291,7 @@ export async function getConditionBySlug(
   slug: string,
   mode: ContentMode,
 ): Promise<ConditionRecord | null> {
-  if (!slug.trim()) {
-    return null;
-  }
-  const client = createClient(mode);
-  const entity = await readFirst(client.collection("conditions"), {
-    status: mode,
-    filters: { slug: { $eq: slug } },
-    populate: conditionPopulate,
-    pagination: { page: 1, pageSize: 1 },
-  });
-  if (!entity) {
-    return null;
-  }
-  const record = mapStrapiCondition(entity, new URL(client.baseURL).origin);
-  validateRouteRecord(record, "condition", mode);
-  return record;
+  return getDetail("condition", slug, mode);
 }
 /** Find one provider by its route slug.
  * @param slug Requested provider slug.
@@ -308,22 +302,7 @@ export async function getProviderBySlug(
   slug: string,
   mode: ContentMode,
 ): Promise<ProviderRecord | null> {
-  if (!slug.trim()) {
-    return null;
-  }
-  const client = createClient(mode);
-  const entity = await readFirst(client.collection("providers"), {
-    status: mode,
-    filters: { slug: { $eq: slug } },
-    populate: providerPopulate,
-    pagination: { page: 1, pageSize: 1 },
-  });
-  if (!entity) {
-    return null;
-  }
-  const record = mapStrapiProvider(entity, new URL(client.baseURL).origin);
-  validateRouteRecord(record, "provider", mode);
-  return record;
+  return getDetail("provider", slug, mode);
 }
 // shortcut: slugless published clinics may lag five seconds, remove when every clinic has a slug.
 const clinicFallbacks = new Map<string, { expires: number; records: Promise<ClinicRecord[]> }>();
@@ -393,21 +372,7 @@ export async function getServiceUpdateBySlug(
   slug: string,
   mode: ContentMode,
 ): Promise<ServiceUpdateRecord | null> {
-  if (!slug.trim()) {
-    return null;
-  }
-  const client = createClient(mode);
-  const entity = await readFirst(client.collection("service-updates"), {
-    status: mode,
-    filters: { slug: { $eq: slug } },
-    pagination: { page: 1, pageSize: 1 },
-  });
-  if (!entity) {
-    return null;
-  }
-  const record = mapStrapiServiceUpdate(entity);
-  validateRouteRecord(record, "serviceUpdate", mode);
-  return record;
+  return getDetail("serviceUpdate", slug, mode);
 }
 /** Load and normalize the announcement single type.
  * @param mode Content state requested from Strapi.
