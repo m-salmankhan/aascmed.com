@@ -6,6 +6,7 @@ import type { MediaDescriptor } from "../../content/models";
 import { DynamicHeading } from "../headings";
 import { ContactBanner, ButtonList } from "../posts/shortcode-components";
 import { StrapiFAQ } from "./faq";
+import { headingIds, contentHeadingIds } from "../../utils/strapi-toc";
 
 /** Image block fields owned by Strapi's renderer package. */
 type CmsInlineImage = Extract<BlocksContent[number], { type: 'image' }>['image'];
@@ -31,16 +32,6 @@ function InlineImageBlock({ image }: { image: PreparedInlineImage }): React.Reac
     }} />;
 }
 
-// Helper to convert text to URL-friendly slug
-function slugify(text: string): string {
-    return text
-        .toLowerCase()
-        .replace(/[^\w\s-]/g, '')
-        .replace(/\s+/g, '-')
-        .replace(/--+/g, '-')
-        .trim();
-}
-
 // Sanitize Strapi Blocks content to handle malformed data
 const sanitizeBlocksContent = (content: any[]): BlocksContent => {
     return content
@@ -51,7 +42,8 @@ const sanitizeBlocksContent = (content: any[]): BlocksContent => {
             }
             return true;
         })
-        .map(block => {
+        .map(original => {
+            const block = { ...original };
             // Ensure children array exists
             if (!block.children) {
                 block.children = [];
@@ -77,70 +69,35 @@ const sanitizeBlocksContent = (content: any[]): BlocksContent => {
 interface StrapiBlocksRendererProps {
     content: BlocksContent | readonly any[] | any[] | undefined | null;
     className?: string;
-}
-
-// Extract text from raw Strapi block children (before React rendering)
-function getTextFromBlockChildren(children: any[]): string {
-    if (!children || !Array.isArray(children)) return '';
-    return children.map(child => {
-        if (child.text) return child.text;
-        if (child.children) return getTextFromBlockChildren(child.children);
-        return '';
-    }).join('');
-}
-
-// Build a map of heading texts to IDs from raw content
-function buildHeadingIdMap(content: any[]): Map<string, string> {
-    const map = new Map<string, string>();
-    for (const block of content) {
-        if (block.type === 'heading' && block.children) {
-            const text = getTextFromBlockChildren(block.children);
-            if (text) {
-                map.set(text, slugify(text));
-            }
-        }
-    }
-    return map;
+    ids?: readonly string[];
 }
 
 /**
  * A wrapper around Strapi's BlocksRenderer that sanitizes malformed content
  * (empty paragraphs, list items without children, etc.)
  */
-export const StrapiBlocksRenderer: React.FC<StrapiBlocksRendererProps> = ({ content, className }) => {
+export const StrapiBlocksRenderer: React.FC<StrapiBlocksRendererProps> = ({ content, className, ids }) => {
     if (!content || !Array.isArray(content) || content.length === 0) {
         return null;
     }
 
-    // Create a mutable copy of the content
-    const mutableContent = [...content] as any[];
-    const sanitizedContent = sanitizeBlocksContent(mutableContent);
-    
-    if (sanitizedContent.length === 0) {
-        return null;
-    }
-
-    // Build heading ID map from raw content
-    const headingIdMap = buildHeadingIdMap(mutableContent);
-    
-    // Track heading index for matching
+    const anchors = ids || headingIds(content);
     let headingIndex = 0;
-    const headingTexts = Array.from(headingIdMap.keys());
+    // Attach anchors before sanitizing so filtering other block types cannot shift them.
+    const preparedContent = sanitizeBlocksContent(content.map(block => block.type === 'heading'
+        ? { ...block, id: anchors[headingIndex++] } : block));
+    if (preparedContent.length === 0) return null;
 
     // Custom block renderers with heading IDs for table of contents
     const blocks = {
         image: InlineImageBlock,
-        heading: ({ children, level }: { children?: React.ReactNode; level: 1 | 2 | 3 | 4 | 5 | 6 }) => {
-            const text = headingTexts[headingIndex] || '';
-            const id = headingIdMap.get(text) || '';
-            headingIndex++;
-            return <DynamicHeading level={level} id={id}>{children}</DynamicHeading>;
-        },
+        heading: ({ children, level, id }: { children?: React.ReactNode; level: 1 | 2 | 3 | 4 | 5 | 6; id?: string }) =>
+            <DynamicHeading level={level} id={id}>{children}</DynamicHeading>,
     };
 
     return (
         <div className={className}>
-            <BlocksRenderer content={sanitizedContent} blocks={blocks} />
+            <BlocksRenderer content={preparedContent} blocks={blocks} />
         </div>
     );
 }
@@ -156,6 +113,8 @@ interface StrapiDynamicZoneRendererProps {
 export const StrapiDynamicZoneRenderer: React.FC<StrapiDynamicZoneRendererProps> = ({ content, className }) => {
     if (!content || !Array.isArray(content)) return null;
 
+    const anchors = contentHeadingIds(content);
+
     return (
         <div className={className}>
             {content.map((component, index) => {
@@ -165,7 +124,7 @@ export const StrapiDynamicZoneRenderer: React.FC<StrapiDynamicZoneRendererProps>
                 // Handle rich text component
                 if (componentType === 'generic.rich-text' && component.text) {
                     return (
-                        <StrapiBlocksRenderer key={index} content={component.text} />
+                        <StrapiBlocksRenderer key={index} content={component.text} ids={anchors[index]} />
                     );
                 }
                 

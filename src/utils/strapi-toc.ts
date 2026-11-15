@@ -1,13 +1,29 @@
-import { ContentsPageItem } from "../components/posts/contents";
+import { extractTextFromChildren } from "./strapi-excerpt";
+import type { ContentsPageItem } from "../components/posts/contents";
 
-// Helper to convert text to URL-friendly slug
+// Shared by rendered heading anchors and their table of contents links.
 export function slugify(text: string): string {
-    return text
-        .toLowerCase()
-        .replace(/[^\w\s-]/g, '')
-        .replace(/\s+/g, '-')
-        .replace(/--+/g, '-')
-        .trim();
+    return text.normalize('NFKC').toLowerCase()
+        .replace(/[^\p{L}\p{N}_\s-]/gu, '')
+        .trim().replace(/[\s-]+/g, '-').replace(/^-|-$/g, '') || 'section';
+}
+
+export function headingIds(blocks: readonly any[], used = new Set<string>()): string[] {
+    return blocks.filter(block => block.type === 'heading').map(block => {
+        const slug = slugify(extractTextFromChildren(block.children));
+        let id = slug;
+        let suffix = 2;
+        while (used.has(id)) id = `${slug}-${suffix++}`;
+        used.add(id);
+        return id;
+    });
+}
+
+/** Allocate anchors once across every rich-text section, reserving the FAQ section ID. */
+export function contentHeadingIds(content: readonly any[]): string[][] {
+    const used = new Set<string>(content.some(component => (component.__component || component.strapi_component) === 'generic.faq') ? ['faq'] : []);
+    return content.map(component => (component.__component || component.strapi_component) === 'generic.rich-text' && Array.isArray(component.text)
+        ? headingIds(component.text, used) : []);
 }
 
 // Extract table of contents from Strapi dynamic zone content
@@ -29,8 +45,9 @@ export function extractTableOfContents(content: any[]): ContentsPageItem[] {
         }
     }
     
+    const anchors = contentHeadingIds(content);
     // Second pass: extract headings, treating minLevel as "top level"
-    for (const component of content) {
+    for (const [index, component] of content.entries()) {
         const componentType = component.__component || component.strapi_component;
         
         // Handle FAQ component - add to TOC
@@ -43,19 +60,16 @@ export function extractTableOfContents(content: any[]): ContentsPageItem[] {
         }
         
         if (componentType === 'generic.rich-text' && component.text) {
+            const ids = anchors[index];
+            let headingIndex = 0;
             for (const block of component.text) {
+                const id = block.type === 'heading' ? ids[headingIndex++] : undefined;
                 if (block.type === 'heading' && block.level && block.level <= minLevel + 1) {
-                    // Extract text from children
-                    const headingText = block.children
-                        ?.map((child: any) => child.text || '')
-                        .join('') || '';
-                    
-                    if (!headingText.trim()) continue;
-                    
-                    const slug = slugify(headingText);
+                    const text = extractTextFromChildren(block.children);
+                    if (!text.trim()) continue;
                     const item: ContentsPageItem = {
-                        title: headingText,
-                        url: `#${slug}`,
+                        title: text,
+                        url: `#${id}`,
                     };
                     
                     // Top-level heading (e.g., h2 or h3 if no h2s exist)
