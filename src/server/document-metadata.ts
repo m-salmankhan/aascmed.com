@@ -1,10 +1,8 @@
 // Validates canonical/social URLs and serializes JSON-LD for Astro documents.
 /** The public canonical host stays fixed when a page is rendered in preview. */
 export const canonicalOrigin = "https://www.aascmed.com";
-/** One JSON-LD entity, with schema.org properties supplied by the route. */
-export type StructuredDataEntry = Record<string, unknown>;
-/** JSON-LD for one entity or multiple entities on the same page. */
-export type StructuredData = StructuredDataEntry | StructuredDataEntry[];
+export { serializeStructuredData } from "../utils/structured-data.ts";
+export type { StructuredData, StructuredDataEntry } from "../utils/structured-data.ts";
 /** Social metadata category understood by the shared document. */
 export type OpenGraphType = "website" | "article" | "profile";
 /** Resolve a route pathname without allowing it to replace the public canonical host.
@@ -32,11 +30,4 @@ export function socialImageUrl(path: string): string {
     throw new Error("Social metadata requires a public HTTPS image");
   }
   return url.href;
-}
-/** Serialize JSON-LD without allowing authored HTML to close its script element.
- * @param value One schema.org entity or an array of entities supplied by the route.
- * @returns JSON text with literal less-than signs escaped; parsing recovers the original data.
- */
-export function serializeStructuredData(value: StructuredData): string {
-  return JSON.stringify(value).replace(/</g, "\\u003c");
 }
