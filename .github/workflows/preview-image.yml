@@ -73,31 +73,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - run: docker push "$IMAGE:$GITHUB_SHA"
-      - name: Confirm private visibility before recording the release
+      - name: Confirm private visibility after publishing
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/check-preview-package.mjs
-      - name: Record the published image for deployment
-        run: |
-          node --input-type=module <<'JS'
-          import assert from 'node:assert/strict';
-          import { execFileSync } from 'node:child_process';
-          import { writeFileSync } from 'node:fs';
-          const repository = 'm-salmankhan/aascmed.com';
-          const prefix = `${process.env.IMAGE}@sha256:`;
-          const [image] = JSON.parse(execFileSync('docker', ['image', 'inspect', `${process.env.IMAGE}:${process.env.GITHUB_SHA}`], { encoding: 'utf8' }));
-          const reference = image.RepoDigests.find((value) => value.startsWith(prefix));
-          assert.ok(reference && reference.length === prefix.length + 64 && /^[0-9a-f]{64}$/.test(reference.slice(prefix.length)));
-          const runId = Number(process.env.GITHUB_RUN_ID);
-          const runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT);
-          assert.ok(Number.isSafeInteger(runId) && runId > 0 && Number.isSafeInteger(runAttempt) && runAttempt > 0);
-          assert.ok(process.env.GITHUB_REPOSITORY === repository && /^[0-9a-f]{40}$/.test(process.env.GITHUB_SHA));
-          writeFileSync('build.json', JSON.stringify({ version: 1, component: 'astro', repository, commit: process.env.GITHUB_SHA, image: reference, runId, runAttempt }) + '\n');
-          JS
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: preview-build-manifest
-          path: build.json
-          if-no-files-found: error
-          overwrite: true
-          retention-days: 30
