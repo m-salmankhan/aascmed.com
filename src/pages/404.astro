@@ -13,6 +13,7 @@ Astro.response.status = 404;
   title="404 Not Found"
   description="This page could not be found."
   ogType="website"
+  useTracking={false}
   noIndex
 >
   <NotFoundPage client:load pathname={Astro.url.pathname} announcement={settings.announcement} />

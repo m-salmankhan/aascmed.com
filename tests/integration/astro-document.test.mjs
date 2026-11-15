@@ -36,6 +36,7 @@ test(
   { timeout: 120000 },
   async () => {
     const cms = await startFixtureCms();
+    Object.assign(cms.published['tracking-info'], { googleAnalyticsId: 'G-CONDITIONS', googleTagManagerId: 'GTM-CONDITIONS', pixelId: 'PIXEL-CONDITIONS' });
     const cmsUrl = cms.origin;
     const observedCmsRequests = cms.requests;
     cms.published.blogs.push({
@@ -290,6 +291,13 @@ import SiteDocument from '../layouts/SiteDocument.astro';
       const notFoundHtml = await readFile(path.join(staticOutputDir, '404.html'), 'utf8');
       assert.ok(notFoundHtml.includes('name="robots" content="noindex, nofollow"'));
       assert.ok(notFoundHtml.includes('Page Not Found!'));
+      assert.doesNotMatch(notFoundHtml, /googletagmanager\.com|connect\.facebook\.net|window\.gtag/);
+      for (const route of ['conditions/index.html', 'conditions/allergy/index.html']) {
+        const html = await readFile(path.join(staticOutputDir, route), 'utf8');
+        assert.ok(html.includes('gtag/js?id=G-CONDITIONS'), route);
+        assert.ok(html.includes('GTM-CONDITIONS'), route);
+        assert.ok(html.includes('PIXEL-CONDITIONS'), route);
+      }
       for (const asset of [
         'assets/favicon/favicon.svg',
         'assets/favicon/favicon-32x32.png',
