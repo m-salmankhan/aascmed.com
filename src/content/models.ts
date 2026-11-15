@@ -2,7 +2,8 @@
 /** JSON scalar values used for serializable CMS data. */
 export type JsonPrimitive = string | number | boolean | null;
 /** Recursively JSON-safe data used for CMS rich text and dynamic-zone content. */
-export type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
+export type JsonValue =
+  JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
 
 /** Strapi Blocks nodes and dynamic-zone entries stay data; views create React elements. */
 export type ContentBlock = { [key: string]: JsonValue };
@@ -87,7 +88,12 @@ export interface ProviderRecord extends ContentRecord {
     qualificationAbbr?: string;
   };
   retirementNotice?: { retired?: boolean; text?: JsonValue[] };
-  review?: { text?: string; reviewer?: string; date?: string | null; link?: string };
+  review?: {
+    text?: string;
+    reviewer?: string;
+    date?: string | null;
+    link?: string;
+  };
 }
 
 /** Clinic content with nullable name and optional location, contact, and hours data. */
@@ -176,7 +182,7 @@ export interface AnnouncementSettings {
   /** True only when the CMS `enabled` value is exactly true. */
   enabled: boolean;
   /** One supported banner style; adapters normalize unrecognized values to `info`. */
-  type: "error" | "info" | "success";
+  type: 'error' | 'info' | 'success';
   /** Optional array of JSON-safe Strapi Blocks nodes. */
   message?: JsonValue[];
 }

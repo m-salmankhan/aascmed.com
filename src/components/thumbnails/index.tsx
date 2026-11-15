@@ -1,12 +1,16 @@
-import React from "react";
-import { css } from "@emotion/react";
-import { bounceTransition, colours } from "../../styles/theme";
-import { FaIcons, IconStyles } from "../font-awesome";
-import { MapBoxProps } from "../mapbox";
-import { StaticMap } from "../mapbox/static";
+import React from 'react';
+import { css } from '@emotion/react';
+import { bounceTransition, colours } from '../../styles/theme';
+import { FaIcons, IconStyles } from '../font-awesome';
+import { MapBoxProps } from '../mapbox';
+import { StaticMap } from '../mapbox/static';
 
-const stylesThumbnail = (iconSize: number, showOverlay: boolean, elipse: boolean) => css`
-    border-radius: ${elipse ? "50%" : "inherit"};
+const stylesThumbnail = (
+  iconSize: number,
+  showOverlay: boolean,
+  elipse: boolean,
+) => css`
+    border-radius: ${elipse ? '50%' : 'inherit'};
     position: relative;
     overflow: hidden;
     transition: transform .25s ease 0s;
@@ -86,34 +90,47 @@ const stylesThumbnail = (iconSize: number, showOverlay: boolean, elipse: boolean
 `;
 
 interface ThumbnailProps {
-    className?: string
-    overlayIcon: string
-    overlayIconStyle: IconStyles,
-    overlayIconSize?: number,
-    image?: React.ReactNode,
-    mapboxStaticMap?: MapBoxProps,
-    imageAlt?: string,
-    shape?: "elipse" | "rect",
-    showOverlay?: boolean
+  className?: string;
+  overlayIcon: string;
+  overlayIconStyle: IconStyles;
+  overlayIconSize?: number;
+  image?: React.ReactNode;
+  mapboxStaticMap?: MapBoxProps;
+  imageAlt?: string;
+  shape?: 'elipse' | 'rect';
+  showOverlay?: boolean;
 }
 export const Thumbnail: React.FC<ThumbnailProps> = ({
-    className,
-    image,
-    mapboxStaticMap,
-    imageAlt,
-    overlayIconStyle,
-    overlayIcon,
-    overlayIconSize,
-    showOverlay,
-    shape,
+  className,
+  image,
+  mapboxStaticMap,
+  imageAlt,
+  overlayIconStyle,
+  overlayIcon,
+  overlayIconSize,
+  showOverlay,
+  shape,
 }) => {
-    return (
-        <div className={className} css={css(stylesThumbnail(overlayIconSize || 3, showOverlay || false, shape === "elipse"))}>
-            {image}
-            {mapboxStaticMap && <StaticMap {...mapboxStaticMap} />}
-            <div className={"overlay"}>
-                <FaIcons iconStyle={overlayIconStyle} icon={overlayIcon} className={"icon"} />
-            </div>
-        </div>
-    )
-}
+  return (
+    <div
+      className={className}
+      css={css(
+        stylesThumbnail(
+          overlayIconSize || 3,
+          showOverlay || false,
+          shape === 'elipse',
+        ),
+      )}
+    >
+      {image}
+      {mapboxStaticMap && <StaticMap {...mapboxStaticMap} />}
+      <div className={'overlay'}>
+        <FaIcons
+          iconStyle={overlayIconStyle}
+          icon={overlayIcon}
+          className={'icon'}
+        />
+      </div>
+    </div>
+  );
+};

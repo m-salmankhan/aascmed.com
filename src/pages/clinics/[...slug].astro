@@ -4,7 +4,11 @@ import { ClinicPage } from '../../components/pages/ClinicPage';
 import { prepareInlineImages } from '../../server/content/inline-images';
 import SitePage from '../../layouts/SitePage.astro';
 import { getClinicBySlug } from '../../server/content/loaders';
-import { pageContentMode, getPageContext, isStaticTarget } from '../../server/pages/common';
+import {
+  pageContentMode,
+  getPageContext,
+  isStaticTarget,
+} from '../../server/pages/common';
 import { contentPaths } from '../../server/pages/content';
 import { socialCardPath } from '../../server/media/social-cards.ts';
 
@@ -46,9 +50,5 @@ await prepareInlineImages(clinic, mode, 1200);
   appendBusinessNameToTitle={false}
   {socialImagePath}
 >
-  <ClinicPage
-    client:load
-    {...context.view}
-    {clinic}
-  />
+  <ClinicPage client:load {...context.view} {clinic} />
 </SitePage>

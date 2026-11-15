@@ -18,7 +18,9 @@ const { values } = parseArgs({
   allowPositionals: true,
 });
 const mode =
-  typeof values.mode === 'string' ? values.mode : process.env.NODE_ENV || 'development';
+  typeof values.mode === 'string'
+    ? values.mode
+    : process.env.NODE_ENV || 'development';
 // Vite preserves existing process variables when loading the repository's env files.
 Object.assign(process.env, loadEnv(mode, repositoryRoot, ''));
 
@@ -42,9 +44,12 @@ for (const source of mediaSources) {
   }
   const url = new URL(source.trim());
   const localHttp =
-    url.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
+    url.protocol === 'http:' &&
+    ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
   if (url.protocol !== 'https:' && !localHttp) {
-    throw new Error('Media origins require HTTPS, except HTTP loopback for local development');
+    throw new Error(
+      'Media origins require HTTPS, except HTTP loopback for local development',
+    );
   }
   if (url.username || url.password) {
     throw new Error('Media origins must not contain credentials');

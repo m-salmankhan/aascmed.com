@@ -10,12 +10,18 @@ import { createExcerpt } from '../../utils/strapi-excerpt';
 import { getResponsiveMediaDescriptor } from '../../server/content/astro-media';
 import type { ProviderViewItem } from '../../views/fixed-archive';
 const mode = pageContentMode();
-const [record, context] = await Promise.all([getProvidersPage(mode), getPageContext(Astro.url.pathname, mode)]);
+const [record, context] = await Promise.all([
+  getProvidersPage(mode),
+  getPageContext(Astro.url.pathname, mode),
+]);
 const page = structuredClone(record);
 const providers: ProviderViewItem[] = [];
 for await (const provider of getProviders(mode)) {
   const image = provider.image
-    ? await getResponsiveMediaDescriptor(provider.image, { width: 600, aspectRatio: 1 })
+    ? await getResponsiveMediaDescriptor(provider.image, {
+        width: 600,
+        aspectRatio: 1,
+      })
     : provider.image;
   providers.push({
     slug: providerPath(provider.slug) || '/providers/',

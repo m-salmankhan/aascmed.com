@@ -71,7 +71,9 @@ export function publicImagesIntegration(
         );
         generatedPaths = [...new Set(cards.map(({ imagePath }) => imagePath))];
         const reused = cards.filter(({ wasCached }) => wasCached).length;
-        logger.info(`Prepared ${cards.length} published social cards (${reused} reused, ${cards.length - reused} generated).`);
+        logger.info(
+          `Prepared ${cards.length} published social cards (${reused} reused, ${cards.length - reused} generated).`,
+        );
       },
       /** Copy staged social cards into static output after Astro has generated pages and assets.
        * @param context Astro output directory populated by the completed static build.

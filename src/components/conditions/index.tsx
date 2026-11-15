@@ -1,5 +1,3 @@
-import {ConditionsArchive} from "./conditions-archive";
+import { ConditionsArchive } from './conditions-archive';
 
-export {
-    ConditionsArchive,
-}
+export { ConditionsArchive };

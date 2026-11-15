@@ -4,7 +4,11 @@ import { BlogPage } from '../../components/pages/BlogPage';
 import { prepareInlineImages } from '../../server/content/inline-images';
 import SitePage from '../../layouts/SitePage.astro';
 import { getBlogBySlug } from '../../server/content/loaders';
-import { getPageContext, pageContentMode, isStaticTarget } from '../../server/pages/common';
+import {
+  getPageContext,
+  pageContentMode,
+  isStaticTarget,
+} from '../../server/pages/common';
 import { blogDate, contentPaths } from '../../server/pages/content';
 import { getResponsiveMediaDescriptor } from '../../server/content/astro-media';
 import { socialCardPath } from '../../server/media/social-cards.ts';
@@ -23,18 +27,19 @@ if (!blog) return Astro.rewrite('/404');
 const context = await getPageContext(Astro.url.pathname, mode);
 const originalThumbnail = blog.thumbnail;
 if (blog.thumbnail) {
-  blog.thumbnail = await getResponsiveMediaDescriptor(blog.thumbnail, { width: 1200 });
+  blog.thumbnail = await getResponsiveMediaDescriptor(blog.thumbnail, {
+    width: 1200,
+  });
 }
 blog.date = blogDate(blog.date);
-const socialImagePath =
-  isStaticTarget()
-    ? socialCardPath({
-        kind: 'blog',
-        slug: blog.slug || '',
-        title: blog.heading || blog.title,
-        backgroundImage: originalThumbnail?.src,
-      })
-    : undefined;
+const socialImagePath = isStaticTarget()
+  ? socialCardPath({
+      kind: 'blog',
+      slug: blog.slug || '',
+      title: blog.heading || blog.title,
+      backgroundImage: originalThumbnail?.src,
+    })
+  : undefined;
 await prepareInlineImages(blog, mode, 1200);
 ---
 

@@ -16,5 +16,9 @@ Astro.response.status = 404;
   useTracking={false}
   noIndex
 >
-  <NotFoundPage client:load pathname={Astro.url.pathname} announcement={settings.announcement} />
+  <NotFoundPage
+    client:load
+    pathname={Astro.url.pathname}
+    announcement={settings.announcement}
+  />
 </SitePage>

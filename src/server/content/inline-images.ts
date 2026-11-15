@@ -16,45 +16,52 @@ export async function prepareInlineImages(
   // Resolve the CMS client once for this tree, lazily when an image needs it.
   let origin: string | undefined;
   async function visit(content: unknown): Promise<void> {
-  if (!content || typeof content !== 'object') {
-    return;
-  }
-  if (Array.isArray(content)) {
-    for (const child of content) {
-      await visit(child);
-    }
-    return;
-  }
-  const block = content as Record<string, unknown>;
-  if (block.type === 'image' && block.image && typeof block.image === 'object') {
-    const image = block.image as Record<string, unknown>;
-    if (typeof image.url !== 'string') {
+    if (!content || typeof content !== 'object') {
       return;
     }
-    origin ??= new URL(createClient(mode).baseURL).origin;
-    const prepared = await getResponsiveMediaDescriptor(
-      {
-        src: new URL(image.url, origin).href,
-        alt: typeof image.alternativeText === 'string' ? image.alternativeText : '',
-        width: typeof image.width === 'number' ? image.width : undefined,
-        height: typeof image.height === 'number' ? image.height : undefined,
-        mimeType: typeof image.mime === 'string' ? image.mime : undefined,
-      },
-      { width },
-    );
-    image.url = prepared.src;
-    image.width = prepared.width;
-    image.height = prepared.height;
-    image.responsive = {
-      srcSet: prepared.srcSet,
-      sizes: prepared.sizes,
-      formats: prepared.formats,
-    };
-    return;
-  }
-  for (const child of Object.values(block)) {
-    await visit(child);
-  }
+    if (Array.isArray(content)) {
+      for (const child of content) {
+        await visit(child);
+      }
+      return;
+    }
+    const block = content as Record<string, unknown>;
+    if (
+      block.type === 'image' &&
+      block.image &&
+      typeof block.image === 'object'
+    ) {
+      const image = block.image as Record<string, unknown>;
+      if (typeof image.url !== 'string') {
+        return;
+      }
+      origin ??= new URL(createClient(mode).baseURL).origin;
+      const prepared = await getResponsiveMediaDescriptor(
+        {
+          src: new URL(image.url, origin).href,
+          alt:
+            typeof image.alternativeText === 'string'
+              ? image.alternativeText
+              : '',
+          width: typeof image.width === 'number' ? image.width : undefined,
+          height: typeof image.height === 'number' ? image.height : undefined,
+          mimeType: typeof image.mime === 'string' ? image.mime : undefined,
+        },
+        { width },
+      );
+      image.url = prepared.src;
+      image.width = prepared.width;
+      image.height = prepared.height;
+      image.responsive = {
+        srcSet: prepared.srcSet,
+        sizes: prepared.sizes,
+        formats: prepared.formats,
+      };
+      return;
+    }
+    for (const child of Object.values(block)) {
+      await visit(child);
+    }
   }
   await visit(content);
 }

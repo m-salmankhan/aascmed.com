@@ -7,7 +7,10 @@ import { spawn } from 'node:child_process';
 import { createServer } from 'node:http';
 import { readFile, stat, writeFile, unlink } from 'node:fs/promises';
 import { chromium } from '@playwright/test';
-import { startFixtureCms, fixtureToken } from '../fixtures/astro-cms/server.mjs';
+import {
+  startFixtureCms,
+  fixtureToken,
+} from '../fixtures/astro-cms/server.mjs';
 const astroRoot = fileURLToPath(new URL('../../', import.meta.url));
 const staticOutputDir = path.join(astroRoot, 'dist');
 /** Check real build output for legacy sitemap fields and truthful CMS edit dates.
@@ -36,7 +39,11 @@ test(
   { timeout: 120000 },
   async () => {
     const cms = await startFixtureCms();
-    Object.assign(cms.published['tracking-info'], { googleAnalyticsId: 'G-CONDITIONS', googleTagManagerId: 'GTM-CONDITIONS', pixelId: 'PIXEL-CONDITIONS' });
+    Object.assign(cms.published['tracking-info'], {
+      googleAnalyticsId: 'G-CONDITIONS',
+      googleTagManagerId: 'GTM-CONDITIONS',
+      pixelId: 'PIXEL-CONDITIONS',
+    });
     const cmsUrl = cms.origin;
     const observedCmsRequests = cms.requests;
     cms.published.blogs.push({
@@ -77,7 +84,9 @@ test(
         );
         child.once('error', reject);
         child.once('exit', (code) =>
-          code === 0 ? resolve() : reject(new Error(`${config} failed with exit ${code}`)),
+          code === 0
+            ? resolve()
+            : reject(new Error(`${config} failed with exit ${code}`)),
         );
       });
     }
@@ -92,12 +101,20 @@ test(
       {
         name: 'analytics-only',
         enabled: true,
-        settings: { googleAnalyticsId: 'G-ONLY', googleTagManagerId: '', pixelId: '' },
+        settings: {
+          googleAnalyticsId: 'G-ONLY',
+          googleTagManagerId: '',
+          pixelId: '',
+        },
       },
       {
         name: 'tag-manager-only',
         enabled: true,
-        settings: { googleAnalyticsId: '', googleTagManagerId: 'GTM-ONLY', pixelId: '' },
+        settings: {
+          googleAnalyticsId: '',
+          googleTagManagerId: 'GTM-ONLY',
+          pixelId: '',
+        },
       },
       {
         name: 'tracking-disabled',
@@ -124,7 +141,10 @@ import SiteDocument from '../layouts/SiteDocument.astro';
       );
       fixtureCreated = true;
       for (const trackingCase of trackingCases) {
-        const file = new URL(`../../src/pages/${trackingCase.name}.astro`, import.meta.url);
+        const file = new URL(
+          `../../src/pages/${trackingCase.name}.astro`,
+          import.meta.url,
+        );
         await writeFile(
           file,
           `---
@@ -147,7 +167,10 @@ import SiteDocument from '../layouts/SiteDocument.astro';
         observedCmsRequests.every((url) => url.query.status === 'published'),
         'static build requests published content only',
       );
-      const homeHtml = await readFile(path.join(staticOutputDir, 'index.html'), 'utf8');
+      const homeHtml = await readFile(
+        path.join(staticOutputDir, 'index.html'),
+        'utf8',
+      );
       assert.ok(
         homeHtml.includes('PUBLISHED HERO'),
         'the real homepage replaces the retired architecture proof',
@@ -165,9 +188,15 @@ import SiteDocument from '../layouts/SiteDocument.astro';
         'name="twitter:card"',
         'https://fonts.googleapis.com/css2?family=Poppins:wght@300;800&display=swap',
       ]) {
-        assert.ok(fixtureHtml.includes(expected), `static HTML missing ${expected}`);
+        assert.ok(
+          fixtureHtml.includes(expected),
+          `static HTML missing ${expected}`,
+        );
       }
-      assert.ok(!fixtureHtml.includes('name="robots"'), 'public static page must remain indexable');
+      assert.ok(
+        !fixtureHtml.includes('name="robots"'),
+        'public static page must remain indexable',
+      );
       assert.ok(
         fixtureHtml.includes('gtag/js?id=G-TEST') &&
           fixtureHtml.includes('GTM-TEST') &&
@@ -189,20 +218,29 @@ import SiteDocument from '../layouts/SiteDocument.astro';
       const fixtureJson = fixtureHtml.match(
         /<script type="application\/ld\+json">([\s\S]*?)<\/script>/,
       )?.[1];
-      assert.equal(JSON.parse(fixtureJson).name, '</script><script>untrusted</script>');
+      assert.equal(
+        JSON.parse(fixtureJson).name,
+        '</script><script>untrusted</script>',
+      );
       const browser = await chromium.launch();
       try {
         const context = await browser.newContext();
         // Run real inline tracking code, but intercept every external request.
         await context.route('**/*', (route) =>
-          route.fulfill({ status: 200, contentType: 'application/javascript', body: '' }),
+          route.fulfill({
+            status: 200,
+            contentType: 'application/javascript',
+            body: '',
+          }),
         );
         const page = await context.newPage();
         const errors = [];
         page.on('pageerror', (error) => errors.push(error.message));
         await page.setContent(fixtureHtml, { waitUntil: 'load' });
         assert.equal(
-          await page.locator('body').evaluate((body) => getComputedStyle(body).margin),
+          await page
+            .locator('body')
+            .evaluate((body) => getComputedStyle(body).margin),
           '0px',
           'shared site styles are rendered without client hydration',
         );
@@ -212,7 +250,9 @@ import SiteDocument from '../layouts/SiteDocument.astro';
           commands: window.dataLayer
             .filter((item) => typeof item[0] === 'string')
             .map((item) => Array.from(item)),
-          analyticsDate: window.dataLayer.find((item) => item[0] === 'js')?.[1] instanceof Date,
+          analyticsDate:
+            window.dataLayer.find((item) => item[0] === 'js')?.[1] instanceof
+            Date,
         }));
         assert.deepEqual(
           tracking.commands.map((command) => command[0]),
@@ -220,7 +260,10 @@ import SiteDocument from '../layouts/SiteDocument.astro';
           'consent precedes one Analytics initialization when GA and GTM are both configured',
         );
         assert.deepEqual(tracking.commands.at(-1), ['config', 'G-TEST']);
-        assert.ok(tracking.analyticsDate, 'Analytics startup includes its timestamp');
+        assert.ok(
+          tracking.analyticsDate,
+          'Analytics startup includes its timestamp',
+        );
         assert.ok(tracking.tagManager, 'GTM initialization executes');
         assert.deepEqual(tracking.pixel, [
           ['init', 'TEST-PIXEL'],
@@ -244,8 +287,12 @@ import SiteDocument from '../layouts/SiteDocument.astro';
               .filter((item) => typeof item[0] === 'string')
               .map((item) => Array.from(item)),
             analyticsDate:
-              (window.dataLayer || []).find((item) => item[0] === 'js')?.[1] instanceof Date,
-            tagManager: (window.dataLayer || []).some((item) => item.event === 'gtm.js'),
+              (window.dataLayer || []).find(
+                (item) => item[0] === 'js',
+              )?.[1] instanceof Date,
+            tagManager: (window.dataLayer || []).some(
+              (item) => item.event === 'gtm.js',
+            ),
           }));
           if (trackingCase.name === 'analytics-only') {
             assert.deepEqual(
@@ -260,7 +307,9 @@ import SiteDocument from '../layouts/SiteDocument.astro';
             assert.ok(state.analyticsDate);
             assert.equal(state.tagManager, false);
             assert.equal(
-              await trackingPage.locator('script[src*="/gtag/js?id=G-ONLY"]').count(),
+              await trackingPage
+                .locator('script[src*="/gtag/js?id=G-ONLY"]')
+                .count(),
               1,
             );
           } else if (trackingCase.name === 'tag-manager-only') {
@@ -269,12 +318,17 @@ import SiteDocument from '../layouts/SiteDocument.astro';
               ['consent', 'consent'],
             );
             assert.equal(state.tagManager, true);
-            assert.equal(await trackingPage.locator('script[src*="/gtag/js"]').count(), 0);
+            assert.equal(
+              await trackingPage.locator('script[src*="/gtag/js"]').count(),
+              0,
+            );
           } else {
             assert.deepEqual(state.commands, []);
             assert.equal(state.tagManager, false);
             assert.equal(
-              await trackingPage.locator('script[src*="googletagmanager.com"]').count(),
+              await trackingPage
+                .locator('script[src*="googletagmanager.com"]')
+                .count(),
               0,
             );
           }
@@ -288,11 +342,22 @@ import SiteDocument from '../layouts/SiteDocument.astro';
       } finally {
         await browser.close();
       }
-      const notFoundHtml = await readFile(path.join(staticOutputDir, '404.html'), 'utf8');
-      assert.ok(notFoundHtml.includes('name="robots" content="noindex, nofollow"'));
+      const notFoundHtml = await readFile(
+        path.join(staticOutputDir, '404.html'),
+        'utf8',
+      );
+      assert.ok(
+        notFoundHtml.includes('name="robots" content="noindex, nofollow"'),
+      );
       assert.ok(notFoundHtml.includes('Page Not Found!'));
-      assert.doesNotMatch(notFoundHtml, /googletagmanager\.com|connect\.facebook\.net|window\.gtag/);
-      for (const route of ['conditions/index.html', 'conditions/allergy/index.html']) {
+      assert.doesNotMatch(
+        notFoundHtml,
+        /googletagmanager\.com|connect\.facebook\.net|window\.gtag/,
+      );
+      for (const route of [
+        'conditions/index.html',
+        'conditions/allergy/index.html',
+      ]) {
         const html = await readFile(path.join(staticOutputDir, route), 'utf8');
         assert.ok(html.includes('gtag/js?id=G-CONDITIONS'), route);
         assert.ok(html.includes('GTM-CONDITIONS'), route);
@@ -311,14 +376,25 @@ import SiteDocument from '../layouts/SiteDocument.astro';
       ]) {
         await stat(path.join(staticOutputDir, asset));
       }
-      const staticSitemap = await readFile(path.join(staticOutputDir, 'sitemap-0.xml'), 'utf8');
+      const staticSitemap = await readFile(
+        path.join(staticOutputDir, 'sitemap-0.xml'),
+        'utf8',
+      );
       assertSitemapMetadata(staticSitemap);
       assert.ok(
-        staticSitemap.includes('https://www.aascmed.com/verification-document-fixture/'),
+        staticSitemap.includes(
+          'https://www.aascmed.com/verification-document-fixture/',
+        ),
         'Astro discovers fixed pages automatically',
       );
-      assert.ok(!staticSitemap.includes('/404'), 'Astro excludes the error page');
-      const indexXml = await readFile(path.join(staticOutputDir, 'sitemap-index.xml'), 'utf8');
+      assert.ok(
+        !staticSitemap.includes('/404'),
+        'Astro excludes the error page',
+      );
+      const indexXml = await readFile(
+        path.join(staticOutputDir, 'sitemap-index.xml'),
+        'utf8',
+      );
       assert.ok(indexXml.includes('https://www.aascmed.com/sitemap-0.xml'));
       await runBuild('astro.config.ssr.ts');
       const portProbe = await new Promise((resolve) => {
@@ -364,11 +440,14 @@ import SiteDocument from '../layouts/SiteDocument.astro';
       assert.ok(framePolicy?.includes('https://editor.example.test:8443'));
       assert.ok(!framePolicy?.includes('strapiapp.com'));
       assert.ok(
-        !ssrHtml.includes('googletagmanager.com') && !ssrHtml.includes('connect.facebook.net'),
+        !ssrHtml.includes('googletagmanager.com') &&
+          !ssrHtml.includes('connect.facebook.net'),
         'preview omits tracking',
       );
       assert.ok(
-        !/G-TEST|GTM-TEST|TEST-PIXEL|googletagmanager\.com|facebook\.net/.test(ssrHtml),
+        !/G-TEST|GTM-TEST|TEST-PIXEL|googletagmanager\.com|facebook\.net/.test(
+          ssrHtml,
+        ),
         'preview suppresses tracking even when the route enables it',
       );
       assert.ok(
@@ -396,7 +475,10 @@ import SiteDocument from '../layouts/SiteDocument.astro';
       const beforeSsrRequests = observedCmsRequests.length;
       const sitemapResponse = await fetch(`${base}/sitemap-0.xml`);
       assert.equal(sitemapResponse.status, 200);
-      assert.match(sitemapResponse.headers.get('content-type') || '', /(?:application|text)\/xml/);
+      assert.match(
+        sitemapResponse.headers.get('content-type') || '',
+        /(?:application|text)\/xml/,
+      );
       assertSitemapMetadata(await sitemapResponse.text());
       assert.equal((await fetch(`${base}/sitemap-index.xml`)).status, 200);
       assert.equal(

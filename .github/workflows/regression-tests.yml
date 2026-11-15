@@ -11,15 +11,15 @@ on:
         required: true
         type: string
       candidate_url:
-        description: "Public candidate deployment URL (site root, no credentials)"
+        description: 'Public candidate deployment URL (site root, no credentials)'
         required: true
         type: string
       reference_url:
-        description: "Pinned public reference deployment URL with matching CMS content"
+        description: 'Pinned public reference deployment URL with matching CMS content'
         required: true
         type: string
       baseline_id:
-        description: "Reference commit/deployment and matched CMS snapshot identifier"
+        description: 'Reference commit/deployment and matched CMS snapshot identifier'
         required: true
         type: string
   issue_comment:

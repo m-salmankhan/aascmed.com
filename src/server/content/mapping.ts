@@ -12,8 +12,8 @@ import type {
   ReviewRecord,
   ServiceUpdateRecord,
   TrackingSettings,
-} from "../../content/models.ts";
-import type { StrapiEntity } from "./strapi.ts";
+} from '../../content/models.ts';
+import type { StrapiEntity } from './strapi.ts';
 /** Fields common to normalized route-bearing CMS records. */
 type CommonContentFields = {
   documentId: string;
@@ -33,21 +33,23 @@ type MediaCandidate = {
  * @returns The string or undefined for a non-string.
  */
 function string(value: unknown): string | undefined {
-  return typeof value === "string" ? value : undefined;
+  return typeof value === 'string' ? value : undefined;
 }
 /** Read a finite numeric value from a CMS field.
  * @param value Untrusted field value.
  * @returns The finite number or undefined.
  */
 function number(value: unknown): number | undefined {
-  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
+  return typeof value === 'number' && Number.isFinite(value)
+    ? value
+    : undefined;
 }
 /** Read a boolean value from a CMS field.
  * @param value Untrusted field value.
  * @returns The boolean or undefined.
  */
 function bool(value: unknown): boolean | undefined {
-  return typeof value === "boolean" ? value : undefined;
+  return typeof value === 'boolean' ? value : undefined;
 }
 /** Remove undefined object fields recursively while keeping arrays serializable.
  * @param value Mapped CMS value.
@@ -55,9 +57,11 @@ function bool(value: unknown): boolean | undefined {
  */
 function compact<T>(value: T): T {
   if (Array.isArray(value)) {
-    return value.map((child) => (child === undefined ? null : compact(child))) as T;
+    return value.map((child) =>
+      child === undefined ? null : compact(child),
+    ) as T;
   }
-  if (value && typeof value === "object") {
+  if (value && typeof value === 'object') {
     return Object.fromEntries(
       Object.entries(value as Record<string, unknown>)
         .filter(([, child]) => child !== undefined)
@@ -72,14 +76,14 @@ function compact<T>(value: T): T {
  */
 function record(value: unknown): Record<string, unknown> | undefined {
   const unwrapped =
-    value && typeof value === "object" && "data" in value
+    value && typeof value === 'object' && 'data' in value
       ? (
           value as {
             data: unknown;
           }
         ).data
       : value;
-  return unwrapped && typeof unwrapped === "object" && !Array.isArray(unwrapped)
+  return unwrapped && typeof unwrapped === 'object' && !Array.isArray(unwrapped)
     ? (unwrapped as Record<string, unknown>)
     : undefined;
 }
@@ -89,7 +93,7 @@ function record(value: unknown): Record<string, unknown> | undefined {
  */
 function list(value: unknown): unknown[] | undefined {
   const unwrapped =
-    value && typeof value === "object" && "data" in value
+    value && typeof value === 'object' && 'data' in value
       ? (
           value as {
             data: unknown;
@@ -105,25 +109,29 @@ function list(value: unknown): unknown[] | undefined {
 function jsonValue(value: unknown): JsonValue | undefined {
   if (
     value === null ||
-    typeof value === "string" ||
-    typeof value === "number" ||
-    typeof value === "boolean"
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'boolean'
   ) {
     return value;
   }
   if (Array.isArray(value)) {
     const output = value.map(jsonValue);
-    return output.every((item) => item !== undefined) ? (output as JsonValue[]) : undefined;
+    return output.every((item) => item !== undefined)
+      ? (output as JsonValue[])
+      : undefined;
   }
-  if (value && typeof value === "object") {
+  if (value && typeof value === 'object') {
     const output: Record<string, JsonValue> = {};
-    for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
+    for (const [key, child] of Object.entries(
+      value as Record<string, unknown>,
+    )) {
       if (
-        key === "id" ||
-        key === "createdAt" ||
-        key === "updatedAt" ||
-        key === "publishedAt" ||
-        key === "documentId"
+        key === 'id' ||
+        key === 'createdAt' ||
+        key === 'updatedAt' ||
+        key === 'publishedAt' ||
+        key === 'documentId'
       ) {
         continue;
       }
@@ -149,20 +157,25 @@ function optionalJson(value: unknown): JsonValue[] | undefined {
  * @param baseUrl CMS origin for relative media URLs.
  * @returns The descriptor, or undefined if the media has no URL.
  */
-export function mapStrapiMedia(value: unknown, baseUrl?: string): MediaDescriptor | undefined {
+export function mapStrapiMedia(
+  value: unknown,
+  baseUrl?: string,
+): MediaDescriptor | undefined {
   const media = record(value);
   if (!media) {
     return undefined;
   }
   const attrs = (
-    media.attributes && typeof media.attributes === "object" ? media.attributes : media
+    media.attributes && typeof media.attributes === 'object'
+      ? media.attributes
+      : media
   ) as Record<string, unknown>;
   const rawUrl = string(attrs.url) ?? string(attrs.src);
   if (!rawUrl) {
     return undefined;
   }
   let src = rawUrl;
-  if (baseUrl && rawUrl.startsWith("/")) {
+  if (baseUrl && rawUrl.startsWith('/')) {
     try {
       src = new URL(rawUrl, baseUrl).toString();
     } catch {
@@ -171,7 +184,11 @@ export function mapStrapiMedia(value: unknown, baseUrl?: string): MediaDescripto
   }
   const descriptor: MediaDescriptor = {
     src,
-    alt: string(attrs.alternativeText) ?? string(attrs.altText) ?? string(attrs.name) ?? "",
+    alt:
+      string(attrs.alternativeText) ??
+      string(attrs.altText) ??
+      string(attrs.name) ??
+      '',
   };
   const width = number(attrs.width);
   const height = number(attrs.height);
@@ -189,7 +206,7 @@ export function mapStrapiMedia(value: unknown, baseUrl?: string): MediaDescripto
     descriptor.aspectRatio = width / height;
   }
   const formats =
-    attrs.formats && typeof attrs.formats === "object"
+    attrs.formats && typeof attrs.formats === 'object'
       ? (attrs.formats as Record<string, unknown>)
       : undefined;
   if (formats) {
@@ -202,7 +219,7 @@ export function mapStrapiMedia(value: unknown, baseUrl?: string): MediaDescripto
         continue;
       }
       let formatSrc = formatUrl;
-      if (baseUrl && formatUrl.startsWith("/")) {
+      if (baseUrl && formatUrl.startsWith('/')) {
         try {
           formatSrc = new URL(formatUrl, baseUrl).toString();
         } catch {
@@ -215,10 +232,12 @@ export function mapStrapiMedia(value: unknown, baseUrl?: string): MediaDescripto
       }
       const type =
         string(format?.mime) ??
-        (string(format?.ext) ? `image/${string(format?.ext)!.slice(1)}` : mimeType);
+        (string(format?.ext)
+          ? `image/${string(format?.ext)!.slice(1)}`
+          : mimeType);
       if (!type || type === mimeType) {
         sources.push({ src: formatSrc, width: formatWidth });
-      } else if (type === "image/avif" || type === "image/webp") {
+      } else if (type === 'image/avif' || type === 'image/webp') {
         alternatives.set(type, [
           ...(alternatives.get(type) ?? []),
           { src: formatSrc, width: formatWidth },
@@ -237,7 +256,7 @@ export function mapStrapiMedia(value: unknown, baseUrl?: string): MediaDescripto
         srcSet: items
           .sort((a, b) => a.width - b.width)
           .map((item) => `${item.src} ${item.width}w`)
-          .join(", "),
+          .join(', '),
       }));
     }
   }
@@ -248,7 +267,7 @@ export function mapStrapiMedia(value: unknown, baseUrl?: string): MediaDescripto
  * @param fallbackTitle Title to use when neither title nor heading is present.
  * @returns Shared identity, route, title, description, and date fields.
  */
-function common(entity: StrapiEntity, fallbackTitle = ""): CommonContentFields {
+function common(entity: StrapiEntity, fallbackTitle = ''): CommonContentFields {
   const title = string(entity.title) ?? string(entity.heading) ?? fallbackTitle;
   return {
     documentId: entity.documentId,
@@ -264,7 +283,10 @@ function common(entity: StrapiEntity, fallbackTitle = ""): CommonContentFields {
  * @param mediaBaseUrl CMS origin used to resolve relative media URLs.
  * @returns The serializable blog values.
  */
-export function mapStrapiBlog(entity: StrapiEntity, mediaBaseUrl?: string): BlogRecord {
+export function mapStrapiBlog(
+  entity: StrapiEntity,
+  mediaBaseUrl?: string,
+): BlogRecord {
   const source = entity;
   return compact({
     ...common(source),
@@ -278,7 +300,10 @@ export function mapStrapiBlog(entity: StrapiEntity, mediaBaseUrl?: string): Blog
  * @param mediaBaseUrl CMS origin used to resolve relative media URLs.
  * @returns The serializable condition values.
  */
-export function mapStrapiCondition(entity: StrapiEntity, mediaBaseUrl?: string): ConditionRecord {
+export function mapStrapiCondition(
+  entity: StrapiEntity,
+  mediaBaseUrl?: string,
+): ConditionRecord {
   const source = entity;
   return compact({
     ...common(source),
@@ -293,13 +318,16 @@ export function mapStrapiCondition(entity: StrapiEntity, mediaBaseUrl?: string):
  * @param mediaBaseUrl CMS origin used to resolve relative media URLs.
  * @returns The serializable provider values.
  */
-export function mapStrapiProvider(entity: StrapiEntity, mediaBaseUrl?: string): ProviderRecord {
+export function mapStrapiProvider(
+  entity: StrapiEntity,
+  mediaBaseUrl?: string,
+): ProviderRecord {
   const source = entity;
   const name = record(source.name);
   const review = record(source.review);
   const retirement = record(source.retirementNotice);
   const provider: ProviderRecord = {
-    ...common(source, string(name?.fullName) ?? ""),
+    ...common(source, string(name?.fullName) ?? ''),
     order: number(source.order) ?? null,
     image: mapStrapiMedia(source.image, mediaBaseUrl),
     body: optionalJson(source.body),
@@ -346,15 +374,21 @@ export function mapStrapiClinic(entity: StrapiEntity): ClinicRecord {
         day: string(hour.day),
         open: bool(hour.open),
         openingHours: opening
-          ? { startTime: string(opening.start_time), endTime: string(opening.end_time) }
+          ? {
+              startTime: string(opening.start_time),
+              endTime: string(opening.end_time),
+            }
           : undefined,
         shotHours: shot
-          ? { startTime: string(shot.start_time), endTime: string(shot.end_time) }
+          ? {
+              startTime: string(shot.start_time),
+              endTime: string(shot.end_time),
+            }
           : undefined,
       };
     });
   const mapped: ClinicRecord = {
-    ...common(source, string(source.clinic_name) ?? ""),
+    ...common(source, string(source.clinic_name) ?? ''),
     clinicName: string(source.clinic_name) ?? null,
     body: optionalJson(source.body),
   };
@@ -379,7 +413,9 @@ export function mapStrapiClinic(entity: StrapiEntity): ClinicRecord {
  * @param entity Flattened Strapi entity.
  * @returns The serializable service update values.
  */
-export function mapStrapiServiceUpdate(entity: StrapiEntity): ServiceUpdateRecord {
+export function mapStrapiServiceUpdate(
+  entity: StrapiEntity,
+): ServiceUpdateRecord {
   const source = entity;
   return compact({
     ...common(source),
@@ -396,7 +432,7 @@ export function mapStrapiReview(entity: StrapiEntity): ReviewRecord {
   return compact({
     documentId: source.documentId,
     id: source.documentId,
-    name: string(source.name) ?? "",
+    name: string(source.name) ?? '',
     stars: number(source.stars),
     content: optionalJson(source.content),
     sourceName: string(source.sourceName),
@@ -425,7 +461,10 @@ export function mapStrapiPage(entity: StrapiEntity): ContentPageRecord {
  * @param mediaBaseUrl CMS origin used to resolve relative media URLs.
  * @returns The serializable homepage values.
  */
-export function mapStrapiHomePage(entity: StrapiEntity, mediaBaseUrl?: string): HomePageRecord {
+export function mapStrapiHomePage(
+  entity: StrapiEntity,
+  mediaBaseUrl?: string,
+): HomePageRecord {
   const source = entity;
   const mapped: HomePageRecord = {
     documentId: source.documentId,
@@ -433,15 +472,15 @@ export function mapStrapiHomePage(entity: StrapiEntity, mediaBaseUrl?: string): 
     metaDescription: string(source.metaDescription),
   };
   for (const key of [
-    "hero",
-    "genericBelowHero",
-    "conditions",
-    "serviceUpdates",
-    "blog",
-    "providers",
-    "feedback",
-    "locations",
-    "contact",
+    'hero',
+    'genericBelowHero',
+    'conditions',
+    'serviceUpdates',
+    'blog',
+    'providers',
+    'feedback',
+    'locations',
+    'contact',
   ] as const) {
     /** Normalize one homepage section and resolve its media URLs.
      * @param raw Section data from Strapi.
@@ -450,10 +489,10 @@ export function mapStrapiHomePage(entity: StrapiEntity, mediaBaseUrl?: string): 
     const normalizeSection = (raw: unknown): JsonValue | undefined => {
       const section = record(raw);
       let value: JsonValue | undefined;
-      if (section && "media" in section) {
+      if (section && 'media' in section) {
         const normalized: Record<string, JsonValue> = {};
         for (const [field, child] of Object.entries(section)) {
-          if (field === "media") {
+          if (field === 'media') {
             const media = list(child)
               ?.map((item) => mapStrapiMedia(item, mediaBaseUrl))
               .filter((item): item is MediaDescriptor => !!item);
@@ -475,7 +514,9 @@ export function mapStrapiHomePage(entity: StrapiEntity, mediaBaseUrl?: string): 
     };
     const raw = source[key];
     const value = Array.isArray(raw)
-      ? raw.map(normalizeSection).filter((item): item is JsonValue => item !== undefined)
+      ? raw
+          .map(normalizeSection)
+          .filter((item): item is JsonValue => item !== undefined)
       : normalizeSection(raw);
     if (value !== undefined) {
       mapped[key] = value;
@@ -487,10 +528,17 @@ export function mapStrapiHomePage(entity: StrapiEntity, mediaBaseUrl?: string): 
  * @param entity Flattened Strapi entity.
  * @returns The serializable announcement values.
  */
-export function mapStrapiAnnouncement(entity: StrapiEntity): AnnouncementSettings {
+export function mapStrapiAnnouncement(
+  entity: StrapiEntity,
+): AnnouncementSettings {
   const source = entity;
-  const type = source.type === "error" || source.type === "success" ? source.type : "info";
-  return compact({ enabled: source.enabled === true, type, message: optionalJson(source.message) });
+  const type =
+    source.type === 'error' || source.type === 'success' ? source.type : 'info';
+  return compact({
+    enabled: source.enabled === true,
+    type,
+    message: optionalJson(source.message),
+  });
 }
 /** Normalize a Strapi tracking settings into the shared content contract.
  * @param entity Flattened Strapi entity.
@@ -499,9 +547,9 @@ export function mapStrapiAnnouncement(entity: StrapiEntity): AnnouncementSetting
 export function mapStrapiTrackingInfo(entity: StrapiEntity): TrackingSettings {
   const source = entity;
   return {
-    googleAnalyticsId: string(source.googleAnalyticsId) ?? "",
-    googleTagManagerId: string(source.googleTagManagerId) ?? "",
-    pixelId: string(source.pixelId) ?? "",
+    googleAnalyticsId: string(source.googleAnalyticsId) ?? '',
+    googleTagManagerId: string(source.googleTagManagerId) ?? '',
+    pixelId: string(source.pixelId) ?? '',
   };
 }
 /** Normalize Strapi blocks into JSON-safe content.

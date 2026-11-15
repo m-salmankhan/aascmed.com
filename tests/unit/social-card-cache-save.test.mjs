@@ -11,13 +11,18 @@ const require = createRequire(import.meta.url);
 const plugin = require('../../netlify/plugins/image-cache');
 
 test('a failed JPEG cache save cannot publish stale cards with new fingerprints', async (t) => {
-  const root = await mkdtemp(path.join(os.tmpdir(), 'aasc-partial-card-cache-'));
+  const root = await mkdtemp(
+    path.join(os.tmpdir(), 'aasc-partial-card-cache-'),
+  );
   const originalCwd = process.cwd();
   t.mock.method(console, 'log', () => {});
   t.mock.method(console, 'warn', () => {});
   try {
     process.chdir(root);
-    const cache = bindOpts({ cwd: root, cacheDir: path.join(root, 'netlify-cache') });
+    const cache = bindOpts({
+      cwd: root,
+      cacheDir: path.join(root, 'netlify-cache'),
+    });
     const options = {
       publicDir: path.join(root, '.astro/public-images'),
       cacheDir: path.join(root, '.astro/public-image-cache'),
@@ -35,32 +40,68 @@ test('a failed JPEG cache save cannot publish stale cards with new fingerprints'
     const expectedBytes = await readFile(changed[0].outputPath);
     assert.notDeepEqual(expectedBytes, oldBytes);
     assert.equal(changed[1].wasCached, true);
-    await plugin.onPostBuild({ utils: { cache: {
-      ...cache,
-      async save(directory) {
-        if (directory === '.astro/public-images') throw new Error('JPEG cache upload interrupted');
-        return cache.save(directory);
+    await plugin.onPostBuild({
+      utils: {
+        cache: {
+          ...cache,
+          async save(directory) {
+            if (directory === '.astro/public-images')
+              throw new Error('JPEG cache upload interrupted');
+            return cache.save(directory);
+          },
+        },
       },
-    } } });
+    });
 
     await rm(options.publicDir, { recursive: true });
     await rm(options.cacheDir, { recursive: true });
     await plugin.onPreBuild({ utils: { cache } });
-    assert.deepEqual(await readFile(changed[0].outputPath), oldBytes, 'restore reproduces the old JPEG/new metadata pair');
+    assert.deepEqual(
+      await readFile(changed[0].outputPath),
+      oldBytes,
+      'restore reproduces the old JPEG/new metadata pair',
+    );
     const repaired = await buildSocialCards(entries, options);
-    assert.equal(repaired[0].wasCached, false, 'mismatched JPEG is regenerated despite matching input fingerprint');
-    assert.deepEqual(await readFile(repaired[0].outputPath), expectedBytes, 'the current title is rendered');
-    assert.equal(repaired[1].wasCached, true, 'an unrelated valid card remains reusable');
+    assert.equal(
+      repaired[0].wasCached,
+      false,
+      'mismatched JPEG is regenerated despite matching input fingerprint',
+    );
+    assert.deepEqual(
+      await readFile(repaired[0].outputPath),
+      expectedBytes,
+      'the current title is rendered',
+    );
+    assert.equal(
+      repaired[1].wasCached,
+      true,
+      'an unrelated valid card remains reusable',
+    );
     const warm = await buildSocialCards(entries, options);
-    assert.equal(warm[0].wasCached, true, 'the repaired checksum is reusable on the next build');
+    assert.equal(
+      warm[0].wasCached,
+      true,
+      'the repaired checksum is reusable on the next build',
+    );
 
     const metadataPath = path.join(options.cacheDir, 'social-cards.json');
     const metadata = JSON.parse(await readFile(metadataPath, 'utf8'));
-    await writeFile(metadataPath, JSON.stringify(Object.fromEntries(
-      Object.entries(metadata).map(([key, value]) => [key, value.split(':')[0]]),
-    )));
+    await writeFile(
+      metadataPath,
+      JSON.stringify(
+        Object.fromEntries(
+          Object.entries(metadata).map(([key, value]) => [
+            key,
+            value.split(':')[0],
+          ]),
+        ),
+      ),
+    );
     const migrated = await buildSocialCards(entries, options);
-    assert.ok(migrated.every(({ wasCached }) => !wasCached), 'legacy input-only fingerprints cause a safe cache miss');
+    assert.ok(
+      migrated.every(({ wasCached }) => !wasCached),
+      'legacy input-only fingerprints cause a safe cache miss',
+    );
   } finally {
     process.chdir(originalCwd);
     await rm(root, { recursive: true, force: true });

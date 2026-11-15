@@ -4,7 +4,11 @@ import { ConditionPage } from '../../components/pages/ConditionPage';
 import { prepareInlineImages } from '../../server/content/inline-images';
 import SitePage from '../../layouts/SitePage.astro';
 import { getConditionBySlug } from '../../server/content/loaders';
-import { getPageContext, pageContentMode, isStaticTarget } from '../../server/pages/common';
+import {
+  getPageContext,
+  pageContentMode,
+  isStaticTarget,
+} from '../../server/pages/common';
 import { contentPaths } from '../../server/pages/content';
 import { socialCardPath } from '../../server/media/social-cards.ts';
 /** Enumerate full published condition route parameters for static output.
@@ -20,15 +24,14 @@ const record = isStaticTarget()
 const condition = structuredClone(record);
 if (!condition) return Astro.rewrite('/404');
 const context = await getPageContext(Astro.url.pathname, mode);
-const socialImagePath =
-  isStaticTarget()
-    ? socialCardPath({
-        kind: 'conditions',
-        slug: condition.slug || '',
-        title: condition.heading || condition.title,
-        backgroundImage: condition.thumbnail?.src,
-      })
-    : condition.thumbnail?.src;
+const socialImagePath = isStaticTarget()
+  ? socialCardPath({
+      kind: 'conditions',
+      slug: condition.slug || '',
+      title: condition.heading || condition.title,
+      backgroundImage: condition.thumbnail?.src,
+    })
+  : condition.thumbnail?.src;
 await prepareInlineImages(condition, mode, 1200);
 ---
 
@@ -40,9 +43,5 @@ await prepareInlineImages(condition, mode, 1200);
   articleSection="conditions"
   {socialImagePath}
 >
-  <ConditionPage
-    client:load
-    {...context.view}
-    {condition}
-  />
+  <ConditionPage client:load {...context.view} {condition} />
 </SitePage>

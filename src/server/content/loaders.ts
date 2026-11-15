@@ -11,14 +11,14 @@ import type {
   ReviewRecord,
   ServiceUpdateRecord,
   TrackingSettings,
-} from "../../content/models.ts";
-import { clinicPath } from "../../content/urls.ts";
+} from '../../content/models.ts';
+import { clinicPath } from '../../content/urls.ts';
 import {
   validateContentRecord,
   type ContentFamily,
   type ContentMode,
-} from "../../content/validation.ts";
-import { createClient, readFirst, readRecords, readSingle } from "./strapi.ts";
+} from '../../content/validation.ts';
+import { createClient, readFirst, readRecords, readSingle } from './strapi.ts';
 import {
   mapStrapiAnnouncement,
   mapStrapiBlog,
@@ -30,7 +30,7 @@ import {
   mapStrapiReview,
   mapStrapiServiceUpdate,
   mapStrapiTrackingInfo,
-} from "./mapping.ts";
+} from './mapping.ts';
 /** Validate one route-bearing record at the published-content boundary.
  * @param record Normalized content record to validate.
  * @param family Route convention used for the records.
@@ -42,12 +42,14 @@ function validateRouteRecord(
   family: ContentFamily,
   mode: ContentMode,
 ): void {
-  if (mode === "draft") {
+  if (mode === 'draft') {
     return;
   }
   const issues = validateContentRecord(record, family, mode);
   if (issues.length) {
-    throw new Error(`Published ${family} record failed validation: ${issues.join(", ")}`);
+    throw new Error(
+      `Published ${family} record failed validation: ${issues.join(', ')}`,
+    );
   }
 }
 /** Optional batch size for collection loaders; accepted values range from 1 through 100. */
@@ -59,9 +61,9 @@ const blogPopulate = {
   thumbnail: true,
   content: {
     on: {
-      "generic.contact-booking-cta": { populate: "*" },
-      "clinics.map": { populate: "*" },
-      "generic.rich-text": { populate: "*" },
+      'generic.contact-booking-cta': { populate: '*' },
+      'clinics.map': { populate: '*' },
+      'generic.rich-text': { populate: '*' },
     },
   },
 };
@@ -76,10 +78,10 @@ const conditionPopulate = {
   thumbnail: true,
   content: {
     on: {
-      "generic.contact-booking-cta": { populate: "*" },
-      "generic.faq-contact-book-buttons": { populate: "*" },
-      "generic.rich-text": { populate: "*" },
-      "generic.faq": { populate: { questions: true } },
+      'generic.contact-booking-cta': { populate: '*' },
+      'generic.faq-contact-book-buttons': { populate: '*' },
+      'generic.rich-text': { populate: '*' },
+      'generic.faq': { populate: { questions: true } },
     },
   },
 };
@@ -91,9 +93,9 @@ const providerPopulate = {
   retirementNotice: true,
   body: {
     on: {
-      "generic.rich-text": { populate: "*" },
-      "generic.contact-booking-cta": { populate: "*" },
-      "generic.faq-contact-book-buttons": { populate: "*" },
+      'generic.rich-text': { populate: '*' },
+      'generic.contact-booking-cta': { populate: '*' },
+      'generic.faq-contact-book-buttons': { populate: '*' },
     },
   },
 };
@@ -121,13 +123,17 @@ export async function* getBlogs(
 ): AsyncGenerator<BlogRecord> {
   const client = createClient(mode);
   const mediaOrigin = new URL(client.baseURL).origin;
-  for await (const entity of readRecords(client.collection("blogs"), {
-    status: mode,
-    sort: ["date:desc", "id:asc"],
-    populate: blogPopulate,
-  }, options.pageSize)) {
+  for await (const entity of readRecords(
+    client.collection('blogs'),
+    {
+      status: mode,
+      sort: ['date:desc', 'id:asc'],
+      populate: blogPopulate,
+    },
+    options.pageSize,
+  )) {
     const record = mapStrapiBlog(entity, mediaOrigin);
-    validateRouteRecord(record, "blog", mode);
+    validateRouteRecord(record, 'blog', mode);
     yield record;
   }
 }
@@ -141,13 +147,17 @@ export async function* getClinics(
   options: CollectionReadOptions = {},
 ): AsyncGenerator<ClinicRecord> {
   const client = createClient(mode);
-  for await (const entity of readRecords(client.collection("clinics"), {
-    status: mode,
-    sort: ["id:asc"],
-    populate: clinicPopulate,
-  }, options.pageSize)) {
+  for await (const entity of readRecords(
+    client.collection('clinics'),
+    {
+      status: mode,
+      sort: ['id:asc'],
+      populate: clinicPopulate,
+    },
+    options.pageSize,
+  )) {
     const record = mapStrapiClinic(entity);
-    validateRouteRecord(record, "clinic", mode);
+    validateRouteRecord(record, 'clinic', mode);
     yield record;
   }
 }
@@ -164,16 +174,20 @@ export async function* getConditions(
   const mediaOrigin = new URL(client.baseURL).origin;
   // Query present orders first, then missing orders, to keep nulls last without materializing.
   for (const orderedQuery of [
-    { filters: { order: { $notNull: true } }, sort: ["order:asc", "id:asc"] },
-    { filters: { order: { $null: true } }, sort: ["id:asc"] },
+    { filters: { order: { $notNull: true } }, sort: ['order:asc', 'id:asc'] },
+    { filters: { order: { $null: true } }, sort: ['id:asc'] },
   ]) {
-    for await (const entity of readRecords(client.collection("conditions"), {
-      status: mode,
-      ...orderedQuery,
-      populate: conditionPopulate,
-    }, options.pageSize)) {
+    for await (const entity of readRecords(
+      client.collection('conditions'),
+      {
+        status: mode,
+        ...orderedQuery,
+        populate: conditionPopulate,
+      },
+      options.pageSize,
+    )) {
       const record = mapStrapiCondition(entity, mediaOrigin);
-      validateRouteRecord(record, "condition", mode);
+      validateRouteRecord(record, 'condition', mode);
       yield record;
     }
   }
@@ -191,16 +205,20 @@ export async function* getProviders(
   const mediaOrigin = new URL(client.baseURL).origin;
   // Query present orders first, then missing orders, to keep nulls last without materializing.
   for (const orderedQuery of [
-    { filters: { order: { $notNull: true } }, sort: ["order:asc", "id:asc"] },
-    { filters: { order: { $null: true } }, sort: ["id:asc"] },
+    { filters: { order: { $notNull: true } }, sort: ['order:asc', 'id:asc'] },
+    { filters: { order: { $null: true } }, sort: ['id:asc'] },
   ]) {
-    for await (const entity of readRecords(client.collection("providers"), {
-      status: mode,
-      ...orderedQuery,
-      populate: providerPopulate,
-    }, options.pageSize)) {
+    for await (const entity of readRecords(
+      client.collection('providers'),
+      {
+        status: mode,
+        ...orderedQuery,
+        populate: providerPopulate,
+      },
+      options.pageSize,
+    )) {
       const record = mapStrapiProvider(entity, mediaOrigin);
-      validateRouteRecord(record, "provider", mode);
+      validateRouteRecord(record, 'provider', mode);
       yield record;
     }
   }
@@ -217,15 +235,19 @@ export async function* getServiceUpdates(
   const client = createClient(mode);
   // Query dated updates first, then undated updates, to keep nulls last without materializing.
   for (const orderedQuery of [
-    { filters: { date: { $notNull: true } }, sort: ["date:desc", "id:asc"] },
-    { filters: { date: { $null: true } }, sort: ["id:asc"] },
+    { filters: { date: { $notNull: true } }, sort: ['date:desc', 'id:asc'] },
+    { filters: { date: { $null: true } }, sort: ['id:asc'] },
   ]) {
-    for await (const entity of readRecords(client.collection("service-updates"), {
-      status: mode,
-      ...orderedQuery,
-    }, options.pageSize)) {
+    for await (const entity of readRecords(
+      client.collection('service-updates'),
+      {
+        status: mode,
+        ...orderedQuery,
+      },
+      options.pageSize,
+    )) {
       const record = mapStrapiServiceUpdate(entity);
-      validateRouteRecord(record, "serviceUpdate", mode);
+      validateRouteRecord(record, 'serviceUpdate', mode);
       yield record;
     }
   }
@@ -240,22 +262,47 @@ export async function* getReviews(
   options: CollectionReadOptions = {},
 ): AsyncGenerator<ReviewRecord> {
   const client = createClient(mode);
-  for await (const entity of readRecords(client.collection("reviews"), {
-    status: mode,
-    sort: ["id:asc"],
-  }, options.pageSize)) {
+  for await (const entity of readRecords(
+    client.collection('reviews'),
+    {
+      status: mode,
+      sort: ['id:asc'],
+    },
+    options.pageSize,
+  )) {
     yield mapStrapiReview(entity);
   }
 }
-type DetailRecords = { blog: BlogRecord; condition: ConditionRecord; provider: ProviderRecord; serviceUpdate: ServiceUpdateRecord };
+type DetailRecords = {
+  blog: BlogRecord;
+  condition: ConditionRecord;
+  provider: ProviderRecord;
+  serviceUpdate: ServiceUpdateRecord;
+};
 const detailTypes = {
   blog: { collection: 'blogs', populate: blogPopulate, map: mapStrapiBlog },
-  condition: { collection: 'conditions', populate: conditionPopulate, map: mapStrapiCondition },
-  provider: { collection: 'providers', populate: providerPopulate, map: mapStrapiProvider },
-  serviceUpdate: { collection: 'service-updates', populate: undefined, map: mapStrapiServiceUpdate },
+  condition: {
+    collection: 'conditions',
+    populate: conditionPopulate,
+    map: mapStrapiCondition,
+  },
+  provider: {
+    collection: 'providers',
+    populate: providerPopulate,
+    map: mapStrapiProvider,
+  },
+  serviceUpdate: {
+    collection: 'service-updates',
+    populate: undefined,
+    map: mapStrapiServiceUpdate,
+  },
 };
 
-async function getDetail<K extends keyof DetailRecords>(kind: K, slug: string, mode: ContentMode): Promise<DetailRecords[K] | null> {
+async function getDetail<K extends keyof DetailRecords>(
+  kind: K,
+  slug: string,
+  mode: ContentMode,
+): Promise<DetailRecords[K] | null> {
   if (!slug.trim()) return null;
   const client = createClient(mode);
   const type = detailTypes[kind];
@@ -266,7 +313,10 @@ async function getDetail<K extends keyof DetailRecords>(kind: K, slug: string, m
     pagination: { page: 1, pageSize: 1 },
   });
   if (!entity) return null;
-  const record = type.map(entity, new URL(client.baseURL).origin) as DetailRecords[K];
+  const record = type.map(
+    entity,
+    new URL(client.baseURL).origin,
+  ) as DetailRecords[K];
   validateRouteRecord(record, kind, mode);
   return record;
 }
@@ -280,7 +330,7 @@ export async function getBlogBySlug(
   slug: string,
   mode: ContentMode,
 ): Promise<BlogRecord | null> {
-  return getDetail("blog", slug, mode);
+  return getDetail('blog', slug, mode);
 }
 /** Find one condition by its route slug.
  * @param slug Requested condition slug.
@@ -291,7 +341,7 @@ export async function getConditionBySlug(
   slug: string,
   mode: ContentMode,
 ): Promise<ConditionRecord | null> {
-  return getDetail("condition", slug, mode);
+  return getDetail('condition', slug, mode);
 }
 /** Find one provider by its route slug.
  * @param slug Requested provider slug.
@@ -302,7 +352,7 @@ export async function getProviderBySlug(
   slug: string,
   mode: ContentMode,
 ): Promise<ProviderRecord | null> {
-  return getDetail("provider", slug, mode);
+  return getDetail('provider', slug, mode);
 }
 /** Find a clinic by slug and fall back to its name-derived route when no explicit slug matches.
  * @param slug Requested clinic route slug.
@@ -317,7 +367,7 @@ export async function getClinicBySlug(
     return null;
   }
   const client = createClient(mode);
-  const entity = await readFirst(client.collection("clinics"), {
+  const entity = await readFirst(client.collection('clinics'), {
     status: mode,
     filters: { slug: { $eq: slug } },
     populate: clinicPopulate,
@@ -325,15 +375,21 @@ export async function getClinicBySlug(
   });
   if (entity) {
     const record = mapStrapiClinic(entity);
-    validateRouteRecord(record, "clinic", mode);
+    validateRouteRecord(record, 'clinic', mode);
     return record;
   }
   // Name-derived routes exist only for CMS clinics without an explicit slug.
   for await (const item of readRecords(client.collection('clinics'), {
-    status: mode, sort: ['id:asc'], populate: clinicPopulate,
+    status: mode,
+    sort: ['id:asc'],
+    populate: clinicPopulate,
   })) {
     const clinic = mapStrapiClinic(item);
-    if (!clinic.slug && clinic.clinicName && clinicPath(clinic) === `/clinics/${slug}/`) {
+    if (
+      !clinic.slug &&
+      clinic.clinicName &&
+      clinicPath(clinic) === `/clinics/${slug}/`
+    ) {
       validateRouteRecord(clinic, 'clinic', mode);
       return clinic;
     }
@@ -349,24 +405,29 @@ export async function getServiceUpdateBySlug(
   slug: string,
   mode: ContentMode,
 ): Promise<ServiceUpdateRecord | null> {
-  return getDetail("serviceUpdate", slug, mode);
+  return getDetail('serviceUpdate', slug, mode);
 }
 /** Load and normalize the announcement single type.
  * @param mode Content state requested from Strapi.
  * @returns Mapped announcement or null when missing; upstream failures throw.
  */
-export async function getAnnouncement(mode: ContentMode): Promise<AnnouncementSettings | null> {
+export async function getAnnouncement(
+  mode: ContentMode,
+): Promise<AnnouncementSettings | null> {
   const client = createClient(mode);
-  const entity = await readSingle(client.single("announcement"), { status: mode });
+  const entity = await readSingle(client.single('announcement'), {
+    status: mode,
+  });
   return entity ? mapStrapiAnnouncement(entity) : null;
 }
 
-
-const singlePage = (uid: string) => async (mode: ContentMode): Promise<ContentPageRecord | null> => {
-  const client = createClient(mode);
-  const entity = await readSingle(client.single(uid), { status: mode });
-  return entity ? mapStrapiPage(entity) : null;
-};
+const singlePage =
+  (uid: string) =>
+  async (mode: ContentMode): Promise<ContentPageRecord | null> => {
+    const client = createClient(mode);
+    const entity = await readSingle(client.single(uid), { status: mode });
+    return entity ? mapStrapiPage(entity) : null;
+  };
 
 export const getBlogArchive = singlePage('blog-archive');
 export const getConditionsArchive = singlePage('conditions-archive');
@@ -380,21 +441,29 @@ export const getPrivacyPolicy = singlePage('privacy-policy');
  * @param mode Content state requested from Strapi.
  * @returns Mapped homepage or null when missing; upstream failures throw.
  */
-export async function getHomePage(mode: ContentMode): Promise<HomePageRecord | null> {
+export async function getHomePage(
+  mode: ContentMode,
+): Promise<HomePageRecord | null> {
   const client = createClient(mode);
-  const entity = await readSingle(client.single("home-page"), {
+  const entity = await readSingle(client.single('home-page'), {
     status: mode,
     populate: homePagePopulate,
   });
-  return entity ? mapStrapiHomePage(entity, new URL(client.baseURL).origin) : null;
+  return entity
+    ? mapStrapiHomePage(entity, new URL(client.baseURL).origin)
+    : null;
 }
 /** Load and normalize the tracking settings single type.
  * @param mode Content state requested from Strapi.
  * @returns Mapped settings or null when missing; upstream failures throw.
  */
-export async function getTrackingInfo(mode: ContentMode): Promise<TrackingSettings | null> {
+export async function getTrackingInfo(
+  mode: ContentMode,
+): Promise<TrackingSettings | null> {
   const client = createClient(mode);
-  const entity = await readSingle(client.single("tracking-info"), { status: mode });
+  const entity = await readSingle(client.single('tracking-info'), {
+    status: mode,
+  });
   return entity ? mapStrapiTrackingInfo(entity) : null;
 }
 /** Published collection records used by static builds and the public route manifest. */
@@ -414,11 +483,11 @@ export async function getPublishedCollections(
   options: CollectionReadOptions = {},
 ): Promise<PublishedCollections> {
   return {
-    blogs: getBlogs("published", options),
-    clinics: getClinics("published", options),
-    conditions: getConditions("published", options),
-    providers: getProviders("published", options),
-    serviceUpdates: getServiceUpdates("published", options),
-    reviews: getReviews("published", options),
+    blogs: getBlogs('published', options),
+    clinics: getClinics('published', options),
+    conditions: getConditions('published', options),
+    providers: getProviders('published', options),
+    serviceUpdates: getServiceUpdates('published', options),
+    reviews: getReviews('published', options),
   };
 }

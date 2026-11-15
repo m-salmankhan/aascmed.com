@@ -1,10 +1,17 @@
 // Validates whether normalized content records can be shown as public pages or incomplete previews.
-import type { ContentRecord, ServiceUpdateRecord } from "./models.ts";
-import { blogPath, clinicPath, conditionPath, providerPath, serviceUpdatePath } from "./urls.ts";
+import type { ContentRecord, ServiceUpdateRecord } from './models.ts';
+import {
+  blogPath,
+  clinicPath,
+  conditionPath,
+  providerPath,
+  serviceUpdatePath,
+} from './urls.ts';
 /** Content family whose route convention is used when validating published records. */
-export type ContentFamily = "blog" | "condition" | "provider" | "clinic" | "serviceUpdate";
+export type ContentFamily =
+  'blog' | 'condition' | 'provider' | 'clinic' | 'serviceUpdate';
 /** CMS publication state: published records must be routable; saved drafts may be incomplete. */
-export type ContentMode = "draft" | "published";
+export type ContentMode = 'draft' | 'published';
 /** Minimal common record fields; clinics may also provide a nullable `clinicName` fallback. */
 type Candidate = Partial<ContentRecord> & {
   clinicName?: string | null;
@@ -20,36 +27,41 @@ export function validateContentRecord(
   family: ContentFamily,
   mode: ContentMode,
 ): string[] {
-  if (mode === "draft") {
+  if (mode === 'draft') {
     return [];
   }
   const issues: string[] = [];
-  if (typeof record.id !== "string" || !record.id.trim()) {
-    issues.push("id is required");
+  if (typeof record.id !== 'string' || !record.id.trim()) {
+    issues.push('id is required');
   }
-  if (typeof record.title !== "string" || !record.title.trim()) {
-    issues.push("title is required");
+  if (typeof record.title !== 'string' || !record.title.trim()) {
+    issues.push('title is required');
   }
   let path: string | null;
   switch (family) {
-    case "blog":
+    case 'blog':
       path = blogPath(record.slug);
       break;
-    case "condition":
+    case 'condition':
       path = conditionPath(record.slug);
       break;
-    case "provider":
+    case 'provider':
       path = providerPath(record.slug);
       break;
-    case "clinic":
-      path = clinicPath({ slug: record.slug ?? null, clinicName: record.clinicName ?? null });
+    case 'clinic':
+      path = clinicPath({
+        slug: record.slug ?? null,
+        clinicName: record.clinicName ?? null,
+      });
       break;
-    case "serviceUpdate":
-      path = serviceUpdatePath(record as Pick<ServiceUpdateRecord, "slug" | "date">);
+    case 'serviceUpdate':
+      path = serviceUpdatePath(
+        record as Pick<ServiceUpdateRecord, 'slug' | 'date'>,
+      );
       break;
   }
   if (!path) {
-    issues.push("a valid URL for this content record is required");
+    issues.push('a valid URL for this content record is required');
   }
   return issues;
 }

@@ -1,18 +1,18 @@
-import { Navigation } from "./navigation";
-import { colours } from "../../styles/theme";
-import { css } from "@emotion/react";
-import { Container } from "../containers";
+import { Navigation } from './navigation';
+import { colours } from '../../styles/theme';
+import { css } from '@emotion/react';
+import { Container } from '../containers';
 
 const stylesNavBar = css({
-    background: colours.brandGradient,
+  background: colours.brandGradient,
 });
 
 export const NavBar = () => {
-    return (
-        <header css={stylesNavBar}>
-            <Container>
-                <Navigation frontPage={false} css={css({ padding: "1em 0" })} />
-            </Container>
-        </header>
-    );
-}
+  return (
+    <header css={stylesNavBar}>
+      <Container>
+        <Navigation frontPage={false} css={css({ padding: '1em 0' })} />
+      </Container>
+    </header>
+  );
+};

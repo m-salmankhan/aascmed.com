@@ -20,9 +20,5 @@ await prepareInlineImages(props, mode, 600);
   appendBusinessNameToTitle={false}
   ogType="website"
 >
-  <HomePage
-    client:load
-    {...context.view}
-    {...props}
-  />
+  <HomePage client:load {...context.view} {...props} />
 </SitePage>

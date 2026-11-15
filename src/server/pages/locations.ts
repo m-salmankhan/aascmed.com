@@ -24,14 +24,23 @@ export function clinicSummary(clinic: ClinicRecord): PracticeSummary {
 
 /** Pass full published updates with their calendar route parameters to static pages. */
 export async function serviceUpdatePaths() {
-  const result: { params: { year: string; month: string; slug: string }; props: { record: ServiceUpdateRecord } }[] = [];
+  const result: {
+    params: { year: string; month: string; slug: string };
+    props: { record: ServiceUpdateRecord };
+  }[] = [];
   const seen = new Set<string>();
   for await (const record of getServiceUpdates('published')) {
     const pathname = serviceUpdatePath(record);
-    if (!pathname || seen.has(pathname)) throw new Error('Invalid or duplicate published service-update route');
+    if (!pathname || seen.has(pathname))
+      throw new Error('Invalid or duplicate published service-update route');
     seen.add(pathname);
-    const [, , year, month, ...segments] = pathname.replace(/\/$/, '').split('/');
-    result.push({ params: { year, month, slug: segments.join('/') }, props: { record } });
+    const [, , year, month, ...segments] = pathname
+      .replace(/\/$/, '')
+      .split('/');
+    result.push({
+      params: { year, month, slug: segments.join('/') },
+      props: { record },
+    });
   }
   return result;
 }

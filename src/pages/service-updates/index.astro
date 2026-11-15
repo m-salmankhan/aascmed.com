@@ -3,13 +3,19 @@
 import { ServiceUpdatesArchivePage } from '../../components/pages/ServiceUpdatesArchivePage';
 import { prepareInlineImages } from '../../server/content/inline-images';
 import SitePage from '../../layouts/SitePage.astro';
-import { getServiceUpdatePage, getServiceUpdates } from '../../server/content/loaders';
+import {
+  getServiceUpdatePage,
+  getServiceUpdates,
+} from '../../server/content/loaders';
 import { pageContentMode, getPageContext } from '../../server/pages/common';
 import { serviceUpdatePath } from '../../content/urls';
 import { blogDate } from '../../server/pages/content';
 import type { ServiceUpdateViewItem } from '../../views/fixed-archive';
 const mode = pageContentMode();
-const [record, context] = await Promise.all([getServiceUpdatePage(mode), getPageContext(Astro.url.pathname, mode)]);
+const [record, context] = await Promise.all([
+  getServiceUpdatePage(mode),
+  getPageContext(Astro.url.pathname, mode),
+]);
 const page = structuredClone(record);
 const serviceUpdates: ServiceUpdateViewItem[] = [];
 for await (const update of getServiceUpdates(mode)) {

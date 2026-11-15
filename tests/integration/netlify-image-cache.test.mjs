@@ -2,7 +2,17 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createServer } from 'node:http';
-import { cp, mkdir, mkdtemp, readFile, readdir, rename, rm, stat, writeFile } from 'node:fs/promises';
+import {
+  cp,
+  mkdir,
+  mkdtemp,
+  readFile,
+  readdir,
+  rename,
+  rm,
+  stat,
+  writeFile,
+} from 'node:fs/promises';
 import { spawn } from 'node:child_process';
 import os from 'node:os';
 import path from 'node:path';
@@ -42,7 +52,9 @@ test('cache backup and restore fall back to copy when rename crosses filesystems
   const restoredPath = path.join(root, 'restored');
   const payload = Buffer.from('cached image fixture');
   const forceExdev = async () => {
-    throw Object.assign(new Error('simulated cross-device rename'), { code: 'EXDEV' });
+    throw Object.assign(new Error('simulated cross-device rename'), {
+      code: 'EXDEV',
+    });
   };
 
   try {
@@ -50,11 +62,17 @@ test('cache backup and restore fall back to copy when rename crosses filesystems
     await writeFile(path.join(originalPath, 'asset.bin'), payload);
 
     await moveDirectory(originalPath, backupPath, forceExdev);
-    assert.deepEqual(await readFile(path.join(backupPath, 'asset.bin')), payload);
+    assert.deepEqual(
+      await readFile(path.join(backupPath, 'asset.bin')),
+      payload,
+    );
     await assert.rejects(stat(originalPath), { code: 'ENOENT' });
 
     await moveDirectory(backupPath, restoredPath, forceExdev);
-    assert.deepEqual(await readFile(path.join(restoredPath, 'asset.bin')), payload);
+    assert.deepEqual(
+      await readFile(path.join(restoredPath, 'asset.bin')),
+      payload,
+    );
     await assert.rejects(stat(backupPath), { code: 'ENOENT' });
   } finally {
     await rm(root, { recursive: true, force: true });
@@ -88,7 +106,9 @@ test('Netlify image cache restores native Astro assets and published social card
   let ownsOutputDirectory = false;
   const imageBytes = await sharp({
     create: { width: 1200, height: 800, channels: 3, background: '#2867d3' },
-  }).jpeg().toBuffer();
+  })
+    .jpeg()
+    .toBuffer();
   const requests = [];
   const imageServer = createServer((request, response) => {
     requests.push(request.url);
@@ -118,7 +138,10 @@ test('Netlify image cache restores native Astro assets and published social card
         backups.push({ originalPath, savedPath });
       } catch (error) {
         if (error.code !== 'EXDEV') throw error;
-        await cp(originalPath, savedPath, { recursive: true, preserveTimestamps: true });
+        await cp(originalPath, savedPath, {
+          recursive: true,
+          preserveTimestamps: true,
+        });
         backups.push({ originalPath, savedPath });
         await rm(originalPath, { recursive: true, force: true });
       }
@@ -132,7 +155,10 @@ test('Netlify image cache restores native Astro assets and published social card
       if (entry.isDirectory()) {
         const nested = await findSocialCard(candidate);
         if (nested) return nested;
-      } else if (entry.name.includes('cache-fixture') && entry.name.endsWith('.jpg')) {
+      } else if (
+        entry.name.includes('cache-fixture') &&
+        entry.name.endsWith('.jpg')
+      ) {
         return candidate;
       }
     }
@@ -141,7 +167,10 @@ test('Netlify image cache restores native Astro assets and published social card
 
   async function clearGeneratedCaches() {
     for (const relativePath of imageCachePaths) {
-      await rm(path.join(repositoryRoot, relativePath), { recursive: true, force: true });
+      await rm(path.join(repositoryRoot, relativePath), {
+        recursive: true,
+        force: true,
+      });
     }
   }
 
@@ -176,13 +205,21 @@ test('Netlify image cache restores native Astro assets and published social card
       },
     );
     let output = '';
-    child.stdout.on('data', (chunk) => { output += chunk; });
-    child.stderr.on('data', (chunk) => { output += chunk; });
+    child.stdout.on('data', (chunk) => {
+      output += chunk;
+    });
+    child.stderr.on('data', (chunk) => {
+      output += chunk;
+    });
     const exitCode = await new Promise((resolve, reject) => {
       child.once('error', reject);
       child.once('close', resolve);
     });
-    assert.equal(exitCode, 0, `Astro fixture build failed:\n${output.slice(-12000)}`);
+    assert.equal(
+      exitCode,
+      0,
+      `Astro fixture build failed:\n${output.slice(-12000)}`,
+    );
     return output;
   }
 
@@ -197,7 +234,11 @@ test('Netlify image cache restores native Astro assets and published social card
 
   try {
     for (const target of [fixtureDirectory, configPath, outputDirectory]) {
-      await assert.rejects(stat(target), { code: 'ENOENT' }, `Refusing to overwrite ${target}`);
+      await assert.rejects(
+        stat(target),
+        { code: 'ENOENT' },
+        `Refusing to overwrite ${target}`,
+      );
     }
     ownsFixtureDirectory = true;
     ownsConfig = true;
@@ -244,8 +285,13 @@ export default defineConfig({
       'utf8',
     );
 
-    const plugin = require(path.join(repositoryRoot, 'netlify/plugins/image-cache/index.js'));
-    const cache = bindOpts({ cwd: repositoryRoot, cacheDir: diskCacheDirectory });
+    const plugin = require(
+      path.join(repositoryRoot, 'netlify/plugins/image-cache/index.js'),
+    );
+    const cache = bindOpts({
+      cwd: repositoryRoot,
+      cacheDir: diskCacheDirectory,
+    });
 
     await plugin.onPreBuild({ utils: { cache } });
     const coldOutput = await build('First published title');
@@ -256,7 +302,10 @@ export default defineConfig({
     const socialCardPath = await findSocialCard(
       path.join(repositoryRoot, '.astro/public-images'),
     );
-    assert.ok(socialCardPath, 'cold build produced the published fixture social card');
+    assert.ok(
+      socialCardPath,
+      'cold build produced the published fixture social card',
+    );
     const firstCard = await readFile(socialCardPath);
     const firstRequestCount = requests.length;
 
@@ -264,19 +313,31 @@ export default defineConfig({
     await rm(outputDirectory, { recursive: true, force: true });
     for (const relativePath of imageCachePaths) {
       const restored = await cache.has(relativePath);
-      assert.equal(restored, true, `${relativePath} was saved in the real Netlify disk cache`);
+      assert.equal(
+        restored,
+        true,
+        `${relativePath} was saved in the real Netlify disk cache`,
+      );
     }
 
     await plugin.onPreBuild({ utils: { cache } });
     const restoredCardStat = await stat(socialCardPath);
     const warmOutput = await build('First published title');
-    assert.match(warmOutput, /reused cache entry/i, 'Astro reuses its restored native image transform');
+    assert.match(
+      warmOutput,
+      /reused cache entry/i,
+      'Astro reuses its restored native image transform',
+    );
     assert.equal(
       requests.length,
       firstRequestCount + 1,
       'only social-card input checking fetches the source again; Astro reuses its native transform',
     );
-    assert.deepEqual(await readFile(socialCardPath), firstCard, 'social-card bytes survive cache restore');
+    assert.deepEqual(
+      await readFile(socialCardPath),
+      firstCard,
+      'social-card bytes survive cache restore',
+    );
     assert.equal(
       (await stat(socialCardPath)).mtimeMs,
       restoredCardStat.mtimeMs,
@@ -286,14 +347,26 @@ export default defineConfig({
 
     await plugin.onPreBuild({ utils: { cache } });
     const changedOutput = await build('Updated published title');
-    assert.match(changedOutput, /reused cache entry/i, 'content change still reuses native image transforms');
+    assert.match(
+      changedOutput,
+      /reused cache entry/i,
+      'content change still reuses native image transforms',
+    );
     const changedCard = await readFile(socialCardPath);
-    assert.notDeepEqual(changedCard, firstCard, 'changed published title regenerates its social card');
+    assert.notDeepEqual(
+      changedCard,
+      firstCard,
+      'changed published title regenerates its social card',
+    );
     await plugin.onPostBuild({ utils: { cache } });
 
     await plugin.onPreBuild({ utils: { cache } });
     const repeatedOutput = await build('Updated published title');
-    assert.match(repeatedOutput, /reused cache entry/i, 'unchanged warm build reuses native image transforms');
+    assert.match(
+      repeatedOutput,
+      /reused cache entry/i,
+      'unchanged warm build reuses native image transforms',
+    );
     assert.deepEqual(
       await readFile(socialCardPath),
       changedCard,

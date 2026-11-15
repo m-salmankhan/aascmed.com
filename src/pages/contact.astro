@@ -8,7 +8,10 @@ import { getPageContext, pageContentMode } from '../server/pages/common';
 import { clinicSummary } from '../server/pages/locations';
 import type { PracticeSummary } from '../components/practices/practice-archive';
 const mode = pageContentMode();
-const [record, context] = await Promise.all([getContact(mode), getPageContext(Astro.url.pathname, mode)]);
+const [record, context] = await Promise.all([
+  getContact(mode),
+  getPageContext(Astro.url.pathname, mode),
+]);
 const page = structuredClone(record);
 const practices: PracticeSummary[] = [];
 const clinicOptions: string[] = [];
