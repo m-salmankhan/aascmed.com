@@ -4,7 +4,7 @@ import { ServiceUpdatePage } from '../../../../components/pages/ServiceUpdatePag
 import { prepareInlineImages } from '../../../../server/content/inline-images';
 import SitePage from '../../../../layouts/SitePage.astro';
 import { getServiceUpdateBySlug } from '../../../../server/content/loaders';
-import { pageContentMode, getPageSettings } from '../../../../server/pages/common';
+import { pageContentMode, getPageContext, isStaticTarget } from '../../../../server/pages/common';
 import { serviceUpdatePaths } from '../../../../server/pages/locations';
 import { serviceUpdatePath } from '../../../../content/urls';
 
@@ -14,20 +14,20 @@ import { serviceUpdatePath } from '../../../../content/urls';
 export async function getStaticPaths() {
   return serviceUpdatePaths();
 }
-const update = import.meta.env.PUBLIC_ASTRO_TARGET === 'static'
+const record = isStaticTarget()
   ? Astro.props.record
   : await getServiceUpdateBySlug(Astro.params.slug || '', pageContentMode());
+const update = structuredClone(record);
 const requestedPath = `/service-updates/${Astro.params.year}/${Astro.params.month}/${Astro.params.slug}/`;
 if (!update || serviceUpdatePath(update) !== requestedPath) {
   return Astro.rewrite('/404');
 }
-const settings = await getPageSettings(pageContentMode());
+const context = await getPageContext(Astro.url.pathname, pageContentMode());
 await prepareInlineImages(update, pageContentMode(), 1200);
 ---
 
 <SitePage
-  pathname={Astro.url.pathname}
-  trackingSettings={settings.trackingSettings}
+  {...context.document}
   title={update.title || 'Untitled'}
   description={update.description || ''}
   ogType="article"
@@ -35,8 +35,7 @@ await prepareInlineImages(update, pageContentMode(), 1200);
 >
   <ServiceUpdatePage
     client:load
-    pathname={Astro.url.pathname}
-    announcement={settings.announcement}
+    {...context.view}
     serviceUpdate={update}
   />
 </SitePage>

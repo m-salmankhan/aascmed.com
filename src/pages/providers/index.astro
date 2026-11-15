@@ -4,13 +4,14 @@ import { ProvidersArchivePage } from '../../components/pages/ProvidersArchivePag
 import { prepareInlineImages } from '../../server/content/inline-images';
 import SitePage from '../../layouts/SitePage.astro';
 import { getProvidersPage, getProviders } from '../../server/content/loaders';
-import { getPageSettings, pageContentMode } from '../../server/pages/common';
+import { getPageContext, pageContentMode } from '../../server/pages/common';
 import { providerPath } from '../../content/urls';
 import { createExcerpt } from '../../utils/strapi-excerpt';
 import { getResponsiveMediaDescriptor } from '../../server/content/astro-media';
 import type { ProviderViewItem } from '../../views/fixed-archive';
 const mode = pageContentMode();
-const [page, settings] = await Promise.all([getProvidersPage(mode), getPageSettings(mode)]);
+const [record, context] = await Promise.all([getProvidersPage(mode), getPageContext(Astro.url.pathname, mode)]);
+const page = structuredClone(record);
 const providers: ProviderViewItem[] = [];
 for await (const provider of getProviders(mode)) {
   const image = provider.image
@@ -28,16 +29,14 @@ await prepareInlineImages(page, mode, 1200);
 ---
 
 <SitePage
-  pathname={Astro.url.pathname}
-  trackingSettings={settings.trackingSettings}
+  {...context.document}
   title={page?.heading || ''}
   description={page?.metaDescription || ''}
   ogType="website"
 >
   <ProvidersArchivePage
     client:load
-    pathname={Astro.url.pathname}
-    announcement={settings.announcement}
+    {...context.view}
     heading={page?.heading || 'Meet the team'}
     blocks={page?.text}
     {providers}

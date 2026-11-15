@@ -4,7 +4,7 @@ import { BlogPage } from '../../components/pages/BlogPage';
 import { prepareInlineImages } from '../../server/content/inline-images';
 import SitePage from '../../layouts/SitePage.astro';
 import { getBlogBySlug } from '../../server/content/loaders';
-import { getPageSettings, pageContentMode } from '../../server/pages/common';
+import { getPageContext, pageContentMode, isStaticTarget } from '../../server/pages/common';
 import { blogDate, contentPaths } from '../../server/pages/content';
 import { getResponsiveMediaDescriptor } from '../../server/content/astro-media';
 import { socialCardPath } from '../../server/media/social-cards.ts';
@@ -15,18 +15,19 @@ export async function getStaticPaths() {
   return contentPaths('blog', '/blog/');
 }
 const mode = pageContentMode();
-const blog = import.meta.env.PUBLIC_ASTRO_TARGET === 'static'
+const record = isStaticTarget()
   ? Astro.props.record
   : await getBlogBySlug(Astro.params.slug || '', mode);
+const blog = structuredClone(record);
 if (!blog) return Astro.rewrite('/404');
-const settings = await getPageSettings(mode);
+const context = await getPageContext(Astro.url.pathname, mode);
 const originalThumbnail = blog.thumbnail;
 if (blog.thumbnail) {
   blog.thumbnail = await getResponsiveMediaDescriptor(blog.thumbnail, { width: 1200 });
 }
 blog.date = blogDate(blog.date);
 const socialImagePath =
-  import.meta.env.PUBLIC_ASTRO_TARGET === 'static'
+  isStaticTarget()
     ? socialCardPath({
         kind: 'blog',
         slug: blog.slug || '',
@@ -38,13 +39,12 @@ await prepareInlineImages(blog, mode, 1200);
 ---
 
 <SitePage
-  pathname={Astro.url.pathname}
-  trackingSettings={settings.trackingSettings}
+  {...context.document}
   title={blog.title || blog.heading || 'Untitled'}
   description={blog.description || ''}
   ogType="article"
   articleSection="blog"
   {socialImagePath}
 >
-  <BlogPage client:load pathname={Astro.url.pathname} announcement={settings.announcement} {blog} />
+  <BlogPage client:load {...context.view} {blog} />
 </SitePage>
