@@ -75,7 +75,7 @@ export function ContactForm(props: ContactFormProps): React.ReactElement {
         }).then(res => {
             console.log(res)
             // no error messages
-            if (res === undefined) {
+            if (res.ok) {
                 setFormState(FormState.SUCCESS);
                 setFormData(undefined);
                 gtag("event", "generate_lead", {

@@ -1,13 +1,3 @@
-export enum HTTP_STATUS {
-    OK = 200,
-    CREATED = 201,
-
-    BAD_REQUEST = 400,
-    FORBIDDEN = 403,
-    NOT_FOUND = 404,
-    UNPROCESSABLE = 422,
-}
-
 export interface ContactFormFields {
     subject: string
     full_name: string
@@ -32,7 +22,6 @@ export interface ContactFormFieldErrors {
     source_url?: string[]
 }
 
-export interface ContactFormErrorResponse {
-    error?: string
-    field_errors?: ContactFormFieldErrors
-}
+export type ContactFormResult =
+    | { ok: true }
+    | { ok: false; error: string; field_errors?: ContactFormFieldErrors };

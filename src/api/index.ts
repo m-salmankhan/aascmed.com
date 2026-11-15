@@ -1,36 +1,53 @@
-import { ContactFormErrorResponse, ContactFormFields, HTTP_STATUS } from "./types";
+import type { ContactFormFields, ContactFormFieldErrors, ContactFormResult } from "./types";
+
+const defaultError = "An unexpected error occurred. Please try again or email us at info@aascmed.com if the problem persists.";
+const fieldNames = ["subject", "full_name", "email_address", "phone_number", "message", "clinic", "new_patient", "disclaimer", "source_url"] as const;
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+    typeof value === "object" && value !== null && !Array.isArray(value);
 
 export class API {
-    // Contact form
-    readonly baseURL: string;
+    constructor(readonly baseURL: string) {}
 
-    constructor(baseURL: string) {
-        this.baseURL = baseURL;
-    }
-
-    async contact(fields: ContactFormFields): Promise<void | ContactFormErrorResponse> {
-        const response = await fetch(
-            `${this.baseURL}/contact/`,
-            {
+    async contact(fields: ContactFormFields): Promise<ContactFormResult> {
+        try {
+            const response = await fetch(`${this.baseURL}/contact/`, {
                 method: "POST",
-                headers: {
-                    "content-type": "application/json"
-                },
-                body: JSON.stringify(fields)
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify(fields),
+                signal: AbortSignal.timeout(15000),
+            });
+            if (response.ok) return { ok: true };
+
+            const data: unknown = await response.json().catch(() => null);
+            const detail = isRecord(data) ? data.detail : undefined;
+            const field_errors: ContactFormFieldErrors = {};
+            if (response.status === 422 && Array.isArray(detail)) {
+                for (const item of detail) {
+                    if (!isRecord(item) || !Array.isArray(item.loc) || item.loc[0] !== "body" || typeof item.msg !== "string") continue;
+                    const field = item.loc[1] === "newPatient" ? "new_patient" : item.loc[1];
+                    const key = fieldNames.find(name => name === field);
+                    if (key) (field_errors[key] ??= []).push(item.msg);
+                }
+            } else if (isRecord(detail) && isRecord(detail.field_errors)) {
+                for (const key of fieldNames) {
+                    const messages = detail.field_errors[key];
+                    if (Array.isArray(messages) && messages.every(message => typeof message === "string") && messages.length) {
+                        field_errors[key] = messages;
+                    }
+                }
             }
-        );
-
-        const data = await response.json().catch(() => new Error("Decoding response failed."));
-
-        switch (response.status) {
-            case HTTP_STATUS.OK:
-                return;
-
-            case HTTP_STATUS.BAD_REQUEST:
-                return data.detail as ContactFormErrorResponse;
-
-            default:
-                throw Error("Unexpected response from API server.")
+            return {
+                ok: false,
+                error: isRecord(detail) && typeof detail.error === "string" && detail.error ? detail.error : defaultError,
+                ...(Object.keys(field_errors).length ? { field_errors } : {}),
+            };
+        } catch (error) {
+            return {
+                ok: false,
+                error: error instanceof Error && error.name === "TimeoutError"
+                    ? "The request timed out. Please try again or contact the clinic directly."
+                    : defaultError,
+            };
         }
     }
 }
