@@ -22,6 +22,7 @@ export interface ContactFormFieldErrors {
     source_url?: string[]
 }
 
+/** Show field_errors first when present; error is the fallback for failures without field errors. */
 export type ContactFormResult =
     | { ok: true }
     | { ok: false; error: string; field_errors?: ContactFormFieldErrors };
