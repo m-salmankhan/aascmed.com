@@ -10,7 +10,7 @@ import { ShareButtons } from "../components/social-media/share";
 import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
 import { Image } from "../components/media/image";
 import type { BlogRecord } from "../content/models";
-import { extractTableOfContents } from "../utils/strapi-toc";
+import { extractTableOfContents, contentHeadingIds } from "../utils/strapi-toc";
 
 /** Normalized blog record and browser pathname required by the detail page. */
 export interface BlogPostViewProps {
@@ -62,10 +62,11 @@ export function BlogPostView({ blog, pathname }: BlogPostViewProps) {
  * @returns Rich-text renderers and contact callouts for recognized entries.
  */
 function BlogContent({ content }: BlogContentProps) {
+  const anchors = contentHeadingIds(content);
   return <>
     {content.map((component, index) => {
       const type = component.__component || component.strapi_component;
-      if (type === "generic.rich-text" && component.text) return <StrapiBlocksRenderer key={index} content={component.text} />;
+      if (type === "generic.rich-text" && component.text) return <StrapiBlocksRenderer key={index} content={component.text} ids={anchors[index]} />;
       if (type === "generic.contact-booking-cta") return <ContactBanner key={index} />;
       return null;
     })}
