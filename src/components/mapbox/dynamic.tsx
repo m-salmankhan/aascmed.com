@@ -54,6 +54,7 @@ export const MapBox: React.FC<MapBoxProps> = (props) => {
 
     const mapContainer = useRef<HTMLDivElement | null>(null);
     const map = useRef<mapboxgl.Map | null>(null);
+    // Changing clinic values intentionally recreates the whole GL map.
     useEffect(() => {
         if (!jsEnabled) return; // no way to show the interactive map without JS
         if (map.current) return; // initialize map only once
