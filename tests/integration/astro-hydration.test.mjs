@@ -130,6 +130,10 @@ test(
         await page.evaluate(() => sessionStorage.getItem('announcementDismissed')),
         'true',
       );
+      await page.evaluate(() => {
+        window.dataLayer = [];
+        window.gtag = function () { window.dataLayer.push(Array.from(arguments)); };
+      });
       cms.runtime.mode = 'validation';
       assert.equal((await submitContact(page)).status(), 400);
       await expect(page.getByText('Fixture email was rejected', { exact: true })).toBeVisible();
@@ -139,6 +143,11 @@ test(
       cms.runtime.mode = 'success';
       assert.equal((await submitContact(page)).status(), 200);
       await expect(page.getByText(/Message successfully sent!/)).toBeVisible();
+      const leads = await page.evaluate(() => window.dataLayer);
+      assert.equal(leads.length, 1);
+      assert.equal(leads[0][0], 'event');
+      assert.equal(leads[0][1], 'generate_lead');
+      assert.equal(leads[0][2].new_customer, true);
       assert.equal(cms.runtime.requests.length, 3);
       const sent = cms.runtime.requests.at(-1);
       assert.equal(
