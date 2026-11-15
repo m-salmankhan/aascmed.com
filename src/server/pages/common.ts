@@ -40,3 +40,12 @@ export function getPageSettings(mode: ContentMode) {
     throw error;
   });
 }
+
+/** Shared document and hydrated-view context for every content route. */
+export async function getPageContext(pathname: string, mode: ContentMode) {
+  const settings = await getPageSettings(mode);
+  return {
+    document: { pathname, trackingSettings: settings.trackingSettings },
+    view: { pathname, announcement: settings.announcement },
+  };
+}

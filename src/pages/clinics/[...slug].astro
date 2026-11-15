@@ -4,7 +4,7 @@ import { ClinicPage } from '../../components/pages/ClinicPage';
 import { prepareInlineImages } from '../../server/content/inline-images';
 import SitePage from '../../layouts/SitePage.astro';
 import { getClinicBySlug } from '../../server/content/loaders';
-import { pageContentMode, getPageSettings } from '../../server/pages/common';
+import { pageContentMode, getPageContext } from '../../server/pages/common';
 import { contentPaths } from '../../server/pages/content';
 import { socialCardPath } from '../../server/media/social-cards.ts';
 
@@ -15,13 +15,14 @@ export async function getStaticPaths() {
   return contentPaths('clinic', '/clinics/');
 }
 const mode = pageContentMode();
-const clinic = import.meta.env.PUBLIC_ASTRO_TARGET === 'static'
+const record = import.meta.env.PUBLIC_ASTRO_TARGET === 'static'
   ? Astro.props.record
   : await getClinicBySlug(Astro.params.slug || '', mode);
+const clinic = structuredClone(record);
 if (!clinic) {
   return Astro.rewrite('/404');
 }
-const settings = await getPageSettings(mode);
+const context = await getPageContext(Astro.url.pathname, mode);
 const latitude = clinic.location?.latitude;
 const longitude = clinic.location?.longitude;
 const leafSlug = (Astro.params.slug || '').split('/').at(-1);
@@ -39,8 +40,7 @@ await prepareInlineImages(clinic, mode, 1200);
 ---
 
 <SitePage
-  pathname={Astro.url.pathname}
-  trackingSettings={settings.trackingSettings}
+  {...context.document}
   title={clinic.title || 'Untitled'}
   description={clinic.description || ''}
   appendBusinessNameToTitle={false}
@@ -48,8 +48,7 @@ await prepareInlineImages(clinic, mode, 1200);
 >
   <ClinicPage
     client:load
-    pathname={Astro.url.pathname}
-    announcement={settings.announcement}
+    {...context.view}
     {clinic}
   />
 </SitePage>

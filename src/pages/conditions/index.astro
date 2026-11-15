@@ -4,12 +4,13 @@ import { ConditionsArchivePage } from '../../components/pages/ConditionsArchiveP
 import { prepareInlineImages } from '../../server/content/inline-images';
 import SitePage from '../../layouts/SitePage.astro';
 import { getConditionsArchive, getConditions } from '../../server/content/loaders';
-import { getPageSettings, pageContentMode } from '../../server/pages/common';
+import { getPageContext, pageContentMode } from '../../server/pages/common';
 import { conditionPath } from '../../content/urls';
 import { getResponsiveMediaDescriptor } from '../../server/content/astro-media';
 import type { ConditionViewItem } from '../../views/fixed-archive';
 const mode = pageContentMode();
-const [page, settings] = await Promise.all([getConditionsArchive(mode), getPageSettings(mode)]);
+const [record, context] = await Promise.all([getConditionsArchive(mode), getPageContext(Astro.url.pathname, mode)]);
+const page = structuredClone(record);
 const conditions: ConditionViewItem[] = [];
 for await (const condition of getConditions(mode)) {
   const thumbnail = condition.thumbnail
@@ -25,16 +26,14 @@ await prepareInlineImages(page, mode, 1200);
 ---
 
 <SitePage
-  pathname={Astro.url.pathname}
-  trackingSettings={settings.trackingSettings}
+  {...context.document}
   title={page?.heading || ''}
   description={page?.metaDescription || ''}
   ogType="website"
 >
   <ConditionsArchivePage
     client:load
-    pathname={Astro.url.pathname}
-    announcement={settings.announcement}
+    {...context.view}
     heading={page?.heading || 'Conditions'}
     blocks={page?.text}
     {conditions}
