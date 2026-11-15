@@ -46,28 +46,28 @@ const stylesTextInputs = (error: boolean) => css`
   }
 `
 
-export const TextInput: React.FC<InputProps> = (props) => {
+export const TextInput: React.FC<InputProps> = ({ label, error, className, ...props }) => {
   const id = useId();
   return (
-    <div css={stylesTextInputs(!!props.error)} className={props.className}>
-      <label css={stylesLabel(!!props.error)} htmlFor={id}>{props.label} {props.required && "(required)"}:</label>
+    <div css={stylesTextInputs(!!error)} className={className}>
+      <label css={stylesLabel(!!error)} htmlFor={id}>{label} {props.required && "(required)"}:</label>
       {
-        props.error &&
-        <ErrorNotice css={css`margin-bottom: 1em;`}>{props.error}</ErrorNotice>
+        error &&
+        <ErrorNotice css={css`margin-bottom: 1em;`}>{error}</ErrorNotice>
       }
       <input id={id} {...props} />
     </div>
   );
 }
 
-export const TextArea: React.FC<TextAreaProps> = (props) => {
+export const TextArea: React.FC<TextAreaProps> = ({ label, error, className, ...props }) => {
   const id = useId();
   return (
-    <div css={stylesTextInputs(!!props.error)} className={props.className}>
-      <label css={stylesLabel(!!props.error)} htmlFor={id}>{props.label} {props.required && "(required)"}:</label>
+    <div css={stylesTextInputs(!!error)} className={className}>
+      <label css={stylesLabel(!!error)} htmlFor={id}>{label} {props.required && "(required)"}:</label>
       {
-        props.error &&
-        <ErrorNotice css={css`margin-bottom: 1em;`}>{props.error}</ErrorNotice>
+        error &&
+        <ErrorNotice css={css`margin-bottom: 1em;`}>{error}</ErrorNotice>
       }
       <textarea id={id} {...props} />
     </div>

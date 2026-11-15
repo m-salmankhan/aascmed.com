@@ -10,6 +10,7 @@ interface NoticeProps {
   className?: string
   children: ReactNode
   onDismiss?: () => void
+  /** Dismiss by collapsing height (shrinkUp) unless fade is explicitly requested. */
   transitionType?: TransitionType
 }
 
@@ -20,14 +21,14 @@ enum NoticeStates {
 }
 
 const stylesNotice = (state: NoticeStates, transitionType?: TransitionType) => {
-  const cleanedTransitionType = transitionType || "fade";
+  const cleanedTransitionType = transitionType || "shrinkUp";
 
   let opacity: string;
   let transform: string;
   let maxHeight: string;
   let overflowY: string;
 
-  if(transitionType === "fade") {
+  if(cleanedTransitionType === "fade") {
     opacity = (state === NoticeStates.INVISIBLE) ? "0" : "1";
     transform = `translateY(-${state === NoticeStates.INVISIBLE ? 100 : 0}%)`;
     maxHeight = "inherit";
@@ -47,7 +48,7 @@ const stylesNotice = (state: NoticeStates, transitionType?: TransitionType) => {
       opacity: ${opacity};
       transform: ${transform};
       max-height: ${maxHeight};
-      overflow-Y: ${overflowY};
+      overflow-y: ${overflowY};
       animation: ${nudge} .25s ease-in .5s 2 forwards running;
       
       button.collapse {
@@ -115,40 +116,6 @@ const stylesError = css`
   }
 `
 
-export const ErrorNotice: React.FC<NoticeProps> = (props) => {
-  const [state, setState] = useState(NoticeStates.VISIBLE);
-
-  const animateOut: MouseEventHandler = (e) => {
-    e.preventDefault();
-    setState(NoticeStates.INVISIBLE);
-  }
-
-  const removeFromDOM = () => {
-    setState(NoticeStates.REMOVED);
-    props.onDismiss && props.onDismiss();
-  }
-
-  if (state === NoticeStates.REMOVED) return <></>;
-  return (
-    <div className={props.className} css={[stylesNotice(state, props.transitionType), stylesError]} onTransitionEnd={removeFromDOM}>
-      <div onTransitionEnd={(event) => event.stopPropagation()}>
-        <button className={"collapse"} onClick={animateOut}>
-          <span css={stylesScreenReaderText}>Close</span>
-          <FaIcons iconStyle={IconStyles.SOLID} icon={"xmark"} className={"icon"} />
-        </button>
-        <div className={"heading"}>
-          <FaIcons iconStyle={IconStyles.SOLID} icon={"triangle-exclamation"} className={"icon"} />
-          Error:
-        </div>
-        <div className={"body"}>
-          {props.children}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-
 const stylesSuccess = css`
   background: ${colours.successBg};
   border: 1px solid ${colours.successTxt};
@@ -166,40 +133,6 @@ const stylesSuccess = css`
     }
   }
 `
-
-export const SuccessNotice: React.FC<NoticeProps> = (props) => {
-  const [state, setState] = useState(NoticeStates.VISIBLE);
-
-  const animateOut: MouseEventHandler = (e) => {
-    e.preventDefault();
-    setState(NoticeStates.INVISIBLE);
-  }
-
-  const removeFromDOM = () => {
-    setState(NoticeStates.REMOVED);
-    props.onDismiss && props.onDismiss();
-  }
-
-  if (state === NoticeStates.REMOVED) return <></>;
-  return (
-    <div className={props.className} css={[stylesNotice(state, props.transitionType), stylesSuccess]} onTransitionEnd={removeFromDOM}>
-      <div onTransitionEnd={(event) => event.stopPropagation()}>
-        <button className={"collapse"} onClick={animateOut}>
-          <span css={stylesScreenReaderText}>Close</span>
-          <FaIcons iconStyle={IconStyles.SOLID} icon={"xmark"} className={"icon"} />
-        </button>
-        <div className={"heading"}>
-          <FaIcons iconStyle={IconStyles.SOLID} icon={"circle-check"} className={"icon"} />
-          Success!
-        </div>
-        <div className={"body"}>
-          {props.children}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 
 const stylesInfo = css`
   background: ${colours.infoBlue};
@@ -223,35 +156,42 @@ const stylesInfo = css`
   }
 `
 
-export const InfoNotice: React.FC<NoticeProps> = (props) => {
+const variants = {
+  error: { styles: stylesError, icon: "triangle-exclamation", heading: "Error:" },
+  success: { styles: stylesSuccess, icon: "circle-check", heading: "Success!" },
+  info: { styles: stylesInfo, icon: "circle-info", heading: "Info:" },
+};
+
+export const Notice: React.FC<NoticeProps & { variant: keyof typeof variants }> = ({ variant, ...props }) => {
   const [state, setState] = useState(NoticeStates.VISIBLE);
-
-  const animateOut: MouseEventHandler = (e) => {
-    e.preventDefault();
+  const appearance = variants[variant];
+  const animateOut: MouseEventHandler = event => {
+    event.preventDefault();
     setState(NoticeStates.INVISIBLE);
-  }
-
-  const removeFromDOM = () => {
+  };
+  const removeFromDOM: React.TransitionEventHandler<HTMLDivElement> = event => {
+    if (event.target !== event.currentTarget || state !== NoticeStates.INVISIBLE) return;
     setState(NoticeStates.REMOVED);
-    props.onDismiss && props.onDismiss();
-  }
-
-  if (state === NoticeStates.REMOVED) return <></>;
+    props.onDismiss?.();
+  };
+  if (state === NoticeStates.REMOVED) return null;
   return (
-    <div className={props.className} css={[stylesNotice(state, props.transitionType), stylesInfo]} onTransitionEnd={removeFromDOM}>
-      <div onTransitionEnd={(event) => event.stopPropagation()}>
-        <button className={"collapse"} onClick={animateOut}>
+    <div className={props.className} css={[stylesNotice(state, props.transitionType), appearance.styles]} onTransitionEnd={removeFromDOM}>
+      <div onTransitionEnd={event => event.stopPropagation()}>
+        <button className="collapse" onClick={animateOut}>
           <span css={stylesScreenReaderText}>Close</span>
-          <FaIcons iconStyle={IconStyles.SOLID} icon={"xmark"} className={"icon"} />
+          <FaIcons iconStyle={IconStyles.SOLID} icon="xmark" className="icon" />
         </button>
-        <div className={"heading"}>
-          <FaIcons iconStyle={IconStyles.SOLID} icon={"circle-info"} className={"icon"} />
-          Info:
+        <div className="heading">
+          <FaIcons iconStyle={IconStyles.SOLID} icon={appearance.icon} className="icon" />
+          {appearance.heading}
         </div>
-        <div className={"body"}>
-          {props.children}
-        </div>
+        <div className="body">{props.children}</div>
       </div>
     </div>
   );
-}
+};
+
+export const ErrorNotice: React.FC<NoticeProps> = props => <Notice {...props} variant="error" />;
+export const SuccessNotice: React.FC<NoticeProps> = props => <Notice {...props} variant="success" />;
+export const InfoNotice: React.FC<NoticeProps> = props => <Notice {...props} variant="info" />;
