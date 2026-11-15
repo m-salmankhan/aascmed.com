@@ -18,7 +18,10 @@ test('Astro integrations and shared UI resolve the root React runtime', () => {
   const sharedReact = realDependency(rootRequire, 'react');
   for (const [label, entry] of [
     ['Astro React integration', rootRequire.resolve('@astrojs/react')],
-    ['Strapi blocks renderer', rootRequire.resolve('@strapi/blocks-react-renderer')],
+    [
+      'Strapi blocks renderer',
+      rootRequire.resolve('@strapi/blocks-react-renderer'),
+    ],
     ['React carousel', rootRequire.resolve('pure-react-carousel')],
   ]) {
     const resolver = createRequire(entry);

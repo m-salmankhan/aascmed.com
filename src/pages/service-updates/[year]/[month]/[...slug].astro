@@ -4,7 +4,10 @@ import { ServiceUpdatePage } from '../../../../components/pages/ServiceUpdatePag
 import { prepareInlineImages } from '../../../../server/content/inline-images';
 import SitePage from '../../../../layouts/SitePage.astro';
 import { getServiceUpdateBySlug } from '../../../../server/content/loaders';
-import { pageContentMode, getPageSettings } from '../../../../server/pages/common';
+import {
+  pageContentMode,
+  getPageSettings,
+} from '../../../../server/pages/common';
 import { serviceUpdatePaths } from '../../../../server/pages/locations';
 import { serviceUpdatePath } from '../../../../content/urls';
 
@@ -14,7 +17,10 @@ import { serviceUpdatePath } from '../../../../content/urls';
 export async function getStaticPaths() {
   return serviceUpdatePaths();
 }
-const update = await getServiceUpdateBySlug(Astro.params.slug || '', pageContentMode());
+const update = await getServiceUpdateBySlug(
+  Astro.params.slug || '',
+  pageContentMode(),
+);
 const requestedPath = `/service-updates/${Astro.params.year}/${Astro.params.month}/${Astro.params.slug}/`;
 if (!update || serviceUpdatePath(update) !== requestedPath) {
   return Astro.rewrite('/404');

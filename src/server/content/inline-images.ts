@@ -23,7 +23,11 @@ export async function prepareInlineImages(
     return;
   }
   const block = content as Record<string, unknown>;
-  if (block.type === 'image' && block.image && typeof block.image === 'object') {
+  if (
+    block.type === 'image' &&
+    block.image &&
+    typeof block.image === 'object'
+  ) {
     const image = block.image as Record<string, unknown>;
     if (typeof image.url !== 'string') {
       return;
@@ -32,7 +36,10 @@ export async function prepareInlineImages(
     const prepared = await getResponsiveMediaDescriptor(
       {
         src: new URL(image.url, origin).href,
-        alt: typeof image.alternativeText === 'string' ? image.alternativeText : '',
+        alt:
+          typeof image.alternativeText === 'string'
+            ? image.alternativeText
+            : '',
         width: typeof image.width === 'number' ? image.width : undefined,
         height: typeof image.height === 'number' ? image.height : undefined,
         mimeType: typeof image.mime === 'string' ? image.mime : undefined,

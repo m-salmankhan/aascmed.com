@@ -3,7 +3,8 @@ import type { ComponentProps } from 'react';
 import { ConditionsArchiveView } from '../../views/fixed-archive';
 import { ReactPage, type PageContextProps } from '../ReactPage';
 
-type ConditionsArchivePageProps = PageContextProps & ComponentProps<typeof ConditionsArchiveView>;
+type ConditionsArchivePageProps = PageContextProps &
+  ComponentProps<typeof ConditionsArchiveView>;
 
 /** Render the condition archive within the shared site providers.
  * @param props Archive copy and condition summaries, current pathname and optional announcement.

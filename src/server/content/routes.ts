@@ -9,11 +9,7 @@ import {
 import { createClient, readRecords } from './strapi.ts';
 
 export type PublishedRouteKind =
-  | 'blog'
-  | 'condition'
-  | 'provider'
-  | 'clinic'
-  | 'service-update';
+  'blog' | 'condition' | 'provider' | 'clinic' | 'service-update';
 export interface PublishedRouteManifestEntry {
   pathname: string;
   kind: PublishedRouteKind;
@@ -54,7 +50,11 @@ export async function getPublishedRouteManifest(
     if (!pathname) {
       throw new Error(`Published ${kind} record has an invalid route`);
     }
-    routes.push({ pathname, kind, updatedAt: textField(updatedAt) ?? undefined });
+    routes.push({
+      pathname,
+      kind,
+      updatedAt: textField(updatedAt) ?? undefined,
+    });
   }
 
   if (!kind || kind === 'blog') {
@@ -72,7 +72,11 @@ export async function getPublishedRouteManifest(
       fields: ['slug', 'updatedAt'],
       sort: ['documentId:asc'],
     })) {
-      addRoute(conditionPath(textField(item.slug)), 'condition', item.updatedAt);
+      addRoute(
+        conditionPath(textField(item.slug)),
+        'condition',
+        item.updatedAt,
+      );
     }
   }
   if (!kind || kind === 'provider') {
@@ -90,7 +94,10 @@ export async function getPublishedRouteManifest(
       fields: ['slug', 'clinic_name', 'updatedAt'],
       sort: ['documentId:asc'],
     })) {
-      const clinic = { slug: textField(item.slug), clinicName: textField(item.clinic_name) };
+      const clinic = {
+        slug: textField(item.slug),
+        clinicName: textField(item.clinic_name),
+      };
       addRoute(clinicPath(clinic), 'clinic', item.updatedAt);
     }
   }

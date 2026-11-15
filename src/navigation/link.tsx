@@ -1,8 +1,8 @@
-import React, { ComponentProps, useEffect, useState } from "react";
-import { normalizePath, useCurrentPath } from "./current-path";
+import React, { ComponentProps, useEffect, useState } from 'react';
+import { normalizePath, useCurrentPath } from './current-path';
 
 /** Browser anchor props plus route-aware active-state options. */
-type SiteLinkProps = Omit<ComponentProps<"a">, "href"> & {
+type SiteLinkProps = Omit<ComponentProps<'a'>, 'href'> & {
   href: string;
   /** Add the class when this link points at the current document path. */
   activeClassName?: string;
@@ -25,15 +25,27 @@ export function SiteLink({
   const providedPath = useCurrentPath();
   const [browserPath, setBrowserPath] = useState<string | null>(null);
   const currentPath = providedPath ?? browserPath;
-  const internalPath = href.startsWith("/") && !href.startsWith("//") ? href.split(/[?#]/, 1)[0] : null;
-  const exactActive = !!internalPath && currentPath !== null && normalizePath(internalPath) === currentPath;
-  const partialActive = !!internalPath && partiallyActive && currentPath !== null &&
+  const internalPath =
+    href.startsWith('/') && !href.startsWith('//')
+      ? href.split(/[?#]/, 1)[0]
+      : null;
+  const exactActive =
+    !!internalPath &&
+    currentPath !== null &&
+    normalizePath(internalPath) === currentPath;
+  const partialActive =
+    !!internalPath &&
+    partiallyActive &&
+    currentPath !== null &&
     currentPath.startsWith(normalizePath(internalPath));
   const active = exactActive || partialActive;
-  const classes = [className, active && activeClassName].filter(Boolean).join(" ") || undefined;
+  const classes =
+    [className, active && activeClassName].filter(Boolean).join(' ') ||
+    undefined;
 
   useEffect(() => {
-    if (providedPath === null) setBrowserPath(normalizePath(window.location.pathname));
+    if (providedPath === null)
+      setBrowserPath(normalizePath(window.location.pathname));
   }, [activeClassName, providedPath]);
 
   return (
@@ -41,7 +53,7 @@ export function SiteLink({
       {...props}
       href={href}
       className={classes}
-      aria-current={exactActive ? "page" : props["aria-current"]}
+      aria-current={exactActive ? 'page' : props['aria-current']}
     >
       {children}
     </a>

@@ -8,7 +8,10 @@ import { getPageSettings, pageContentMode } from '../server/pages/common';
 import { clinicPath } from '../content/urls';
 import type { PracticeSummary } from '../components/practices/practice-archive';
 const mode = pageContentMode();
-const [page, settings] = await Promise.all([getContact(mode), getPageSettings(mode)]);
+const [page, settings] = await Promise.all([
+  getContact(mode),
+  getPageSettings(mode),
+]);
 const practices: PracticeSummary[] = [];
 const clinicOptions: string[] = [];
 for await (const clinic of getClinics(mode)) {

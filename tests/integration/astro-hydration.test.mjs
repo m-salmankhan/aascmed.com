@@ -2,8 +2,17 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { chromium, expect } from '@playwright/test';
-import { startFixtureCms, fixtureToken } from '../fixtures/astro-cms/server.mjs';
-import { availablePort, command, build, ready, stop } from '../fixtures/astro-cms/process.mjs';
+import {
+  startFixtureCms,
+  fixtureToken,
+} from '../fixtures/astro-cms/server.mjs';
+import {
+  availablePort,
+  command,
+  build,
+  ready,
+  stop,
+} from '../fixtures/astro-cms/process.mjs';
 /** Navigate to actual server HTML and wait for every load-hydrated React island.
  * @param page Playwright browser page.
  * @param url Local Astro page URL.
@@ -12,7 +21,9 @@ import { availablePort, command, build, ready, stop } from '../fixtures/astro-cm
 async function openHydrated(page, url) {
   const response = await page.goto(url, { waitUntil: 'domcontentloaded' });
   assert.equal(response.status(), 200, url);
-  await expect(page.locator('astro-island[ssr]')).toHaveCount(0, { timeout: 15000 });
+  await expect(page.locator('astro-island[ssr]')).toHaveCount(0, {
+    timeout: 15000,
+  });
   return response;
 }
 /** Fill the real contact form with public synthetic data and submit through the fixture HTTP API.
@@ -20,18 +31,23 @@ async function openHydrated(page, url) {
  * @returns After the contact API responds to the submission.
  */
 async function submitContact(page) {
-  const form = page.locator('form').filter({ has: page.locator('input[name="subject"]') });
+  const form = page
+    .locator('form')
+    .filter({ has: page.locator('input[name="subject"]') });
   await form.locator('input[name="subject"]').fill('Synthetic browser enquiry');
   await form.locator('input[name="fullname"]').fill('Example Test Person');
   await form.locator('input[name="email"]').fill('example@example.com');
   await form.locator('input[name="phone"]').fill('555-0100');
-  await form.locator('textarea[name="message"]').fill('Synthetic test data only.');
+  await form
+    .locator('textarea[name="message"]')
+    .fill('Synthetic test data only.');
   await form.locator('select[name="clinic"]').selectOption({ index: 1 });
   await form.locator('input[name="new_patient"]').check();
   await form.locator('input[name="disclaimer"]').check();
   const response = page.waitForResponse(
     (item) =>
-      new URL(item.url()).pathname === '/runtime/contact/' && item.request().method() === 'POST',
+      new URL(item.url()).pathname === '/runtime/contact/' &&
+      item.request().method() === 'POST',
   );
   await form.getByRole('button', { name: 'Send Message', exact: true }).click();
   return response;
@@ -72,7 +88,9 @@ test(
         timezoneId: 'America/Chicago',
       });
       await context.route('**/*', (route) =>
-        ['localhost', '127.0.0.1'].includes(new URL(route.request().url()).hostname)
+        ['localhost', '127.0.0.1'].includes(
+          new URL(route.request().url()).hostname,
+        )
           ? route.continue()
           : route.abort(),
       );
@@ -92,26 +110,35 @@ test(
       });
       const page = await context.newPage();
       assert.equal(
-        await page.evaluate(() => Intl.DateTimeFormat().resolvedOptions().timeZone),
+        await page.evaluate(
+          () => Intl.DateTimeFormat().resolvedOptions().timeZone,
+        ),
         'America/Chicago',
       );
-      const datedResponse = await openHydrated(page, `${origin}/service-updates/2026/11/notice/`);
+      const datedResponse = await openHydrated(
+        page,
+        `${origin}/service-updates/2026/11/notice/`,
+      );
       assert.ok(
         (await datedResponse.text()).includes('1st November 2026'),
         'SSR retains the CMS calendar date',
       );
-      await expect(page.getByText('1st November 2026', { exact: true })).toBeVisible();
-      await expect(page.locator('a[href="/service-updates/2026/11/notice/"]')).toHaveAttribute(
-        'aria-current',
-        'page',
-      );
+      await expect(
+        page.getByText('1st November 2026', { exact: true }),
+      ).toBeVisible();
+      await expect(
+        page.locator('a[href="/service-updates/2026/11/notice/"]'),
+      ).toHaveAttribute('aria-current', 'page');
       await openHydrated(page, `${origin}/contact/`);
       const toggle = page.locator('.mobile-menu > summary');
       const nativeMenu = page.locator('.mobile-menu');
       await expect(nativeMenu).not.toHaveAttribute('open');
       await toggle.click();
       await expect(nativeMenu).toHaveAttribute('open', '');
-      await page.locator('nav').getByRole('link', { name: 'Blog', exact: true }).click();
+      await page
+        .locator('nav')
+        .getByRole('link', { name: 'Blog', exact: true })
+        .click();
       await page.waitForURL('**/blog/');
       await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
       await expect(
@@ -122,20 +149,28 @@ test(
       await expect(nativeMenu).toHaveAttribute('open', '');
       await toggle.click();
       await expect(nativeMenu).not.toHaveAttribute('open');
-      const notice = page.locator('aside').filter({ hasText: 'PUBLISHED ANNOUNCEMENT' });
+      const notice = page
+        .locator('aside')
+        .filter({ hasText: 'PUBLISHED ANNOUNCEMENT' });
       await expect(notice).toBeVisible();
       await notice.getByRole('button', { name: 'Close', exact: true }).click();
       await expect(notice).toHaveCount(0);
       assert.equal(
-        await page.evaluate(() => sessionStorage.getItem('announcementDismissed')),
+        await page.evaluate(() =>
+          sessionStorage.getItem('announcementDismissed'),
+        ),
         'true',
       );
       cms.runtime.mode = 'validation';
       assert.equal((await submitContact(page)).status(), 400);
-      await expect(page.getByText('Fixture email was rejected', { exact: true })).toBeVisible();
+      await expect(
+        page.getByText('Fixture email was rejected', { exact: true }),
+      ).toBeVisible();
       cms.runtime.mode = 'error';
       assert.equal((await submitContact(page)).status(), 503);
-      await expect(page.getByText(/An unexpected error occurred/)).toBeVisible();
+      await expect(
+        page.getByText(/An unexpected error occurred/),
+      ).toBeVisible();
       cms.runtime.mode = 'success';
       assert.equal((await submitContact(page)).status(), 200);
       await expect(page.getByText(/Message successfully sent!/)).toBeVisible();
@@ -151,21 +186,31 @@ test(
       assert.equal(sent.body.disclaimer, true);
       assert.equal(sent.body.source_url, `${origin}/contact/`);
       await openHydrated(page, `${origin}/`);
-      await expect(page.getByRole('button', { name: 'Dismiss', exact: true })).toBeVisible();
+      await expect(
+        page.getByRole('button', { name: 'Dismiss', exact: true }),
+      ).toBeVisible();
       await page.getByRole('button', { name: 'Dismiss', exact: true }).click();
-      await expect(page.getByRole('button', { name: 'Dismiss', exact: true })).toHaveCount(0);
+      await expect(
+        page.getByRole('button', { name: 'Dismiss', exact: true }),
+      ).toHaveCount(0);
       const next = page.getByRole('button', { name: /^next$/i });
       await next.scrollIntoViewIfNeeded();
-      const before = await page.locator('.carousel__slide--visible').innerText();
+      const before = await page
+        .locator('.carousel__slide--visible')
+        .innerText();
       await next.click();
       await expect
         .poll(() => page.locator('.carousel__slide--visible').innerText())
         .not.toBe(before);
       await page.getByRole('button', { name: /^previous$/i }).click();
-      await expect.poll(() => page.locator('.carousel__slide--visible').innerText()).toBe(before);
+      await expect
+        .poll(() => page.locator('.carousel__slide--visible').innerText())
+        .toBe(before);
       const storedContext = await browser.newContext();
       await storedContext.route('**/*', (route) =>
-        ['localhost', '127.0.0.1'].includes(new URL(route.request().url()).hostname)
+        ['localhost', '127.0.0.1'].includes(
+          new URL(route.request().url()).hostname,
+        )
           ? route.continue()
           : route.abort(),
       );
@@ -184,13 +229,18 @@ test(
           errors.push(message.text());
         }
       });
-      const storedResponse = await openHydrated(storedPage, `${origin}/privacy/`);
+      const storedResponse = await openHydrated(
+        storedPage,
+        `${origin}/privacy/`,
+      );
       assert.ok(
         (await storedResponse.text()).includes('PUBLISHED ANNOUNCEMENT'),
         'the server renders a deterministic notice before client storage is read',
       );
       await expect(
-        storedPage.locator('aside').filter({ hasText: 'PUBLISHED ANNOUNCEMENT' }),
+        storedPage
+          .locator('aside')
+          .filter({ hasText: 'PUBLISHED ANNOUNCEMENT' }),
       ).toHaveCount(0);
       assert.deepEqual(
         errors,

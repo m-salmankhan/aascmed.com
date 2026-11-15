@@ -1,25 +1,34 @@
-import { css } from "@emotion/react"
-import { useState, useId, useRef, useEffect } from "react"
-import { MapBoxProps } from "."
-import { usePublicConfig } from "../../config/public-context";
+import { css } from '@emotion/react';
+import { useState, useId, useRef, useEffect } from 'react';
+import { MapBoxProps } from '.';
+import { usePublicConfig } from '../../config/public-context';
 
 interface StaticMapBoxParameters {
-    label: string
-    longitude: number
-    latitude: number
-    width: number
-    height: number
-    retina: boolean
-    zoom: number
-    accessToken: string
+  label: string;
+  longitude: number;
+  latitude: number;
+  width: number;
+  height: number;
+  retina: boolean;
+  zoom: number;
+  accessToken: string;
 }
-const mapSrc = ({ label, latitude, longitude, width, height, retina, zoom, accessToken }: StaticMapBoxParameters) =>
-    `https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/pin-l-${label}+1C5E38(${longitude},${latitude})/${longitude},${latitude},${zoom},0/${width}x${height}${retina ? "@2x" : ""}?access_token=${accessToken}`;
+const mapSrc = ({
+  label,
+  latitude,
+  longitude,
+  width,
+  height,
+  retina,
+  zoom,
+  accessToken,
+}: StaticMapBoxParameters) =>
+  `https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/pin-l-${label}+1C5E38(${longitude},${latitude})/${longitude},${latitude},${zoom},0/${width}x${height}${retina ? '@2x' : ''}?access_token=${accessToken}`;
 
 enum ImageState {
-    INITIAL = "init",
-    LOADED = "loaded",
-    COMPLETED = "completed"
+  INITIAL = 'init',
+  LOADED = 'loaded',
+  COMPLETED = 'completed',
 }
 
 const stylesStaticMap = css`
@@ -27,14 +36,14 @@ const stylesStaticMap = css`
 
   &.noscript {
     img.init {
-        visibility: hidden;
+      visibility: hidden;
     }
   }
-  
+
   .lazy-container {
     position: relative;
     height: 100%;
-    
+
     img {
       position: absolute;
       top: 0;
@@ -43,20 +52,22 @@ const stylesStaticMap = css`
       height: 100%;
       object-fit: cover;
       object-position: center;
-      transition: opacity .5s ease 0s, filter .5s ease 0s;
+      transition:
+        opacity 0.5s ease 0s,
+        filter 0.5s ease 0s;
       filter: blur(20px);
       display: block;
       object-fit: cover;
     }
-    
-    img.lazy-preview {
-        opacity: 1;
 
-        &.loaded {
-            opacity: 0;
-        }
+    img.lazy-preview {
+      opacity: 1;
+
+      &.loaded {
+        opacity: 0;
+      }
     }
-    
+
     img.map {
       filter: inherit;
       &.loaded {
@@ -67,69 +78,90 @@ const stylesStaticMap = css`
 `;
 
 export const StaticMap: React.FC<MapBoxProps> = (props) => {
-    const { mapboxAccessToken } = usePublicConfig();
-    const [loaded, setLoaded] = useState(ImageState.INITIAL);
-    const id = useId();
+  const { mapboxAccessToken } = usePublicConfig();
+  const [loaded, setLoaded] = useState(ImageState.INITIAL);
+  const id = useId();
 
-    const unBlurImage = () => {
-        setLoaded(ImageState.LOADED);
+  const unBlurImage = () => {
+    setLoaded(ImageState.LOADED);
+  };
+
+  const removePreviewImg = () => {
+    setLoaded(ImageState.COMPLETED);
+  };
+
+  const imageRef = useRef<HTMLImageElement | null>(null);
+  useEffect(() => {
+    if (!imageRef.current) return;
+
+    if (imageRef.current.complete && imageRef.current.naturalWidth > 0) {
+      unBlurImage();
     }
+  }, [imageRef, unBlurImage]);
 
-    const removePreviewImg = () => {
-        setLoaded(ImageState.COMPLETED);
-    }
+  const previewSrc = '/assets/map-lazy.jpg';
 
-    const imageRef = useRef<HTMLImageElement | null>(null);
-    useEffect(() => {
-        if (!imageRef.current) return;
+  const baseParameters: StaticMapBoxParameters = {
+    width: 600,
+    height: 400,
+    label: props.label[0].toLocaleLowerCase(),
+    longitude: props.longitude,
+    latitude: props.latitude,
+    retina: false,
+    zoom: props.zoom,
+    accessToken: mapboxAccessToken,
+  };
 
-        if (imageRef.current.complete && imageRef.current.naturalWidth > 0) {
-            unBlurImage();
-        }
-    }, [imageRef, unBlurImage]);
-
-
-    const previewSrc = "/assets/map-lazy.jpg";
-
-    const baseParameters: StaticMapBoxParameters = {
-        width: 600,
-        height: 400,
-        label: props.label[0].toLocaleLowerCase(),
-        longitude: props.longitude,
-        latitude: props.latitude,
-        retina: false,
-        zoom: props.zoom,
-        accessToken: mapboxAccessToken,
-    }
-
-    const image = {
-        src: mapSrc({ ...baseParameters, width: 600, height: 400 }),
-        srcset:
-            `${mapSrc({ ...baseParameters, width: 200, height: 133 })} 200w,
+  const image = {
+    src: mapSrc({ ...baseParameters, width: 600, height: 400 }),
+    srcset: `${mapSrc({ ...baseParameters, width: 200, height: 133 })} 200w,
             ${mapSrc({ ...baseParameters, width: 300, height: 200 })} 300w,
             ${mapSrc({ ...baseParameters, width: 400, height: 267 })} 400w,
             ${mapSrc({ ...baseParameters, width: 400, height: 267, retina: true })} 800w,
             ${mapSrc({ ...baseParameters, width: 600, height: 400, retina: true })} 1200w, `,
-        sizes: props.sizes ?? `(min-width: 60em) ${props.width ?? 90}vw, 90vw`,
-    }
+    sizes: props.sizes ?? `(min-width: 60em) ${props.width ?? 90}vw, 90vw`,
+  };
 
-    return (
-        <div className={props.className + " noscript"} css={css(stylesStaticMap)}>
-            <noscript>
-                <div className="lazy-container">
-                    <img loading="lazy" decoding="async" alt={props.alt} className={`map ${ImageState.COMPLETED}`} src={image.src} srcSet={image.srcset} sizes={image.sizes} />
-                </div>
-            </noscript>
-            <div id={id} className={`lazy-container`}>
-                {
-                    (props.inView === undefined ? true : props.inView) &&
-                    <img loading="lazy" decoding="async" ref={imageRef} onLoad={unBlurImage} className={`map ${loaded}`} src={image.src} srcSet={image.srcset} alt={props.alt} sizes={image.sizes} />
-                }
-                {
-                    loaded !== ImageState.COMPLETED &&
-                    <img loading="lazy" decoding="async" className={`lazy-preview ${loaded}`} src={previewSrc} alt={props.alt} onTransitionEnd={removePreviewImg} />
-                }
-            </div>
+  return (
+    <div className={props.className + ' noscript'} css={css(stylesStaticMap)}>
+      <noscript>
+        <div className="lazy-container">
+          <img
+            loading="lazy"
+            decoding="async"
+            alt={props.alt}
+            className={`map ${ImageState.COMPLETED}`}
+            src={image.src}
+            srcSet={image.srcset}
+            sizes={image.sizes}
+          />
         </div>
-    )
-}
+      </noscript>
+      <div id={id} className={`lazy-container`}>
+        {(props.inView === undefined ? true : props.inView) && (
+          <img
+            loading="lazy"
+            decoding="async"
+            ref={imageRef}
+            onLoad={unBlurImage}
+            className={`map ${loaded}`}
+            src={image.src}
+            srcSet={image.srcset}
+            alt={props.alt}
+            sizes={image.sizes}
+          />
+        )}
+        {loaded !== ImageState.COMPLETED && (
+          <img
+            loading="lazy"
+            decoding="async"
+            className={`lazy-preview ${loaded}`}
+            src={previewSrc}
+            alt={props.alt}
+            onTransitionEnd={removePreviewImg}
+          />
+        )}
+      </div>
+    </div>
+  );
+};

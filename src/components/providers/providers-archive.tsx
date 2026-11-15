@@ -1,65 +1,65 @@
-import React from "react";
-import { ProviderSummary } from "./index";
-import { css } from "@emotion/react";
-import { cols, gridContainer } from "../../styles/grid";
-import { H2 } from "../headings";
-import { SiteLink } from "../../navigation/link";
-import { Thumbnail } from "../thumbnails";
-import { IconStyles } from "../font-awesome";
-import { breakpointStrings, mediaBreakpoints } from "../../styles/breakpoints";
-import Color from "color";
-import { colours, gridSpacing } from "../../styles/theme";
-import { stylesBtnSecondary, stylesButton } from "../buttons";
+import React from 'react';
+import { ProviderSummary } from './index';
+import { css } from '@emotion/react';
+import { cols, gridContainer } from '../../styles/grid';
+import { H2 } from '../headings';
+import { SiteLink } from '../../navigation/link';
+import { Thumbnail } from '../thumbnails';
+import { IconStyles } from '../font-awesome';
+import { breakpointStrings, mediaBreakpoints } from '../../styles/breakpoints';
+import Color from 'color';
+import { colours, gridSpacing } from '../../styles/theme';
+import { stylesBtnSecondary, stylesButton } from '../buttons';
 
 interface ProviderArchiveProps {
-    className?: string
-    providers: ProviderSummary[]
+  className?: string;
+  providers: ProviderSummary[];
 }
 interface ProviderProps {
-    className?: string
-    provider: ProviderSummary
+  className?: string;
+  provider: ProviderSummary;
 }
 
-const stylesProviderArchive = css(
-    css`
-        list-style: none;
-        margin: 0;
-        padding: 0;
-    `
-);
+const stylesProviderArchive = css(css`
+  list-style: none;
+  margin: 0;
+  padding: 0;
+`);
 
 const stylesProvider = css`
-    margin: ${gridSpacing * 1.5}em 0;
+  margin: ${gridSpacing * 1.5}em 0;
 `;
 
 const stylesProviderArticle = css(
-    gridContainer(),
-    css`
-        align-items: center;
-    `
+  gridContainer(),
+  css`
+    align-items: center;
+  `,
 );
 
 const stylesProviderHeader = css(
-    cols(12),
-    cols(3, mediaBreakpoints.md),
-    css`
-      width: 100%;
-      text-align: center; 
-      margin-bottom: ${gridSpacing / 2}em;
-      
-      a {
-        text-decoration: none;
-        outline: none;
-        
-        .degree {
-          color: ${Color(colours.brandPrimary).desaturate(1).toString()}
-        }
-        
-        &:hover, &:focus, &:active {
-          text-decoration: underline;
-        }
+  cols(12),
+  cols(3, mediaBreakpoints.md),
+  css`
+    width: 100%;
+    text-align: center;
+    margin-bottom: ${gridSpacing / 2}em;
+
+    a {
+      text-decoration: none;
+      outline: none;
+
+      .degree {
+        color: ${Color(colours.brandPrimary).desaturate(1).toString()};
       }
-    `
+
+      &:hover,
+      &:focus,
+      &:active {
+        text-decoration: underline;
+      }
+    }
+  `,
 );
 
 const styleThumbnail = css`
@@ -68,55 +68,71 @@ const styleThumbnail = css`
 `;
 
 const stylesProviderExcerpt = css(
-    cols(12),
-    cols(9, mediaBreakpoints.md),
-    css`
-        .read-more {
-          margin: ${gridSpacing}em 0;
-          text-align: center;
-          
-          ${breakpointStrings.md} {
-            text-align: left;
-          }
-        }
-    `
+  cols(12),
+  cols(9, mediaBreakpoints.md),
+  css`
+    .read-more {
+      margin: ${gridSpacing}em 0;
+      text-align: center;
+
+      ${breakpointStrings.md} {
+        text-align: left;
+      }
+    }
+  `,
 );
 
 const Provider: React.FC<ProviderProps> = ({ className, provider }) => {
-    const nameWithTitle = (!!provider.name.title ? `${provider.name.title} ` : "") + provider.name.fullName;
-    const retiredText = provider.retired ? "(Retired)" : "";
-    return (
-        <li className={className} css={stylesProvider}>
-            <article css={stylesProviderArticle}>
-                <header css={stylesProviderHeader}>
-                    <SiteLink href={provider.slug}>
-                        {
-                            provider.image &&
-                            <Thumbnail
-                                css={styleThumbnail}
-                                overlayIcon={`user-doctor`}
-                                overlayIconStyle={IconStyles.SOLID}
-                                image={provider.image}
-                                imageAlt={`An image of ${nameWithTitle}`}
-                                shape={"elipse"}
-                            />
-                        }
-                        <H2>{nameWithTitle} {retiredText}</H2>
-                        {!!provider.name.degree && <span className={"degree"}>{provider.name.degree}</span>}
-                    </SiteLink>
-                </header>
-                <div css={stylesProviderExcerpt}>
-                    {provider.excerpt}
-                    <div className={"read-more"}>
-                    <SiteLink href={provider.slug} css={[stylesButton, stylesBtnSecondary]}>Read More</SiteLink>
-                    </div>
-                </div>
-            </article>
-        </li>
-    )
-}
+  const nameWithTitle =
+    (!!provider.name.title ? `${provider.name.title} ` : '') +
+    provider.name.fullName;
+  const retiredText = provider.retired ? '(Retired)' : '';
+  return (
+    <li className={className} css={stylesProvider}>
+      <article css={stylesProviderArticle}>
+        <header css={stylesProviderHeader}>
+          <SiteLink href={provider.slug}>
+            {provider.image && (
+              <Thumbnail
+                css={styleThumbnail}
+                overlayIcon={`user-doctor`}
+                overlayIconStyle={IconStyles.SOLID}
+                image={provider.image}
+                imageAlt={`An image of ${nameWithTitle}`}
+                shape={'elipse'}
+              />
+            )}
+            <H2>
+              {nameWithTitle} {retiredText}
+            </H2>
+            {!!provider.name.degree && (
+              <span className={'degree'}>{provider.name.degree}</span>
+            )}
+          </SiteLink>
+        </header>
+        <div css={stylesProviderExcerpt}>
+          {provider.excerpt}
+          <div className={'read-more'}>
+            <SiteLink
+              href={provider.slug}
+              css={[stylesButton, stylesBtnSecondary]}
+            >
+              Read More
+            </SiteLink>
+          </div>
+        </div>
+      </article>
+    </li>
+  );
+};
 
-export const ProviderArchive: React.FC<ProviderArchiveProps> = ({ className, providers }) =>
-    <ul className={className} css={stylesProviderArchive}>
-        {providers.map((provider, idx) => <Provider provider={provider} key={idx} />)}
-    </ul>
+export const ProviderArchive: React.FC<ProviderArchiveProps> = ({
+  className,
+  providers,
+}) => (
+  <ul className={className} css={stylesProviderArchive}>
+    {providers.map((provider, idx) => (
+      <Provider provider={provider} key={idx} />
+    ))}
+  </ul>
+);

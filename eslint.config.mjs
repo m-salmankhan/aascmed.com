@@ -4,7 +4,15 @@ import hooks from 'eslint-plugin-react-hooks';
 import a11y from 'eslint-plugin-jsx-a11y';
 
 export default tseslint.config(
-  { ignores: ['dist*/**', 'node_modules/**', '.astro/**', 'src/server/content/generated/**', 'src/components/header/generated-navigation-metrics.mts'] },
+  {
+    ignores: [
+      'dist*/**',
+      'node_modules/**',
+      '.astro/**',
+      'src/server/content/generated/**',
+      'src/components/header/generated-navigation-metrics.mts',
+    ],
+  },
   ...tseslint.configs.recommended,
   ...astro.configs.recommended,
   {
@@ -32,7 +40,12 @@ export default tseslint.config(
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
       // Existing accessibility work remains in WEB-63, WEB-64 and WEB-65.
-      ...Object.fromEntries(Object.keys(a11y.configs.recommended.rules).map(rule => [rule, 'warn'])),
+      ...Object.fromEntries(
+        Object.keys(a11y.configs.recommended.rules).map((rule) => [
+          rule,
+          'warn',
+        ]),
+      ),
     },
   },
 );

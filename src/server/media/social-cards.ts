@@ -1,5 +1,10 @@
 // Social-card rendering for Astro builds.
-import { createCanvas, GlobalFonts, loadImage, type SKRSContext2D } from '@napi-rs/canvas';
+import {
+  createCanvas,
+  GlobalFonts,
+  loadImage,
+  type SKRSContext2D,
+} from '@napi-rs/canvas';
 import sharp from 'sharp';
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
@@ -27,8 +32,7 @@ export interface SocialCardEntry {
 
 /** Lazy card inputs, including ordinary arrays. */
 export type SocialCardEntries =
-  | Iterable<SocialCardEntry>
-  | AsyncIterable<SocialCardEntry>;
+  Iterable<SocialCardEntry> | AsyncIterable<SocialCardEntry>;
 
 /** Output/cache directories and remote-image settings shared by a card batch. */
 export interface PublicImageBuildOptions {
@@ -160,9 +164,12 @@ function basenameFromSource(source: string | undefined): string {
  */
 export function socialCardPath(entry: SocialCardEntry): string {
   const segments = safePathSegments(entry.slug);
-  const name = safeSegment(entry.mediaName || (entry.mapLocation
-    ? `${entry.slug}-${entry.mapLocation.latitude}-${entry.mapLocation.longitude}-map`
-    : basenameFromSource(entry.backgroundImage)));
+  const name = safeSegment(
+    entry.mediaName ||
+      (entry.mapLocation
+        ? `${entry.slug}-${entry.mapLocation.latitude}-${entry.mapLocation.longitude}-map`
+        : basenameFromSource(entry.backgroundImage)),
+  );
   return `/og-images/${entry.kind}/${[...segments.slice(0, -1), `${segments.at(-1)}-${name}.jpg`].join('/')}`;
 }
 /** Read and validate a local image or an allowlisted remote image with a bounded response body.
@@ -247,7 +254,11 @@ async function fetchImage(
  * @param maxWidth Maximum line width in pixels.
  * @returns Lines in display order.
  */
-function wrapText(ctx: SKRSContext2D, text: string, maxWidth: number): string[] {
+function wrapText(
+  ctx: SKRSContext2D,
+  text: string,
+  maxWidth: number,
+): string[] {
   const lines: string[] = [];
   let line = '';
   for (const word of text.split(/\s+/)) {
@@ -295,7 +306,9 @@ async function createOverlay(title: string): Promise<Buffer> {
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
   const logoMeta = await sharp(LOGO).metadata();
   const logoHeight = 70;
-  const logoWidth = Math.round(logoHeight * (logoMeta.width! / logoMeta.height!));
+  const logoWidth = Math.round(
+    logoHeight * (logoMeta.width! / logoMeta.height!),
+  );
   const logo = await loadImage(
     await sharp(LOGO).resize(logoWidth, logoHeight).png().toBuffer(),
   );
@@ -467,7 +480,8 @@ export async function buildSocialCards(
     }
     // The JPEG and metadata can come from different saves after a cache I/O failure.
     // Verify both inputs and actual output bytes before accepting a restored card.
-    const wasCached = outputHash !== undefined &&
+    const wasCached =
+      outputHash !== undefined &&
       cache[cacheKey] === `${contentHash}:${outputHash}`;
     if (!wasCached) {
       await renderSocialCard(entry.title || 'Untitled', mediaBytes, outputPath);

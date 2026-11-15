@@ -12,7 +12,11 @@ import {
   ready,
   stop,
 } from '../fixtures/astro-cms/process.mjs';
-import { startFixtureCms, fixtureToken, draftMarker } from '../fixtures/astro-cms/server.mjs';
+import {
+  startFixtureCms,
+  fixtureToken,
+  draftMarker,
+} from '../fixtures/astro-cms/server.mjs';
 const routes = [
   ['/', 'PUBLISHED GENERIC copy'],
   ['/blog/', 'PUBLISHED blog-archive'],
@@ -37,9 +41,13 @@ const routes = [
 async function assertInlineImageFits(page) {
   for (const width of [390, 1280]) {
     await page.setViewportSize({ width, height: 844 });
-    const fits = await page.getByRole('img', { name: 'Fixture inline image' }).evaluate((image) =>
-      image.getBoundingClientRect().width <= image.closest('div').getBoundingClientRect().width + 1,
-    );
+    const fits = await page
+      .getByRole('img', { name: 'Fixture inline image' })
+      .evaluate(
+        (image) =>
+          image.getBoundingClientRect().width <=
+          image.closest('div').getBoundingClientRect().width + 1,
+      );
     assert.ok(fits, `inline image fits its content column at ${width}px`);
   }
 }
@@ -74,13 +82,22 @@ async function assertPublicArtifacts(directory) {
  * @returns Parsed JSON-LD entries for page-family-specific assertions.
  */
 function assertDocument(html, pathname) {
-  assert.ok(html.includes(`href="https://www.aascmed.com${pathname}"`), `${pathname} canonical`);
+  assert.ok(
+    html.includes(`href="https://www.aascmed.com${pathname}"`),
+    `${pathname} canonical`,
+  );
   assert.ok(/<title>[^<]+<\/title>/.test(html), `${pathname} title`);
   assert.ok(html.includes('name="description"'), `${pathname} description`);
   const entries = [
-    ...html.matchAll(/<script\b[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g),
+    ...html.matchAll(
+      /<script\b[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g,
+    ),
   ].map((match) => JSON.parse(match[1]));
-  assert.equal(html.includes(fixtureToken), false, `${pathname} must not expose CMS credentials`);
+  assert.equal(
+    html.includes(fixtureToken),
+    false,
+    `${pathname} must not expose CMS credentials`,
+  );
   return entries;
 }
 test(
@@ -110,12 +127,16 @@ test(
       );
       assert.ok(
         cms.requests.some(
-          ({ pathname, query }) => pathname === '/api/blogs' && Number(query.pagination?.page) > 1,
+          ({ pathname, query }) =>
+            pathname === '/api/blogs' && Number(query.pagination?.page) > 1,
         ),
         'actual static pages consume more than the first CMS page',
       );
       await assertPublicArtifacts(path.join(astroRoot, 'dist'));
-      const sitemap = await readFile(path.join(astroRoot, 'dist/sitemap-0.xml'), 'utf8');
+      const sitemap = await readFile(
+        path.join(astroRoot, 'dist/sitemap-0.xml'),
+        'utf8',
+      );
       for (const [pathname] of routes) {
         assert.ok(
           sitemap.includes(`https://www.aascmed.com${pathname}`),
@@ -123,12 +144,16 @@ test(
         );
       }
       assert.ok(!sitemap.includes('draft-new'));
-      assert.ok(sitemap.includes('<lastmod>2026-04-03T14:20:00.000Z</lastmod>'));
+      assert.ok(
+        sitemap.includes('<lastmod>2026-04-03T14:20:00.000Z</lastmod>'),
+      );
       browser = await chromium.launch();
       const noJs = await browser.newContext({ javaScriptEnabled: false });
       await noJs.route('**/*', (route) => {
         const hostname = new URL(route.request().url()).hostname;
-        return ['127.0.0.1', 'localhost'].includes(hostname) ? route.continue() : route.abort();
+        return ['127.0.0.1', 'localhost'].includes(hostname)
+          ? route.continue()
+          : route.abort();
       });
       const page = await noJs.newPage();
       const staticPort = await availablePort();
@@ -163,29 +188,53 @@ test(
           `${pathname} exposes structured headings`,
         );
         assert.ok(!html.includes(draftMarker));
-        assert.ok(!html.includes('noindex, nofollow'), `${pathname} is indexable`);
+        assert.ok(
+          !html.includes('noindex, nofollow'),
+          `${pathname} is indexable`,
+        );
         if (pathname === '/conditions/allergy/') {
           assert.ok(jsonLd.some((entry) => entry['@type'] === 'FAQPage'));
         }
         if (pathname === '/blog/article-1/') {
-          assert.ok(html.includes('G-FIXTURE'), 'public articles retain enabled analytics');
+          assert.ok(
+            html.includes('G-FIXTURE'),
+            'public articles retain enabled analytics',
+          );
         }
         if (pathname === '/blog/article-1/') {
           await assertInlineImageFits(page);
-          const inline = page.getByRole('img', { name: 'Fixture inline image' });
+          const inline = page.getByRole('img', {
+            name: 'Fixture inline image',
+          });
           const src = await inline.getAttribute('src');
-          assert.match(src, /^\/_astro\//, 'embedded CMS images are native local static assets');
+          assert.match(
+            src,
+            /^\/_astro\//,
+            'embedded CMS images are native local static assets',
+          );
           assert.ok((await inline.getAttribute('srcset')).includes('/_astro/'));
           assert.equal((await fetch(new URL(src, staticOrigin))).status, 200);
         }
         if (pathname === '/providers/doctor-example/') {
-          const social = html.match(/property="og:image" content="([^"]+)"/)?.[1];
+          const social = html.match(
+            /property="og:image" content="([^"]+)"/,
+          )?.[1];
           assert.ok(social);
-          assert.match(new URL(social).pathname, /^\/_astro\//, 'provider social metadata uses a local image');
-          assert.equal((await fetch(new URL(new URL(social).pathname, staticOrigin))).status, 200);
+          assert.match(
+            new URL(social).pathname,
+            /^\/_astro\//,
+            'provider social metadata uses a local image',
+          );
+          assert.equal(
+            (await fetch(new URL(new URL(social).pathname, staticOrigin)))
+              .status,
+            200,
+          );
         }
         if (pathname === '/clinics/example-clinic/') {
-          const clinic = jsonLd.find((entry) => entry['@type'] === 'MedicalClinic');
+          const clinic = jsonLd.find(
+            (entry) => entry['@type'] === 'MedicalClinic',
+          );
           assert.ok(clinic);
           assert.equal(
             clinic.url,
@@ -194,13 +243,18 @@ test(
           );
         }
       }
-      assert.equal((await fetch(`${staticOrigin}/blog/draft-new/`)).status, 404);
+      assert.equal(
+        (await fetch(`${staticOrigin}/blog/draft-new/`)).status,
+        404,
+      );
       await stop(staticServer);
       staticServer = undefined;
       const beforeSsrBuild = cms.requests.length;
       await build('astro.config.ssr.ts', env);
       assert.ok(
-        cms.requests.slice(beforeSsrBuild).every(({ query }) => query.status === 'published'),
+        cms.requests
+          .slice(beforeSsrBuild)
+          .every(({ query }) => query.status === 'published'),
         'SSR build-time sitemap also excludes saved drafts',
       );
       const port = await availablePort();
@@ -212,7 +266,9 @@ test(
       });
       await ready(previewServer, origin);
       for (const [pathname, publishedMarker] of routes) {
-        const response = await page.goto(`${origin}${pathname}`, { waitUntil: 'domcontentloaded' });
+        const response = await page.goto(`${origin}${pathname}`, {
+          waitUntil: 'domcontentloaded',
+        });
         assert.equal(response.status(), 200, `${pathname} preview status`);
         const html = await response.text();
         assertDocument(html, pathname);
@@ -224,32 +280,58 @@ test(
         );
         if (pathname === '/blog/article-1/') {
           await assertInlineImageFits(page);
-          const inline = page.getByRole('img', { name: 'Fixture inline image' });
+          const inline = page.getByRole('img', {
+            name: 'Fixture inline image',
+          });
           const src = await inline.getAttribute('src');
-          assert.match(src, /^\/_image\/?\?/, 'preview uses the same native image service on demand');
+          assert.match(
+            src,
+            /^\/_image\/?\?/,
+            'preview uses the same native image service on demand',
+          );
           assert.equal((await fetch(new URL(src, origin))).status, 200);
         }
         assert.match(response.headers()['cache-control'] || '', /no-store/);
         assert.match(response.headers()['x-robots-tag'] || '', /noindex/);
         assert.ok(html.includes('noindex, nofollow'));
         assert.ok(
-          !/G-FIXTURE|GTM-FIXTURE|FIXTURE-PIXEL|googletagmanager\.com|facebook\.net/.test(html),
+          !/G-FIXTURE|GTM-FIXTURE|FIXTURE-PIXEL|googletagmanager\.com|facebook\.net/.test(
+            html,
+          ),
           `${pathname} suppresses tracking in preview`,
         );
       }
-      cms.draft.providers.push({ documentId: 'incomplete-profile', slug: 'minimal-profile' });
+      cms.draft.providers.push({
+        documentId: 'incomplete-profile',
+        slug: 'minimal-profile',
+      });
       const incomplete = await fetch(`${origin}/providers/minimal-profile/`);
-      assert.equal(incomplete.status, 200, 'saved drafts tolerate missing optional profile fields');
+      assert.equal(
+        incomplete.status,
+        200,
+        'saved drafts tolerate missing optional profile fields',
+      );
       assert.ok((await incomplete.text()).includes('<title>'));
       cms.draft.providers.pop();
       const completeHome = cms.draft['home-page'];
       cms.draft['home-page'] = { documentId: 'incomplete-home' };
-      assert.equal((await fetch(origin)).status, 200, 'missing draft sections use public view defaults');
+      assert.equal(
+        (await fetch(origin)).status,
+        200,
+        'missing draft sections use public view defaults',
+      );
       cms.draft['home-page'] = completeHome;
       cms.unavailableResources.add('blogs');
       const unavailable = await fetch(`${origin}/blog/article-1/`);
-      assert.equal(unavailable.status, 500, 'CMS failures do not masquerade as successful or missing pages');
-      assert.ok(!(await unavailable.text()).includes(fixtureToken), 'CMS failure responses omit credentials');
+      assert.equal(
+        unavailable.status,
+        500,
+        'CMS failures do not masquerade as successful or missing pages',
+      );
+      assert.ok(
+        !(await unavailable.text()).includes(fixtureToken),
+        'CMS failure responses omit credentials',
+      );
       cms.unavailableResources.clear();
       cms.draft.blogs.push({
         ...structuredClone(cms.draft.blogs[0]),
@@ -269,7 +351,9 @@ test(
         (await edited.text()).includes(`${draftMarker} Edited after startup`),
         'existing draft copy refreshes immediately without rebuilding',
       );
-      const forcedPublished = await fetch(`${origin}/blog/article-1/?status=published`);
+      const forcedPublished = await fetch(
+        `${origin}/blog/article-1/?status=published`,
+      );
       assert.ok(
         (await forcedPublished.text()).includes(draftMarker),
         'browser query parameters do not override the preview deployment mode',
@@ -333,7 +417,9 @@ test(
       const previewSitemap = await fetch(`${origin}/sitemap-0.xml`);
       assert.equal(previewSitemap.status, 200);
       const previewXml = await previewSitemap.text();
-      assert.ok(!previewXml.includes('draft-new') && !previewXml.includes('renamed-'));
+      assert.ok(
+        !previewXml.includes('draft-new') && !previewXml.includes('renamed-'),
+      );
       assert.ok(
         previewXml.includes('/blog/article-1/'),
         'preview sitemap remains the published build artifact',
@@ -359,7 +445,10 @@ test(
         !publishedHtml.includes(draftMarker),
         'browser input cannot unlock saved drafts on a published runtime',
       );
-      assert.equal((await fetch(`${publishedOrigin}/blog/draft-new/?status=draft`)).status, 404);
+      assert.equal(
+        (await fetch(`${publishedOrigin}/blog/draft-new/?status=draft`)).status,
+        404,
+      );
     } finally {
       await browser?.close();
       await stop(staticServer);

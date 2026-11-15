@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import type { RefObject } from "react";
+import { useEffect } from 'react';
+import type { RefObject } from 'react';
 
 /** Enhance the native menu with its original slide transition and keyboard focus.
  * CSS still selects the layout before hydration; no-JS and pre-hydration toggles
@@ -14,17 +14,19 @@ export function useAnimatedNavigation(
     const nav = navRef.current;
     const details = detailsRef.current;
     const desktop = desktopRef.current;
-    const summary = details?.querySelector("summary");
-    const content = details?.querySelector<HTMLElement>(".mobile-menu-content");
+    const summary = details?.querySelector('summary');
+    const content = details?.querySelector<HTMLElement>('.mobile-menu-content');
     if (!nav || !details || !desktop || !summary || !content) return;
 
-    const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
-    let mobile = getComputedStyle(details).display !== "none";
+    const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+    let mobile = getComputedStyle(details).display !== 'none';
     let desiredOpen = details.open;
     let transition: Animation | undefined;
     let generation = 0;
     let disposed = false;
-    let focused = nav.contains(document.activeElement) ? document.activeElement : null;
+    let focused = nav.contains(document.activeElement)
+      ? document.activeElement
+      : null;
 
     const settle = (open: boolean) => {
       generation++;
@@ -34,9 +36,9 @@ export function useAnimatedNavigation(
       details.open = open;
       content.inert = false;
       delete content.dataset.animating;
-      content.style.removeProperty("max-height");
-      content.style.removeProperty("transition");
-      summary.removeAttribute("aria-expanded");
+      content.style.removeProperty('max-height');
+      content.style.removeProperty('transition');
+      summary.removeAttribute('aria-expanded');
     };
 
     const setOpen = (open: boolean, immediate = false) => {
@@ -49,28 +51,40 @@ export function useAnimatedNavigation(
       // Preserve the original 60em transition range, extending it if enlarged
       // content needs more room. A fully expanded menu has no height limit.
       details.open = true;
-      const expandedHeight = Math.max(60 * parseFloat(getComputedStyle(content).fontSize), content.scrollHeight);
+      const expandedHeight = Math.max(
+        60 * parseFloat(getComputedStyle(content).fontSize),
+        content.scrollHeight,
+      );
       if (!transition) {
-        content.style.transition = "none";
-        content.style.maxHeight = open ? "0px" : `${expandedHeight}px`;
+        content.style.transition = 'none';
+        content.style.maxHeight = open ? '0px' : `${expandedHeight}px`;
         content.getBoundingClientRect();
-        content.style.removeProperty("transition");
+        content.style.removeProperty('transition');
       }
-      content.dataset.animating = "";
+      content.dataset.animating = '';
       content.inert = !open;
-      summary.setAttribute("aria-expanded", String(open));
-      content.style.maxHeight = open ? `${expandedHeight}px` : "0px";
+      summary.setAttribute('aria-expanded', String(open));
+      content.style.maxHeight = open ? `${expandedHeight}px` : '0px';
       // Let CSS handle interrupted/reversed transitions, including its native
       // reversal timing. Waiting on this element ignores bubbled child events.
-      transition = content.getAnimations().find(animation =>
-        "transitionProperty" in animation && animation.transitionProperty === "max-height");
+      transition = content
+        .getAnimations()
+        .find(
+          (animation) =>
+            'transitionProperty' in animation &&
+            animation.transitionProperty === 'max-height',
+        );
       if (!transition) {
         settle(open);
         return;
       }
       transition.finished.then(
-        () => { if (!disposed && generation === ticket) settle(open); },
-        () => { if (!disposed && generation === ticket) settle(desiredOpen); },
+        () => {
+          if (!disposed && generation === ticket) settle(open);
+        },
+        () => {
+          if (!disposed && generation === ticket) settle(desiredOpen);
+        },
       );
     };
 
@@ -80,26 +94,40 @@ export function useAnimatedNavigation(
       setOpen(!(transition ? desiredOpen : details.open));
     };
     const escape = (event: KeyboardEvent) => {
-      if (event.key !== "Escape" || !mobile || !(transition ? desiredOpen : details.open)) return;
+      if (
+        event.key !== 'Escape' ||
+        !mobile ||
+        !(transition ? desiredOpen : details.open)
+      )
+        return;
       event.preventDefault();
       setOpen(false);
       summary.focus();
     };
     const rememberFocus = (event: FocusEvent) => {
-      focused = event.target instanceof Element && nav.contains(event.target) ? event.target : null;
+      focused =
+        event.target instanceof Element && nav.contains(event.target)
+          ? event.target
+          : null;
     };
     const forgetOrdinaryBlur = (event: FocusEvent) => {
       // A layout switch can hide the focused link before ResizeObserver runs.
       // Retain only that hidden target; an ordinary blur means the user left it.
-      if (event.target instanceof Element && event.target.getClientRects().length) focused = null;
+      if (
+        event.target instanceof Element &&
+        event.target.getClientRects().length
+      )
+        focused = null;
     };
-    const motionChanged = () => { if (reducedMotion.matches) settle(desiredOpen); };
+    const motionChanged = () => {
+      if (reducedMotion.matches) settle(desiredOpen);
+    };
 
     // A native menu may have been opened on mobile and resized before hydration.
     // Preserve that interaction only when CSS still selects the mobile layout.
     if (!mobile) settle(false);
     const observer = new ResizeObserver(() => {
-      const nextMobile = getComputedStyle(details).display !== "none";
+      const nextMobile = getComputedStyle(details).display !== 'none';
       if (nextMobile === mobile) return;
       mobile = nextMobile;
       if (nextMobile) {
@@ -107,24 +135,24 @@ export function useAnimatedNavigation(
       } else {
         const restoreFocus = details.contains(focused);
         setOpen(false, true);
-        if (restoreFocus) desktop.querySelector("a")?.focus();
+        if (restoreFocus) desktop.querySelector('a')?.focus();
       }
     });
     observer.observe(nav);
-    summary.addEventListener("click", toggle);
-    details.addEventListener("keydown", escape);
-    nav.addEventListener("focusout", forgetOrdinaryBlur);
-    document.addEventListener("focusin", rememberFocus);
-    reducedMotion.addEventListener("change", motionChanged);
+    summary.addEventListener('click', toggle);
+    details.addEventListener('keydown', escape);
+    nav.addEventListener('focusout', forgetOrdinaryBlur);
+    document.addEventListener('focusin', rememberFocus);
+    reducedMotion.addEventListener('change', motionChanged);
     return () => {
       disposed = true;
       settle(desiredOpen);
       observer.disconnect();
-      summary.removeEventListener("click", toggle);
-      details.removeEventListener("keydown", escape);
-      nav.removeEventListener("focusout", forgetOrdinaryBlur);
-      document.removeEventListener("focusin", rememberFocus);
-      reducedMotion.removeEventListener("change", motionChanged);
+      summary.removeEventListener('click', toggle);
+      details.removeEventListener('keydown', escape);
+      nav.removeEventListener('focusout', forgetOrdinaryBlur);
+      document.removeEventListener('focusin', rememberFocus);
+      reducedMotion.removeEventListener('change', motionChanged);
     };
   }, [navRef, detailsRef, desktopRef]);
 }

@@ -17,20 +17,20 @@ const reviewsDir = path.join(__dirname, '../content/reviews-archive');
 function textToBlocks(text) {
   const blocks = [];
   const paragraphs = text.split(/\n\n+/);
-  
+
   for (const paragraph of paragraphs) {
     const trimmed = paragraph.trim();
     if (!trimmed) continue;
-    
+
     // Handle single newlines within a paragraph (join them)
     const cleanedText = trimmed.replace(/\n/g, ' ');
-    
+
     blocks.push({
       type: 'paragraph',
-      children: [{ type: 'text', text: cleanedText }]
+      children: [{ type: 'text', text: cleanedText }],
     });
   }
-  
+
   return blocks;
 }
 
@@ -41,15 +41,15 @@ async function reviewExists(name) {
     `${STRAPI_URL}/api/reviews?filters[name][$eq]=${encodedName}`,
     {
       headers: {
-        'Authorization': `Bearer ${STRAPI_TOKEN}`
-      }
-    }
+        Authorization: `Bearer ${STRAPI_TOKEN}`,
+      },
+    },
   );
-  
+
   if (!response.ok) {
     return false;
   }
-  
+
   const result = await response.json();
   return result.data && result.data.length > 0;
 }
@@ -60,16 +60,16 @@ async function createReview(reviewData) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${STRAPI_TOKEN}`
+      Authorization: `Bearer ${STRAPI_TOKEN}`,
     },
-    body: JSON.stringify({ data: reviewData })
+    body: JSON.stringify({ data: reviewData }),
   });
-  
+
   if (!response.ok) {
     const error = await response.text();
     throw new Error(`Failed to create review: ${response.status} - ${error}`);
   }
-  
+
   return response.json();
 }
 
@@ -79,42 +79,42 @@ async function publishReview(documentId) {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${STRAPI_TOKEN}`
+      Authorization: `Bearer ${STRAPI_TOKEN}`,
     },
     body: JSON.stringify({
       data: {
-        publishedAt: new Date().toISOString()
-      }
-    })
+        publishedAt: new Date().toISOString(),
+      },
+    }),
   });
-  
+
   if (!response.ok) {
     const error = await response.text();
     throw new Error(`Failed to publish review: ${response.status} - ${error}`);
   }
-  
+
   return response.json();
 }
 
 async function migrateReviews() {
   console.log('Starting reviews migration...\n');
-  
+
   // Get all review files
-  const files = fs.readdirSync(reviewsDir).filter(f => f.endsWith('.mdx'));
+  const files = fs.readdirSync(reviewsDir).filter((f) => f.endsWith('.mdx'));
   console.log(`Found ${files.length} review files\n`);
-  
+
   let successCount = 0;
   let skipCount = 0;
   let errorCount = 0;
-  
+
   for (const file of files) {
     const filePath = path.join(reviewsDir, file);
     const content = fs.readFileSync(filePath, 'utf-8');
     const { data: frontmatter, content: body } = matter(content);
-    
+
     const name = frontmatter.title;
     console.log(`Processing: ${name}`);
-    
+
     try {
       // Check if already exists
       if (await reviewExists(name)) {
@@ -122,35 +122,35 @@ async function migrateReviews() {
         skipCount++;
         continue;
       }
-      
+
       // Convert body to blocks
       const contentBlocks = textToBlocks(body.trim());
-      
+
       // Prepare review data
       const reviewData = {
         name: name,
         stars: frontmatter.stars || 5,
         content: contentBlocks,
         sourceName: frontmatter.source?.name || 'Google Reviews',
-        sourceUrl: frontmatter.source?.url || ''
+        sourceUrl: frontmatter.source?.url || '',
       };
-      
+
       // Create the review
       const result = await createReview(reviewData);
       console.log(`  Created review`);
-      
+
       // Publish the review
       const documentId = result.data.documentId;
       await publishReview(documentId);
       console.log(`  Published\n`);
-      
+
       successCount++;
     } catch (error) {
       console.error(`  Error: ${error.message}\n`);
       errorCount++;
     }
   }
-  
+
   console.log('\n--- Migration Summary ---');
   console.log(`Success: ${successCount}`);
   console.log(`Skipped: ${skipCount}`);

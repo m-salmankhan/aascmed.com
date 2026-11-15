@@ -26,7 +26,9 @@ export function clinicSummary(clinic: ClinicRecord): PracticeSummary {
 export async function serviceUpdatePaths() {
   const routes = await getPublishedRouteManifest('service-update');
   return routes.map(({ pathname }) => {
-    const [, , year, month, ...segments] = pathname.replace(/\/$/, '').split('/');
+    const [, , year, month, ...segments] = pathname
+      .replace(/\/$/, '')
+      .split('/');
     return { params: { year, month, slug: segments.join('/') } };
   });
 }

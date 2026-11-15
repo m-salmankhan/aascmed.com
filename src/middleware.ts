@@ -15,9 +15,14 @@ export const onRequest = defineMiddleware(async (_context, next) => {
       process.env.STRAPI_API_URL,
       ...(process.env.PREVIEW_FRAME_ORIGINS || '').split(','),
     ].filter((value) => value?.trim());
-    const parentOrigins = configuredParents.map((value) => new URL(value!.trim()).origin);
+    const parentOrigins = configuredParents.map(
+      (value) => new URL(value!.trim()).origin,
+    );
     const frameAncestors = ["'self'", ...new Set(parentOrigins)].join(' ');
-    response.headers.set('Content-Security-Policy', `frame-ancestors ${frameAncestors}`);
+    response.headers.set(
+      'Content-Security-Policy',
+      `frame-ancestors ${frameAncestors}`,
+    );
   }
   return response;
 });

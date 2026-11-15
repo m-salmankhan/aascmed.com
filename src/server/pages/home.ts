@@ -21,7 +21,10 @@ import {
   getServiceUpdates,
 } from '../content/loaders';
 import type { ContentMode } from '../content/strapi';
-import { getResponsiveMediaDescriptor, type ResponsiveMediaOptions } from '../content/astro-media';
+import {
+  getResponsiveMediaDescriptor,
+  type ResponsiveMediaOptions,
+} from '../content/astro-media';
 import { blogDate } from './content';
 /** Shared homepage props and their nested section/media models. */
 type HomeProps = ComponentProps<typeof HomeView>;
@@ -35,8 +38,12 @@ const SITE_TITLE = 'Allergy, Asthma and Sinus Centers';
  * @param value JSON-safe CMS section or feedback value.
  * @returns Its object fields, or undefined for absent or non-object values.
  */
-function sectionObject(value: JsonValue | undefined): HomeJsonObject | undefined {
-  return value && typeof value === 'object' && !Array.isArray(value) ? value : undefined;
+function sectionObject(
+  value: JsonValue | undefined,
+): HomeJsonObject | undefined {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? value
+    : undefined;
 }
 /** Read optional CMS text while preserving the shared view's existing empty defaults.
  * @param value Normalized CMS field.
@@ -88,7 +95,12 @@ async function sectionMedia(
     const descriptor = entry.mimeType?.startsWith('image/')
       ? await image(entry, { width: 600 })
       : entry;
-    media.push({ mime: entry.mimeType, name: entry.alt, url: entry.src, descriptor });
+    media.push({
+      mime: entry.mimeType,
+      name: entry.alt,
+      url: entry.src,
+      descriptor,
+    });
   }
   return media.length ? media : undefined;
 }
@@ -97,7 +109,10 @@ async function sectionMedia(
  * @param fallback Existing display heading used when the CMS heading is absent.
  * @returns The shared section heading, rich-text blocks and media.
  */
-async function section(value: JsonValue | undefined, fallback: string): Promise<HomeSection> {
+async function section(
+  value: JsonValue | undefined,
+  fallback: string,
+): Promise<HomeSection> {
   const fields = sectionObject(value);
   return {
     heading: text(fields?.heading) || fallback,
@@ -109,7 +124,11 @@ async function section(value: JsonValue | undefined, fallback: string): Promise<
  * @returns A serializable responsive hero descriptor using static assets or the SSR image endpoint.
  */
 async function heroImage(): Promise<MediaDescriptor> {
-  const result = await getImage({ src: heroBackground, layout: 'full-width', format: 'webp' });
+  const result = await getImage({
+    src: heroBackground,
+    layout: 'full-width',
+    format: 'webp',
+  });
   return {
     src: result.src,
     alt: '',
@@ -230,7 +249,9 @@ export async function getHomePageData(mode: ContentMode) {
     }
   }
   const genericSections: HomeSection[] = [];
-  for (const raw of Array.isArray(home?.genericBelowHero) ? home.genericBelowHero : []) {
+  for (const raw of Array.isArray(home?.genericBelowHero)
+    ? home.genericBelowHero
+    : []) {
     const mapped = await section(raw, '');
     if (mapped.heading || mapped.text?.length || mapped.media?.length) {
       genericSections.push(mapped);
@@ -245,7 +266,10 @@ export async function getHomePageData(mode: ContentMode) {
     },
     genericSections,
     conditions: {
-      ...(await section(home?.conditions, 'Learn more about the conditions we treat.')),
+      ...(await section(
+        home?.conditions,
+        'Learn more about the conditions we treat.',
+      )),
       items: conditions,
     },
     blogs: { ...(await section(home?.blog, 'Blog')), items: blogs },
@@ -260,7 +284,10 @@ export async function getHomePageData(mode: ContentMode) {
     feedback: {
       averageRating: {
         rating: typeof feedback?.rating === 'number' ? feedback.rating : 0,
-        source: { name: text(feedback?.sourceName), url: text(feedback?.sourceUrl) },
+        source: {
+          name: text(feedback?.sourceName),
+          url: text(feedback?.sourceUrl),
+        },
         date: text(feedback?.accessDate),
       },
       reviews,

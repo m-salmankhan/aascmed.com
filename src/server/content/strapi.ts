@@ -6,8 +6,8 @@ import {
   type API,
   type CollectionTypeManager,
   type SingleTypeManager,
-} from "@strapi/client";
-import type { ContentMode as ValidationContentMode } from "../../content/validation.ts";
+} from '@strapi/client';
+import type { ContentMode as ValidationContentMode } from '../../content/validation.ts';
 /** Publication state requested from Strapi; draft reads require a draft-enabled deployment. */
 export type ContentMode = ValidationContentMode;
 /** Flattened Strapi record after its stable document ID has been checked. */
@@ -16,7 +16,8 @@ export interface StrapiEntity {
   [field: string]: unknown;
 }
 /** Sanitized failure categories reported by the content adapter. */
-export type StrapiRequestFailureKind = "configuration" | "upstream" | "invalid-response";
+export type StrapiRequestFailureKind =
+  'configuration' | 'upstream' | 'invalid-response';
 /** Failure returned to callers without leaking URLs, credentials, or response content. */
 export class StrapiRequestError extends Error {
   readonly kind: StrapiRequestFailureKind;
@@ -27,9 +28,13 @@ export class StrapiRequestError extends Error {
    * @param status Optional HTTP status from Strapi.
    * @returns The sanitized request error.
    */
-  constructor(kind: StrapiRequestFailureKind, message: string, status?: number) {
+  constructor(
+    kind: StrapiRequestFailureKind,
+    message: string,
+    status?: number,
+  ) {
     super(message);
-    this.name = "StrapiRequestError";
+    this.name = 'StrapiRequestError';
     this.kind = kind;
     this.status = status;
   }
@@ -44,25 +49,37 @@ const MAX_PAGES = 10000;
  */
 function safeEndpoint(base: string | undefined): URL {
   if (!base) {
-    throw new StrapiRequestError("configuration", "Strapi API URL is not configured");
+    throw new StrapiRequestError(
+      'configuration',
+      'Strapi API URL is not configured',
+    );
   }
   let url: URL;
   try {
     url = new URL(base);
   } catch {
-    throw new StrapiRequestError("configuration", "Strapi API URL is invalid");
+    throw new StrapiRequestError('configuration', 'Strapi API URL is invalid');
   }
   if (
-    url.protocol !== "https:" &&
-    !(url.protocol === "http:" && ["localhost", "127.0.0.1"].includes(url.hostname))
+    url.protocol !== 'https:' &&
+    !(
+      url.protocol === 'http:' &&
+      ['localhost', '127.0.0.1'].includes(url.hostname)
+    )
   ) {
-    throw new StrapiRequestError("configuration", "Strapi API URL must use HTTPS");
+    throw new StrapiRequestError(
+      'configuration',
+      'Strapi API URL must use HTTPS',
+    );
   }
   if (url.username || url.password || url.search || url.hash) {
-    throw new StrapiRequestError("configuration", "Strapi API URL contains unsupported URL parts");
+    throw new StrapiRequestError(
+      'configuration',
+      'Strapi API URL contains unsupported URL parts',
+    );
   }
-  const path = url.pathname.replace(/\/$/, "");
-  if (!path.endsWith("/api")) {
+  const path = url.pathname.replace(/\/$/, '');
+  if (!path.endsWith('/api')) {
     url.pathname = `${path}/api/`;
   }
   return url;
@@ -73,31 +90,34 @@ function safeEndpoint(base: string | undefined): URL {
  */
 export function createClient(mode: ContentMode) {
   if (
-    mode === "draft" &&
-    (process.env.ASTRO_CONTENT_MODE !== "draft" ||
-      import.meta.env?.PUBLIC_ASTRO_TARGET === "static")
+    mode === 'draft' &&
+    (process.env.ASTRO_CONTENT_MODE !== 'draft' ||
+      import.meta.env?.PUBLIC_ASTRO_TARGET === 'static')
   ) {
     throw new StrapiRequestError(
-      "configuration",
-      "Draft content is unavailable in this deployment",
+      'configuration',
+      'Draft content is unavailable in this deployment',
     );
   }
-  if (mode !== "draft" && mode !== "published") {
-    throw new StrapiRequestError("configuration", "Invalid content mode");
+  if (mode !== 'draft' && mode !== 'published') {
+    throw new StrapiRequestError('configuration', 'Invalid content mode');
   }
-  const headers: Record<string, string> = { Accept: "application/json" };
-  if (mode === "draft") {
-    headers["Cache-Control"] = "no-store";
+  const headers: Record<string, string> = { Accept: 'application/json' };
+  if (mode === 'draft') {
+    headers['Cache-Control'] = 'no-store';
   }
   const endpoint = safeEndpoint(process.env.STRAPI_API_URL);
   try {
     return strapi({
-      baseURL: endpoint.href.replace(/\/$/, ""),
+      baseURL: endpoint.href.replace(/\/$/, ''),
       ...(process.env.STRAPI_TOKEN ? { auth: process.env.STRAPI_TOKEN } : {}),
       headers,
     });
   } catch {
-    throw new StrapiRequestError("configuration", "Strapi client configuration is invalid");
+    throw new StrapiRequestError(
+      'configuration',
+      'Strapi client configuration is invalid',
+    );
   }
 }
 /** Convert SDK and JSON failures into safe project errors.
@@ -110,19 +130,22 @@ function requestFailure(error: unknown): StrapiRequestError {
   }
   if (error instanceof HTTPError) {
     return new StrapiRequestError(
-      "upstream",
+      'upstream',
       `Strapi request failed (${error.response.status})`,
       error.response.status,
     );
   }
   if (error instanceof SyntaxError) {
-    return new StrapiRequestError("invalid-response", "Strapi returned malformed JSON");
+    return new StrapiRequestError(
+      'invalid-response',
+      'Strapi returned malformed JSON',
+    );
   }
   return new StrapiRequestError(
-    "upstream",
-    error instanceof Error && error.name === "AbortError"
-      ? "Strapi request timed out"
-      : "Strapi request could not be completed",
+    'upstream',
+    error instanceof Error && error.name === 'AbortError'
+      ? 'Strapi request timed out'
+      : 'Strapi request could not be completed',
   );
 }
 /** Cancel an SDK error body that will not be returned or parsed by the content adapter.
@@ -139,12 +162,18 @@ async function cancelErrorBody(error: unknown): Promise<void> {
  * @returns The flattened record with a nonempty document ID; throws for malformed content.
  */
 function validateEntity(value: unknown): StrapiEntity {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    throw new StrapiRequestError("invalid-response", "Strapi returned an invalid content record");
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new StrapiRequestError(
+      'invalid-response',
+      'Strapi returned an invalid content record',
+    );
   }
   const entity = value as Record<string, unknown>;
-  if (typeof entity.documentId !== "string" || !entity.documentId.trim()) {
-    throw new StrapiRequestError("invalid-response", "Strapi content record is missing documentId");
+  if (typeof entity.documentId !== 'string' || !entity.documentId.trim()) {
+    throw new StrapiRequestError(
+      'invalid-response',
+      'Strapi content record is missing documentId',
+    );
   }
   return entity as StrapiEntity;
 }
@@ -161,7 +190,7 @@ export async function* readRecords(
 ): AsyncGenerator<StrapiEntity> {
   if (!Number.isInteger(pageSize) || pageSize < 1 || pageSize > MAX_PAGE_SIZE) {
     throw new StrapiRequestError(
-      "configuration",
+      'configuration',
       `Strapi page size must be between 1 and ${MAX_PAGE_SIZE}`,
     );
   }
@@ -183,38 +212,45 @@ export async function* readRecords(
       throw requestFailure(error);
     }
     if (!response || !Array.isArray(response.data)) {
-      throw new StrapiRequestError("invalid-response", "Strapi returned an invalid collection");
+      throw new StrapiRequestError(
+        'invalid-response',
+        'Strapi returned an invalid collection',
+      );
     }
     const pageCount = response.meta?.pagination?.pageCount;
     const total = response.meta?.pagination?.total;
-    if (typeof pageCount === "number" && pageCount > MAX_PAGES) {
+    if (typeof pageCount === 'number' && pageCount > MAX_PAGES) {
       throw new StrapiRequestError(
-        "upstream",
+        'upstream',
         `Strapi pagination exceeds the ${MAX_PAGES} page safety limit`,
       );
     }
-    if (typeof total === "number" && total > MAX_PAGE_SIZE * MAX_PAGES) {
+    if (typeof total === 'number' && total > MAX_PAGE_SIZE * MAX_PAGES) {
       throw new StrapiRequestError(
-        "upstream",
+        'upstream',
         `Strapi collection exceeds the ${MAX_PAGE_SIZE * MAX_PAGES} record safety limit`,
       );
     }
     totalRead += response.data.length;
     if (totalRead > MAX_PAGE_SIZE * MAX_PAGES) {
       throw new StrapiRequestError(
-        "upstream",
+        'upstream',
         `Strapi collection exceeds the ${MAX_PAGE_SIZE * MAX_PAGES} record safety limit`,
       );
     }
     for (const value of response.data) {
       yield validateEntity(value);
     }
-    if (typeof pageCount === "number" ? page >= pageCount : response.data.length < pageSize) {
+    if (
+      typeof pageCount === 'number'
+        ? page >= pageCount
+        : response.data.length < pageSize
+    ) {
       break;
     }
     if (page === MAX_PAGES) {
       throw new StrapiRequestError(
-        "upstream",
+        'upstream',
         `Strapi pagination did not finish within ${MAX_PAGES} pages`,
       );
     }
@@ -237,7 +273,10 @@ export async function readFirst(
     throw requestFailure(error);
   }
   if (!response || !Array.isArray(response.data)) {
-    throw new StrapiRequestError("invalid-response", "Strapi returned an invalid lookup");
+    throw new StrapiRequestError(
+      'invalid-response',
+      'Strapi returned an invalid lookup',
+    );
   }
   return response.data.length ? validateEntity(response.data[0]) : null;
 }
@@ -260,8 +299,11 @@ export async function readSingle(
     }
     throw requestFailure(error);
   }
-  if (!response || !Object.hasOwn(response, "data")) {
-    throw new StrapiRequestError("invalid-response", "Strapi returned an invalid single type");
+  if (!response || !Object.hasOwn(response, 'data')) {
+    throw new StrapiRequestError(
+      'invalid-response',
+      'Strapi returned an invalid single type',
+    );
   }
   return response.data == null ? null : validateEntity(response.data);
 }

@@ -11,14 +11,14 @@ import type {
   ReviewRecord,
   ServiceUpdateRecord,
   TrackingSettings,
-} from "../../content/models.ts";
-import { clinicPath } from "../../content/urls.ts";
+} from '../../content/models.ts';
+import { clinicPath } from '../../content/urls.ts';
 import {
   validateContentRecord,
   type ContentFamily,
   type ContentMode,
-} from "../../content/validation.ts";
-import { createClient, readFirst, readRecords, readSingle } from "./strapi.ts";
+} from '../../content/validation.ts';
+import { createClient, readFirst, readRecords, readSingle } from './strapi.ts';
 import {
   mapStrapiAnnouncement,
   mapStrapiBlog,
@@ -30,7 +30,7 @@ import {
   mapStrapiReview,
   mapStrapiServiceUpdate,
   mapStrapiTrackingInfo,
-} from "./mapping.ts";
+} from './mapping.ts';
 /** Validate one route-bearing record at the published-content boundary.
  * @param record Normalized content record to validate.
  * @param family Route convention used for the records.
@@ -42,12 +42,14 @@ function validateRouteRecord(
   family: ContentFamily,
   mode: ContentMode,
 ): void {
-  if (mode === "draft") {
+  if (mode === 'draft') {
     return;
   }
   const issues = validateContentRecord(record, family, mode);
   if (issues.length) {
-    throw new Error(`Published ${family} record failed validation: ${issues.join(", ")}`);
+    throw new Error(
+      `Published ${family} record failed validation: ${issues.join(', ')}`,
+    );
   }
 }
 /** Optional batch size for collection loaders; accepted values range from 1 through 100. */
@@ -59,9 +61,9 @@ const blogPopulate = {
   thumbnail: true,
   content: {
     on: {
-      "generic.contact-booking-cta": { populate: "*" },
-      "clinics.map": { populate: "*" },
-      "generic.rich-text": { populate: "*" },
+      'generic.contact-booking-cta': { populate: '*' },
+      'clinics.map': { populate: '*' },
+      'generic.rich-text': { populate: '*' },
     },
   },
 };
@@ -76,10 +78,10 @@ const conditionPopulate = {
   thumbnail: true,
   content: {
     on: {
-      "generic.contact-booking-cta": { populate: "*" },
-      "generic.faq-contact-book-buttons": { populate: "*" },
-      "generic.rich-text": { populate: "*" },
-      "generic.faq": { populate: { questions: true } },
+      'generic.contact-booking-cta': { populate: '*' },
+      'generic.faq-contact-book-buttons': { populate: '*' },
+      'generic.rich-text': { populate: '*' },
+      'generic.faq': { populate: { questions: true } },
     },
   },
 };
@@ -91,9 +93,9 @@ const providerPopulate = {
   retirementNotice: true,
   body: {
     on: {
-      "generic.rich-text": { populate: "*" },
-      "generic.contact-booking-cta": { populate: "*" },
-      "generic.faq-contact-book-buttons": { populate: "*" },
+      'generic.rich-text': { populate: '*' },
+      'generic.contact-booking-cta': { populate: '*' },
+      'generic.faq-contact-book-buttons': { populate: '*' },
     },
   },
 };
@@ -121,13 +123,17 @@ export async function* getBlogs(
 ): AsyncGenerator<BlogRecord> {
   const client = createClient(mode);
   const mediaOrigin = new URL(client.baseURL).origin;
-  for await (const entity of readRecords(client.collection("blogs"), {
-    status: mode,
-    sort: ["date:desc", "id:asc"],
-    populate: blogPopulate,
-  }, options.pageSize)) {
+  for await (const entity of readRecords(
+    client.collection('blogs'),
+    {
+      status: mode,
+      sort: ['date:desc', 'id:asc'],
+      populate: blogPopulate,
+    },
+    options.pageSize,
+  )) {
     const record = mapStrapiBlog(entity, mediaOrigin);
-    validateRouteRecord(record, "blog", mode);
+    validateRouteRecord(record, 'blog', mode);
     yield record;
   }
 }
@@ -141,13 +147,17 @@ export async function* getClinics(
   options: CollectionReadOptions = {},
 ): AsyncGenerator<ClinicRecord> {
   const client = createClient(mode);
-  for await (const entity of readRecords(client.collection("clinics"), {
-    status: mode,
-    sort: ["id:asc"],
-    populate: clinicPopulate,
-  }, options.pageSize)) {
+  for await (const entity of readRecords(
+    client.collection('clinics'),
+    {
+      status: mode,
+      sort: ['id:asc'],
+      populate: clinicPopulate,
+    },
+    options.pageSize,
+  )) {
     const record = mapStrapiClinic(entity);
-    validateRouteRecord(record, "clinic", mode);
+    validateRouteRecord(record, 'clinic', mode);
     yield record;
   }
 }
@@ -164,16 +174,20 @@ export async function* getConditions(
   const mediaOrigin = new URL(client.baseURL).origin;
   // Query present orders first, then missing orders, to keep nulls last without materializing.
   for (const orderedQuery of [
-    { filters: { order: { $notNull: true } }, sort: ["order:asc", "id:asc"] },
-    { filters: { order: { $null: true } }, sort: ["id:asc"] },
+    { filters: { order: { $notNull: true } }, sort: ['order:asc', 'id:asc'] },
+    { filters: { order: { $null: true } }, sort: ['id:asc'] },
   ]) {
-    for await (const entity of readRecords(client.collection("conditions"), {
-      status: mode,
-      ...orderedQuery,
-      populate: conditionPopulate,
-    }, options.pageSize)) {
+    for await (const entity of readRecords(
+      client.collection('conditions'),
+      {
+        status: mode,
+        ...orderedQuery,
+        populate: conditionPopulate,
+      },
+      options.pageSize,
+    )) {
       const record = mapStrapiCondition(entity, mediaOrigin);
-      validateRouteRecord(record, "condition", mode);
+      validateRouteRecord(record, 'condition', mode);
       yield record;
     }
   }
@@ -191,16 +205,20 @@ export async function* getProviders(
   const mediaOrigin = new URL(client.baseURL).origin;
   // Query present orders first, then missing orders, to keep nulls last without materializing.
   for (const orderedQuery of [
-    { filters: { order: { $notNull: true } }, sort: ["order:asc", "id:asc"] },
-    { filters: { order: { $null: true } }, sort: ["id:asc"] },
+    { filters: { order: { $notNull: true } }, sort: ['order:asc', 'id:asc'] },
+    { filters: { order: { $null: true } }, sort: ['id:asc'] },
   ]) {
-    for await (const entity of readRecords(client.collection("providers"), {
-      status: mode,
-      ...orderedQuery,
-      populate: providerPopulate,
-    }, options.pageSize)) {
+    for await (const entity of readRecords(
+      client.collection('providers'),
+      {
+        status: mode,
+        ...orderedQuery,
+        populate: providerPopulate,
+      },
+      options.pageSize,
+    )) {
       const record = mapStrapiProvider(entity, mediaOrigin);
-      validateRouteRecord(record, "provider", mode);
+      validateRouteRecord(record, 'provider', mode);
       yield record;
     }
   }
@@ -217,15 +235,19 @@ export async function* getServiceUpdates(
   const client = createClient(mode);
   // Query dated updates first, then undated updates, to keep nulls last without materializing.
   for (const orderedQuery of [
-    { filters: { date: { $notNull: true } }, sort: ["date:desc", "id:asc"] },
-    { filters: { date: { $null: true } }, sort: ["id:asc"] },
+    { filters: { date: { $notNull: true } }, sort: ['date:desc', 'id:asc'] },
+    { filters: { date: { $null: true } }, sort: ['id:asc'] },
   ]) {
-    for await (const entity of readRecords(client.collection("service-updates"), {
-      status: mode,
-      ...orderedQuery,
-    }, options.pageSize)) {
+    for await (const entity of readRecords(
+      client.collection('service-updates'),
+      {
+        status: mode,
+        ...orderedQuery,
+      },
+      options.pageSize,
+    )) {
       const record = mapStrapiServiceUpdate(entity);
-      validateRouteRecord(record, "serviceUpdate", mode);
+      validateRouteRecord(record, 'serviceUpdate', mode);
       yield record;
     }
   }
@@ -240,10 +262,14 @@ export async function* getReviews(
   options: CollectionReadOptions = {},
 ): AsyncGenerator<ReviewRecord> {
   const client = createClient(mode);
-  for await (const entity of readRecords(client.collection("reviews"), {
-    status: mode,
-    sort: ["id:asc"],
-  }, options.pageSize)) {
+  for await (const entity of readRecords(
+    client.collection('reviews'),
+    {
+      status: mode,
+      sort: ['id:asc'],
+    },
+    options.pageSize,
+  )) {
     yield mapStrapiReview(entity);
   }
 }
@@ -260,7 +286,7 @@ export async function getBlogBySlug(
     return null;
   }
   const client = createClient(mode);
-  const entity = await readFirst(client.collection("blogs"), {
+  const entity = await readFirst(client.collection('blogs'), {
     status: mode,
     filters: { slug: { $eq: slug } },
     populate: blogPopulate,
@@ -270,7 +296,7 @@ export async function getBlogBySlug(
     return null;
   }
   const record = mapStrapiBlog(entity, new URL(client.baseURL).origin);
-  validateRouteRecord(record, "blog", mode);
+  validateRouteRecord(record, 'blog', mode);
   return record;
 }
 /** Find one condition by its route slug.
@@ -286,7 +312,7 @@ export async function getConditionBySlug(
     return null;
   }
   const client = createClient(mode);
-  const entity = await readFirst(client.collection("conditions"), {
+  const entity = await readFirst(client.collection('conditions'), {
     status: mode,
     filters: { slug: { $eq: slug } },
     populate: conditionPopulate,
@@ -296,7 +322,7 @@ export async function getConditionBySlug(
     return null;
   }
   const record = mapStrapiCondition(entity, new URL(client.baseURL).origin);
-  validateRouteRecord(record, "condition", mode);
+  validateRouteRecord(record, 'condition', mode);
   return record;
 }
 /** Find one provider by its route slug.
@@ -312,7 +338,7 @@ export async function getProviderBySlug(
     return null;
   }
   const client = createClient(mode);
-  const entity = await readFirst(client.collection("providers"), {
+  const entity = await readFirst(client.collection('providers'), {
     status: mode,
     filters: { slug: { $eq: slug } },
     populate: providerPopulate,
@@ -322,7 +348,7 @@ export async function getProviderBySlug(
     return null;
   }
   const record = mapStrapiProvider(entity, new URL(client.baseURL).origin);
-  validateRouteRecord(record, "provider", mode);
+  validateRouteRecord(record, 'provider', mode);
   return record;
 }
 /** Find a clinic by slug and fall back to its name-derived route when no explicit slug matches.
@@ -338,7 +364,7 @@ export async function getClinicBySlug(
     return null;
   }
   const client = createClient(mode);
-  const entity = await readFirst(client.collection("clinics"), {
+  const entity = await readFirst(client.collection('clinics'), {
     status: mode,
     filters: { slug: { $eq: slug } },
     populate: clinicPopulate,
@@ -346,21 +372,22 @@ export async function getClinicBySlug(
   });
   if (entity) {
     const record = mapStrapiClinic(entity);
-    validateRouteRecord(record, "clinic", mode);
+    validateRouteRecord(record, 'clinic', mode);
     return record;
   }
-  for await (const entity of readRecords(client.collection("clinics"), {
+  for await (const entity of readRecords(client.collection('clinics'), {
     status: mode,
-    sort: ["id:asc"],
+    sort: ['id:asc'],
     populate: clinicPopulate,
   })) {
     const clinic = mapStrapiClinic(entity);
     if (
       !clinic.slug &&
       clinic.clinicName &&
-      clinicPath({ slug: null, clinicName: clinic.clinicName }) === `/clinics/${slug}/`
+      clinicPath({ slug: null, clinicName: clinic.clinicName }) ===
+        `/clinics/${slug}/`
     ) {
-      validateRouteRecord(clinic, "clinic", mode);
+      validateRouteRecord(clinic, 'clinic', mode);
       return clinic;
     }
   }
@@ -379,7 +406,7 @@ export async function getServiceUpdateBySlug(
     return null;
   }
   const client = createClient(mode);
-  const entity = await readFirst(client.collection("service-updates"), {
+  const entity = await readFirst(client.collection('service-updates'), {
     status: mode,
     filters: { slug: { $eq: slug } },
     pagination: { page: 1, pageSize: 1 },
@@ -388,100 +415,138 @@ export async function getServiceUpdateBySlug(
     return null;
   }
   const record = mapStrapiServiceUpdate(entity);
-  validateRouteRecord(record, "serviceUpdate", mode);
+  validateRouteRecord(record, 'serviceUpdate', mode);
   return record;
 }
 /** Load and normalize the announcement single type.
  * @param mode Content state requested from Strapi.
  * @returns Mapped announcement or null when missing; upstream failures throw.
  */
-export async function getAnnouncement(mode: ContentMode): Promise<AnnouncementSettings | null> {
+export async function getAnnouncement(
+  mode: ContentMode,
+): Promise<AnnouncementSettings | null> {
   const client = createClient(mode);
-  const entity = await readSingle(client.single("announcement"), { status: mode });
+  const entity = await readSingle(client.single('announcement'), {
+    status: mode,
+  });
   return entity ? mapStrapiAnnouncement(entity) : null;
 }
 /** Load and normalize the blog archive page.
  * @param mode Content state requested from Strapi.
  * @returns Mapped page or null when missing; upstream failures throw.
  */
-export async function getBlogArchive(mode: ContentMode): Promise<ContentPageRecord | null> {
+export async function getBlogArchive(
+  mode: ContentMode,
+): Promise<ContentPageRecord | null> {
   const client = createClient(mode);
-  const entity = await readSingle(client.single("blog-archive"), { status: mode });
+  const entity = await readSingle(client.single('blog-archive'), {
+    status: mode,
+  });
   return entity ? mapStrapiPage(entity) : null;
 }
 /** Load and normalize the conditions archive page.
  * @param mode Content state requested from Strapi.
  * @returns Mapped page or null when missing; upstream failures throw.
  */
-export async function getConditionsArchive(mode: ContentMode): Promise<ContentPageRecord | null> {
+export async function getConditionsArchive(
+  mode: ContentMode,
+): Promise<ContentPageRecord | null> {
   const client = createClient(mode);
-  const entity = await readSingle(client.single("conditions-archive"), { status: mode });
+  const entity = await readSingle(client.single('conditions-archive'), {
+    status: mode,
+  });
   return entity ? mapStrapiPage(entity) : null;
 }
 /** Load and normalize the clinics archive page.
  * @param mode Content state requested from Strapi.
  * @returns Mapped page or null when missing; upstream failures throw.
  */
-export async function getClinicsArchive(mode: ContentMode): Promise<ContentPageRecord | null> {
+export async function getClinicsArchive(
+  mode: ContentMode,
+): Promise<ContentPageRecord | null> {
   const client = createClient(mode);
-  const entity = await readSingle(client.single("clinics-archive"), { status: mode });
+  const entity = await readSingle(client.single('clinics-archive'), {
+    status: mode,
+  });
   return entity ? mapStrapiPage(entity) : null;
 }
 /** Load and normalize the contact page.
  * @param mode Content state requested from Strapi.
  * @returns Mapped page or null when missing; upstream failures throw.
  */
-export async function getContact(mode: ContentMode): Promise<ContentPageRecord | null> {
+export async function getContact(
+  mode: ContentMode,
+): Promise<ContentPageRecord | null> {
   const client = createClient(mode);
-  const entity = await readSingle(client.single("contact"), { status: mode });
+  const entity = await readSingle(client.single('contact'), { status: mode });
   return entity ? mapStrapiPage(entity) : null;
 }
 /** Load and normalize the providers page.
  * @param mode Content state requested from Strapi.
  * @returns Mapped page or null when missing; upstream failures throw.
  */
-export async function getProvidersPage(mode: ContentMode): Promise<ContentPageRecord | null> {
+export async function getProvidersPage(
+  mode: ContentMode,
+): Promise<ContentPageRecord | null> {
   const client = createClient(mode);
-  const entity = await readSingle(client.single("providers-page"), { status: mode });
+  const entity = await readSingle(client.single('providers-page'), {
+    status: mode,
+  });
   return entity ? mapStrapiPage(entity) : null;
 }
 /** Load and normalize the service updates page.
  * @param mode Content state requested from Strapi.
  * @returns Mapped page or null when missing; upstream failures throw.
  */
-export async function getServiceUpdatePage(mode: ContentMode): Promise<ContentPageRecord | null> {
+export async function getServiceUpdatePage(
+  mode: ContentMode,
+): Promise<ContentPageRecord | null> {
   const client = createClient(mode);
-  const entity = await readSingle(client.single("service-update-page"), { status: mode });
+  const entity = await readSingle(client.single('service-update-page'), {
+    status: mode,
+  });
   return entity ? mapStrapiPage(entity) : null;
 }
 /** Load and normalize the privacy policy page.
  * @param mode Content state requested from Strapi.
  * @returns Mapped page or null when missing; upstream failures throw.
  */
-export async function getPrivacyPolicy(mode: ContentMode): Promise<ContentPageRecord | null> {
+export async function getPrivacyPolicy(
+  mode: ContentMode,
+): Promise<ContentPageRecord | null> {
   const client = createClient(mode);
-  const entity = await readSingle(client.single("privacy-policy"), { status: mode });
+  const entity = await readSingle(client.single('privacy-policy'), {
+    status: mode,
+  });
   return entity ? mapStrapiPage(entity) : null;
 }
 /** Load the homepage with its display sections and their media populated.
  * @param mode Content state requested from Strapi.
  * @returns Mapped homepage or null when missing; upstream failures throw.
  */
-export async function getHomePage(mode: ContentMode): Promise<HomePageRecord | null> {
+export async function getHomePage(
+  mode: ContentMode,
+): Promise<HomePageRecord | null> {
   const client = createClient(mode);
-  const entity = await readSingle(client.single("home-page"), {
+  const entity = await readSingle(client.single('home-page'), {
     status: mode,
     populate: homePagePopulate,
   });
-  return entity ? mapStrapiHomePage(entity, new URL(client.baseURL).origin) : null;
+  return entity
+    ? mapStrapiHomePage(entity, new URL(client.baseURL).origin)
+    : null;
 }
 /** Load and normalize the tracking settings single type.
  * @param mode Content state requested from Strapi.
  * @returns Mapped settings or null when missing; upstream failures throw.
  */
-export async function getTrackingInfo(mode: ContentMode): Promise<TrackingSettings | null> {
+export async function getTrackingInfo(
+  mode: ContentMode,
+): Promise<TrackingSettings | null> {
   const client = createClient(mode);
-  const entity = await readSingle(client.single("tracking-info"), { status: mode });
+  const entity = await readSingle(client.single('tracking-info'), {
+    status: mode,
+  });
   return entity ? mapStrapiTrackingInfo(entity) : null;
 }
 /** Published collection records used by static builds and the public route manifest. */
@@ -501,11 +566,11 @@ export async function getPublishedCollections(
   options: CollectionReadOptions = {},
 ): Promise<PublishedCollections> {
   return {
-    blogs: getBlogs("published", options),
-    clinics: getClinics("published", options),
-    conditions: getConditions("published", options),
-    providers: getProviders("published", options),
-    serviceUpdates: getServiceUpdates("published", options),
-    reviews: getReviews("published", options),
+    blogs: getBlogs('published', options),
+    clinics: getClinics('published', options),
+    conditions: getConditions('published', options),
+    providers: getProviders('published', options),
+    serviceUpdates: getServiceUpdates('published', options),
+    reviews: getReviews('published', options),
   };
 }

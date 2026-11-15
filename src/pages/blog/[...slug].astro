@@ -20,7 +20,9 @@ if (!blog) return Astro.rewrite('/404');
 const settings = await getPageSettings(mode);
 const originalThumbnail = blog.thumbnail;
 if (blog.thumbnail) {
-  blog.thumbnail = await getResponsiveMediaDescriptor(blog.thumbnail, { width: 1200 });
+  blog.thumbnail = await getResponsiveMediaDescriptor(blog.thumbnail, {
+    width: 1200,
+  });
 }
 blog.date = blogDate(blog.date);
 const socialImagePath =
@@ -45,5 +47,10 @@ await prepareInlineImages(blog, mode, 1200);
   articleSection="blog"
   {socialImagePath}
 >
-  <BlogPage client:load pathname={Astro.url.pathname} announcement={settings.announcement} {blog} />
+  <BlogPage
+    client:load
+    pathname={Astro.url.pathname}
+    announcement={settings.announcement}
+    {blog}
+  />
 </SitePage>

@@ -1,6 +1,9 @@
 // Provides compact route parameters and display dates for shared content pages.
 import moment from 'moment';
-import { getPublishedRouteManifest, type PublishedRouteKind } from '../content/routes';
+import {
+  getPublishedRouteManifest,
+  type PublishedRouteKind,
+} from '../content/routes';
 
 /** Read only published route references for Astro's static path enumeration.
  * @param kind Detail route family to enumerate.

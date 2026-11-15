@@ -47,7 +47,9 @@ if (provider.review?.date) {
   provider.review.date = date.isValid() ? date.format('MMMM D, YYYY') : '';
 }
 const honorific =
-  provider.name?.honorific && provider.name.honorific !== 'None' ? provider.name.honorific : '';
+  provider.name?.honorific && provider.name.honorific !== 'None'
+    ? provider.name.honorific
+    : '';
 const title = `${honorific} ${provider.name?.fullName || 'Untitled'}`.trim();
 await prepareInlineImages(provider, mode, 800);
 ---

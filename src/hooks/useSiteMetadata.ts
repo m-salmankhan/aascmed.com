@@ -1,11 +1,11 @@
-import { useSiteData } from "../data/site-data";
+import { useSiteData } from '../data/site-data';
 
 export const useSiteMetadata = () => {
-    const { siteSettings } = useSiteData();
+  const { siteSettings } = useSiteData();
 
-    return {
-        title: siteSettings.title || "Untitled Site",
-        url: siteSettings.url || "",
-        twitter: siteSettings.twitterHandle,
-    };
-}
+  return {
+    title: siteSettings.title || 'Untitled Site',
+    url: siteSettings.url || '',
+    twitter: siteSettings.twitterHandle,
+  };
+};

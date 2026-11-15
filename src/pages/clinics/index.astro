@@ -8,7 +8,10 @@ import { pageContentMode, getPageSettings } from '../../server/pages/common';
 import { clinicSummary } from '../../server/pages/locations';
 import type { PracticeSummary } from '../../components/practices/practice-archive';
 const mode = pageContentMode();
-const [page, settings] = await Promise.all([getClinicsArchive(mode), getPageSettings(mode)]);
+const [page, settings] = await Promise.all([
+  getClinicsArchive(mode),
+  getPageSettings(mode),
+]);
 const practices: PracticeSummary[] = [];
 for await (const clinic of getClinics(mode)) {
   practices.push(clinicSummary(clinic));

@@ -28,7 +28,11 @@ function contentState(prefix) {
    * @returns Heading, rich text and optional media collection.
    */
   const section = (name) => {
-    return { heading: `${prefix} ${name}`, text: blocks(`${prefix} ${name} copy`), media: [] };
+    return {
+      heading: `${prefix} ${name}`,
+      text: blocks(`${prefix} ${name} copy`),
+      media: [],
+    };
   };
   /** Supply one fixed/archive singleton with visible copy and SEO metadata.
    * @param name Singleton resource name.
@@ -53,7 +57,10 @@ function contentState(prefix) {
       description: `${prefix} article description`,
       thumbnail: null,
       content: [
-        { __component: 'generic.rich-text', text: blocks(`${prefix} BLOG_BODY_${index}`) },
+        {
+          __component: 'generic.rich-text',
+          text: blocks(`${prefix} BLOG_BODY_${index}`),
+        },
         { __component: 'generic.contact-booking-cta' },
       ],
     })),
@@ -67,11 +74,17 @@ function contentState(prefix) {
         order: 1,
         thumbnail: null,
         content: [
-          { __component: 'generic.rich-text', text: blocks(`${prefix} CONDITION_BODY`) },
+          {
+            __component: 'generic.rich-text',
+            text: blocks(`${prefix} CONDITION_BODY`),
+          },
           {
             __component: 'generic.faq',
             questions: [
-              { question: `${prefix} FAQ question`, answer: blocks(`${prefix} FAQ answer`) },
+              {
+                question: `${prefix} FAQ question`,
+                answer: blocks(`${prefix} FAQ answer`),
+              },
             ],
           },
         ],
@@ -91,7 +104,12 @@ function contentState(prefix) {
         order: 1,
         image: null,
         retirementNotice: { retired: false },
-        body: [{ __component: 'generic.rich-text', text: blocks(`${prefix} PROVIDER_BODY`) }],
+        body: [
+          {
+            __component: 'generic.rich-text',
+            text: blocks(`${prefix} PROVIDER_BODY`),
+          },
+        ],
       },
     ],
     clinics: [
@@ -231,7 +249,9 @@ export async function startFixtureCms() {
     .toBuffer();
   const inlineImage = await sharp({
     create: { width: 1200, height: 800, channels: 3, background: '#1C5E38' },
-  }).png().toBuffer();
+  })
+    .png()
+    .toBuffer();
   const requests = [];
   const unavailableResources = new Set();
   const server = createServer(async (request, response) => {
@@ -254,15 +274,17 @@ export async function startFixtureCms() {
       });
       response.setHeader('content-type', 'application/json');
       if (runtime.mode === 'validation') {
-        response
-          .writeHead(400)
-          .end(
-            JSON.stringify({
-              detail: { field_errors: { email_address: ['Fixture email was rejected'] } },
-            }),
-          );
+        response.writeHead(400).end(
+          JSON.stringify({
+            detail: {
+              field_errors: { email_address: ['Fixture email was rejected'] },
+            },
+          }),
+        );
       } else if (runtime.mode === 'error') {
-        response.writeHead(503).end(JSON.stringify({ detail: 'Fixture unavailable' }));
+        response
+          .writeHead(503)
+          .end(JSON.stringify({ detail: 'Fixture unavailable' }));
       } else {
         response.end(JSON.stringify({ ok: true }));
       }
@@ -279,7 +301,11 @@ export async function startFixtureCms() {
       return;
     }
     const query = qs.parse(url.search.slice(1));
-    requests.push({ pathname: url.pathname, query, authorization: request.headers.authorization });
+    requests.push({
+      pathname: url.pathname,
+      query,
+      authorization: request.headers.authorization,
+    });
     if (request.headers.authorization !== `Bearer ${fixtureToken}`) {
       response.writeHead(401).end();
       return;
@@ -288,7 +314,9 @@ export async function startFixtureCms() {
     const resource = url.pathname.replace(/^\/api\//, '');
     if (unavailableResources.has(resource)) {
       response.writeHead(503, { 'content-type': 'application/json' });
-      response.end(JSON.stringify({ error: { message: 'Synthetic CMS outage' } }));
+      response.end(
+        JSON.stringify({ error: { message: 'Synthetic CMS outage' } }),
+      );
       return;
     }
     const value = source[resource];
@@ -302,14 +330,17 @@ export async function startFixtureCms() {
       return;
     }
     let data = value.filter((record) => matches(record, query.filters));
-    const sorting = typeof query.sort === 'string' ? [query.sort] : query.sort || [];
+    const sorting =
+      typeof query.sort === 'string' ? [query.sort] : query.sort || [];
     data.sort((left, right) => {
       for (const item of sorting) {
         const [field, direction] = item.split(':');
         const a = left[field];
         const b = right[field];
         const result =
-          typeof a === 'number' ? a - b : String(a ?? '').localeCompare(String(b ?? ''));
+          typeof a === 'number'
+            ? a - b
+            : String(a ?? '').localeCompare(String(b ?? ''));
         if (result) {
           return direction === 'desc' ? -result : result;
         }
@@ -321,15 +352,25 @@ export async function startFixtureCms() {
     const page = Number(query.pagination?.page || 1);
     data = data.slice((page - 1) * pageSize, page * pageSize);
     if (query.fields) {
-      const fields = typeof query.fields === 'string' ? [query.fields] : query.fields;
+      const fields =
+        typeof query.fields === 'string' ? [query.fields] : query.fields;
       data = data.map((record) =>
-        Object.fromEntries(['documentId', ...fields].map((field) => [field, record[field]])),
+        Object.fromEntries(
+          ['documentId', ...fields].map((field) => [field, record[field]]),
+        ),
       );
     }
     response.end(
       JSON.stringify({
         data,
-        meta: { pagination: { page, pageSize, total, pageCount: Math.ceil(total / pageSize) } },
+        meta: {
+          pagination: {
+            page,
+            pageSize,
+            total,
+            pageCount: Math.ceil(total / pageSize),
+          },
+        },
       }),
     );
   });
@@ -349,7 +390,13 @@ export async function startFixtureCms() {
     });
     state.blogs[0].content[0].text.push({
       type: 'image',
-      image: { url: '/media/inline.png', alternativeText: 'Fixture inline image', width: 1200, height: 800, mime: 'image/png' },
+      image: {
+        url: '/media/inline.png',
+        alternativeText: 'Fixture inline image',
+        width: 1200,
+        height: 800,
+        mime: 'image/png',
+      },
       children: [{ type: 'text', text: '' }],
     });
     state.conditions[0].thumbnail = media;
