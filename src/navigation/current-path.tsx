@@ -3,7 +3,7 @@ import React, { createContext, ReactNode, useContext } from "react";
 const CurrentPathContext = createContext<string | null>(null);
 
 /** Normalize a route to one leading and trailing slash.
- * @param path Browser or Gatsby pathname.
+ * @param path Browser or server pathname.
  * @returns A slash-delimited path; the site root remains `/`.
  */
 export function normalizePath(path: string): string {
@@ -19,7 +19,7 @@ export function CurrentPathProvider(props: { path: string; children?: ReactNode 
   return <CurrentPathContext.Provider value={normalizePath(props.path)}>{props.children}</CurrentPathContext.Provider>;
 }
 
-/** Read the route path injected by the Gatsby boundary.
+/** Read the route path injected by the page boundary.
  * @returns The normalized path, or null when no provider is mounted.
  */
 export const useCurrentPath = (): string | null => useContext(CurrentPathContext);

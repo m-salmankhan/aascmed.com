@@ -60,8 +60,6 @@
     "@types/node": "26.6.6",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
-    "formdata-node": "^6.0.3",
-    "gray-matter": "^4.0.3",
     "openapi-typescript": "7.13.0",
     "pixelmatch": "^8.0.0",
     "pngjs": "^7.0.0",

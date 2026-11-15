@@ -1,5 +1,6 @@
 ---
 // Defines the Astro HTML document, shared global styles, metadata, asset links and tracking tags.
+import { siteSettings as defaults } from '../config/site';
 import navigationFont from '../server/media/assets/Poppins-ExtraBold.ttf?url';
 import { Global } from '@emotion/react';
 import { stylesGlobal } from '../styles/global';
@@ -29,11 +30,7 @@ const {
   title,
   description = '',
   pathname,
-  siteSettings = {
-    title: 'Allergy, Asthma and Sinus Centers',
-    url: 'https://www.aascmed.com',
-    twitterHandle: '@DrMaazAllergy',
-  },
+  siteSettings = defaults,
   trackingSettings,
   useTracking = false,
   appendBusinessNameToTitle = true,
@@ -43,7 +40,7 @@ const {
   structuredData,
 } = Astro.props;
 
-const siteTitle = siteSettings.title || 'Allergy, Asthma and Sinus Centers';
+const siteTitle = siteSettings.title || defaults.title;
 const pageTitle = title
   ? `${title}${appendBusinessNameToTitle ? ` | ${siteTitle}` : ''}`
   : siteTitle;

@@ -17,12 +17,9 @@ type PreparedInlineImage = CmsInlineImage & {
 
 /** Render an embedded image using its prepared responsive attributes when supplied.
  * @param props Strapi image fields plus optional native Astro source candidates.
- * @returns The shared responsive image, or the existing plain image for Gatsby data.
+ * @returns The shared image with optional prepared responsive attributes.
  */
 function InlineImageBlock({ image }: { image: PreparedInlineImage }): React.ReactElement {
-    if (!image.responsive) {
-        return <img src={image.url} alt={image.alternativeText || undefined} />;
-    }
     return <Image css={{ maxWidth: "100%", height: "auto" }} image={{
         src: image.url,
         alt: image.alternativeText || '',
@@ -118,8 +115,8 @@ export const StrapiDynamicZoneRenderer: React.FC<StrapiDynamicZoneRendererProps>
     return (
         <div className={className}>
             {content.map((component, index) => {
-                // Get component type - handle both raw Strapi data (__component) and Gatsby transformed data (strapi_component)
-                const componentType = component.__component || component.strapi_component;
+                // Read the Strapi dynamic-zone component type.
+                const componentType = component.__component;
                 
                 // Handle rich text component
                 if (componentType === 'generic.rich-text' && component.text) {

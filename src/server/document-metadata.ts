@@ -1,6 +1,7 @@
 // Validates canonical/social URLs and serializes JSON-LD for Astro documents.
 /** The public canonical host stays fixed when a page is rendered in preview. */
-export const canonicalOrigin = "https://www.aascmed.com";
+import { siteSettings } from "../config/site.ts";
+export const canonicalOrigin = siteSettings.url;
 export { serializeStructuredData } from "../utils/structured-data.ts";
 export type { StructuredData, StructuredDataEntry } from "../utils/structured-data.ts";
 /** Social metadata category understood by the shared document. */

@@ -109,7 +109,7 @@ const homePagePopulate = {
   locations: { populate: { media: true } },
   contact: { populate: { media: true } },
 };
-// Numeric CMS IDs preserve Gatsby source order when display dates or orders tie.
+// Numeric CMS IDs preserve source order when display dates or orders tie.
 /** Load and normalize published or draft blogs, ordered by date.
  * @param mode Content state requested from Strapi.
  * @param options Optional bounded page size for the CMS requests.

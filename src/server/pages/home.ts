@@ -92,7 +92,7 @@ async function sectionMedia(
   }
   return media.length ? media : undefined;
 }
-/** Normalize one homepage section using the same headings and optional blocks as Gatsby.
+/** Normalize one homepage section using the shared headings and optional blocks.
  * @param value Normalized section from the CMS homepage singleton.
  * @param fallback Existing display heading used when the CMS heading is absent.
  * @returns The shared section heading, rich-text blocks and media.

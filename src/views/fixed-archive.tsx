@@ -79,7 +79,7 @@ export function ContactView({ heading = "Contact Us", blocks, practices, clinicO
   </Container></main></Layout>;
 }
 
-/** Blog archive card data with thumbnail metadata instead of a Gatsby image node. */
+/** Blog archive card data with thumbnail metadata for the shared image renderer. */
 export interface BlogViewItem extends Omit<BlogSummary, "thumbnail"> { thumbnail?: MediaDescriptor }
 /** Blog archive heading, intro blocks, and serializable card data. */
 type BlogArchiveViewProps = FixedViewProps & { blogs: BlogViewItem[] };
