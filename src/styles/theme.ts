@@ -25,13 +25,19 @@ export const fontBaseSize = "1rem";
 ===== Colours ====
 */
 export const colours = {
-  // Precomputed from the brand colours; no runtime colour library is needed.
-  primaryMuted: "hsl(145.5, 0%, 23.9%)",
-  secondaryMuted: "hsl(117.30000000000001, 0%, 46.1%)",
+  // brandPrimary, fully desaturated: Color(brandPrimary).desaturate(1).
+  primaryMuted: "hsl(0, 0%, 23.9%)",
+  // brandSecondary, fully desaturated: Color(brandSecondary).desaturate(1).
+  secondaryMuted: "hsl(0, 0%, 46.1%)",
+  // brandPrimary: Color(brandPrimary).darken(0.3).fade(0.1).
   primaryOverlay: "hsla(145.5, 54.1%, 16.7%, 0.9)",
-  secondaryOverlay: "hsla(117.30000000000001, 37.9%, 32.3%, 0.9)",
+  // brandSecondary: Color(brandSecondary).darken(0.3).fade(0.1).
+  secondaryOverlay: "hsla(117.3, 37.9%, 32.3%, 0.9)",
+  // brandPrimary: Color(brandPrimary).darken(0.8).fade(0.1).
   primaryDarkOverlay: "hsla(145.5, 54.1%, 4.8%, 0.9)",
+  // brandPrimary: Color(brandPrimary).fade(0.3).
   primaryBorder: "rgba(28, 94, 56, 0.7)",
+  // brandPrimary: Color(brandPrimary).darken(0.5).saturate(0.8).
   ratingBackground: "hsl(145.5, 97.4%, 12%)",
   bodyBackground: "#f7f7f7",
   brandPrimary: "#1C5E38",
