@@ -19,7 +19,7 @@ export interface MediaFormat {
   sizes?: string;
 }
 
-/** Framework-neutral image metadata shared by Gatsby and Astro views. */
+/** Framework-neutral image metadata shared by server and browser views. */
 export interface MediaDescriptor {
   /** Public image URL used as the default source. */
   src: string;

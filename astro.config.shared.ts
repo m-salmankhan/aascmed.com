@@ -1,3 +1,4 @@
+import { siteSettings } from './src/config/site.ts';
 // Shares Astro settings and environment-backed media origins between static and preview builds.
 import type { AstroUserConfig } from 'astro';
 import { loadEnv } from 'vite';
@@ -53,7 +54,7 @@ for (const source of mediaSources) {
 export const mediaOrigins = [...origins];
 
 const config = {
-  site: 'https://www.aascmed.com',
+  site: siteSettings.url,
   trailingSlash: 'always',
   root: '.',
   srcDir: './src',

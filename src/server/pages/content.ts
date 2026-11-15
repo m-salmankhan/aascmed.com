@@ -16,7 +16,7 @@ export async function contentPaths(kind: PublishedRouteKind, prefix: string) {
     }));
 }
 
-/** Format a CMS date as Gatsby's ordinal day, full month and year.
+/** Format a CMS date as the ordinal day, full month and year.
  * @param value ISO calendar date from a blog record.
  * @returns Display date, or an empty string when the CMS supplied none.
  */

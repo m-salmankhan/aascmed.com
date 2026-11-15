@@ -21,8 +21,8 @@ export function headingIds(blocks: readonly any[], used = new Set<string>()): st
 
 /** Allocate anchors once across every rich-text section, reserving the FAQ section ID. */
 export function contentHeadingIds(content: readonly any[]): string[][] {
-    const used = new Set<string>(content.some(component => (component.__component || component.strapi_component) === 'generic.faq') ? ['faq'] : []);
-    return content.map(component => (component.__component || component.strapi_component) === 'generic.rich-text' && Array.isArray(component.text)
+    const used = new Set<string>(content.some(component => (component.__component) === 'generic.faq') ? ['faq'] : []);
+    return content.map(component => (component.__component) === 'generic.rich-text' && Array.isArray(component.text)
         ? headingIds(component.text, used) : []);
 }
 
@@ -35,7 +35,7 @@ export function extractTableOfContents(content: any[]): ContentsPageItem[] {
     // First pass: find the minimum heading level used
     let minLevel = 6;
     for (const component of content) {
-        const componentType = component.__component || component.strapi_component;
+        const componentType = component.__component;
         if (componentType === 'generic.rich-text' && component.text) {
             for (const block of component.text) {
                 if (block.type === 'heading' && block.level) {
@@ -48,7 +48,7 @@ export function extractTableOfContents(content: any[]): ContentsPageItem[] {
     const anchors = contentHeadingIds(content);
     // Second pass: extract headings, treating minLevel as "top level"
     for (const [index, component] of content.entries()) {
-        const componentType = component.__component || component.strapi_component;
+        const componentType = component.__component;
         
         // Handle FAQ component - add to TOC
         if (componentType === 'generic.faq') {

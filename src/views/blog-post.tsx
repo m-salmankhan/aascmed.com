@@ -65,7 +65,7 @@ function BlogContent({ content }: BlogContentProps) {
   const anchors = contentHeadingIds(content);
   return <>
     {content.map((component, index) => {
-      const type = component.__component || component.strapi_component;
+      const type = component.__component;
       if (type === "generic.rich-text" && component.text) return <StrapiBlocksRenderer key={index} content={component.text} ids={anchors[index]} />;
       if (type === "generic.contact-booking-cta") return <ContactBanner key={index} />;
       return null;
