@@ -1,6 +1,6 @@
 ---
 // Renders a provider profile from a static path or request-time preview lookup.
-import moment from 'moment';
+import { formatReviewDate } from '../../utils/dates';
 import { getImage } from 'astro:assets';
 import { ProviderPage } from '../../components/pages/ProviderPage';
 import { prepareInlineImages } from '../../server/content/inline-images';
@@ -46,8 +46,7 @@ if (provider.image) {
   });
 }
 if (provider.review?.date) {
-  const date = moment.utc(provider.review.date, moment.ISO_8601, true);
-  provider.review.date = date.isValid() ? date.format('MMMM D, YYYY') : '';
+  provider.review.date = formatReviewDate(provider.review.date);
 }
 const honorific =
   provider.name?.honorific && provider.name.honorific !== 'None' ? provider.name.honorific : '';

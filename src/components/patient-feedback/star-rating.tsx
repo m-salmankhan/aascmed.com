@@ -2,7 +2,6 @@ import {css} from "@emotion/react";
 import {alternativeBounceTransition, colours, gridSpacing} from "../../styles/theme";
 import React, {CSSProperties, useEffect, useRef, useState} from "react";
 import {FaIcons, IconStyles} from "../font-awesome";
-import Color from "color";
 import {H3, stylesH1} from "../headings";
 
 interface StarCount {
@@ -89,7 +88,7 @@ interface AverageRatingProps {
 }
 
 const stylesAverageRating = css({
-    background: Color(colours.brandPrimary).darken(0.5).saturate(0.8).toString(),
+    background: colours.ratingBackground,
     textAlign: "center",
     color: "#fff",
     padding: `${gridSpacing*3}em 0`,

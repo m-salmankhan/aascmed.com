@@ -5,7 +5,6 @@ import { cols, gridContainer } from "../../styles/grid";
 import { mediaBreakpoints } from "../../styles/breakpoints";
 import { SiteLink } from "../../navigation/link";
 import { bounceTransition, colours, gridSpacing } from "../../styles/theme";
-import Color from "color";
 
 export interface BlogSummary {
     slug: string,
@@ -63,7 +62,7 @@ const stylesLi = css(
             left: 0,
             width: "100%",
             height: "100%",
-            background: `linear-gradient(to top right, ${Color(colours.brandPrimary).darken(0.3).fade(0.1).toString()}, ${Color(colours.brandSecondary).darken(0.3).fade(0.1).toString()})`,
+            background: `linear-gradient(to top right, ${colours.primaryOverlay}, ${colours.secondaryOverlay})`,
             opacity: 0,
             transition: `opacity 0.5s ease 0s`,
         },
@@ -88,7 +87,7 @@ const stylesLi = css(
                 },
 
                 ".date": {
-                    color: Color(colours.brandPrimary).desaturate(1).toString(),
+                    color: colours.primaryMuted,
                 },
 
                 "&:hover": {
@@ -100,7 +99,7 @@ const stylesLi = css(
         footer: {
             marginTop: "1em",
             a: {
-                color: Color(colours.brandPrimary).desaturate(1).toString(),
+                color: colours.primaryMuted,
             }
         }
     }

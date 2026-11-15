@@ -25,6 +25,14 @@ export const fontBaseSize = "1rem";
 ===== Colours ====
 */
 export const colours = {
+  // Precomputed from the brand colours; no runtime colour library is needed.
+  primaryMuted: "hsl(145.5, 0%, 23.9%)",
+  secondaryMuted: "hsl(117.30000000000001, 0%, 46.1%)",
+  primaryOverlay: "hsla(145.5, 54.1%, 16.7%, 0.9)",
+  secondaryOverlay: "hsla(117.30000000000001, 37.9%, 32.3%, 0.9)",
+  primaryDarkOverlay: "hsla(145.5, 54.1%, 4.8%, 0.9)",
+  primaryBorder: "rgba(28, 94, 56, 0.7)",
+  ratingBackground: "hsl(145.5, 97.4%, 12%)",
   bodyBackground: "#f7f7f7",
   brandPrimary: "#1C5E38",
   brandSecondary: "#4DA249",

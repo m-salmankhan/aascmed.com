@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { SiteLink } from "../../navigation/link";
 import { colours, gridSpacing } from "../../styles/theme";
-import Color from "color";
 import { breakpointStrings, mediaBreakpoints } from "../../styles/breakpoints";
 import { H2, stylesH1 } from "../headings";
 import { CSSObject } from "@emotion/serialize";
@@ -37,8 +36,8 @@ const stylesContents: CSSObject = {
     padding: "1rem",
     paddingBottom: "1rem",
     background: "rgba(0, 0, 0, 0.03)",
-    borderTop: `0.25rem solid ${Color(colours.brandPrimary).fade(0.3)}`,
-    borderBottom: `0.25rem solid ${Color(colours.brandPrimary).fade(0.3)}`,
+    borderTop: `0.25rem solid ${colours.primaryBorder}`,
+    borderBottom: `0.25rem solid ${colours.primaryBorder}`,
     marginBottom: `1.5rem`,
     marginTop: `${gridSpacing}em`,
     position: "sticky",

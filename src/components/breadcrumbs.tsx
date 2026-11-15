@@ -1,11 +1,10 @@
 import React from "react";
 import {SiteLink} from "../navigation/link";
 import {css} from "@emotion/react";
-import Color from "color";
 import {colours, gridSpacing} from "../styles/theme";
 
 const stylesBreadcrumbs = css({
-    color: Color(colours.brandPrimary).desaturate(1).toString(),
+    color: colours.primaryMuted,
 
 
     ".breadcrumb-text": {
@@ -22,10 +21,10 @@ const stylesBreadcrumbs = css({
             display: "inline",
 
             a: {
-                color: Color(colours.brandPrimary).desaturate(1).toString(),
+                color: colours.primaryMuted,
                 "&:focus": {
                     outline: "none",
-                    backgroundColor: Color(colours.brandPrimary).desaturate(1).toString(),
+                    backgroundColor: colours.primaryMuted,
                     color: "#fff",
                 },
             },

@@ -5,7 +5,6 @@ import { cols, gridContainer } from "../../styles/grid";
 import { mediaBreakpoints } from "../../styles/breakpoints";
 import { SiteLink } from "../../navigation/link";
 import { colours, gridSpacing } from "../../styles/theme";
-import Color from "color";
 
 export interface ServiceUpdateSummary {
     slug: string,
@@ -46,7 +45,7 @@ const stylesLi = css(
                 },
 
                 ".date": {
-                    color: Color(colours.brandPrimary).desaturate(1).toString(),
+                    color: colours.primaryMuted,
                 },
 
                 "&:hover": {
@@ -58,7 +57,7 @@ const stylesLi = css(
         footer: {
             marginTop: "1em",
             a: {
-                color: Color(colours.brandPrimary).desaturate(1).toString(),
+                color: colours.primaryMuted,
             }
         }
     }

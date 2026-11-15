@@ -8,7 +8,6 @@ import { IconStyles } from "../font-awesome";
 import { SiteLink } from "../../navigation/link";
 import { colours, gridSpacing } from "../../styles/theme";
 import { Thumbnail } from "../thumbnails";
-import Color from "color";
 
 interface ProvidersArchiveProps {
     className?: string,
@@ -48,7 +47,7 @@ const stylesProviderItem = css(
           }
           
           .read-more {
-            color: ${Color(colours.brandPrimary).desaturate(1).toString()}
+            color: ${colours.primaryMuted}
           }
         }
     `

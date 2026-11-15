@@ -1,6 +1,5 @@
 // Renders service-update articles with calendar dates that stay stable across browser timezones.
 import * as React from 'react';
-import moment from 'moment';
 import { css } from '@emotion/react';
 import { Breadcrumbs } from '../components/breadcrumbs';
 import { H1 } from '../components/headings';
@@ -27,19 +26,17 @@ import { serviceUpdatePath } from '../content/urls';
 export interface ServiceUpdateViewProps {
   serviceUpdate: ServiceUpdateRecord;
   pathname: string;
+  dateLabel: string;
 }
 
 /** Render a dated service-update detail page from shared content data.
  * @param props Service-update record and current browser pathname.
  * @returns The update layout with date, rich text, and browser-aware back navigation.
  */
-export function ServiceUpdateView({ serviceUpdate, pathname }: ServiceUpdateViewProps) {
+export function ServiceUpdateView({ serviceUpdate, pathname, dateLabel }: ServiceUpdateViewProps) {
   const [jsEnabled, setJsEnabled] = React.useState(false);
   React.useEffect(() => setJsEnabled(true), []);
   const title = serviceUpdate.title || 'Untitled';
-  const rawDate = serviceUpdate.date;
-  const date = rawDate ? moment.parseZone(rawDate, moment.ISO_8601, true) : null;
-  const formattedDate = date?.isValid() ? date.format('Do MMMM YYYY') : '';
   const slug = serviceUpdatePath(serviceUpdate) || pathname;
 
   return (
@@ -60,7 +57,7 @@ export function ServiceUpdateView({ serviceUpdate, pathname }: ServiceUpdateView
         <Article css={css({ h3: { fontSize: '1rem' } })}>
           <H1>{title}</H1>
           <ShareButtons pageTitle={title} path={pathname} />
-          <p>{formattedDate}</p>
+          <p>{dateLabel}</p>
           <Columns>
             <MainCol>
               {serviceUpdate.body && <StrapiBlocksRenderer content={serviceUpdate.body as any[]} />}

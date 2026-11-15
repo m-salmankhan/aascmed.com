@@ -1,7 +1,6 @@
 import {FaIcons, IconStyles} from "../font-awesome";
 import {stylesScreenReaderText} from "../../styles/accessibility";
 import React from "react";
-import Color from "color";
 import {css} from "@emotion/react";
 import {colours} from "../../styles/theme";
 import { useSiteMetadata } from "../../hooks/useSiteMetadata";
@@ -14,7 +13,7 @@ enum SocialNetworks {
     pinterest = 'pinterest',
 }
 
-const desaturated = Color(colours.brandPrimary).desaturate(1).toString();
+const desaturated = colours.primaryMuted;
 
 interface SocialButtonProps {
     network: SocialNetworks
