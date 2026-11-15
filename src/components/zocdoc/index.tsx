@@ -248,10 +248,15 @@ export const ZocDoc = () => {
     const zocDocRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
+        let collapsed = false;
         const callBack = () => {
-            setCollapse(window.scrollY > 600);
-        }
-        window.addEventListener("scroll", callBack);
+            const next = window.scrollY > 600;
+            if (next === collapsed) return;
+            collapsed = next;
+            setCollapse(next);
+        };
+        window.addEventListener("scroll", callBack, { passive: true });
+        callBack();
 
         return () => {
             window.removeEventListener("scroll", callBack);
