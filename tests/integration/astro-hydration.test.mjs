@@ -54,6 +54,7 @@ test(
       PUBLIC_MAPBOX_API_KEY: '',
     };
     let server;
+    let staticServer;
     let browser;
     try {
       await build('astro.config.ts', env);
@@ -66,6 +67,10 @@ test(
         PORT: String(port),
       });
       await ready(server, origin);
+      const staticPort = await availablePort();
+      const staticOrigin = `http://127.0.0.1:${staticPort}`;
+      staticServer = command(['node_modules/astro/bin/astro.mjs', 'preview', '--host', '127.0.0.1', '--port', String(staticPort)], env);
+      await ready(staticServer, staticOrigin);
       browser = await chromium.launch();
       const context = await browser.newContext({
         viewport: { width: 390, height: 844 },
@@ -130,10 +135,8 @@ test(
         await page.evaluate(() => sessionStorage.getItem('announcementDismissed')),
         'true',
       );
-      await page.evaluate(() => {
-        window.dataLayer = [];
-        window.gtag = function () { window.dataLayer.push(Array.from(arguments)); };
-      });
+      await openHydrated(page, `${staticOrigin}/contact/`);
+      assert.equal(await page.evaluate(() => typeof window.gtag), 'function', 'the real static document installs the tag bootstrap');
       cms.runtime.mode = 'validation';
       assert.equal((await submitContact(page)).status(), 400);
       await expect(page.getByText('Fixture email was rejected', { exact: true })).toBeVisible();
@@ -143,7 +146,7 @@ test(
       cms.runtime.mode = 'success';
       assert.equal((await submitContact(page)).status(), 200);
       await expect(page.getByText(/Message successfully sent!/)).toBeVisible();
-      const leads = await page.evaluate(() => window.dataLayer);
+      const leads = await page.evaluate(() => window.dataLayer.filter(command => command[0] === 'event' && command[1] === 'generate_lead'));
       assert.equal(leads.length, 1);
       assert.equal(leads[0][0], 'event');
       assert.equal(leads[0][1], 'generate_lead');
@@ -158,7 +161,7 @@ test(
       assert.equal(sent.body.full_name, 'Example Test Person');
       assert.equal(sent.body.newPatient, true);
       assert.equal(sent.body.disclaimer, true);
-      assert.equal(sent.body.source_url, `${origin}/contact/`);
+      assert.equal(sent.body.source_url, `${staticOrigin}/contact/`);
       await openHydrated(page, `${origin}/`);
       await expect(page.getByRole('button', { name: 'Dismiss', exact: true })).toBeVisible();
       await page.getByRole('button', { name: 'Dismiss', exact: true }).click();
@@ -211,6 +214,7 @@ test(
     } finally {
       await browser?.close();
       await stop(server);
+      await stop(staticServer);
       await cms.close();
     }
   },

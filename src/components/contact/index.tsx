@@ -37,8 +37,7 @@ export function ContactForm(props: ContactFormProps): React.ReactElement {
 
     useEffect(() => {
         if (formState !== FormState.SUCCESS) return;
-        const fbq = (window as typeof window & { fbq?: (...args: string[]) => void }).fbq;
-        fbq?.("track", "Contact");
+        window.fbq?.("track", "Contact");
     }, [formState]);
     // update state variables. actual api call happens on rerender
     const formSubmisisonHandler: FormEventHandler<HTMLFormElement> = (event) => {

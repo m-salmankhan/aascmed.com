@@ -38,22 +38,3 @@ test('JSON-LD remains parseable while authored tags cannot close its script', ()
   assert.equal(result.includes('<'), false);
   assert.deepEqual(JSON.parse(result), data);
 });
-
-// Exercise the real document queue and the contact success command together.
-test('a contact lead queues exactly one complete Google tag command', async () => {
-  const { readFileSync } = await import('node:fs');
-  const { runInNewContext } = await import('node:vm');
-  const document = readFileSync(new URL('../../src/layouts/SiteDocument.astro', import.meta.url), 'utf8');
-  const contact = readFileSync(new URL('../../src/components/contact/index.tsx', import.meta.url), 'utf8');
-  const bootstrap = document.match(/window.gtag = function \(\) \{[\s\S]*?\};/)[0];
-  const commandPattern = /window.gtag\?\.\(\s*["']event["'],\s*["']generate_lead["'],\s*\{[\s\S]*?\}\s*,?\s*\);/;
-  const command = contact.match(commandPattern)[0];
-  assert.ok(command.replaceAll('"', "'").replace(/\}\);$/, "},\n);").match(commandPattern));
-  const window = { dataLayer: [] };
-  const formData = new Map([['new_patient', '1'], ['clinic', 'Aurora']]);
-  runInNewContext(bootstrap + command, { window, formData });
-  assert.equal(window.dataLayer.length, 1);
-  assert.deepEqual(JSON.parse(JSON.stringify(Array.from(window.dataLayer[0]))),
-    ['event', 'generate_lead', { new_customer: true, clinic: 'Aurora' }]);
-  assert.doesNotThrow(() => runInNewContext(command, { window: {}, formData }));
-});
