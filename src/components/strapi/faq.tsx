@@ -1,3 +1,4 @@
+import { extractTextFromChildren } from "../../utils/strapi-excerpt";
 import React from "react";
 import { serializeStructuredData } from "../../utils/structured-data";
 import { StrapiBlocksRenderer } from "./blocks-renderer";
@@ -8,13 +9,7 @@ import { FAQ as FAQWrapper } from "../posts/shortcode-components";
 function extractTextFromBlocks(blocks: any[]): string {
     if (!blocks || !Array.isArray(blocks)) return '';
     
-    return blocks.map(block => {
-        if (block.children) {
-            const text = (nodes: any[]): string => nodes.map(node => typeof node.text === 'string' ? node.text : text(node.children || [])).join('');
-            return text(block.children);
-        }
-        return '';
-    }).join('\n');
+    return blocks.map(block => extractTextFromChildren(block.children)).join('\n');
 }
 
 // FAQ Question component

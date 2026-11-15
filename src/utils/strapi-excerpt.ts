@@ -1,7 +1,7 @@
 // Extract plain text from Strapi blocks (rich text children)
-function extractTextFromChildren(children: any[]): string {
+export function extractTextFromChildren(children: any[]): string {
     if (!children || !Array.isArray(children)) return '';
-    return children.map((child: any) => child.text || '').join('');
+    return children.map((child: any) => typeof child.text === 'string' ? child.text : extractTextFromChildren(child.children)).join('');
 }
 
 // Extract plain text from Strapi dynamic zone content
