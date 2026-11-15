@@ -304,9 +304,6 @@ export async function getProviderBySlug(
 ): Promise<ProviderRecord | null> {
   return getDetail("provider", slug, mode);
 }
-// shortcut: slugless published clinics may lag five seconds, remove when every clinic has a slug.
-const clinicFallbacks = new Map<string, { expires: number; records: Promise<ClinicRecord[]> }>();
-
 /** Find a clinic by slug and fall back to its name-derived route when no explicit slug matches.
  * @param slug Requested clinic route slug.
  * @param mode Content state requested from Strapi.
@@ -331,37 +328,17 @@ export async function getClinicBySlug(
     validateRouteRecord(record, "clinic", mode);
     return record;
   }
-  async function* sluglessClinics() {
-    for await (const item of readRecords(client.collection('clinics'), {
-      status: mode, sort: ['id:asc'], populate: clinicPopulate,
-    })) {
-      const clinic = mapStrapiClinic(item);
-      if (!clinic.slug) yield clinic;
+  // Name-derived routes exist only for CMS clinics without an explicit slug.
+  for await (const item of readRecords(client.collection('clinics'), {
+    status: mode, sort: ['id:asc'], populate: clinicPopulate,
+  })) {
+    const clinic = mapStrapiClinic(item);
+    if (!clinic.slug && clinic.clinicName && clinicPath(clinic) === `/clinics/${slug}/`) {
+      validateRouteRecord(clinic, 'clinic', mode);
+      return clinic;
     }
   }
-  const matches = (clinic: ClinicRecord) => clinic.clinicName && clinicPath(clinic) === `/clinics/${slug}/`;
-  if (mode === 'draft') {
-    for await (const clinic of sluglessClinics()) {
-      if (matches(clinic)) return clinic;
-    }
-    return null;
-  }
-  const key = client.baseURL;
-  let cached = clinicFallbacks.get(key);
-  if (!cached || cached.expires <= Date.now()) {
-    const records = (async () => {
-      const clinics: ClinicRecord[] = [];
-      for await (const clinic of sluglessClinics()) clinics.push(clinic);
-      return clinics;
-    })();
-    cached = { expires: Date.now() + 5000, records };
-    clinicFallbacks.set(key, cached);
-    const entry = cached;
-    records.catch(() => { if (clinicFallbacks.get(key) === entry) clinicFallbacks.delete(key); });
-  }
-  const clinic = (await cached.records).find(matches) ?? null;
-  if (clinic) validateRouteRecord(clinic, 'clinic', mode);
-  return clinic;
+  return null;
 }
 /** Find one service update by its route slug.
  * @param slug Requested service update slug.
@@ -385,32 +362,19 @@ export async function getAnnouncement(mode: ContentMode): Promise<AnnouncementSe
 }
 
 
-
-
-
-const pageTypes = {
-  getBlogArchive: "blog-archive",
-  getConditionsArchive: "conditions-archive",
-  getClinicsArchive: "clinics-archive",
-  getContact: "contact",
-  getProvidersPage: "providers-page",
-  getServiceUpdatePage: "service-update-page",
-  getPrivacyPolicy: "privacy-policy",
+const singlePage = (uid: string) => async (mode: ContentMode): Promise<ContentPageRecord | null> => {
+  const client = createClient(mode);
+  const entity = await readSingle(client.single(uid), { status: mode });
+  return entity ? mapStrapiPage(entity) : null;
 };
 
-async function loadPage(kind: keyof typeof pageTypes, mode: ContentMode): Promise<ContentPageRecord | null> {
-  const client = createClient(mode);
-  const entity = await readSingle(client.single(pageTypes[kind]), { status: mode });
-  return entity ? mapStrapiPage(entity) : null;
-}
-
-export const getBlogArchive = (mode: ContentMode) => loadPage("getBlogArchive", mode);
-export const getConditionsArchive = (mode: ContentMode) => loadPage("getConditionsArchive", mode);
-export const getClinicsArchive = (mode: ContentMode) => loadPage("getClinicsArchive", mode);
-export const getContact = (mode: ContentMode) => loadPage("getContact", mode);
-export const getProvidersPage = (mode: ContentMode) => loadPage("getProvidersPage", mode);
-export const getServiceUpdatePage = (mode: ContentMode) => loadPage("getServiceUpdatePage", mode);
-export const getPrivacyPolicy = (mode: ContentMode) => loadPage("getPrivacyPolicy", mode);
+export const getBlogArchive = singlePage('blog-archive');
+export const getConditionsArchive = singlePage('conditions-archive');
+export const getClinicsArchive = singlePage('clinics-archive');
+export const getContact = singlePage('contact');
+export const getProvidersPage = singlePage('providers-page');
+export const getServiceUpdatePage = singlePage('service-update-page');
+export const getPrivacyPolicy = singlePage('privacy-policy');
 
 /** Load the homepage with its display sections and their media populated.
  * @param mode Content state requested from Strapi.

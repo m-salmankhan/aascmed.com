@@ -646,32 +646,21 @@ test("published route references request scalar fields without expanded page con
   assert.deepEqual(routes, [{ pathname: "/clinics/crest-hill/", kind: "clinic", updatedAt: "2026-04-03T14:20:00.000Z" }]);
 });
 
-test('published clinic fallback reuses its scan, expires, and keeps explicit slugs authoritative', async () => {
-  process.env.STRAPI_API_URL = 'https://fallback-cache.example.test';
-  let scans = 0;
+test('published clinic fallback scans fresh data and keeps explicit slugs authoritative', async () => {
+  process.env.STRAPI_API_URL = 'https://fresh-clinics.example.test';
   let name = 'Old Name';
   let explicit = false;
-  const now = Date.now;
-  let time = now();
-  Date.now = () => time;
-  try {
-    await withFetch(async request => {
-      const params = new URL(request.url).searchParams;
-      const direct = params.has('filters[slug][$eq]');
-      if (!direct) scans++;
-      const data = direct ? (explicit ? [{ documentId: 'explicit', slug: 'old-name', clinic_name: 'Explicit' }] : [])
-        : [{ documentId: 'fallback', clinic_name: name }];
-      return Response.json({ data, meta: { pagination: { pageCount: 1, total: data.length } } });
-    }, async () => {
-      assert.equal((await getClinicBySlug('old-name', 'published'))?.documentId, 'fallback');
-      assert.equal((await getClinicBySlug('old-name', 'published'))?.documentId, 'fallback');
-      assert.equal(scans, 1);
-      explicit = true;
-      assert.equal((await getClinicBySlug('old-name', 'published'))?.documentId, 'explicit');
-      explicit = false; name = 'New Name'; time += 5001;
-      assert.equal(await getClinicBySlug('old-name', 'published'), null);
-      assert.equal((await getClinicBySlug('new-name', 'published'))?.documentId, 'fallback');
-      assert.equal(scans, 2);
-    });
-  } finally { Date.now = now; }
+  await withFetch(async request => {
+    const direct = new URL(request.url).searchParams.has('filters[slug][$eq]');
+    const data = direct ? (explicit ? [{ documentId: 'explicit', slug: 'old-name', clinic_name: 'Explicit' }] : [])
+      : [{ documentId: 'fallback', clinic_name: name }];
+    return Response.json({ data, meta: { pagination: { pageCount: 1, total: data.length } } });
+  }, async () => {
+    assert.equal((await getClinicBySlug('old-name', 'published'))?.documentId, 'fallback');
+    name = 'New Name';
+    assert.equal(await getClinicBySlug('old-name', 'published'), null);
+    assert.equal((await getClinicBySlug('new-name', 'published'))?.documentId, 'fallback');
+    explicit = true;
+    assert.equal((await getClinicBySlug('old-name', 'published'))?.documentId, 'explicit');
+  });
 });
