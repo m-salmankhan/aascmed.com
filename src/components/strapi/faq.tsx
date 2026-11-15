@@ -1,4 +1,5 @@
 import React from "react";
+import { serializeStructuredData } from "../../utils/structured-data";
 import { StrapiBlocksRenderer } from "./blocks-renderer";
 import { DynamicHeading, H2 } from "../headings";
 import { FAQ as FAQWrapper } from "../posts/shortcode-components";
@@ -9,7 +10,8 @@ function extractTextFromBlocks(blocks: any[]): string {
     
     return blocks.map(block => {
         if (block.children) {
-            return block.children.map((child: any) => child.text || '').join('');
+            const text = (nodes: any[]): string => nodes.map(node => typeof node.text === 'string' ? node.text : text(node.children || [])).join('');
+            return text(block.children);
         }
         return '';
     }).join('\n');
@@ -64,7 +66,7 @@ export const StrapiFAQ: React.FC<StrapiFAQProps> = ({ className, questions }) =>
         <H2>Frequently Asked Questions</H2>
 
         <FAQWrapper className={className}>
-            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeStructuredData(structuredData) }} />
             {
                 questions.map((question, idx) =>
                     <FAQQuestion

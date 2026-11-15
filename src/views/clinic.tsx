@@ -1,3 +1,4 @@
+import { serializeStructuredData } from "../utils/structured-data";
 import React from "react";
 import { css } from "@emotion/react";
 import { Breadcrumbs } from "../components/breadcrumbs";
@@ -127,6 +128,6 @@ export function ClinicView({ clinic }: ClinicViewProps) {
         </Column>
       </Columns>
     </main>
-    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }} />
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeStructuredData(structuredData) }} />
   </HalfColumnsLayout>;
 }
