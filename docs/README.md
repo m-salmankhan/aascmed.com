@@ -53,5 +53,6 @@ This target does not include a deployed authentication gateway. Draft mode requi
 - [Page architecture](../src/server/pages/README.md): routes, views, redirects and sitemaps.
 - [Media](../src/server/media/README.md): responsive images, social cards and caches.
 - [Testing](../tests/README.md): local checks, browser comparisons and CI.
+- [Code style](code-style/README.md): naming, doc comments and TypeScript, React and Astro conventions.
 - [Astro migration validation](astro-stage3-parity.md): historical baseline, differences and evidence.
 - [Migration plans](../plans/astro-migration-plan.md) and [ticket index](../plans/astro-migration-tickets.md): recorded decisions and deferred work.
