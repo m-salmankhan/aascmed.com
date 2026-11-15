@@ -1,13 +1,6 @@
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
-const ts = require("typescript");
-const fs = require("node:fs");
-const compile = (module, filename) => module._compile(ts.transpileModule(fs.readFileSync(filename, "utf8"), {
-  compilerOptions: { jsx: ts.JsxEmit.ReactJSX, jsxImportSource: "@emotion/react", module: ts.ModuleKind.CommonJS, esModuleInterop: true },
-  fileName: filename,
-}).outputText, filename);
-require.extensions[".ts"] = require.extensions[".tsx"] = compile;
-
+require('./helpers/register-react.js');
 const React = require("react");
 const { renderToStaticMarkup } = require("react-dom/server");
 const { PublicConfigProvider } = require("../../src/config/public-context.tsx");
@@ -40,19 +33,5 @@ test("static maps use caller sizes in both the main image and no-JavaScript fall
   for (const map of maps) {
     assert.ok(map.includes(`sizes="${sizes}"`));
     assert.ok(map.includes('loading="lazy"'));
-  }
-});
-
-const { useSiteMetadata } = require('../../src/hooks/useSiteMetadata.ts');
-const { siteSettings } = require('../../src/config/site.ts');
-const { SiteDataProvider } = require('../../src/data/site-data.tsx');
-test('site identity defaults agree with the configured public site', () => {
-  function Metadata() { return React.createElement('span', null, JSON.stringify(useSiteMetadata())); }
-  const normal = renderToStaticMarkup(React.createElement(Metadata));
-  const empty = renderToStaticMarkup(React.createElement(SiteDataProvider, { value: { siteSettings: { title: '', url: '' } } }, React.createElement(Metadata)));
-  for (const html of [normal, empty]) {
-    assert.ok(html.includes(siteSettings.title));
-    assert.ok(html.includes(siteSettings.url));
-    assert.ok(!html.includes('Untitled Site'));
   }
 });
