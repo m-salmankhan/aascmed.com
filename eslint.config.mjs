@@ -30,7 +30,7 @@ export default tseslint.config(
     plugins: { 'react-hooks': hooks, 'jsx-a11y': a11y },
     rules: {
       'react-hooks/rules-of-hooks': 'error',
-      'react-hooks/exhaustive-deps': 'warn',
+      'react-hooks/exhaustive-deps': 'error',
       // Existing accessibility work remains in WEB-63, WEB-64 and WEB-65.
       ...Object.fromEntries(Object.keys(a11y.configs.recommended.rules).map(rule => [rule, 'warn'])),
     },
