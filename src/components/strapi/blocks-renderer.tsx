@@ -6,7 +6,7 @@ import type { MediaDescriptor } from "../../content/models";
 import { DynamicHeading } from "../headings";
 import { ContactBanner, ButtonList } from "../posts/shortcode-components";
 import { StrapiFAQ } from "./faq";
-import { headingIds } from "../../utils/strapi-toc";
+import { headingIds, contentHeadingIds } from "../../utils/strapi-toc";
 
 /** Image block fields owned by Strapi's renderer package. */
 type CmsInlineImage = Extract<BlocksContent[number], { type: 'image' }>['image'];
@@ -81,16 +81,12 @@ export const StrapiBlocksRenderer: React.FC<StrapiBlocksRendererProps> = ({ cont
         return null;
     }
 
-    const sanitizedContent = sanitizeBlocksContent(content);
-    
-    if (sanitizedContent.length === 0) {
-        return null;
-    }
-
-    const anchors = ids || headingIds(sanitizedContent);
+    const anchors = ids || headingIds(content);
     let headingIndex = 0;
-    const preparedContent = sanitizedContent.map(block => block.type === 'heading'
-        ? { ...block, id: anchors[headingIndex++] } : block);
+    // Attach anchors before sanitizing so filtering other block types cannot shift them.
+    const preparedContent = sanitizeBlocksContent(content.map(block => block.type === 'heading'
+        ? { ...block, id: anchors[headingIndex++] } : block));
+    if (preparedContent.length === 0) return null;
 
     // Custom block renderers with heading IDs for table of contents
     const blocks = {
@@ -117,9 +113,7 @@ interface StrapiDynamicZoneRendererProps {
 export const StrapiDynamicZoneRenderer: React.FC<StrapiDynamicZoneRendererProps> = ({ content, className }) => {
     if (!content || !Array.isArray(content)) return null;
 
-    const usedIds = new Set<string>(content.some(component => (component.__component || component.strapi_component) === 'generic.faq') ? ['faq'] : []);
-    const anchors = content.map(component => (component.__component || component.strapi_component) === 'generic.rich-text' && component.text
-        ? headingIds(component.text, usedIds) : []);
+    const anchors = contentHeadingIds(content);
 
     return (
         <div className={className}>

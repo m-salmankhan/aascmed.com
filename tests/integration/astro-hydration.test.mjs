@@ -42,6 +42,10 @@ test(
   async () => {
     const cms = await startFixtureCms();
     cms.published['service-updates'][0].date = '2026-11-01T00:30:00.000Z';
+    const repeatedHeading = () => ({ __component: 'generic.rich-text', text: [
+      { type: 'heading', level: 2, children: [{ type: 'text', text: 'Symptoms' }] },
+    ] });
+    cms.published.blogs[0].content.push(repeatedHeading(), repeatedHeading());
     const env = {
       ...process.env,
       DEBUG: '',
@@ -150,6 +154,10 @@ test(
       assert.equal(sent.body.newPatient, true);
       assert.equal(sent.body.disclaimer, true);
       assert.equal(sent.body.source_url, `${origin}/contact/`);
+      await openHydrated(page, `${origin}/blog/article-1/`);
+      await expect(page.locator('a[href="#symptoms"], a[href="#symptoms-2"]')).toHaveCount(2);
+      assert.deepEqual(await page.locator('h2[id^="symptoms"]').evaluateAll(nodes => nodes.map(node => node.id)), ['symptoms', 'symptoms-2']);
+      assert.ok(await page.locator('a[href="#symptoms"], a[href="#symptoms-2"]').evaluateAll(links => links.every(link => document.getElementById(link.hash.slice(1)))));
       await openHydrated(page, `${origin}/`);
       await expect(page.getByRole('button', { name: 'Dismiss', exact: true })).toBeVisible();
       await page.getByRole('button', { name: 'Dismiss', exact: true }).click();
