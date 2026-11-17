@@ -7,7 +7,7 @@ export const IlitSocietyBadge = () => (
             srcSet: "https://ilitsociety.org/badge/ilit-badge-light-sm-find-us-on@2x.png 2x",
             width: 189,
             height: 48,
-            alt: "Find us on the ILIT Society directory (opens in a new tab)",
+            alt: "Find us on the ILIT Society directory",
         }} />
     </a>
 );
