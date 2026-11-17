@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="190" height="48" viewBox="0 0 190 48" role="img" aria-label="Find us on ILIT Society directory">
-<style>@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;700&amp;display=swap');text{font-family:Archivo,"Segoe UI",system-ui,sans-serif}</style>
-<rect x="0" y="0" width="190" height="48" rx="6" fill="#F5EFE3"/>
-<svg x="12" y="10.2" width="26" height="27.6" viewBox="20 30 80 85"><line x1="60" y1="45" x2="35" y2="100" stroke="#c9a132" stroke-width="2"/><line x1="60" y1="45" x2="85" y2="100" stroke="#c9a132" stroke-width="2"/><line x1="35" y1="100" x2="85" y2="100" stroke="#c9a132" stroke-width="2"/><circle cx="60" cy="45" r="14" fill="#c9a132"/><circle cx="35" cy="100" r="14" fill="#1B2A4A"/><circle cx="85" cy="100" r="14" fill="#1B2A4A"/></svg>
-<text x="48" y="20.0" font-size="8.5" font-weight="700" letter-spacing="1.53" fill="#A8862E">FIND US ON</text>
-<text x="48" y="34.9" font-size="14" font-weight="700" letter-spacing="-0.2" fill="#1B2A4A">ILIT Society <tspan font-weight="500" opacity="0.85">directory</tspan></text>
-</svg>
