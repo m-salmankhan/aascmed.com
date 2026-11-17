@@ -7,6 +7,7 @@ import { H3, stylesH1 } from "../headings";
 import { Logo } from "../logo";
 import { SiteLink } from "../../navigation/link";
 import { HorizontalCalloutBanner } from "../cta/horizontal-banner";
+import { IlitSocietyBadge } from "../ilit-society-badge";
 
 const stylesFooter = css`
     background: ${colours.brandPrimary};
@@ -51,9 +52,7 @@ export const Footer = () => {
                     <Logo css={css`fill: #fff; width: 8em; height: 8em;`} />
                     <H3 css={stylesH1}>About</H3>
                     <p>We have been providing expert care for nearly 30 years to sufferers of allergy, asthma and sinus related problems.</p>
-                    <a href="https://ilitsociety.org/practitioner/allergy-asthma-sinus-centers-bolingbrook/" title="ILIT Society: directory of intralymphatic immunotherapy practitioners">
-                        <img src="https://ilitsociety.org/badge/ilit-badge-light-find-us-on.png" srcSet="https://ilitsociety.org/badge/ilit-badge-light-find-us-on@2x.png 2x" width="234" height="64" alt="Find us on the ILIT Society directory" loading="lazy" />
-                    </a>
+                    <IlitSocietyBadge />
                 </div>
                 <div css={stylesCol}>
                     <H3 css={stylesH1}>Navigation</H3>
