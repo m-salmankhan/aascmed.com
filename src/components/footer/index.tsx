@@ -7,6 +7,7 @@ import { H3, stylesH1 } from "../headings";
 import { Logo } from "../logo";
 import { SiteLink } from "../../navigation/link";
 import { HorizontalCalloutBanner } from "../cta/horizontal-banner";
+import { IlitSocietyBadge } from "../ilit-society-badge";
 
 const stylesFooter = css`
     background: ${colours.brandPrimary};
@@ -51,6 +52,7 @@ export const Footer = () => {
                     <Logo css={css`fill: #fff; width: 8em; height: 8em;`} />
                     <H3 css={stylesH1}>About</H3>
                     <p>We have been providing expert care for nearly 30 years to sufferers of allergy, asthma and sinus related problems.</p>
+                    <IlitSocietyBadge />
                 </div>
                 <div css={stylesCol}>
                     <H3 css={stylesH1}>Navigation</H3>
