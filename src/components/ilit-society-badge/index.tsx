@@ -1,7 +1,7 @@
 import { Image } from "../media/image";
 
-export const IlitSocietyBadge = () => (
-    <a href="https://ilitsociety.org/practitioner/allergy-asthma-sinus-centers-bolingbrook/" target="_blank" rel="noopener noreferrer nofollow">
+export const IlitSocietyBadge = ({ href = "https://ilitsociety.org/practitioner/allergy-asthma-sinus-centers-bolingbrook/" }: { href?: string }) => (
+    <a href={href} target="_blank" rel="noopener noreferrer nofollow">
         <Image image={{
             src: "https://ilitsociety.org/badge/ilit-badge-light-sm-find-us-on.png",
             srcSet: "https://ilitsociety.org/badge/ilit-badge-light-sm-find-us-on@2x.png 2x",
