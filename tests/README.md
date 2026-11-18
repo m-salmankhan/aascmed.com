@@ -77,6 +77,10 @@ Mapbox telemetry and preview-widget requests are blocked without counting them a
 unexpected submissions. No real contact API, email, appointment or CMS mutation
 is allowed.
 
+Each worker fetches the public ILIT Society badge images once and reuses those
+bytes on both deployments. The browser still waits for the badge to decode before
+capturing the page. A failed upstream fetch still fails the check.
+
 Booking smoke serves a tiny inert script and intercepts the outbound practice
 URL. It verifies our script loader, dismissal and handoff, **not Zocdoc's popup
 implementation, availability, authentication or appointment completion**.
