@@ -358,6 +358,15 @@ export function mapStrapiClinic(entity: StrapiEntity): ClinicRecord {
     clinicName: string(source.clinic_name) ?? null,
     body: optionalJson(source.body),
   };
+  const badgeUrl = string(source.ilit_society_url)?.trim();
+  if (badgeUrl) {
+    try {
+      const url = new URL(badgeUrl);
+      if (url.protocol === "https:" && url.hostname === "ilitsociety.org" && !url.username && !url.password) {
+        mapped.ilitSocietyUrl = url.href;
+      }
+    } catch { /* Ignore invalid CMS URLs. */ }
+  }
   if (location) {
     mapped.location = {
       address: string(location.address),
