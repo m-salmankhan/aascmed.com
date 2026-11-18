@@ -1,5 +1,6 @@
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
+const { readFileSync } = require("node:fs");
 const { summarizeReport, reviewBody, publishReview, validatePullRequest } = require("../ci/review");
 
 function report(annotations = [], unexpected = 0) {
@@ -32,6 +33,26 @@ function options(annotations = [], commentId = "42") {
 
 const difference = { type: "reference-difference", description: "Changed pixels: 500 (5%); limit 0.1%" };
 
+test("command acknowledgement creates a bot-owned comment and exposes its ID", async () => {
+  const workflow = readFileSync(".github/workflows/regression-tests.yml", "utf8");
+  const script = workflow.split("  unit:")[0].split("          script: |\n")[1]
+    .split("\n").map(line => line.slice(12)).join("\n");
+  const calls = [];
+  const github = { rest: {
+    repos: { getCollaboratorPermissionLevel: async () => ({ data: { permission: "write" } }) },
+    pulls: { get: async () => ({ data: { state: "open", head: { repo: { full_name: "owner/repo" } } } }) },
+    issues: { createComment: async args => { calls.push(args); return { data: { id: 123 } }; } },
+  } };
+  const outputs = {};
+  const core = { setOutput: (key, value) => { outputs[key] = value; }, setFailed: assert.fail };
+  const context = { repo: { owner: "owner", repo: "repo" }, payload: { issue: { number: 7 }, comment: { id: 42, user: { login: "user" } } } };
+  await new (Object.getPrototypeOf(async function () {}).constructor)("github", "core", "context", script)(github, core, context);
+  assert.equal(calls[0].issue_number, 7);
+  assert.equal(outputs.comment_id, "123");
+  assert.match(workflow, /UI_COMMENT_ID: \$\{\{ needs\.prepare-comment-command\.outputs\.comment_id \}\}/);
+  assert.match(workflow, /comment_id: Number\('\$\{\{ needs\.prepare-comment-command\.outputs\.comment_id \}\}'\)/);
+});
+
 test("review summary extracts advisory differences from nested suites without confusing pixel measurements", () => {
   const summary = summarizeReport(report([difference, { type: "pixel-difference", description: "500 pixels" }]));
   assert.equal(summary.differences.length, 1);
@@ -47,7 +68,7 @@ test("review summary preserves functional failures and rejects missing or empty 
   }]) assert.throws(() => summarizeReport(invalid));
 });
 
-test("different pages update the command comment in the PR conversation with report links", async () => {
+test("different pages update the workflow comment in the PR conversation with report links", async () => {
   const input = options([difference]);
   const result = await publishReview(input);
   assert.equal(result.posted, true);
@@ -64,7 +85,7 @@ test("different pages update the command comment in the PR conversation with rep
   assert.match(comment.body, /\| Viewport \| Page\/check \| Differences \|\n\| --- \| --- \| --- \|\n\|/);
 });
 
-test("an unchanged comparison updates the command comment with a no-differences result", async () => {
+test("an unchanged comparison updates the workflow comment with a no-differences result", async () => {
   const input = options();
   const result = await publishReview(input);
   assert.equal(result.posted, true);
