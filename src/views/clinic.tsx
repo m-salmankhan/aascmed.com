@@ -10,6 +10,7 @@ import { ContactForm } from "../components/contact";
 import { Article } from "../components/posts/article";
 import { useSiteMetadata } from "../hooks/useSiteMetadata";
 import { StrapiBlocksRenderer } from "../components/strapi/blocks-renderer";
+import { IlitSocietyBadge } from "../components/ilit-society-badge";
 import { clinicPath } from "../content/urls";
 import type { ClinicRecord } from "../content/models";
 
@@ -94,6 +95,7 @@ export function ClinicView({ clinic }: ClinicViewProps) {
     <main>
       <Breadcrumbs path={[["/", "Home"], ["/clinics/", "Clinics"], [slug, clinicName]]} css={css({ marginTop: "3em" })} />
       <H1 css={css`font-size: 2.5em;`}>{clinicName} Clinic</H1>
+      {clinic?.ilitSocietyUrl && <IlitSocietyBadge href={clinic.ilitSocietyUrl} />}
       <Columns>
         <Column>
           <MapBox css={css`height: 25em`} longitude={longitude} latitude={latitude} zoom={15} label={pinLabelName} />
