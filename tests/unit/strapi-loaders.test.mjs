@@ -65,6 +65,15 @@ test("Strapi v5 clinic mapper retains documentId and deeply nested opening and s
   assert.equal(clinic.hours?.[1].open, false);
   assert.equal(clinic.location?.placeId, "place-123");
 });
+test("clinic badge links accept only HTTPS ILIT Society URLs", async () => {
+  const clinic = await fixture("clinic");
+  const map = (ilit_society_url) => mapStrapiClinic({ ...clinic, ilit_society_url }).ilitSocietyUrl;
+  const listing = "https://ilitsociety.org/practitioner/allergy-asthma-sinus-centers-aurora/";
+  assert.equal(map(listing), listing);
+  for (const value of [undefined, "", "not a URL", "javascript:alert(1)", "http://ilitsociety.org/", "https://ilitsociety.org.evil.test/", "https://user@ilitsociety.org/"]) {
+    assert.equal(map(value), undefined);
+  }
+});
 test("Strapi v5 condition mapper keeps FAQ blocks and normalized media descriptors", async () => {
   const condition = mapStrapiCondition(await fixture("condition"), "https://cms.example.test");
   assert.equal(condition.id, "condition-food-allergy");
