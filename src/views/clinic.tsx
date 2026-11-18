@@ -95,7 +95,6 @@ export function ClinicView({ clinic }: ClinicViewProps) {
     <main>
       <Breadcrumbs path={[["/", "Home"], ["/clinics/", "Clinics"], [slug, clinicName]]} css={css({ marginTop: "3em" })} />
       <H1 css={css`font-size: 2.5em;`}>{clinicName} Clinic</H1>
-      {clinic?.ilitSocietyUrl && <IlitSocietyBadge href={clinic.ilitSocietyUrl} />}
       <Columns>
         <Column>
           <MapBox css={css`height: 25em`} longitude={longitude} latitude={latitude} zoom={15} label={pinLabelName} />
@@ -107,7 +106,11 @@ export function ClinicView({ clinic }: ClinicViewProps) {
           </PrimaryAnchor>}
           <H2 css={stylesH1}>Contact</H2>
           <ContactForm clinic={clinicName} />
-          <Article><h2>About the Clinic</h2><StrapiBlocksRenderer content={clinic?.body as any[] | undefined} /></Article>
+          <Article>
+            <h2>About the Clinic</h2>
+            {clinic?.ilitSocietyUrl && <IlitSocietyBadge href={clinic.ilitSocietyUrl} />}
+            <StrapiBlocksRenderer content={clinic?.body as any[] | undefined} />
+          </Article>
         </Column>
         <Column>
           <H2 css={[stylesH1, css`margin-top: 0`]}>Contact Information</H2>
