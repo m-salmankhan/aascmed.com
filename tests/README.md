@@ -205,8 +205,8 @@ quick, advisory comparison against the main deploy alias, not a commit-pinned
 baseline. No content export or freeze is needed. If page text, photos, or other
 published content changed between the builds, those changes can appear in the
 report alongside code and layout changes. The fast infrastructure job
-remains separate from both browser comparison paths. The command comment is
-updated with a running notice and then the results, all in the PR conversation;
+remains separate from both browser comparison paths. The workflow posts a
+running notice and updates its own comment with the results in the PR conversation;
 it does not create a review comment that needs resolving.
 
 For an on-demand PR comparison, wait for the Netlify preview deployment to
