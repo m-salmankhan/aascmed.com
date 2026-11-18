@@ -1,13 +1,3 @@
-export enum HTTP_STATUS {
-    OK = 200,
-    CREATED = 201,
-
-    BAD_REQUEST = 400,
-    FORBIDDEN = 403,
-    NOT_FOUND = 404,
-    UNPROCESSABLE = 422,
-}
-
 export interface ContactFormFields {
     subject: string
     full_name: string
@@ -36,3 +26,10 @@ export interface ContactFormErrorResponse {
     error?: string
     field_errors?: ContactFormFieldErrors
 }
+
+export type ContactFormFailure = "timeout" | "network" | "rejected" | "server";
+
+/** Field errors take precedence over the server error, then the failure reason's UI copy. */
+export type ContactFormResult =
+    | { ok: true }
+    | ({ ok: false; reason: ContactFormFailure } & ContactFormErrorResponse);

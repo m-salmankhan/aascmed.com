@@ -1,36 +1,30 @@
-import { ContactFormErrorResponse, ContactFormFields, HTTP_STATUS } from "./types";
+import type { ContactFormFields, ContactFormErrorResponse, ContactFormResult } from "./types";
 
 export class API {
-    // Contact form
-    readonly baseURL: string;
+    constructor(readonly baseURL: string) {}
 
-    constructor(baseURL: string) {
-        this.baseURL = baseURL;
-    }
-
-    async contact(fields: ContactFormFields): Promise<void | ContactFormErrorResponse> {
-        const response = await fetch(
-            `${this.baseURL}/contact/`,
-            {
+    async contact(fields: ContactFormFields): Promise<ContactFormResult> {
+        let response: Response;
+        try {
+            response = await fetch(`${this.baseURL}/contact/`, {
                 method: "POST",
-                headers: {
-                    "content-type": "application/json"
-                },
-                body: JSON.stringify(fields)
-            }
-        );
-
-        const data = await response.json().catch(() => new Error("Decoding response failed."));
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify(fields),
+                signal: AbortSignal.timeout(15000),
+            });
+        } catch (error) {
+            return { ok: false, reason: error instanceof DOMException && error.name === "TimeoutError" ? "timeout" : "network" };
+        }
 
         switch (response.status) {
-            case HTTP_STATUS.OK:
-                return;
-
-            case HTTP_STATUS.BAD_REQUEST:
-                return data.detail as ContactFormErrorResponse;
-
+            case 200:
+                return { ok: true };
+            case 400: {
+                const data = await response.json().catch(() => null);
+                return { ...(data?.detail as ContactFormErrorResponse | undefined), ok: false, reason: "rejected" };
+            }
             default:
-                throw Error("Unexpected response from API server.")
+                return { ok: false, reason: "server" };
         }
     }
 }
