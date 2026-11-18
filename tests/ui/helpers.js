@@ -41,6 +41,13 @@ async function preparePage(page, url) {
     await dismissBooking(page);
     await expect(page).toHaveURL(url);
   }
+  // Hidden map previews cannot be scrolled into view until their container loads the map.
+  for (const map of await page.locator(".lazy-container:visible").all()) {
+    await map.scrollIntoViewIfNeeded();
+    await expect.poll(() => map.locator("img.lazy-preview").evaluateAll(images =>
+      images.every(image => getComputedStyle(image).opacity === "0")
+    ), { message: `Static map preview did not fade on ${url}` }).toBe(true);
+  }
   for (const image of await page.locator(imageSelector).all()) {
     if (!await image.isVisible()) continue;
     await image.scrollIntoViewIfNeeded();
@@ -48,9 +55,6 @@ async function preparePage(page, url) {
       { message: `Image failed to load on ${url}: ${await image.getAttribute("alt")}` }).toBe(true);
     await image.evaluate(element => element.decode());
   }
-  await expect.poll(() => page.locator("img.lazy-preview").evaluateAll(images =>
-    images.every(image => getComputedStyle(image).opacity === "0")
-  )).toBe(true);
   await page.evaluate(() => scrollTo({ top: 0, behavior: "instant" }));
   await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
   await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
