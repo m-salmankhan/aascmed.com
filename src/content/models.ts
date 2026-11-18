@@ -93,6 +93,7 @@ export interface ProviderRecord extends ContentRecord {
 /** Clinic content with nullable name and optional location, contact, and hours data. */
 export interface ClinicRecord extends ContentRecord {
   clinicName: string | null;
+  ilitSocietyUrl?: string;
   location?: {
     address?: string;
     latitude?: number | null;
