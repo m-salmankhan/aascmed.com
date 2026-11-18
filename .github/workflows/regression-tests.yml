@@ -37,6 +37,8 @@ concurrency:
 jobs:
   prepare-comment-command:
     name: Acknowledge regression command
+    outputs:
+      comment_id: ${{ steps.acknowledge.outputs.comment_id }}
     if: github.event_name == 'issue_comment' && github.event.issue.pull_request && contains(fromJSON('["/regression-check","/run-regression"]'), github.event.comment.body)
     runs-on: ubuntu-latest
     permissions:
@@ -45,6 +47,7 @@ jobs:
       issues: write
     steps:
       - uses: actions/github-script@v7
+        id: acknowledge
         with:
           script: |
             const { owner, repo } = context.repo;
@@ -53,8 +56,8 @@ jobs:
               owner, repo, username: comment.user.login,
             });
             if (!["admin", "maintain", "write"].includes(access.permission)) {
-              await github.rest.issues.updateComment({
-                owner, repo, comment_id: comment.id,
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: context.payload.issue.number,
                 body: "This regression check can only be run by a repository collaborator with write access.",
               });
               core.setFailed("Commenter needs write access to run the regression check");
@@ -64,17 +67,18 @@ jobs:
               owner, repo, pull_number: context.payload.issue.number,
             });
             if (pullRequest.state !== "open" || pullRequest.head.repo?.full_name !== `${owner}/${repo}`) {
-              await github.rest.issues.updateComment({
-                owner, repo, comment_id: comment.id,
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: context.payload.issue.number,
                 body: "This regression check only runs on open PRs from this repository.",
               });
               core.setFailed("Regression checks do not run for closed or fork PRs");
               return;
             }
-            await github.rest.issues.updateComment({
-              owner, repo, comment_id: comment.id,
+            const { data: reply } = await github.rest.issues.createComment({
+              owner, repo, issue_number: context.payload.issue.number,
               body: "⏳ Regression check started. I’m checking the PR and preview now; I’ll update this comment with the results.",
             });
+            core.setOutput("comment_id", String(reply.id));
 
   unit:
     name: Source and Astro checks
@@ -147,7 +151,6 @@ jobs:
           INPUT_CANDIDATE_URL: ${{ inputs.candidate_url }}
           INPUT_REFERENCE_URL: ${{ inputs.reference_url }}
           INPUT_BASELINE_ID: ${{ inputs.baseline_id }}
-          INPUT_COMMENT_ID: ${{ github.event.comment.id }}
         with:
           script: |
             const { validatePullRequest } = require("./tests/ci/review");
@@ -174,7 +177,6 @@ jobs:
               core.setOutput("reference_url", target.referenceURL);
               core.setOutput("baseline_id", target.baselineId);
               core.setOutput("candidate_commit", target.candidateCommit);
-              core.setOutput("comment_id", String(context.payload.comment.id));
             }
       - name: Expose resolved comparison inputs
         env:
@@ -183,7 +185,7 @@ jobs:
           UI_REFERENCE_URL: ${{ steps.targets.outputs.reference_url }}
           UI_BASELINE_ID: ${{ steps.targets.outputs.baseline_id }}
           UI_CANDIDATE_COMMIT: ${{ steps.targets.outputs.candidate_commit }}
-          UI_COMMENT_ID: ${{ steps.targets.outputs.comment_id }}
+          UI_COMMENT_ID: ${{ needs.prepare-comment-command.outputs.comment_id }}
         run: |
           printf 'UI_PULL_REQUEST_NUMBER=%s\n' "$UI_PULL_REQUEST_NUMBER" >> "$GITHUB_ENV"
           printf 'UI_BASE_URL=%s\n' "$UI_BASE_URL" >> "$GITHUB_ENV"
@@ -268,7 +270,7 @@ jobs:
             const body = `⚠️ Regression check couldn't finish. See the [workflow run](${runURL}) for the reason.`;
             await github.rest.issues.updateComment({
               ...context.repo,
-              comment_id: context.payload.comment.id,
+              comment_id: Number('${{ needs.prepare-comment-command.outputs.comment_id }}'),
               body,
             });
 
