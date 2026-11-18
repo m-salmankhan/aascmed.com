@@ -91,6 +91,26 @@ test("page readiness waits for interactive dismissal", async ({ page }) => {
   expect(await semanticImages(page)).toEqual([{ alt: "Clinic", loading: "lazy", draggable: false }]);
 });
 
+test("page readiness scrolls offscreen map containers before waiting for their previews to fade", async ({ page }) => {
+  const map = `<div class="lazy-container" style="margin-top:3000px;height:100px">
+    <img class="lazy-preview" alt="Map preview" style="visibility:hidden"
+      src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10'%3E%3C/svg%3E">
+  </div><script>
+    const container = document.querySelector('.lazy-container');
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      container.querySelector('.lazy-preview').remove();
+      observer.disconnect();
+    });
+    observer.observe(container);
+  </script>`;
+  const body = fixture.replace("</main>", `${map}</main>`)
+    .replace('<a href="https://www.zocdoc.com/', '<a style="position:fixed;top:0" href="https://www.zocdoc.com/');
+  await page.route(url, route => route.fulfill({ contentType: "text/html", body }));
+  await preparePage(page, url);
+  await expect(page.locator(".lazy-preview")).toHaveCount(0);
+});
+
 test("contract detects text, metadata, heading, link and structured-data mutations", async ({ page }) => {
   await preparePage(page, url);
   const original = await pageContract(page);
