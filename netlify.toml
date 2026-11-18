@@ -1,7 +1,0 @@
-[build]
-  command = "yarn build"
-  publish = "dist"
-
-# Restore generated image artifacts before the build; save them after success.
-[[plugins]]
-  package = "./netlify/plugins/image-cache"
