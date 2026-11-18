@@ -7,6 +7,7 @@ function summarizeReport(report) {
   assert.ok(report.stats.expected + report.stats.unexpected + report.stats.flaky > 0, "No tests executed");
   assert.ok(Array.isArray(report.suites) && Array.isArray(report.errors), "Invalid Playwright report");
   const differences = [];
+  const screenshotPairs = [];
   let tests = 0;
   const visit = suites => {
     for (const suite of suites) {
@@ -17,6 +18,12 @@ function summarizeReport(report) {
           const categories = test.annotations.filter(annotation => annotation.type === "reference-difference")
             .map(annotation => annotation.description);
           if (categories.length) differences.push({ title: spec.title, project: test.projectName, categories });
+          const images = test.results?.at(-1)?.attachments;
+          const reference = images?.find(image => image.name === "reference" && image.contentType === "image/png")?.path;
+          const candidate = images?.find(image => image.name === "candidate" && image.contentType === "image/png")?.path;
+          if (reference && candidate && (categories.length || spec.title.startsWith("/ matches reference"))) {
+            screenshotPairs.push({ title: spec.title, project: test.projectName, reference, candidate, changed: categories.length > 0 });
+          }
         }
       }
       if (suite.suites) visit(suite.suites);
@@ -26,12 +33,12 @@ function summarizeReport(report) {
   const total = report.stats.expected + report.stats.unexpected + report.stats.skipped + report.stats.flaky;
   assert.equal(tests, total, "Report test inventory does not match stats");
   return {
-    differences, total, failures: report.stats.unexpected + report.errors.length,
+    differences, screenshotPairs, total, failures: report.stats.unexpected + report.errors.length,
     skipped: report.stats.skipped, flaky: report.stats.flaky,
   };
 }
 
-function reviewBody({ summary, runURL, artifactURL, commitSha, candidateURL, referenceURL, baselineId }) {
+function reviewBody({ summary, runURL, artifactURL, commitSha, candidateURL, referenceURL, baselineId, screenshots = [] }) {
   const code = value => {
     const text = String(value).replace(/[`|\r\n<>]/g, " ");
     return `\`${text.length > 1000 ? text.slice(0, 1000) + "... [truncated]" : text}\``;
@@ -49,7 +56,7 @@ function reviewBody({ summary, runURL, artifactURL, commitSha, candidateURL, ref
     "<!-- website-reference-review -->",
     "### Website regression check",
     summary.differences.length
-      ? `Visual differences: **${summary.differences.length} page/viewport comparisons**. Functional/execution failures: **${summary.failures}**.`
+      ? `Differences flagged for review: **${summary.differences.length} page/viewport comparisons**. Functional/execution failures: **${summary.failures}**.`
       : `No reference differences found across ${summary.total} checks. Functional/execution failures: **${summary.failures}**.`,
     `Tests: ${summary.total}; skipped: ${summary.skipped}; flaky: ${summary.flaky}.`,
     "",
@@ -59,7 +66,14 @@ function reviewBody({ summary, runURL, artifactURL, commitSha, candidateURL, ref
     `Baseline: ${code(baselineId)}`,
     "",
     `[CI run](${runURL}) | [Download full report and screenshots](${artifactURL}) (retained for 14 days)`,
-    "The report includes reference/candidate screenshots, pixel differences where dimensions match, and contract JSON.",
+    ...(screenshots.length ? [
+      "",
+      "### Screenshots",
+      "| Page and viewport | Reference | Candidate |",
+      "| --- | --- | --- |",
+      ...screenshots.map(({ title, project, reference, candidate }) =>
+        `| ${code(title.split(" matches reference")[0])} · ${code(project)} | ![Reference screenshot](${reference}) | ![Candidate screenshot](${candidate}) |`),
+    ] : []),
     "",
     ...(rows.length ? ["| Viewport | Page/check | Differences |", "| --- | --- | --- |", ...rows] : ["No reference differences recorded."]),
     ...(omitted ? [`${omitted} more comparisons are listed in the complete report.`] : []),
@@ -85,7 +99,10 @@ async function publishReview(options) {
   assert.ok(artifactURL, "A report artifact URL is required");
   const summary = summarizeReport(options.report);
   const pullNumber = await validatePullRequest(options);
-  const body = reviewBody({ ...options, summary });
+  const screenshots = options.includeScreenshots
+    ? await require("./screenshots").publishScreenshots({ github, owner, repo, pullNumber, pairs: summary.screenshotPairs })
+    : [];
+  const body = reviewBody({ ...options, summary, screenshots });
   const { data: comment } = commentId
     ? await github.rest.issues.updateComment({ owner, repo, comment_id: Number(commentId), body })
     : await github.rest.issues.createComment({ owner, repo, issue_number: pullNumber, body });
