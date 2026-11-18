@@ -1,7 +1,7 @@
 const { expect } = require("@playwright/test");
 const { sitemapLocations } = require("./contracts");
 
-const imageSelector = 'header img:not([aria-hidden="true"]):not([role="presentation"]), #main img:not([aria-hidden="true"]):not([role="presentation"])';
+const imageSelector = ':is(header, #main, footer) img:not([aria-hidden="true"]):not([role="presentation"])';
 
 async function installSafety(context) {
   const violations = [];

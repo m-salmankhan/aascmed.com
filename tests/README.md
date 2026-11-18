@@ -208,6 +208,10 @@ report alongside code and layout changes. The fast infrastructure job
 remains separate from both browser comparison paths. The workflow posts a
 running notice and updates its own comment with the results in the PR conversation;
 it does not create a review comment that needs resolving.
+The comment shows up to four flagged reference/candidate screenshot pairs inline,
+or desktop and mobile home screenshots when the comparison is clean. These
+previews are stored on a separate `regression-screenshots/pr-N` branch in the
+public repository. The 14-day Actions artifact includes the full-resolution set.
 
 For an on-demand PR comparison, wait for the Netlify preview deployment to
 succeed, then comment `/regression-check` (`/run-regression` is also accepted as
@@ -258,8 +262,9 @@ results. Publishing/API failures, missing/empty reports and stale PR heads are
 infrastructure errors and fail the job. A cancelled run is not an acceptance
 result.
 
-Only browser runs and the same-repository PR instruction comment receive the
-write permissions they need, using GitHub's built-in token. The instruction
+Only on-demand jobs that publish results or instructions receive write permissions,
+using GitHub's built-in token. The browser job writes inline screenshot previews
+for comment-triggered comparisons of the public Netlify deployments. The instruction
 comment runs with `pull_request_target` and does not check out or execute PR code.
 Automatic PR infrastructure checks remain read-only. No Kaneo credential or external image
 hosting is needed. Manual dispatch executes the selected branch's test code with

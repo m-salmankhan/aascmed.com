@@ -91,6 +91,19 @@ test("page readiness waits for interactive dismissal", async ({ page }) => {
   expect(await semanticImages(page)).toEqual([{ alt: "Clinic", loading: "lazy", draggable: false }]);
 });
 
+test("page readiness loads a lazy footer badge before returning to the top", async ({ page }) => {
+  const body = fixture.replace("<footer>", `<footer style="margin-top:6000px">
+    <img alt="Directory badge" loading="lazy" width="189" height="48" src="/badge.svg">`)
+    .replace('<a href="https://www.zocdoc.com/', '<a style="position:fixed;top:0" href="https://www.zocdoc.com/');
+  await page.route(url, route => route.fulfill({ contentType: "text/html", body }));
+  await page.route("**/badge.svg", route => route.fulfill({
+    contentType: "image/svg+xml", body: '<svg xmlns="http://www.w3.org/2000/svg" width="189" height="48"/>',
+  }));
+  await preparePage(page, url);
+  expect(await page.getByAltText("Directory badge").evaluate(image => image.naturalWidth)).toBe(189);
+  expect(await page.evaluate(() => scrollY)).toBe(0);
+});
+
 test("page readiness scrolls offscreen map containers before waiting for their previews to fade", async ({ page }) => {
   const map = `<div class="lazy-container" style="margin-top:3000px;height:100px">
     <img class="lazy-preview" alt="Map preview" style="visibility:hidden"

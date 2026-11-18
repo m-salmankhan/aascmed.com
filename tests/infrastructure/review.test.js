@@ -1,6 +1,9 @@
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const { readFileSync } = require("node:fs");
+const { mkdir, mkdtemp, rm, writeFile } = require("node:fs/promises");
+const { resolve } = require("node:path");
+const { PNG } = require("pngjs");
 const { summarizeReport, reviewBody, publishReview, validatePullRequest } = require("../ci/review");
 
 function report(annotations = [], unexpected = 0) {
@@ -91,6 +94,37 @@ test("an unchanged comparison updates the workflow comment with a no-differences
   assert.equal(result.posted, true);
   assert.equal(input.comments.length, 1);
   assert.match(input.comments[0].body, /No reference differences found/);
+});
+
+test("the workflow publishes screenshot pairs and embeds them in the PR comment", async t => {
+  await mkdir("test-results", { recursive: true });
+  const dir = await mkdtemp(resolve("test-results/screenshots-"));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const file = resolve(dir, "screenshot.png");
+  await writeFile(file, PNG.sync.write(new PNG({ width: 16, height: 16 })));
+
+  const input = options();
+  input.includeScreenshots = true;
+  input.report.suites[0].suites[0].specs[0].tests[0].results = [{
+    attachments: ["reference", "candidate"].map(name => ({ name, path: file, contentType: "image/png" })),
+  }];
+  input.github.rest.git = {
+    createBlob: async ({ content }) => {
+      assert.equal(Buffer.from(content, "base64").subarray(8, 12).toString(), "WEBP");
+      return { data: { sha: "blob-sha" } };
+    },
+    createTree: async ({ tree }) => {
+      assert.deepEqual(tree.map(file => file.path), ["1-reference.webp", "1-candidate.webp"]);
+      return { data: { sha: "tree-sha" } };
+    },
+    getRef: async () => { throw Object.assign(new Error("Not found"), { status: 404 }); },
+    createCommit: async () => ({ data: { sha: "screenshots-sha" } }),
+    createRef: async ({ ref }) => assert.equal(ref, "refs/heads/regression-screenshots/pr-113"),
+  };
+  await publishReview(input);
+  const body = input.comments[0].body;
+  assert.match(body, /!\[Reference screenshot\]\(https:\/\/raw.githubusercontent.com\/owner\/repo\/screenshots-sha\/1-reference.webp\)/);
+  assert.match(body, /!\[Candidate screenshot\]\(https:\/\/raw.githubusercontent.com\/owner\/repo\/screenshots-sha\/1-candidate.webp\)/);
 });
 
 test("functional failures remain visible even when reference differences are advisory", async () => {
