@@ -108,7 +108,7 @@ export function ClinicView({ clinic }: ClinicViewProps) {
           <ContactForm clinic={clinicName} />
           <Article>
             <h2>About the Clinic</h2>
-            {clinic?.ilitSocietyUrl && <IlitSocietyBadge href={clinic.ilitSocietyUrl} />}
+            {clinic?.ilitSocietyUrl && <IlitSocietyBadge href={clinic.ilitSocietyUrl} variant="dark" />}
             <StrapiBlocksRenderer content={clinic?.body as any[] | undefined} />
           </Article>
         </Column>
