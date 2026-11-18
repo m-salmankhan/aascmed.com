@@ -4,12 +4,13 @@ const { installSafety } = require("./helpers");
 const test = base.extend({
   badgeImages: [async ({ playwright }, use) => {
     const request = await playwright.request.newContext();
-    const urls = ["light", "dark"].flatMap(variant => ["", "@2x"].map(scale =>
-      `https://ilitsociety.org/badge/ilit-badge-${variant}-sm-find-us-on${scale}.png`));
+    const urls = ["light", "dark"].map(variant =>
+      `https://ilitsociety.org/badge/ilit-badge-${variant}-sm-find-us-on.png`);
     let images;
     try {
       images = await Promise.all(urls.map(async url => {
-        const response = await request.get(url, { maxRetries: 2, timeout: 15000 });
+        const response = await request.get(url, { maxRetries: 2, timeout: 10000 })
+          .catch(() => request.get(url, { maxRetries: 2, timeout: 10000 }));
         expect(response.ok(), `Badge request failed (${response.status()}): ${url}`).toBe(true);
         return [url, await response.body()];
       }));

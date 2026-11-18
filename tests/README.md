@@ -77,7 +77,7 @@ Mapbox telemetry and preview-widget requests are blocked without counting them a
 unexpected submissions. No real contact API, email, appointment or CMS mutation
 is allowed.
 
-Each worker fetches the public ILIT Society badge images once and reuses those
+Each worker fetches the standard-resolution public ILIT Society badges and reuses those
 bytes on both deployments. The browser still waits for the badge to decode before
 capturing the page. A failed upstream fetch still fails the check.
 
