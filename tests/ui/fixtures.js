@@ -2,29 +2,27 @@ const { test: base, expect } = require("@playwright/test");
 const { installSafety } = require("./helpers");
 
 const test = base.extend({
-  badgeImages: [async ({}, use) => {
-    await use(new Map());
+  badgeImages: [async ({ playwright }, use) => {
+    const request = await playwright.request.newContext();
+    const urls = ["light", "dark"].flatMap(variant => ["", "@2x"].map(scale =>
+      `https://ilitsociety.org/badge/ilit-badge-${variant}-sm-find-us-on${scale}.png`));
+    let images;
+    try {
+      images = await Promise.all(urls.map(async url => {
+        const response = await request.get(url, { maxRetries: 2, timeout: 15000 });
+        expect(response.ok(), `Badge request failed (${response.status()}): ${url}`).toBe(true);
+        return [url, await response.body()];
+      }));
+    } finally {
+      await request.dispose();
+    }
+    await use(new Map(images));
   }, { scope: "worker" }],
   safety: [async ({ context, badgeImages }, use) => {
     const violations = await installSafety(context);
-    await context.route(/^https:\/\/ilitsociety\.org\/badge\/ilit-badge-(light|dark)-sm-find-us-on(@2x)?\.png$/, async route => {
+    await context.route(url => badgeImages.has(url.href), async route => {
       if (route.request().method() !== "GET") return route.fallback();
-      const url = route.request().url();
-      // Reuse the verified public badge bytes on both deployments and across test contexts.
-      if (!badgeImages.has(url)) {
-        badgeImages.set(url, (async () => {
-          const response = await route.fetch({ maxRetries: 2, timeout: 10000 });
-          expect(response.ok(), `Badge request failed (${response.status()})`).toBe(true);
-          return response.body();
-        })());
-      }
-      try {
-        await route.fulfill({ contentType: "image/png", body: await badgeImages.get(url) });
-      } catch (error) {
-        badgeImages.delete(url);
-        await route.abort();
-        throw error;
-      }
+      await route.fulfill({ contentType: "image/png", body: badgeImages.get(route.request().url()) });
     });
     await use();
     expect(violations, "Unhandled write requests were blocked; explicitly mock expected form submissions").toEqual([]);
