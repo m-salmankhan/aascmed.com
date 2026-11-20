@@ -17,6 +17,12 @@ Changing an embedded browser value requires a new build. Mapbox tokens are publi
 
 The removed Gatsby variables (`GATSBY_STRAPI_API_URL`, `GATSBY_API_BASE_URL`, `GATSBY_MAPBOX_API_KEY`, preview/refresh flags) are no longer application configuration. Copy their public URL/Mapbox values to the corresponding settings above for this branch. Retain the old hosting values and exact build settings privately for the pre-removal rollback deployment until acceptance/retention gates pass; do not revoke old credentials as part of source cleanup. The old Gatsby preview workflow, images, Caddy and forward-auth configuration are removed from source. No new VPS, registry or auth credentials are required yet.
 
+## GitHub Actions preview publication
+
+Set repository variables `STRAPI_API_URL`, `STRAPI_MEDIA_ORIGINS`, `PUBLIC_RUNTIME_API_BASE_URL` and `PUBLIC_MAPBOX_API_KEY` for the preview image. They contain public origins/browser settings, not the CMS token. The publisher requires an HTTPS CMS URL for the image's media allowlist and receives no runtime secrets or VPS SSH key.
+
+Set repository secrets `PREVIEW_APP_ID` and `PREVIEW_APP_PRIVATE_KEY` for the separate deployment-notification workflow. Install that GitHub App on `Allergy-Asthma-and-Sinus-Centers/preview.aascmed.com` with Actions write permission; the notification requests only that repository/permission. The preview repository independently verifies the completed build before deployment. `GITHUB_TOKEN` supplies this website repository's scoped package-publishing access automatically. No CMS credentials are needed to build or test the image.
+
 ## Optional tools and process settings
 
 - `HOST` and `PORT`: compiled Node SSR listen settings. For a local check, use `HOST=127.0.0.1` and a free port. The default adapter settings otherwise apply; these do not secure the server.

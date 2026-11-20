@@ -95,6 +95,8 @@ Label: **Astro stage 3: Route migration**. Parent: **WEB-16**.
 
 Label: **Astro stage 4: Preview rollout**. Parent: **WEB-17**. WEB-46 Gatsby retirement is Done and merged; preview implementation follows the current direct blockers below. The former parallel-Gatsby, Cloudflare Access/Tunnel and laptop/manual-deployment proposals are superseded. The owner manually provisions a VPS; trusted CI runs Ansible for bootstrap and automatic deployment after merges to `main`. Terraform is out of scope for now. See [the preview platform plan](preview-platform-plan.md) for repository ownership, CI trust/release contracts and replacement-server acceptance.
 
+The owner authorized stacked implementation MRs and parallel subagent work on 1 November, with reconciliation, local tests and independent code review before handoff. Dependent review branches may target their parent branches before merge; this does not mark prerequisites Done or permit unmerged live rollout. Runtime secrets use GitHub's encrypted repository store directly; no secrets or extra Vault password live in Git. Start review at [preview MR #1](https://github.com/Allergy-Asthma-and-Sinus-Centers/preview.aascmed.com/pull/1); the website's [runtime/image](https://github.com/m-salmankhan/aascmed.com/pull/175) and [publication](https://github.com/m-salmankhan/aascmed.com/pull/176) form a linked stack in that repository.
+
 | Ticket | Work | Prerequisite |
 | --- | --- | --- |
 | WEB-51 | Establish preview repository, automatic CI deployment contracts and reconcile closed work | WEB-46 |
