@@ -13,6 +13,7 @@ export function publishedSitemap(): AstroIntegration {
   const modifiedDates = new Map<string, string>();
   const integration = sitemap({
     customPages,
+    filter: (page) => new URL(page).pathname !== '/preview-unavailable/',
     changefreq: 'daily',
     priority: 0.7,
     /** Add a real CMS modification timestamp to this URL when one is available.
