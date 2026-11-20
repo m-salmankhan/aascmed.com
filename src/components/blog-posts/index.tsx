@@ -106,7 +106,7 @@ const stylesLi = css(
     }
 );
 
-export const BlogList: React.FC<BlogListProps> = ({ className, Blogs, frontPage }) => {
+export const BlogList = ({ className, Blogs, frontPage }: BlogListProps): React.ReactElement => {
     return (
         <ul className={className} css={stylesList}>
             {
@@ -149,8 +149,8 @@ interface BlogArchiveProps {
 }
 
 
-export const BlogArchive: React.FC<BlogArchiveProps> =
-    ({ className, heading, textContent, media, blogPosts, frontPage }) => {
+export const BlogArchive =
+    ({ className, heading, textContent, media, blogPosts, frontPage }: BlogArchiveProps): React.ReactElement => {
         if (blogPosts.length == 0) {
             return <></>;
         }

@@ -26,7 +26,7 @@ type FaIconProps = {
     style?: CSSProperties,
 };
 
-export const FaIcons: React.FC<FaIconProps> = ({iconStyle, icon, className, ...props}) =>
+export const FaIcons = ({iconStyle, icon, className, ...props}: FaIconProps): React.ReactElement =>
   <svg {...props} className={className}>
     <use href={spriteSymbol(iconStyle, icon)}/>
   </svg>

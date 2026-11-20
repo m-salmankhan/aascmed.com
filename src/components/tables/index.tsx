@@ -23,7 +23,7 @@ const stylesTable = css`
   }
 
 `
-export const Table: React.FC<HTMLProps<HTMLTableElement>> = (props) =>
+export const Table = (props: HTMLProps<HTMLTableElement>): React.ReactElement =>
     <table css={stylesTable} {...props}>
 
     </table>

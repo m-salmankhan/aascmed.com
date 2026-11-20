@@ -107,7 +107,7 @@ function buildHeadingIdMap(content: any[]): Map<string, string> {
  * A wrapper around Strapi's BlocksRenderer that sanitizes malformed content
  * (empty paragraphs, list items without children, etc.)
  */
-export const StrapiBlocksRenderer: React.FC<StrapiBlocksRendererProps> = ({ content, className }) => {
+export const StrapiBlocksRenderer = ({ content, className }: StrapiBlocksRendererProps): React.ReactElement | null => {
     if (!content || !Array.isArray(content) || content.length === 0) {
         return null;
     }
@@ -153,7 +153,7 @@ interface StrapiDynamicZoneRendererProps {
 /**
  * Renders Strapi dynamic zone content including rich text, FAQ, and contact CTA components.
  */
-export const StrapiDynamicZoneRenderer: React.FC<StrapiDynamicZoneRendererProps> = ({ content, className }) => {
+export const StrapiDynamicZoneRenderer = ({ content, className }: StrapiDynamicZoneRendererProps): React.ReactElement | null => {
     if (!content || !Array.isArray(content)) return null;
 
     return (

@@ -16,7 +16,7 @@ interface PatientFeedbackProps {
     reviews: Review[]
 }
 
-export const PatientFeedback: React.FC<PatientFeedbackProps> = ({className, averageRating,reviews}) => {
+export const PatientFeedback = ({className, averageRating,reviews}: PatientFeedbackProps): React.ReactElement => {
     const sectionRef = useRef<HTMLElement | null>(null);
     const intersectionObserverRef = useRef<IntersectionObserver | null>(null);
     const [enable, setEnable] = useState(false);

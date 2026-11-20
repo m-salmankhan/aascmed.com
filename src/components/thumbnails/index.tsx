@@ -97,7 +97,7 @@ interface ThumbnailProps {
     shape?: "elipse" | "rect",
     showOverlay?: boolean
 }
-export const Thumbnail: React.FC<ThumbnailProps> = ({
+export const Thumbnail = ({
     className,
     image,
     mapboxStaticMap,
@@ -107,7 +107,7 @@ export const Thumbnail: React.FC<ThumbnailProps> = ({
     overlayIconSize,
     showOverlay,
     shape,
-}) => {
+}: ThumbnailProps): React.ReactElement => {
     return (
         <div className={className} css={css(stylesThumbnail(overlayIconSize || 3, showOverlay || false, shape === "elipse"))}>
             {image}

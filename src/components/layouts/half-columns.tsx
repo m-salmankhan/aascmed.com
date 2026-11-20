@@ -9,7 +9,7 @@ interface HalfColumnProps {
     children: ReactNode,
     className?: string
 }
-export const HalfColumnsLayout: React.FC<HalfColumnProps> = ({ children, className }) => {
+export const HalfColumnsLayout = ({ children, className }: HalfColumnProps): React.ReactElement => {
     return (
         <App className={className} >
             <NavBar />

@@ -7,7 +7,7 @@ import { gridSpacing } from "../../styles/theme";
 interface ColumnGroupProps { children: ReactNode; className?: string }
 interface ColumnProps { children: ReactNode; className?: string }
 
-export const Columns: React.FC<ColumnGroupProps> = ({ children, className }) =>
+export const Columns = ({ children, className }: ColumnGroupProps): React.ReactElement =>
   <div css={[gridContainer(), { margin: `0 -${gridSpacing / 2}em` }]} className={className}>{children}</div>;
 
 const stylesColumn = css(
@@ -21,5 +21,5 @@ const stylesColumn = css(
   `,
 );
 
-export const Column: React.FC<ColumnProps> = ({ children, className }) =>
+export const Column = ({ children, className }: ColumnProps): React.ReactElement =>
   <div className={`half-column${className ? ` ${className}` : ""}`} css={stylesColumn}>{children}</div>;

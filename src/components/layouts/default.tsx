@@ -3,7 +3,7 @@ import { NavBar } from "../header";
 import React, { ReactNode } from "react";
 import { Footer } from "../footer";
 
-export const Layout: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const Layout = ({ children }: { children: ReactNode }): React.ReactElement => {
     return (
         <App>
             <NavBar />

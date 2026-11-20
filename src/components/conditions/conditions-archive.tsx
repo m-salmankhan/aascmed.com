@@ -61,7 +61,7 @@ const stylesLi = css(
     `
 );
 
-export const ConditionList: React.FC<ConditionListProps> = ({ className, conditions, showViewAll = true }) =>
+export const ConditionList = ({ className, conditions, showViewAll = true }: ConditionListProps): React.ReactElement =>
     <ul className={className} css={stylesConditionsGrid}>
         {
             conditions.map(
@@ -98,7 +98,7 @@ export const ConditionList: React.FC<ConditionListProps> = ({ className, conditi
 
 
 
-export const ConditionsArchive: React.FC<ConditionsArchiveProps> = ({ className, textContent, media, heading, frontPage, conditionsList, showViewAll = true }) => {
+export const ConditionsArchive = ({ className, textContent, media, heading, frontPage, conditionsList, showViewAll = true }: ConditionsArchiveProps): React.ReactElement => {
     return (
         <section className={className}>
             <SectionHeader

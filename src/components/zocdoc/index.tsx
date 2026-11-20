@@ -98,7 +98,7 @@ interface BubbleProps extends HTMLProps<HTMLAnchorElement> {
     collapse: boolean
 }
 
-const Bubble: React.FC<BubbleProps> = ({children, collapse, ...props}) => {
+const Bubble = ({children, collapse, ...props}: BubbleProps): React.ReactElement => {
     const [visibilityState, setVisibilityState] = useState(BubbleStates.VISIBLE);
 
     useEffect(() => {
@@ -212,7 +212,7 @@ interface BookButtonProps extends HTMLProps<HTMLAnchorElement> {
     collapse: boolean
 }
 
-const BookButton: React.FC<BookButtonProps> = ({collapse, ...props}) => {
+const BookButton = ({collapse, ...props}: BookButtonProps): React.ReactElement => {
     return (
         <a {...props} css={resetLinkStyles}>
             <div css={stylesBookButton(collapse)}>

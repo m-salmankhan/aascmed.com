@@ -79,7 +79,7 @@ const stylesCarouselNav = css({
   },
 });
 
-const MediaItem: React.FC<{ item: SectionMediaItem }> = ({ item }) => {
+const MediaItem = ({ item }: { item: SectionMediaItem }) => {
   const isVideo = item.mime?.startsWith("video/");
   const isImage = item.mime?.startsWith("image/");
   const alt = item.name || "";
@@ -111,7 +111,7 @@ interface SectionMediaProps {
   className?: string;
 }
 
-export const SectionMedia: React.FC<SectionMediaProps> = ({ media, className }) => {
+export const SectionMedia = ({ media, className }: SectionMediaProps): React.ReactElement | null => {
   if (media.length === 0) return null;
 
   if (media.length === 1) {
@@ -189,11 +189,11 @@ interface SectionWithMediaProps {
  * Wraps a section's content (children on left) with optional media on the right.
  * If no valid media, renders children full-width without the grid wrapper.
  */
-export const SectionWithMedia: React.FC<SectionWithMediaProps> = ({
+export const SectionWithMedia = ({
   children,
   media,
   className,
-}) => {
+}: SectionWithMediaProps): React.ReactElement => {
   const validMedia = filterValidMedia(media);
 
   if (validMedia.length === 0) {

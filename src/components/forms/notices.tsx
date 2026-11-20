@@ -115,7 +115,7 @@ const stylesError = css`
   }
 `
 
-export const ErrorNotice: React.FC<NoticeProps> = (props) => {
+export const ErrorNotice = (props: NoticeProps): React.ReactElement => {
   const [state, setState] = useState(NoticeStates.VISIBLE);
 
   const animateOut: MouseEventHandler = (e) => {
@@ -167,7 +167,7 @@ const stylesSuccess = css`
   }
 `
 
-export const SuccessNotice: React.FC<NoticeProps> = (props) => {
+export const SuccessNotice = (props: NoticeProps): React.ReactElement => {
   const [state, setState] = useState(NoticeStates.VISIBLE);
 
   const animateOut: MouseEventHandler = (e) => {
@@ -223,7 +223,7 @@ const stylesInfo = css`
   }
 `
 
-export const InfoNotice: React.FC<NoticeProps> = (props) => {
+export const InfoNotice = (props: NoticeProps): React.ReactElement => {
   const [state, setState] = useState(NoticeStates.VISIBLE);
 
   const animateOut: MouseEventHandler = (e) => {

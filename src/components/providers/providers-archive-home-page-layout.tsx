@@ -54,7 +54,7 @@ const stylesProviderItem = css(
     `
 );
 
-const Providers: React.FC<ProvidersProps> = ({ className, providers }) => {
+const Providers = ({ className, providers }: ProvidersProps) => {
     return (
         <ul className={className} css={stylesProviders}>
             {
@@ -79,8 +79,8 @@ const Providers: React.FC<ProvidersProps> = ({ className, providers }) => {
 }
 
 
-export const ProvidersArchiveHomePageLayout: React.FC<ProvidersArchiveProps> =
-    ({ className, heading, textContent, media, providers }) => {
+export const ProvidersArchiveHomePageLayout =
+    ({ className, heading, textContent, media, providers }: ProvidersArchiveProps): React.ReactElement => {
         if (providers.length == 0)
             return <></>;
 

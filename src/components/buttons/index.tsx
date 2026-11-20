@@ -55,23 +55,23 @@ export const stylesBtnSecondary: CSSInterpolation = {
     },
 }
 
-export const PrimaryButton: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>> = ({ children, ...props }) =>
+export const PrimaryButton = ({ children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>): React.ReactElement =>
     <button {...props} css={[stylesButton, stylesBtnPrimary]}>
         {children}
     </button>
 
-export const SecondaryButton: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>> = ({ children, ...props }) =>
+export const SecondaryButton = ({ children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>): React.ReactElement =>
     <button {...props} css={[stylesButton, stylesBtnSecondary]}>
         {children}
     </button>
 
 
-export const PrimaryAnchor: React.FC<React.AnchorHTMLAttributes<HTMLAnchorElement>> = ({ children, ...props }) =>
+export const PrimaryAnchor = ({ children, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>): React.ReactElement =>
     <a {...props} css={[stylesButton, stylesBtnPrimary]}>
         {children}
     </a>
 
-export const SecondaryAnchor: React.FC<React.AnchorHTMLAttributes<HTMLAnchorElement>> = ({ children, ...props }) =>
+export const SecondaryAnchor = ({ children, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>): React.ReactElement =>
     <a {...props} css={[stylesButton, stylesBtnSecondary]}>
         {children}
     </a>

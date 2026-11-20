@@ -45,7 +45,7 @@ function addPopup(
     return popup;
 }
 
-export const MapBox: React.FC<MapBoxProps> = (props) => {
+export const MapBox = (props: MapBoxProps): React.ReactElement => {
     const { mapboxAccessToken } = usePublicConfig();
     const [jsEnabled, setJsEnabled] = useState(false);
     useEffect(() => {

@@ -17,7 +17,7 @@ interface ColumnProps {
     children: ReactNode,
     className?: string
 }
-export const PrimarySecondaryColumnsLayout: React.FC<PrimarySecondaryColumnsLayoutProps> = ({ children, className }) => {
+export const PrimarySecondaryColumnsLayout = ({ children, className }: PrimarySecondaryColumnsLayoutProps): React.ReactElement => {
     return (
         <App className={className} >
             <NavBar />
@@ -29,7 +29,7 @@ export const PrimarySecondaryColumnsLayout: React.FC<PrimarySecondaryColumnsLayo
     );
 }
 
-export const Columns: React.FC<PrimarySecondaryColumnsLayoutProps> = ({ children, className }) =>
+export const Columns = ({ children, className }: PrimarySecondaryColumnsLayoutProps): React.ReactElement =>
     <div css={[gridContainer(), { margin: `0 -${gridSpacing / 2}em` }]} className={className}>
         {children}
     </div>
@@ -46,7 +46,7 @@ const stylesReorderMain: CSSInterpolation = {
 stylesReorderMain[breakpointStrings.md] = {
     order: 0,
 }
-export const MainCol: React.FC<ColumnProps> = ({ children, className }) => {
+export const MainCol = ({ children, className }: ColumnProps): React.ReactElement => {
     return (
         <div className={className} css={[stylesMainCol, stylesReorderMain]}>
             {children}
@@ -64,7 +64,7 @@ const stylesReorderSide: CSSInterpolation = {
 stylesReorderSide[breakpointStrings.md] = {
     order: 1,
 }
-export const SideCol: React.FC<ColumnProps> = ({ children, className }) => {
+export const SideCol = ({ children, className }: ColumnProps): React.ReactElement => {
     return (
         <div className={className} css={[stylesSideCol, stylesReorderSide]}>
             {children}

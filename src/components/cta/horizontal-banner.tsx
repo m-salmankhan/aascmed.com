@@ -43,7 +43,7 @@ const stylesSecondaryOnDark = css({
   },
 });
 
-export const HorizontalCalloutBanner: React.FC<HorizontalCalloutBannerProps> = ({
+export const HorizontalCalloutBanner = ({
   className,
   title,
   description,
@@ -53,7 +53,7 @@ export const HorizontalCalloutBanner: React.FC<HorizontalCalloutBannerProps> = (
   secondaryButtonUrl,
   useContainer = true,
   compactInContainer = false,
-}) => {
+}: HorizontalCalloutBannerProps): React.ReactElement => {
   const banner = (
     <CalloutBanner
       title={title}

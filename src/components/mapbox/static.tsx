@@ -66,7 +66,7 @@ const stylesStaticMap = css`
   }
 `;
 
-export const StaticMap: React.FC<MapBoxProps> = (props) => {
+export const StaticMap = (props: MapBoxProps): React.ReactElement => {
     const { mapboxAccessToken } = usePublicConfig();
     const [loaded, setLoaded] = useState(ImageState.INITIAL);
     const id = useId();

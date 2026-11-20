@@ -29,7 +29,7 @@ const stylesFAQBtn = css({
     }
 });
 
-export const ButtonList: React.FC<ShortCodeProps> = ({ className, children }) =>
+export const ButtonList = ({ className, children }: ShortCodeProps): React.ReactElement =>
     <nav className={className} css={stylesButtonList}>
         {children}
         <PrimaryAnchor href={"#faq"} css={stylesFAQBtn}>Skip to FAQ</PrimaryAnchor>
@@ -38,7 +38,7 @@ export const ButtonList: React.FC<ShortCodeProps> = ({ className, children }) =>
     </nav>
 
 
-export const ContactBanner: React.FC<ShortCodeProps> = ({ className, children }) =>
+export const ContactBanner = ({ className, children }: ShortCodeProps): React.ReactElement =>
     <CalloutBanner
         className={className}
         variant={"dark"}
@@ -80,7 +80,7 @@ const stylesInfoNotice: CSSInterpolation = {
         marginRight: `${gridSpacing/4}em`,
     } 
 }
-export const InfoNotice: React.FC<ShortCodeProps> = ({className, children}) =>
+export const InfoNotice = ({className, children}: ShortCodeProps): React.ReactElement =>
     <div className={className} css={stylesInfoNotice}>
         <FaIcons iconStyle={IconStyles.SOLID} icon={"circle-info"} className={"icon"} /> <strong>Info:</strong>
         {children}
@@ -100,7 +100,7 @@ h6 {
     font-size: 1rem;
 }
 `;
-export const FAQ: React.FC<FAQProps> = (props) =>
+export const FAQ = (props: FAQProps): React.ReactElement =>
     <div css={stylesFAQ}>
         {props.children}
     </div>

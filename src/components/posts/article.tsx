@@ -52,7 +52,7 @@ stylesArticle[breakpointStrings.md] = {
     },
 }
 
-export const Article: React.FC<HTMLProps<HTMLDivElement>> = ({children, ...props}) =>
+export const Article = ({children, ...props}: HTMLProps<HTMLDivElement>): React.ReactElement =>
     <article css={stylesArticle} {...props}>
         {children}
     </article>

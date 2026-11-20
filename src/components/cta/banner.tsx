@@ -103,7 +103,7 @@ const stylesDescription = css({
   marginBottom: `${gridSpacing / 2}em`,
 });
 
-export const CalloutBanner: React.FC<CalloutBannerProps> = ({
+export const CalloutBanner = ({
   className,
   title,
   description,
@@ -112,7 +112,7 @@ export const CalloutBanner: React.FC<CalloutBannerProps> = ({
   variant = "dark",
   layout = "block",
   titleSize = "default",
-}) => {
+}: CalloutBannerProps): React.ReactElement => {
   const bannerStyle = variant === "dark" ? stylesDark : stylesLight;
   const titleStyle =
     titleSize === "compact"
