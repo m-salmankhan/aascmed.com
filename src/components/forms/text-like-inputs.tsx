@@ -46,7 +46,7 @@ const stylesTextInputs = (error: boolean) => css`
   }
 `
 
-export const TextInput: React.FC<InputProps> = (props) => {
+export const TextInput = (props: InputProps): React.ReactElement => {
   const id = useId();
   return (
     <div css={stylesTextInputs(!!props.error)} className={props.className}>
@@ -60,7 +60,7 @@ export const TextInput: React.FC<InputProps> = (props) => {
   );
 }
 
-export const TextArea: React.FC<TextAreaProps> = (props) => {
+export const TextArea = (props: TextAreaProps): React.ReactElement => {
   const id = useId();
   return (
     <div css={stylesTextInputs(!!props.error)} className={props.className}>

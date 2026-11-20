@@ -43,7 +43,7 @@ interface StrapiFAQProps {
 /**
  * Renders a Strapi FAQ component with structured data for SEO.
  */
-export const StrapiFAQ: React.FC<StrapiFAQProps> = ({ className, questions }) => {
+export const StrapiFAQ = ({ className, questions }: StrapiFAQProps): React.ReactElement | null => {
     if (!questions || questions.length === 0) return null;
 
     const structuredData = {

@@ -74,7 +74,7 @@ interface SliderReviewProps {
     className?: string,
     number: number
 }
-const SliderReview: React.FC<SliderReviewProps> = ({className, review, number}) => {
+const SliderReview = ({className, review, number}: SliderReviewProps) => {
     const carouselContext = useContext(CarouselContext);
     const [currentSlide, setCurrentSlide] = useState(carouselContext.state.currentSlide);
     useEffect(() => {
@@ -209,7 +209,7 @@ interface ReviewSliderProps {
     reviews: [Review],
     inViewPort: boolean
 }
-export const ReviewSlider: React.FC<ReviewSliderProps> = ({className, reviews, inViewPort}) => {
+export const ReviewSlider = ({className, reviews, inViewPort}: ReviewSliderProps): React.ReactElement => {
     return (
         // viewport
         <Container className={className}>
@@ -269,7 +269,7 @@ interface ReviewsSectionProps {
     reviews: [Review],
     inViewport: boolean
 }
-export const ReviewsSection: React.FC<ReviewsSectionProps> = ({className, reviews, inViewport}) => {
+export const ReviewsSection = ({className, reviews, inViewport}: ReviewsSectionProps): React.ReactElement => {
     return (
         <section className={className} css={stylesReviewsSection}>
             <ReviewSlider reviews={reviews} inViewPort={inViewport} />

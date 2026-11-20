@@ -64,7 +64,7 @@ const stylesLi = css(
     }
 );
 
-export const ServiceUpdateList: React.FC<ServiceUpdateListProps> = ({ className, serviceUpdates, frontPage }) => {
+export const ServiceUpdateList = ({ className, serviceUpdates, frontPage }: ServiceUpdateListProps): React.ReactElement => {
     return (
         <ul className={className} css={stylesList}>
             {
@@ -102,8 +102,8 @@ interface ServiceUpdateArchiveProps {
 }
 
 
-export const ServiceUpdateArchive: React.FC<ServiceUpdateArchiveProps> =
-    ({ className, heading, textContent, media, serviceUpdates, frontPage }) => {
+export const ServiceUpdateArchive =
+    ({ className, heading, textContent, media, serviceUpdates, frontPage }: ServiceUpdateArchiveProps): React.ReactElement => {
         if (serviceUpdates.length == 0) {
             return <></>;
         }

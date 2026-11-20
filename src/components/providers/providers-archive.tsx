@@ -82,7 +82,7 @@ const stylesProviderExcerpt = css(
     `
 );
 
-const Provider: React.FC<ProviderProps> = ({ className, provider }) => {
+const Provider = ({ className, provider }: ProviderProps) => {
     const nameWithTitle = (!!provider.name.title ? `${provider.name.title} ` : "") + provider.name.fullName;
     const retiredText = provider.retired ? "(Retired)" : "";
     return (
@@ -116,7 +116,7 @@ const Provider: React.FC<ProviderProps> = ({ className, provider }) => {
     )
 }
 
-export const ProviderArchive: React.FC<ProviderArchiveProps> = ({ className, providers }) =>
+export const ProviderArchive = ({ className, providers }: ProviderArchiveProps): React.ReactElement =>
     <ul className={className} css={stylesProviderArchive}>
         {providers.map((provider, idx) => <Provider provider={provider} key={idx} />)}
     </ul>

@@ -30,7 +30,7 @@ const stylesDropdownInput = (error: boolean) => css`
   }
 `
 
-export const DropdownInput: React.FC<DropdownInputProps> = ({ className, error, label, ...props }) => {
+export const DropdownInput = ({ className, error, label, ...props }: DropdownInputProps): React.ReactElement => {
   const id = useId();
   return (
     <div className={className} css={stylesDropdownInput(!!error)}>

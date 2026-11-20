@@ -29,7 +29,7 @@ const stylesCheckboxInput = (error: boolean) => css`
   }
 `;
 
-export const Checkbox: React.FC<CheckboxProps> = (props) => {
+export const Checkbox = (props: CheckboxProps): React.ReactElement => {
   const id = useId();
 
   return (

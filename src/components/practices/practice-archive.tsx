@@ -56,7 +56,7 @@ interface PracticeListItemProps {
     isFrontPage?: boolean,
     practice: PracticeSummary
 }
-const PracticeArchiveListItem: React.FC<PracticeListItemProps> = ({ className, practice, inView, isFrontPage }) => {
+const PracticeArchiveListItem = ({ className, practice, inView, isFrontPage }: PracticeListItemProps) => {
     const staticMapProps: MapBoxProps = {
         longitude: practice.longitude,
         latitude: practice.latitude,
@@ -105,7 +105,7 @@ interface PracticeArchiveListProps {
     lazyLoad?: boolean,
     practices: [PracticeSummary]
 }
-export const PracticeArchiveList: React.FC<PracticeArchiveListProps> = (props) => {
+export const PracticeArchiveList = (props: PracticeArchiveListProps): React.ReactElement => {
     const lazyLoad = props.lazyLoad || false;
     const [inView, setInView] = useState(!lazyLoad);
     const observerRef = useRef<IntersectionObserver | null>(null);
@@ -148,7 +148,7 @@ interface PracticeArchiveProps {
     lazyLoad?: boolean,
     isHomePage: boolean
 }
-export const PracticeArchive: React.FC<PracticeArchiveProps> = ({ className, practices, heading, textContent, media, isHomePage, lazyLoad }) => {
+export const PracticeArchive = ({ className, practices, heading, textContent, media, isHomePage, lazyLoad }: PracticeArchiveProps): React.ReactElement => {
     if (practices.length === 0) return <></>;
 
     return (

@@ -18,7 +18,7 @@ interface ContentsItemProps {
     activeIDs: string[],
 }
 
-const ContentsItem: React.FC<ContentsItemProps> = ({ heading, active, activeIDs }) => {
+const ContentsItem = ({ heading, active, activeIDs }: ContentsItemProps) => {
     return (
         <li>
             <SiteLink className={active ? "active" : ""} href={heading.url}>{heading.title}</SiteLink>
@@ -130,7 +130,7 @@ interface Heading {
     subHeadings: Heading[]
     active: boolean
 }
-export const Contents: React.FC<ContentsProps> = ({ className, items }) => {
+export const Contents = ({ className, items }: ContentsProps): React.ReactElement => {
     const [activeIDs, setActiveIDs] = useState<string[]>([]);
     // Initialise Observer
     const observerRef = useRef<IntersectionObserver | null>(null);

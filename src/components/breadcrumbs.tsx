@@ -53,7 +53,7 @@ interface BreadcrumbsProps {
     className?: string,
 }
 
-export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({path, className=''}) =>
+export const Breadcrumbs = ({path, className=''}: BreadcrumbsProps): React.ReactElement =>
     <div className={className} css={stylesBreadcrumbs}>
         <span className={"breadcrumb-text"}>You are here:</span>
         <ol>

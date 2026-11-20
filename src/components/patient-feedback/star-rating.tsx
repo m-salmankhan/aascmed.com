@@ -48,7 +48,7 @@ const stylesVisibleStarIcon: CSSProperties = {
     transform: "scale(1)",
 }
 
-export const StarIcon: React.FC<StarIconProps> = ({style, order, enabled, className}) => {
+export const StarIcon = ({style, order, enabled, className}: StarIconProps): React.ReactElement => {
     const [visible, setVisible] = useState(false);
     const timeoutId = useRef<number | null>(null);
 
@@ -106,7 +106,7 @@ const stylesAverageRating = css({
         color: "#fff",
     },
 });
-export const AverageRating: React.FC<AverageRatingProps> = ({rating, source, date, enabled}) => {
+export const AverageRating = ({rating, source, date, enabled}: AverageRatingProps): React.ReactElement => {
     const {whole, half, empty} = calculateNumStars(rating);
 
     const stars = [

@@ -54,7 +54,7 @@ interface SocialButtonProps {
     url: string,
     title: string
 }
-const SocialButton: React.FC<SocialButtonProps> = ({network, url, title}) => {
+const SocialButton = ({network, url, title}: SocialButtonProps) => {
     switch(network) {
         case SocialNetworks.facebook:
             return(
@@ -105,7 +105,7 @@ interface ShareToSocialsProps {
     pageTitle: string
     path: string,
 }
-export const ShareButtons: React.FC<ShareToSocialsProps> = ({pageTitle, path, className}) => {
+export const ShareButtons = ({pageTitle, path, className}: ShareToSocialsProps): React.ReactElement => {
     const { url: baseURL } = useSiteMetadata();
     const url = baseURL + path;
 

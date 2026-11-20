@@ -32,13 +32,13 @@ const stylesButtonRow = css({
   },
 });
 
-export const PatientFormsBanner: React.FC<PatientFormsBannerProps> = ({
+export const PatientFormsBanner = ({
   className,
   heading = "New Patient? Start Here",
   description = "Complete your paperwork online before your visit - quick, secure, and paperless.",
   registrationFormUrl,
   healthHistoryFormUrl,
-}) => (
+}: PatientFormsBannerProps): React.ReactElement => (
   <section className={className} css={stylesSection} aria-label={"Patient forms"}>
     <Container>
       <CalloutBanner title={heading} description={description} centered={true} variant="dark">

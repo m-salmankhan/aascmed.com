@@ -98,7 +98,7 @@ const getParallaxValues = (height: number): ParallaxParameters => {
     }
 }
 
-export const HeroBase: React.FC<HeroProps> = ({ heading, textContent, media, image, navigation, children }) => {
+export const HeroBase = ({ heading, textContent, media, image, navigation, children }: HeroProps): React.ReactElement => {
     const headerRef = useRef<HTMLElement | null>(null);
     const [parallax, setParallax] = useState<ParallaxParameters>({ textTranslation: 0, backgroundOpacity: 0 });
 
